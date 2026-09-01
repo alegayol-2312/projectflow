@@ -880,7 +880,7 @@ function colorEstadoTarea(tarea) {
   <img src={logoGP} alt="Grupo Petersen" />
 </div>
 
-          <h1>Proyecto 1</h1>
+          <h1>Grupo Petersen</h1>
 
 <p>
   Gestión colaborativa de proyectos
@@ -941,7 +941,7 @@ function colorEstadoTarea(tarea) {
 </div>
 
           <div>
-            <h1>Proyecto 1</h1>
+            <h1>Grupo Petersen</h1>
 
 <p>
   Proyecto: {proyecto?.nombre || 'Sin proyecto'}
