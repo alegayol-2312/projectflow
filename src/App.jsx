@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import './index.css'
 import { supabase } from './lib/supabase'
+import logoGP from './assets/logo-gp.png'
 
 const formularioVacio = {
   nombre: '',
@@ -13,6 +14,21 @@ const formularioVacio = {
   hito: false,
 }
 
+const nombresMeses = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+]
+
 function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -24,6 +40,7 @@ function App() {
   const [proyecto, setProyecto] = useState(null)
   const [tareas, setTareas] = useState([])
   const [historial, setHistorial] = useState([])
+  const [historialExpandido, setHistorialExpandido] = useState(false)
   const [perfiles, setPerfiles] = useState([])
 
   const [modalOpen, setModalOpen] = useState(false)
@@ -34,6 +51,17 @@ function App() {
   const [filtroResponsable, setFiltroResponsable] = useState('Todos')
   const [filtroEstado, setFiltroEstado] = useState('Todos')
   const [vista, setVista] = useState('gantt')
+
+  // MES QUE ESTAMOS MIRANDO EN EL GANTT
+  const hoyReal = new Date()
+
+  const [mesVisualizado, setMesVisualizado] = useState(
+    hoyReal.getMonth()
+  )
+
+  const [anioVisualizado, setAnioVisualizado] = useState(
+    hoyReal.getFullYear()
+  )
 
   useEffect(() => {
     iniciarApp()
@@ -89,7 +117,7 @@ function App() {
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .eq('nombre', 'Migración Banco1')
+      .eq('nombre', 'RPA & Automatización')
       .single()
 
     if (error) {
@@ -132,14 +160,9 @@ function App() {
       return
     }
 
-    const { data: dependenciasData, error: dependenciasError } =
-      await supabase
-        .from('task_dependencies')
-        .select('*')
-
-    if (dependenciasError) {
-      console.error('Error cargando dependencias:', dependenciasError)
-    }
+    const { data: dependenciasData } = await supabase
+      .from('task_dependencies')
+      .select('*')
 
     const tareasConDependencias = (tareasData || []).map((tarea) => {
       const dependencia = dependenciasData?.find(
@@ -157,24 +180,18 @@ function App() {
 
   async function cargarHistorial() {
     const { data: historyData, error: historyError } = await supabase
-      .from('task_history')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(20)
+  .from('task_history')
+  .select('*')
+  .order('created_at', { ascending: false })
 
     if (historyError) {
-      console.error('Error cargando historial:', historyError)
+      console.error('Error historial:', historyError)
       return
     }
 
-    const { data: profilesData, error: profilesError } =
-      await supabase
-        .from('profiles')
-        .select('*')
-
-    if (profilesError) {
-      console.error('Error cargando perfiles:', profilesError)
-    }
+    const { data: profilesData } = await supabase
+      .from('profiles')
+      .select('*')
 
     const historialConUsuario = (historyData || []).map((item) => {
       const perfil = profilesData?.find(
@@ -201,12 +218,24 @@ function App() {
     return new Date(year, month - 1, day)
   }
 
-  function calcularFin(inicio, duracion) {
+  function calcularFechaFinDate(inicio, duracion) {
     const fecha = parseDate(inicio)
 
-    if (!fecha) return ''
+    if (!fecha) return null
 
-    fecha.setDate(fecha.getDate() + Number(duracion) - 1)
+    const fin = new Date(fecha)
+
+    fin.setDate(
+      fin.getDate() + Number(duracion) - 1
+    )
+
+    return fin
+  }
+
+  function calcularFin(inicio, duracion) {
+    const fecha = calcularFechaFinDate(inicio, duracion)
+
+    if (!fecha) return ''
 
     return fecha.toLocaleDateString('es-AR')
   }
@@ -223,10 +252,9 @@ function App() {
 
     if (!inicio) return 0
 
-    const fin = new Date(inicio)
-
-    fin.setDate(
-      fin.getDate() + Number(tarea.duracion_dias) - 1
+    const fin = calcularFechaFinDate(
+      tarea.fecha_inicio,
+      tarea.duracion_dias
     )
 
     if (hoy < inicio) return 0
@@ -238,13 +266,15 @@ function App() {
 
     const diasPasados =
       Math.floor(
-        (hoy - inicio) / (1000 * 60 * 60 * 24)
+        (hoy - inicio) / 86400000
       ) + 1
 
     return Math.min(
       100,
       Math.round(
-        (diasPasados / Number(tarea.duracion_dias)) * 100
+        (diasPasados /
+          Number(tarea.duracion_dias)) *
+          100
       )
     )
   }
@@ -257,15 +287,12 @@ function App() {
     const hoy = new Date()
     hoy.setHours(0, 0, 0, 0)
 
-    const fin = parseDate(tarea.fecha_inicio)
-
-    if (!fin) return false
-
-    fin.setDate(
-      fin.getDate() + Number(tarea.duracion_dias) - 1
+    const fin = calcularFechaFinDate(
+      tarea.fecha_inicio,
+      tarea.duracion_dias
     )
 
-    return hoy > fin
+    return fin ? hoy > fin : false
   }
 
   function handleChange(event) {
@@ -328,18 +355,19 @@ function App() {
           estado: form.estado,
           prioridad: form.prioridad,
           es_hito: form.hito,
+
           fecha_finalizacion:
             form.estado === 'Finalizado'
               ? tareaEditando.fecha_finalizacion ||
                 new Date().toISOString()
               : null,
+
           updated_at: new Date().toISOString(),
         })
         .eq('id', tareaEditando.id)
 
       if (error) {
-        console.error(error)
-        alert(`No se pudo editar la tarea: ${error.message}`)
+        alert(`No se pudo editar: ${error.message}`)
         return
       }
 
@@ -378,6 +406,7 @@ function App() {
           prioridad: form.prioridad,
           es_hito: form.hito,
           created_by: session.user.id,
+
           fecha_finalizacion:
             form.estado === 'Finalizado'
               ? new Date().toISOString()
@@ -387,8 +416,7 @@ function App() {
         .single()
 
       if (error) {
-        console.error('ERROR SUPABASE:', error)
-        alert(`No se pudo guardar la tarea: ${error.message}`)
+        alert(`No se pudo guardar: ${error.message}`)
         return
       }
 
@@ -430,8 +458,7 @@ function App() {
       .eq('id', tarea.id)
 
     if (error) {
-      console.error(error)
-      alert('No se pudo finalizar la tarea.')
+      alert('No se pudo finalizar.')
       return
     }
 
@@ -463,8 +490,7 @@ function App() {
       .eq('id', tarea.id)
 
     if (error) {
-      console.error(error)
-      alert('No se pudo eliminar la tarea.')
+      alert('No se pudo eliminar.')
       return
     }
 
@@ -473,6 +499,136 @@ function App() {
       cargarHistorial(),
     ])
   }
+
+ // =========================
+// NAVEGACIÓN DEL GANTT
+// =========================
+
+function irAHoy() {
+  const hoy = new Date()
+
+  setMesVisualizado(hoy.getMonth())
+  setAnioVisualizado(hoy.getFullYear())
+}
+
+function cambiarMesDirecto(valor) {
+  if (!valor) return
+
+  const [anio, mes] = valor.split('-').map(Number)
+
+  setAnioVisualizado(anio)
+  setMesVisualizado(mes - 1)
+}
+
+function mismaFecha(a, b) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  )
+}
+
+function inicialDiaSemanaFecha(fecha) {
+  const letras = ['D', 'L', 'M', 'M', 'J', 'V', 'S']
+
+  return letras[fecha.getDay()]
+}
+
+const diasHabilesMes = useMemo(() => {
+  const ultimoDia = new Date(
+    anioVisualizado,
+    mesVisualizado + 1,
+    0
+  ).getDate()
+
+  const lista = []
+
+  for (let dia = 1; dia <= ultimoDia; dia++) {
+    const fecha = new Date(
+      anioVisualizado,
+      mesVisualizado,
+      dia
+    )
+
+    const numeroDia = fecha.getDay()
+
+    if (numeroDia !== 0 && numeroDia !== 6) {
+      lista.push(fecha)
+    }
+  }
+
+  return lista
+}, [mesVisualizado, anioVisualizado])
+
+function posicionBarra(tarea) {
+  const inicioTarea = parseDate(tarea.fecha_inicio)
+
+  const finTarea = calcularFechaFinDate(
+    tarea.fecha_inicio,
+    tarea.duracion_dias
+  )
+
+  if (
+    !inicioTarea ||
+    !finTarea ||
+    diasHabilesMes.length === 0
+  ) {
+    return null
+  }
+
+  const diasVisibles = diasHabilesMes.filter((fecha) => {
+    return (
+      fecha >= inicioTarea &&
+      fecha <= finTarea
+    )
+  })
+
+  if (diasVisibles.length === 0) {
+    return null
+  }
+
+  const primerDiaVisible = diasVisibles[0]
+
+  const indiceInicio = diasHabilesMes.findIndex((fecha) =>
+    mismaFecha(fecha, primerDiaVisible)
+  )
+
+  return {
+    left: `${
+      (indiceInicio / diasHabilesMes.length) * 100
+    }%`,
+
+    width: `${
+      (diasVisibles.length / diasHabilesMes.length) * 100
+    }%`,
+
+    center: `${
+      (
+        (indiceInicio + diasVisibles.length / 2) /
+        diasHabilesMes.length
+      ) * 100
+    }%`,
+  }
+}
+
+function posicionHoy() {
+  const hoy = new Date()
+
+  hoy.setHours(0, 0, 0, 0)
+
+  const indiceHoy = diasHabilesMes.findIndex((fecha) =>
+    mismaFecha(fecha, hoy)
+  )
+
+  if (indiceHoy === -1) {
+    return null
+  }
+
+  return (
+    ((indiceHoy + 0.5) / diasHabilesMes.length) *
+    100
+  )
+}
 
   const responsables = useMemo(() => {
     return perfiles
@@ -483,15 +639,15 @@ function App() {
 
   const tareasFiltradas = useMemo(() => {
     return tareas.filter((tarea) => {
-      const coincideResponsable =
+      const responsableOK =
         filtroResponsable === 'Todos' ||
         tarea.responsable === filtroResponsable
 
-      const coincideEstado =
+      const estadoOK =
         filtroEstado === 'Todos' ||
         tarea.estado === filtroEstado
 
-      return coincideResponsable && coincideEstado
+      return responsableOK && estadoOK
     })
   }, [tareas, filtroResponsable, filtroEstado])
 
@@ -516,8 +672,8 @@ function App() {
         ? 0
         : Math.round(
             tareas.reduce(
-              (totalAvance, tarea) =>
-                totalAvance + calcularAvance(tarea),
+              (acc, tarea) =>
+                acc + calcularAvance(tarea),
               0
             ) / total
           )
@@ -535,6 +691,7 @@ function App() {
     if (estado === 'Finalizado') return 'estado finalizado'
     if (estado === 'En curso') return 'estado en-curso'
     if (estado === 'Bloqueado') return 'estado bloqueado'
+
     return 'estado pendiente'
   }
 
@@ -542,62 +699,21 @@ function App() {
     if (tarea.estado === 'Finalizado') return 'bar-green'
     if (tarea.estado === 'Bloqueado') return 'bar-blocked'
     if (tarea.estado === 'En curso') return 'bar-purple'
+
     return 'bar-blue'
   }
 
-  function posicionBarra(tarea) {
-    const inicioMes = new Date(2026, 8, 1)
-    const inicio = parseDate(tarea.fecha_inicio)
-
-    if (!inicio) {
-      return {
-        left: '0%',
-        width: '3%',
-      }
-    }
-
-    const dias =
-      Math.round(
-        (inicio - inicioMes) / 86400000
-      )
-
-    const left =
-      Math.max(0, (dias / 30) * 100)
-
-    const width =
-      Math.max(
-        3,
-        (Number(tarea.duracion_dias) / 30) * 100
-      )
-
-    return {
-      left: `${Math.min(left, 97)}%`,
-      width: `${Math.min(
-        width,
-        Math.max(3, 100 - left)
-      )}%`,
-    }
-  }
-
   function nombreDependencia(tarea) {
-    if (!tarea.dependencia_id) {
-      return '—'
-    }
-
     const dependencia =
       tareas.find(
         (otra) =>
           otra.id === tarea.dependencia_id
       )
 
-    return dependencia
-      ? dependencia.nombre
-      : '—'
+    return dependencia?.nombre || '—'
   }
 
   function formatoFechaHora(fecha) {
-    if (!fecha) return ''
-
     return new Date(fecha).toLocaleString(
       'es-AR',
       {
@@ -608,6 +724,11 @@ function App() {
       }
     )
   }
+
+  const historialVisible =
+  historialExpandido
+    ? historial
+    : historial.slice(0, 5)
 
   if (loading) {
     return (
@@ -621,17 +742,19 @@ function App() {
     return (
       <div className="login-screen">
         <div className="login-card">
-          <div className="login-logo">
-            PF
-          </div>
 
-          <h1>ProjectFlow</h1>
+          <div className="login-logo image-logo">
+  <img src={logoGP} alt="Grupo Petersen" />
+</div>
 
-          <p>
-            Gestión colaborativa de proyectos
-          </p>
+          <h1>Proyecto 1</h1>
+
+<p>
+  Gestión colaborativa de proyectos
+</p>
 
           <form onSubmit={login}>
+
             <label>Email</label>
 
             <input
@@ -640,7 +763,6 @@ function App() {
               onChange={(e) =>
                 setEmail(e.target.value)
               }
-              required
             />
 
             <label>Contraseña</label>
@@ -651,7 +773,6 @@ function App() {
               onChange={(e) =>
                 setPassword(e.target.value)
               }
-              required
             />
 
             {loginError && (
@@ -662,15 +783,18 @@ function App() {
 
             <button
               className="btn-primary login-button"
-              type="submit"
             >
               Ingresar
             </button>
+
           </form>
+
         </div>
       </div>
     )
   }
+
+  const hoyPos = posicionHoy()
 
   return (
     <div className="app">
@@ -678,19 +802,23 @@ function App() {
       <header className="topbar">
 
         <div className="brand-area">
-          <div className="logo">PF</div>
+
+          <div className="logo image-logo">
+  <img src={logoGP} alt="Grupo Petersen" />
+</div>
 
           <div>
-            <h1>ProjectFlow</h1>
+            <h1>Proyecto 1</h1>
 
-            <p>
-              Proyecto:{' '}
-              {proyecto?.nombre || 'Cargando...'}
-            </p>
+<p>
+  Proyecto: RPA & Automatización
+</p>
           </div>
+
         </div>
 
         <div className="top-actions">
+
           <span className="user-email">
             {session.user.email}
           </span>
@@ -708,6 +836,7 @@ function App() {
           >
             + Nueva tarea
           </button>
+
         </div>
 
       </header>
@@ -715,7 +844,9 @@ function App() {
       <section className="filters">
 
         <select>
-          <option>Migración Banco1</option>
+          <option>
+  RPA & Automatización
+</option>
         </select>
 
         <select
@@ -748,26 +879,32 @@ function App() {
             Todos los estados
           </option>
 
-          <option value="Pendiente">Pendiente</option>
-          <option value="En curso">En curso</option>
-          <option value="Finalizado">Finalizado</option>
-          <option value="Bloqueado">Bloqueado</option>
+          <option>Pendiente</option>
+          <option>En curso</option>
+          <option>Finalizado</option>
+          <option>Bloqueado</option>
         </select>
 
         <div className="view-buttons">
+
           <button
             className={vista === 'gantt' ? 'active' : ''}
-            onClick={() => setVista('gantt')}
+            onClick={() =>
+              setVista('gantt')
+            }
           >
             Gantt
           </button>
 
           <button
             className={vista === 'tabla' ? 'active' : ''}
-            onClick={() => setVista('tabla')}
+            onClick={() =>
+              setVista('tabla')
+            }
           >
             Tabla
           </button>
+
         </div>
 
       </section>
@@ -807,154 +944,310 @@ function App() {
       </section>
 
       {vista === 'gantt' && (
-        <main className="workspace">
+        <>
+          <section className="gantt-navigation">
 
-          <section className="task-panel">
-            <div className="section-title">
-              <h2>Tareas</h2>
+  <div className="gantt-period-title">
 
-              <span>
-                {tareasFiltradas.length} de {tareas.length}
-              </span>
-            </div>
+    <span>Período visualizado</span>
 
-            <div className="table-header task-grid">
-              <div>Tarea</div>
-              <div>Responsable</div>
-              <div>Inicio</div>
-              <div>Días</div>
-              <div>Estado</div>
-              <div>Acciones</div>
-            </div>
+    <strong>
+      {nombresMeses[mesVisualizado]} {anioVisualizado}
+    </strong>
 
-            {tareasFiltradas.map((tarea) => (
-              <div
-                className="task-grid task-row"
-                key={tarea.id}
-              >
-                <div className="task-name">
-                  {estaAtrasada(tarea) && (
-                    <span className="late-icon">
-                      ⚠
-                    </span>
-                  )}
+  </div>
 
-                  <div>
+  <div className="gantt-nav-right">
+
+    <button
+      className="today-button"
+      onClick={irAHoy}
+    >
+      Hoy
+    </button>
+
+    <input
+      className="month-picker"
+      type="month"
+      value={`${anioVisualizado}-${String(
+        mesVisualizado + 1
+      ).padStart(2, '0')}`}
+      onChange={(e) =>
+        cambiarMesDirecto(e.target.value)
+      }
+    />
+
+  </div>
+
+</section>
+
+          <main className="workspace gantt-workspace">
+
+            <section className="task-panel">
+
+              <div className="section-title">
+                <h2>Tareas</h2>
+
+                <span>
+                  {tareasFiltradas.length} de {tareas.length}
+                </span>
+              </div>
+
+              <div className="table-header task-grid">
+
+                <div>Tarea</div>
+                <div>Responsable</div>
+                <div>Inicio</div>
+                <div>Días</div>
+                <div>Estado</div>
+                <div>Acciones</div>
+
+              </div>
+
+              {tareasFiltradas.map((tarea) => (
+
+                <div
+  className={`task-grid task-row ${
+    posicionBarra(tarea)
+      ? ''
+      : 'task-outside-month'
+  }`}
+  key={tarea.id}
+>
+
+                  <div className="task-name">
+
+                    {estaAtrasada(tarea) && (
+                      <span className="late-icon">
+                        ⚠
+                      </span>
+                    )}
+
                     <div>
-                      {tarea.nombre}
 
-                      {tarea.es_hito && (
-                        <span className="hito-badge">
-                          ◆
-                        </span>
+                      <div>
+                        {tarea.nombre}
+
+                        {tarea.es_hito && (
+                          <span className="hito-badge">
+                            ◆
+                          </span>
+                        )}
+                      </div>
+
+                      {tarea.dependencia_id && (
+                        <small className="dependencia-text">
+                          Depende de: {nombreDependencia(tarea)}
+                        </small>
                       )}
+
                     </div>
 
-                    {tarea.dependencia_id && (
-                      <small className="dependencia-text">
-                        Depende de: {nombreDependencia(tarea)}
-                      </small>
-                    )}
                   </div>
-                </div>
 
-                <div>{tarea.responsable}</div>
+                  <div>
+                    {tarea.responsable}
+                  </div>
 
-                <div>
-                  {parseDate(
-                    tarea.fecha_inicio
-                  )?.toLocaleDateString('es-AR')}
-                </div>
+                  <div>
+                    {parseDate(
+                      tarea.fecha_inicio
+                    )?.toLocaleDateString('es-AR')}
+                  </div>
 
-                <div>{tarea.duracion_dias}</div>
+                  <div>
+                    {tarea.duracion_dias}
+                  </div>
 
-                <div>
-                  <span className={colorEstado(tarea.estado)}>
-                    {tarea.estado}
-                  </span>
-                </div>
+                  <div>
+                    <span
+                      className={colorEstado(
+                        tarea.estado
+                      )}
+                    >
+                      {tarea.estado}
+                    </span>
+                  </div>
 
-                <div className="row-actions">
-                  <button
-                    className="mini-button edit"
-                    onClick={() => abrirEditar(tarea)}
-                  >
-                    ✎
-                  </button>
+                  <div className="row-actions">
 
-                  {tarea.estado !== 'Finalizado' && (
                     <button
-                      className="mini-button success"
+                      className="mini-button edit"
                       onClick={() =>
-                        finalizarTarea(tarea)
+                        abrirEditar(tarea)
                       }
                     >
-                      ✓
+                      ✎
                     </button>
-                  )}
 
-                  <button
-                    className="mini-button danger"
-                    onClick={() =>
-                      eliminarTarea(tarea)
-                    }
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-            ))}
-          </section>
+                    {tarea.estado !== 'Finalizado' && (
+                      <button
+                        className="mini-button success"
+                        onClick={() =>
+                          finalizarTarea(tarea)
+                        }
+                      >
+                        ✓
+                      </button>
+                    )}
 
-          <section className="gantt-panel">
-            <div className="gantt-header">
-              <span>01 Sep</span>
-              <span>08 Sep</span>
-              <span>15 Sep</span>
-              <span>22 Sep</span>
-              <span>29 Sep</span>
-            </div>
+                    <button
+                      className="mini-button danger"
+                      onClick={() =>
+                        eliminarTarea(tarea)
+                      }
+                    >
+                      ×
+                    </button>
 
-            <div className="gantt-body">
-              {tareasFiltradas.map((tarea) => (
-                <div
-                  className="gantt-row"
-                  key={tarea.id}
-                >
-                  <div
-                    className={`bar ${colorBarra(tarea)}`}
-                    style={posicionBarra(tarea)}
-                  >
-                    {tarea.es_hito
-                      ? '◆'
-                      : `${calcularAvance(tarea)}%`
-                    }
                   </div>
-                </div>
-              ))}
-            </div>
-          </section>
 
-        </main>
+                </div>
+
+              ))}
+
+            </section>
+
+            <section className="gantt-panel dynamic-gantt">
+
+  <div className="gantt-title-row">
+
+    <h2>
+      Gantt de seguimiento
+    </h2>
+
+    <span>
+      Lunes a viernes
+    </span>
+
+  </div>
+
+  <div
+    className="days-header"
+    style={{
+      gridTemplateColumns:
+        `repeat(${diasHabilesMes.length}, 1fr)`,
+    }}
+  >
+    {diasHabilesMes.map((fecha) => (
+      <div
+        key={fecha.toISOString()}
+        className="day-header"
+      >
+        <span>
+          {inicialDiaSemanaFecha(fecha)}
+        </span>
+
+        <strong>
+          {fecha.getDate()}
+        </strong>
+      </div>
+    ))}
+  </div>
+
+  <div className="dynamic-gantt-body">
+
+                {hoyPos !== null && (
+                  <div
+                    className="today-line-real"
+                    style={{
+                      left: `${hoyPos}%`,
+                    }}
+                  >
+                    <span>
+                      HOY
+                    </span>
+                  </div>
+                )}
+
+                {tareasFiltradas.map((tarea) => {
+
+                  const posicion =
+                    posicionBarra(tarea)
+
+                  return (
+                    <div
+                      className="dynamic-gantt-row"
+                      key={tarea.id}
+                    >
+
+                      <div
+  className="day-background-grid"
+  style={{
+    gridTemplateColumns:
+      `repeat(${diasHabilesMes.length}, 1fr)`,
+  }}
+>
+  {diasHabilesMes.map((fecha) => (
+    <div
+      key={fecha.toISOString()}
+      className="day-cell"
+    />
+  ))}
+</div>
+
+                      {posicion && (
+                        tarea.es_hito
+                          ? (
+                            <div
+                            
+  className="gantt-milestone"
+  style={{
+    left: posicion.center,
+  }}
+  title={tarea.nombre}
+>
+  ◆
+</div>
+                          )
+                          : (
+                            <div
+                              className={`bar dynamic-bar ${colorBarra(
+                                tarea
+                              )}`}
+                              style={posicion}
+                              title={`${tarea.nombre} · ${calcularFin(
+                                tarea.fecha_inicio,
+                                tarea.duracion_dias
+                              )}`}
+                            >
+                              {calcularAvance(tarea)}%
+                            </div>
+                          )
+                      )}
+
+                    </div>
+                  )
+                })}
+
+              </div>
+
+            </section>
+
+          </main>
+        </>
       )}
 
       {vista === 'tabla' && (
         <section className="task-panel">
+
           <div className="section-title">
             <h2>Vista tabla</h2>
 
             <span>
-              {tareasFiltradas.length} de {tareas.length}
+              {tareasFiltradas.length} tareas
             </span>
           </div>
 
           <div className="table-header task-grid">
+
             <div>Tarea</div>
             <div>Responsable</div>
             <div>Inicio</div>
             <div>Días</div>
             <div>Estado</div>
             <div>Acciones</div>
+
           </div>
 
           {tareasFiltradas.map((tarea) => (
@@ -962,11 +1255,14 @@ function App() {
               className="task-grid task-row"
               key={tarea.id}
             >
+
               <div className="task-name">
                 {tarea.nombre}
               </div>
 
-              <div>{tarea.responsable}</div>
+              <div>
+                {tarea.responsable}
+              </div>
 
               <div>
                 {parseDate(
@@ -974,18 +1270,25 @@ function App() {
                 )?.toLocaleDateString('es-AR')}
               </div>
 
-              <div>{tarea.duracion_dias}</div>
+              <div>
+                {tarea.duracion_dias}
+              </div>
 
               <div>
-                <span className={colorEstado(tarea.estado)}>
+                <span
+                  className={colorEstado(tarea.estado)}
+                >
                   {tarea.estado}
                 </span>
               </div>
 
               <div className="row-actions">
+
                 <button
                   className="mini-button edit"
-                  onClick={() => abrirEditar(tarea)}
+                  onClick={() =>
+                    abrirEditar(tarea)
+                  }
                 >
                   ✎
                 </button>
@@ -1009,65 +1312,25 @@ function App() {
                 >
                   ×
                 </button>
+
               </div>
+
             </div>
           ))}
+
         </section>
       )}
 
-      <section className="history-panel">
-        <div className="history-header">
-          <div>
-            <h3>Historial de cambios</h3>
-            <p>Últimas acciones del proyecto</p>
-          </div>
-
-          <span>{historial.length} eventos</span>
-        </div>
-
-        <div className="history-list">
-          {historial.length === 0 && (
-            <div className="history-empty">
-              Todavía no hay movimientos.
-            </div>
-          )}
-
-          {historial.map((item) => (
-            <div
-              className="history-item"
-              key={item.id}
-            >
-              <div className="history-icon">
-                {item.accion === 'Tarea creada'
-                  ? '+'
-                  : item.accion === 'Tarea finalizada'
-                    ? '✓'
-                    : '✎'}
-              </div>
-
-              <div className="history-content">
-                <div className="history-top">
-                  <strong>
-                    {item.usuario_nombre}
-                  </strong>
-
-                  <span>
-                    {formatoFechaHora(item.created_at)}
-                  </span>
-                </div>
-
-                <p>{item.detalle}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+     
 
       {modalOpen && (
+
         <div className="modal-overlay">
+
           <div className="modal">
 
             <div className="modal-header">
+
               <div>
                 <h2>
                   {tareaEditando
@@ -1089,11 +1352,13 @@ function App() {
               >
                 ×
               </button>
+
             </div>
 
             <form onSubmit={guardarTarea}>
 
               <div className="form-group full">
+
                 <label>
                   Nombre de la tarea
                 </label>
@@ -1103,11 +1368,13 @@ function App() {
                   value={form.nombre}
                   onChange={handleChange}
                 />
+
               </div>
 
               <div className="form-grid">
 
                 <div className="form-group">
+
                   <label>
                     Responsable
                   </label>
@@ -1130,9 +1397,11 @@ function App() {
                       </option>
                     ))}
                   </select>
+
                 </div>
 
                 <div className="form-group">
+
                   <label>
                     Fecha inicio
                   </label>
@@ -1143,9 +1412,11 @@ function App() {
                     value={form.inicio}
                     onChange={handleChange}
                   />
+
                 </div>
 
                 <div className="form-group">
+
                   <label>
                     Duración en días
                   </label>
@@ -1157,9 +1428,11 @@ function App() {
                     value={form.duracion}
                     onChange={handleChange}
                   />
+
                 </div>
 
                 <div className="form-group">
+
                   <label>
                     Estado
                   </label>
@@ -1174,9 +1447,11 @@ function App() {
                     <option>Finalizado</option>
                     <option>Bloqueado</option>
                   </select>
+
                 </div>
 
                 <div className="form-group">
+
                   <label>
                     Prioridad
                   </label>
@@ -1190,9 +1465,11 @@ function App() {
                     <option>Media</option>
                     <option>Baja</option>
                   </select>
+
                 </div>
 
                 <div className="form-group">
+
                   <label>
                     Dependencia
                   </label>
@@ -1202,6 +1479,7 @@ function App() {
                     value={form.dependencia}
                     onChange={handleChange}
                   >
+
                     <option value="">
                       Sin dependencia
                     </option>
@@ -1219,12 +1497,15 @@ function App() {
                           {tarea.nombre}
                         </option>
                       ))}
+
                   </select>
+
                 </div>
 
               </div>
 
               <div className="form-check-row">
+
                 <input
                   type="checkbox"
                   id="hito"
@@ -1236,10 +1517,13 @@ function App() {
                 <label htmlFor="hito">
                   Marcar como hito
                 </label>
+
               </div>
 
               {form.inicio && (
+
                 <div className="fecha-preview">
+
                   Fecha fin calculada:
 
                   <strong>
@@ -1249,10 +1533,13 @@ function App() {
                       form.duracion
                     )}
                   </strong>
+
                 </div>
+
               )}
 
               <div className="modal-actions">
+
                 <button
                   type="button"
                   className="btn-secondary"
@@ -1269,12 +1556,15 @@ function App() {
                     ? 'Guardar cambios'
                     : 'Crear tarea'}
                 </button>
+
               </div>
 
             </form>
 
           </div>
+
         </div>
+
       )}
 
     </div>

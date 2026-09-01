@@ -1236,3 +1236,913 @@ p {
   text-align: center;
   font-size: 12px;
 }
+
+/* ==========================================
+   NAVEGACION GANTT
+========================================== */
+
+.gantt-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  margin-bottom: 10px;
+
+  padding: 10px 12px;
+
+  border: 1px solid #222a35;
+  border-radius: 12px;
+
+  background: #0d1117;
+}
+
+.gantt-nav-left,
+.gantt-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.month-arrow {
+  width: 38px;
+  height: 38px;
+
+  border: 1px solid #2a3440;
+  border-radius: 9px;
+
+  background: #141a22;
+  color: #00d9ff;
+
+  font-size: 18px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.month-arrow:hover {
+  border-color: #00d9ff;
+  background: rgba(0, 217, 255, 0.08);
+}
+
+.current-month {
+  min-width: 160px;
+
+  text-align: center;
+
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+}
+
+.current-month strong {
+  color: #eef2f6;
+}
+
+.current-month span {
+  color: #7e8997;
+}
+
+.today-button {
+  height: 38px;
+
+  padding: 0 14px;
+
+  border-radius: 9px;
+
+  border:
+    1px solid rgba(0, 217, 255, 0.35);
+
+  background:
+    rgba(0, 217, 255, 0.08);
+
+  color: #00d9ff;
+
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.month-picker {
+  height: 38px;
+
+  padding: 0 10px;
+
+  border-radius: 9px;
+
+  border: 1px solid #2a3440;
+
+  background: #10151c;
+
+  color: #dce3ea;
+
+  color-scheme: dark;
+}
+
+/* ==========================================
+   GANTT DINAMICO
+========================================== */
+
+.dynamic-gantt {
+  overflow-x: auto;
+}
+
+.days-header {
+  height: 56px;
+
+  display: grid;
+
+  min-width: 850px;
+
+  background: #090d13;
+
+  border-bottom: 1px solid #222a35;
+}
+
+.day-header {
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 2px;
+
+  border-right: 1px solid #181f28;
+
+  color: #768392;
+
+  font-size: 9px;
+}
+
+.day-header strong {
+  font-size: 11px;
+
+  color: #b6c0cb;
+}
+
+.day-header.weekend {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.day-header.weekend strong {
+  color: #697482;
+}
+
+.dynamic-gantt-body {
+  min-width: 850px;
+
+  position: relative;
+}
+
+.dynamic-gantt-row {
+  position: relative;
+
+  height: 58px;
+
+  border-bottom: 1px solid #191f28;
+}
+
+.day-background-grid {
+  position: absolute;
+
+  inset: 0;
+
+  display: grid;
+}
+
+.day-cell {
+  border-right: 1px solid #171d25;
+}
+
+.day-cell.weekend {
+  background:
+    rgba(255, 255, 255, 0.018);
+}
+
+/* Barra nueva */
+
+.dynamic-bar {
+  position: absolute;
+
+  top: 17px;
+
+  height: 24px;
+
+  z-index: 3;
+
+  border-radius: 6px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  min-width: 6px;
+
+  overflow: hidden;
+}
+
+/* HOY */
+
+.today-line-real {
+  position: absolute;
+
+  top: 0;
+  bottom: 0;
+
+  width: 2px;
+
+  z-index: 8;
+
+  background: #00eaff;
+
+  box-shadow:
+    0 0 10px rgba(0, 234, 255, 0.35);
+
+  pointer-events: none;
+}
+
+.today-line-real span {
+  position: absolute;
+
+  top: 4px;
+  left: 5px;
+
+  padding: 3px 5px;
+
+  border-radius: 4px;
+
+  background: #00eaff;
+  color: #031015;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.04em;
+}
+
+/* HITOS */
+
+.gantt-milestone {
+  position: absolute;
+
+  top: 14px;
+
+  z-index: 5;
+
+  color: #ff52c8;
+
+  font-size: 22px;
+
+  transform: translateX(-50%);
+
+  text-shadow:
+    0 0 10px rgba(255, 82, 200, 0.45);
+}
+
+@media (max-width: 700px) {
+
+  .gantt-navigation {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .gantt-nav-left,
+  .gantt-nav-right {
+    justify-content: center;
+  }
+
+}
+
+/* ==========================================
+   NUEVO LAYOUT GANTT
+========================================== */
+
+/*
+  Panel izquierdo más chico.
+  Gantt mucho más grande.
+*/
+
+.gantt-workspace {
+  grid-template-columns:
+    minmax(430px, 0.7fr)
+    minmax(900px, 2fr);
+}
+
+/* Tabla izquierda más compacta */
+
+.gantt-workspace .task-grid {
+  grid-template-columns:
+    minmax(145px, 1.7fr)
+    minmax(90px, 1fr)
+    75px
+    38px
+    90px
+    82px;
+
+  gap: 6px;
+}
+
+.gantt-workspace .task-row {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.gantt-workspace .table-header {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+/* ==========================================
+   PANEL GANTT MÁS ANCHO
+========================================== */
+
+.dynamic-gantt {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.days-header,
+.dynamic-gantt-body {
+  /*
+    Hay suficiente ancho para mostrar
+    los 28 / 29 / 30 / 31 días claramente.
+  */
+  min-width: 980px;
+}
+
+/*
+  Cada día tiene ahora bastante más espacio.
+*/
+
+.day-header {
+  min-width: 29px;
+}
+
+.day-header span {
+  font-size: 8px;
+}
+
+.day-header strong {
+  font-size: 11px;
+}
+
+/* ==========================================
+   SELECTOR DE MES
+========================================== */
+
+.gantt-navigation {
+  padding: 11px 14px;
+}
+
+.gantt-period-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gantt-period-title span {
+  color: #687483;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.gantt-period-title strong {
+  color: #edf2f7;
+  font-size: 16px;
+}
+
+.gantt-nav-right {
+  margin-left: auto;
+}
+
+.month-picker {
+  min-width: 175px;
+}
+
+/* ==========================================
+   HISTORIAL COMPACTO
+========================================== */
+
+.history-list {
+  max-height: none;
+  overflow: visible;
+}
+
+.history-item {
+  min-height: 52px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.history-more {
+  display: flex;
+  justify-content: center;
+
+  padding: 10px;
+
+  border-top: 1px solid #191f28;
+
+  background: #0a0f15;
+}
+
+.history-more button {
+  border: 0;
+
+  background: transparent;
+
+  color: #00d9ff;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  padding: 7px 16px;
+
+  border-radius: 8px;
+}
+
+.history-more button:hover {
+  background: rgba(0, 217, 255, 0.08);
+}
+
+/* ==========================================
+   MEJOR APROVECHAMIENTO DE PANTALLA
+========================================== */
+
+@media (min-width: 1500px) {
+
+  .gantt-workspace {
+    grid-template-columns:
+      470px
+      1fr;
+  }
+
+  .days-header,
+  .dynamic-gantt-body {
+    min-width: 0;
+  }
+
+}
+
+@media (max-width: 1200px) {
+
+  .gantt-workspace {
+    grid-template-columns:
+      430px
+      980px;
+  }
+
+}
+
+/* ==========================================
+   AJUSTE FINAL LAYOUT GANTT
+========================================== */
+
+/* Panel tareas compacto, pero con espacio
+   suficiente para que Acciones no invada Gantt */
+
+.gantt-workspace {
+  grid-template-columns:
+    560px
+    minmax(0, 1fr);
+}
+
+/* Las 6 columnas entran dentro de los 560px */
+
+.gantt-workspace .task-grid {
+  grid-template-columns:
+    minmax(135px, 1.7fr)
+    95px
+    75px
+    40px
+    90px
+    82px;
+
+  gap: 5px;
+}
+
+.gantt-workspace .task-panel {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.gantt-workspace .task-row,
+.gantt-workspace .table-header {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+
+/* ==========================================
+   GANTT: LOS 31 DÍAS ENTRAN SIEMPRE
+========================================== */
+
+.dynamic-gantt {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* IMPORTANTE:
+   sacamos el min-width grande que obligaba
+   al scroll horizontal */
+
+.days-header,
+.dynamic-gantt-body {
+  width: 100%;
+  min-width: 0;
+}
+
+.days-header {
+  display: grid;
+}
+
+.day-header {
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 1px;
+}
+
+.day-header span {
+  font-size: 7px;
+}
+
+.day-header strong {
+  font-size: 10px;
+}
+
+.dynamic-gantt-row {
+  width: 100%;
+}
+
+.day-background-grid {
+  width: 100%;
+}
+
+
+/* ==========================================
+   ACCIONES MÁS COMPACTAS
+========================================== */
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mini-button {
+  width: 25px;
+  height: 25px;
+
+  padding: 0;
+
+  font-size: 11px;
+}
+
+
+/* ==========================================
+   TAREAS FUERA DEL MES VISUALIZADO
+========================================== */
+
+.task-row.task-outside-month {
+  opacity: 0.42;
+}
+
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width: 1100px) {
+
+  .gantt-workspace {
+    grid-template-columns:
+      520px
+      minmax(0, 1fr);
+  }
+
+  .gantt-workspace .task-grid {
+    grid-template-columns:
+      minmax(125px, 1.6fr)
+      85px
+      70px
+      35px
+      85px
+      78px;
+  }
+
+}
+
+@media (max-width: 850px) {
+
+  .gantt-workspace {
+    display: block;
+  }
+
+  .gantt-workspace .task-panel {
+    overflow-x: auto;
+  }
+
+  .dynamic-gantt {
+    margin-top: 10px;
+  }
+
+}
+
+/* ==========================================
+   AJUSTE GANTT SIN FINES DE SEMANA
+========================================== */
+
+.gantt-workspace {
+  grid-template-columns:
+    590px
+    minmax(0, 1fr);
+}
+
+/* Encabezado del panel derecho alineado con "Tareas" */
+
+.gantt-title-row {
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 16px;
+
+  border-bottom: 1px solid #222934;
+
+  background: #0a0e14;
+}
+
+.gantt-title-row h2 {
+  margin: 0;
+  font-size: 15px;
+  color: #eef2f6;
+}
+
+.gantt-title-row span {
+  color: #7d8998;
+  font-size: 11px;
+}
+
+/* Los días quedan debajo del título, alineados
+   con la fila de subtítulos del panel izquierdo */
+
+.days-header {
+  height: 48px;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  border-bottom: 1px solid #222934;
+  background: #090d13;
+}
+
+.day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+
+  padding-bottom: 6px;
+
+  border-right: 1px solid #181f28;
+
+  color: #768392;
+  font-size: 9px;
+
+  min-width: 0;
+  overflow: hidden;
+}
+
+.day-header span {
+  font-size: 8px;
+  line-height: 1;
+}
+
+.day-header strong {
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1;
+  color: #b6c0cb;
+}
+
+.dynamic-gantt {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dynamic-gantt-body {
+  width: 100%;
+  min-width: 0;
+}
+
+.dynamic-gantt-row {
+  position: relative;
+  height: 58px;
+  border-bottom: 1px solid #191f28;
+}
+
+.day-background-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  width: 100%;
+}
+
+.day-cell {
+  border-right: 1px solid #171d25;
+}
+
+/* Panel izquierdo un poquito más cómodo */
+
+.gantt-workspace .task-grid {
+  grid-template-columns:
+    minmax(150px, 1.8fr)
+    110px
+    75px
+    40px
+    90px
+    82px;
+
+  gap: 6px;
+}
+
+.gantt-workspace .task-row,
+.gantt-workspace .table-header {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+/* Filas fuera del mes seleccionado */
+
+.task-row.task-outside-month {
+  opacity: 0.42;
+}
+
+/* Acciones compactas */
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mini-button {
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  font-size: 11px;
+}
+
+/* Responsive */
+
+@media (max-width: 1200px) {
+  .gantt-workspace {
+    grid-template-columns:
+      540px
+      minmax(0, 1fr);
+  }
+
+  .gantt-workspace .task-grid {
+    grid-template-columns:
+      minmax(135px, 1.6fr)
+      95px
+      70px
+      35px
+      85px
+      78px;
+  }
+}
+
+@media (max-width: 900px) {
+  .gantt-workspace {
+    display: block;
+  }
+
+  .dynamic-gantt {
+    margin-top: 10px;
+  }
+
+  .gantt-title-row,
+  .days-header,
+  .dynamic-gantt-body {
+    min-width: 760px;
+  }
+}
+
+/* ==========================================
+   AJUSTE FINO DE ALINEACION IZQ vs GANTT
+========================================== */
+
+/* 1) Misma altura en la primera fila de título */
+.gantt-workspace .section-title,
+.gantt-title-row {
+  height: 56px;
+  min-height: 56px;
+  box-sizing: border-box;
+}
+
+/* 2) Misma altura en la fila de subtítulos */
+.gantt-workspace .table-header,
+.days-header {
+  height: 52px;
+  min-height: 52px;
+  box-sizing: border-box;
+}
+
+/* 3) Cada fila de tareas debe medir EXACTAMENTE lo mismo
+      que cada fila del Gantt */
+.gantt-workspace .task-row,
+.dynamic-gantt-row {
+  height: 58px;
+  min-height: 58px;
+  box-sizing: border-box;
+}
+
+/* 4) Sacamos el padding vertical que agranda de más las filas */
+.gantt-workspace .task-row {
+  padding-top: 0;
+  padding-bottom: 0;
+  align-items: center;
+}
+
+/* 5) El header izquierdo también alineado al centro */
+.gantt-workspace .table-header {
+  padding-top: 0;
+  padding-bottom: 0;
+  align-items: center;
+}
+
+/* 6) El header de días baja visualmente un poco */
+.days-header {
+  align-items: stretch;
+}
+
+.day-header {
+  justify-content: center;
+  padding-top: 6px;
+  padding-bottom: 4px;
+}
+
+/* 7) La barra del gantt centrada exacta dentro de su fila */
+.dynamic-bar,
+.bar {
+  top: 17px;
+}
+
+/* 8) El hito también centrado */
+.gantt-milestone {
+  top: 13px;
+}
+
+/* 9) Si alguna tarea tiene texto en 2 líneas, que no empuje la fila */
+.task-name {
+  min-height: 0;
+  align-items: center;
+}
+
+.task-name > div {
+  min-width: 0;
+}
+
+/* ==========================================
+   LOGO CON IMAGEN
+========================================== */
+
+.image-logo {
+  padding: 0;
+  overflow: hidden;
+  background: white;
+}
+
+.image-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.logo.image-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.login-logo.image-logo {
+  width: 54px;
+  height: 54px;
+  border-radius: 15px;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
