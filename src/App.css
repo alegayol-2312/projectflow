@@ -1,0 +1,240 @@
+import './index.css'
+
+function App() {
+  const tareas = [
+    {
+      nombre: 'Análisis de infraestructura',
+      responsable: 'Alejandro R.',
+      inicio: '01/09/2026',
+      duracion: 5,
+      estado: 'Finalizado',
+      prioridad: 'Alta',
+      avance: 100,
+    },
+    {
+      nombre: 'Aprovisionamiento de servidores',
+      responsable: 'Juan Pérez',
+      inicio: '04/09/2026',
+      duracion: 8,
+      estado: 'En curso',
+      prioridad: 'Alta',
+      avance: 60,
+    },
+    {
+      nombre: 'Configuración de red',
+      responsable: 'María López',
+      inicio: '08/09/2026',
+      duracion: 6,
+      estado: 'En curso',
+      prioridad: 'Media',
+      avance: 40,
+    },
+    {
+      nombre: 'Seguridad y accesos',
+      responsable: 'Carlos Vega',
+      inicio: '12/09/2026',
+      duracion: 5,
+      estado: 'Pendiente',
+      prioridad: 'Alta',
+      avance: 0,
+    },
+    {
+      nombre: 'Pruebas de infraestructura',
+      responsable: 'Ana Torres',
+      inicio: '18/09/2026',
+      duracion: 4,
+      estado: 'Bloqueado',
+      prioridad: 'Media',
+      avance: 0,
+    },
+  ]
+
+  const colorEstado = (estado) => {
+    if (estado === 'Finalizado') return 'estado finalizado'
+    if (estado === 'En curso') return 'estado en-curso'
+    if (estado === 'Bloqueado') return 'estado bloqueado'
+    return 'estado pendiente'
+  }
+
+  return (
+    <div className="app">
+      <header className="topbar">
+        <div>
+          <div className="logo">PF</div>
+          <div>
+            <h1>ProjectFlow</h1>
+            <p>Proyecto: Migración Banco1</p>
+          </div>
+        </div>
+
+        <button className="btn-primary">+ Nueva tarea</button>
+      </header>
+
+      <section className="filters">
+        <select>
+          <option>Migración Banco1</option>
+        </select>
+
+        <select>
+          <option>Todos los responsables</option>
+        </select>
+
+        <select>
+          <option>Todos los estados</option>
+        </select>
+
+        <div className="view-buttons">
+          <button className="active">Gantt</button>
+          <button>Tabla</button>
+        </div>
+      </section>
+
+      <section className="kpis">
+        <div className="kpi">
+          <span>Total tareas</span>
+          <strong>48</strong>
+          <small>Todas las tareas</small>
+        </div>
+
+        <div className="kpi green">
+          <span>Finalizadas</span>
+          <strong>16</strong>
+          <small>33% del total</small>
+        </div>
+
+        <div className="kpi purple">
+          <span>En curso</span>
+          <strong>18</strong>
+          <small>37% del total</small>
+        </div>
+
+        <div className="kpi orange">
+          <span>Atrasadas</span>
+          <strong>6</strong>
+          <small>12% del total</small>
+        </div>
+
+        <div className="kpi pink">
+          <span>Avance proyecto</span>
+          <strong>68%</strong>
+          <small>Avance general</small>
+        </div>
+      </section>
+
+      <main className="workspace">
+        <section className="task-panel">
+          <div className="section-title">
+            <h2>Infraestructura</h2>
+            <span>5 tareas</span>
+          </div>
+
+          <div className="table-header task-grid">
+            <div>Tarea</div>
+            <div>Responsable</div>
+            <div>Inicio</div>
+            <div>Días</div>
+            <div>Estado</div>
+            <div>Prioridad</div>
+          </div>
+
+          {tareas.map((tarea, index) => (
+            <div className="task-grid task-row" key={index}>
+              <div className="task-name">{tarea.nombre}</div>
+              <div>{tarea.responsable}</div>
+              <div>{tarea.inicio}</div>
+              <div>{tarea.duracion}</div>
+              <div>
+                <span className={colorEstado(tarea.estado)}>
+                  {tarea.estado}
+                </span>
+              </div>
+              <div>
+                <span className={`prioridad ${tarea.prioridad.toLowerCase()}`}>
+                  {tarea.prioridad}
+                </span>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        <section className="gantt-panel">
+          <div className="gantt-header">
+            <span>01 Sep</span>
+            <span>08 Sep</span>
+            <span>15 Sep</span>
+            <span>22 Sep</span>
+            <span>29 Sep</span>
+          </div>
+
+          <div className="gantt-body">
+            <div className="today-line">
+              <span>HOY</span>
+            </div>
+
+            <div className="gantt-row">
+              <div
+                className="bar bar-green"
+                style={{ left: '4%', width: '20%' }}
+              >
+                100%
+              </div>
+            </div>
+
+            <div className="gantt-row">
+              <div
+                className="bar bar-purple"
+                style={{ left: '15%', width: '30%' }}
+              >
+                60%
+              </div>
+            </div>
+
+            <div className="gantt-row">
+              <div
+                className="bar bar-cyan"
+                style={{ left: '31%', width: '25%' }}
+              >
+                40%
+              </div>
+            </div>
+
+            <div className="gantt-row">
+              <div
+                className="bar bar-blue"
+                style={{ left: '48%', width: '22%' }}
+              >
+                0%
+              </div>
+            </div>
+
+            <div className="gantt-row">
+              <div
+                className="bar bar-blocked"
+                style={{ left: '68%', width: '18%' }}
+              >
+                Bloqueado
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <section className="history">
+        <div>
+          <h3>Historial de cambios</h3>
+          <p><strong>Ale</strong> creó “Pruebas de infraestructura”</p>
+        </div>
+
+        <div>
+          <p><strong>Juan Pérez</strong> cambió una tarea a En curso</p>
+        </div>
+
+        <div>
+          <p><strong>María López</strong> marcó una tarea como Finalizada</p>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+export default App
