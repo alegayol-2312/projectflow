@@ -481,7 +481,7 @@ p {
 }
 
 .bloqueado {
-  color: #ff6679;
+  color: #ffb84d;
 
   background:
     rgba(255, 94, 116, 0.12);
@@ -685,7 +685,7 @@ p {
   background:
     linear-gradient(
       90deg,
-      #d43d57,
+      #ffb84d,
       #ff6679
     );
 
@@ -1037,7 +1037,7 @@ p {
 .login-error {
   margin-top: 10px;
 
-  color: #ff6478;
+  color: #ffb84d;
 
   font-size: 12px;
 }
@@ -2330,11 +2330,11 @@ p {
 
 /* Bloqueado */
 .legend-chip.bloqueado {
-  color: #ff9f43;
+  color: #ffb84d;
 }
 
 .legend-chip.bloqueado i {
-  background: #ff9f43;
+  background: #ffb84d;
 }
 
 .gantt-days-label {
@@ -2395,8 +2395,8 @@ p {
 .bar-bloqueado {
   background: linear-gradient(
     90deg,
-    #ff8a35,
-    #ffad4d
+    #ffb84d,
+    #ffb84d
   ) !important;
 
   border-color: rgba(255, 159, 67, 0.55) !important;
