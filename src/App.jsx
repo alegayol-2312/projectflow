@@ -38,6 +38,15 @@ function App() {
   const [loginError, setLoginError] = useState('')
 
   const [proyecto, setProyecto] = useState(null)
+  const [proyectos, setProyectos] = useState([])
+const [proyectoSeleccionadoId, setProyectoSeleccionadoId] = useState('')
+
+const [modalProyectoOpen, setModalProyectoOpen] = useState(false)
+
+const [nuevoProyecto, setNuevoProyecto] = useState({
+  nombre: '',
+  descripcion: '',
+})
   const [tareas, setTareas] = useState([])
   const [historial, setHistorial] = useState([])
   const [historialExpandido, setHistorialExpandido] = useState(false)
@@ -51,6 +60,7 @@ function App() {
   const [filtroResponsable, setFiltroResponsable] = useState('Todos')
   const [filtroEstado, setFiltroEstado] = useState('Todos')
   const [vista, setVista] = useState('gantt')
+  const [filtroPrioridad, setFiltroPrioridad] = useState('Todas')
 
   // MES QUE ESTAMOS MIRANDO EN EL GANTT
   const hoyReal = new Date()
@@ -76,10 +86,33 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (session) {
-      cargarProyecto()
-    }
-  }, [session])
+  if (session) {
+    cargarProyectos()
+    cargarPerfiles()
+  }
+}, [session])
+
+useEffect(() => {
+  if (!proyectoSeleccionadoId) {
+    return
+  }
+
+  const proyectoActivo = proyectos.find(
+    (item) => item.id === proyectoSeleccionadoId
+  )
+
+  if (!proyectoActivo) {
+    return
+  }
+
+  setProyecto(proyectoActivo)
+
+  setFiltroResponsable('Todos')
+  setFiltroEstado('Todos')
+
+  cargarTareas(proyectoSeleccionadoId)
+
+}, [proyectoSeleccionadoId, proyectos])
 
   async function iniciarApp() {
     const {
@@ -113,26 +146,42 @@ function App() {
     setPerfiles([])
   }
 
-  async function cargarProyecto() {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('nombre', 'RPA & Automatización')
-      .single()
+  async function cargarProyectos() {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .order('nombre', { ascending: true })
 
-    if (error) {
-      console.error('Error cargando proyecto:', error)
-      return
-    }
-
-    setProyecto(data)
-
-    await Promise.all([
-      cargarTareas(data.id),
-      cargarHistorial(),
-      cargarPerfiles(),
-    ])
+  if (error) {
+    console.error('Error cargando proyectos:', error)
+    return
   }
+
+  const lista = data || []
+
+  setProyectos(lista)
+
+  if (lista.length === 0) {
+    setProyecto(null)
+    setProyectoSeleccionadoId('')
+    setTareas([])
+    return
+  }
+
+  // Si ya había uno seleccionado, lo mantenemos
+  const seleccionadoExiste = lista.find(
+    (item) => item.id === proyectoSeleccionadoId
+  )
+
+  if (seleccionadoExiste) {
+    setProyecto(seleccionadoExiste)
+    return
+  }
+
+  // Si no, elegimos el primero
+  setProyecto(lista[0])
+  setProyectoSeleccionadoId(lista[0].id)
+}
 
   async function cargarPerfiles() {
     const { data, error } = await supabase
@@ -446,6 +495,54 @@ function App() {
       cargarHistorial(),
     ])
   }
+async function crearProyecto(event) {
+  event.preventDefault()
+
+  const nombre = nuevoProyecto.nombre.trim()
+
+  if (!nombre) {
+    alert('Ingresá el nombre del proyecto.')
+    return
+  }
+
+  const yaExiste = proyectos.some(
+    (item) =>
+      item.nombre.trim().toLowerCase() ===
+      nombre.toLowerCase()
+  )
+
+  if (yaExiste) {
+    alert('Ya existe un proyecto con ese nombre.')
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('projects')
+    .insert({
+      nombre,
+      descripcion: nuevoProyecto.descripcion.trim(),
+      estado: 'En curso',
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error(error)
+    alert(`No se pudo crear el proyecto: ${error.message}`)
+    return
+  }
+
+  setNuevoProyecto({
+    nombre: '',
+    descripcion: '',
+  })
+
+  setModalProyectoOpen(false)
+
+  await cargarProyectos()
+
+  setProyectoSeleccionadoId(data.id)
+}
 
   async function finalizarTarea(tarea) {
     const { error } = await supabase
@@ -636,20 +733,32 @@ function posicionHoy() {
       .filter(Boolean)
       .sort()
   }, [perfiles])
+const tareasFiltradas = useMemo(() => {
+  return tareas.filter((tarea) => {
+    const cumpleResponsable =
+      filtroResponsable === 'Todos' ||
+      tarea.responsable === filtroResponsable
 
-  const tareasFiltradas = useMemo(() => {
-    return tareas.filter((tarea) => {
-      const responsableOK =
-        filtroResponsable === 'Todos' ||
-        tarea.responsable === filtroResponsable
+    const cumpleEstado =
+      filtroEstado === 'Todos' ||
+      estadoVisual(tarea) === filtroEstado
 
-      const estadoOK =
-        filtroEstado === 'Todos' ||
-        tarea.estado === filtroEstado
+    const cumplePrioridad =
+      filtroPrioridad === 'Todas' ||
+      tarea.prioridad === filtroPrioridad
 
-      return responsableOK && estadoOK
-    })
-  }, [tareas, filtroResponsable, filtroEstado])
+    return (
+      cumpleResponsable &&
+      cumpleEstado &&
+      cumplePrioridad
+    )
+  })
+}, [
+  tareas,
+  filtroResponsable,
+  filtroEstado,
+  filtroPrioridad,
+])
 
   const metricas = useMemo(() => {
     const total = tareas.length
@@ -687,13 +796,37 @@ function posicionHoy() {
     }
   }, [tareas])
 
-  function colorEstado(estado) {
-    if (estado === 'Finalizado') return 'estado finalizado'
-    if (estado === 'En curso') return 'estado en-curso'
-    if (estado === 'Bloqueado') return 'estado bloqueado'
-
-    return 'estado pendiente'
+  function estadoVisual(tarea) {
+  if (estaAtrasada(tarea)) {
+    return 'Vencido'
   }
+
+  return tarea.estado
+}
+
+function colorEstadoTarea(tarea) {
+  const estado = estadoVisual(tarea)
+
+  if (estado === 'Vencido') {
+    return 'estado vencido'
+  }
+
+  if (estado === 'Finalizado') {
+    return 'estado finalizado'
+  }
+
+  if (estado === 'En curso') {
+    return 'estado en-curso'
+  }
+
+  if (estado === 'Bloqueado') {
+    return 'estado bloqueado'
+  }
+
+  return 'estado pendiente'
+}
+
+
 
   function colorBarra(tarea) {
     if (tarea.estado === 'Finalizado') return 'bar-green'
@@ -811,7 +944,7 @@ function posicionHoy() {
             <h1>Proyecto 1</h1>
 
 <p>
-  Proyecto: RPA & Automatización
+  Proyecto: {proyecto?.nombre || 'Sin proyecto'}
 </p>
           </div>
 
@@ -843,11 +976,40 @@ function posicionHoy() {
 
       <section className="filters">
 
-        <select>
-          <option>
-  RPA & Automatización
-</option>
-        </select>
+        <div className="project-selector-group">
+
+  <select
+    className="project-selector"
+    value={proyectoSeleccionadoId}
+    onChange={(e) =>
+      setProyectoSeleccionadoId(e.target.value)
+    }
+  >
+
+    {proyectos.map((proyectoItem) => (
+
+      <option
+        key={proyectoItem.id}
+        value={proyectoItem.id}
+      >
+        {proyectoItem.nombre}
+      </option>
+
+    ))}
+
+  </select>
+
+  <button
+    type="button"
+    className="new-project-button"
+    onClick={() =>
+      setModalProyectoOpen(true)
+    }
+  >
+    + Proyecto
+  </button>
+
+</div>
 
         <select
           value={filtroResponsable}
@@ -868,6 +1030,29 @@ function posicionHoy() {
             </option>
           ))}
         </select>
+
+<select
+  value={filtroPrioridad}
+  onChange={(e) =>
+    setFiltroPrioridad(e.target.value)
+  }
+>
+  <option value="Todas">
+    Todas las prioridades
+  </option>
+
+  <option value="Alta">
+    Alta
+  </option>
+
+  <option value="Media">
+    Media
+  </option>
+
+  <option value="Baja">
+    Baja
+  </option>
+</select>
 
         <select
           value={filtroEstado}
@@ -1015,35 +1200,18 @@ function posicionHoy() {
   key={tarea.id}
 >
 
-                  <div className="task-name">
+                  <div className="task-title-with-priority">
+  <span
+    className={`priority-icon ${tarea.prioridad?.toLowerCase()}`}
+    title={`Prioridad ${tarea.prioridad || 'Media'}`}
+  >
+    {tarea.prioridad === 'Alta' && '▲'}
+    {tarea.prioridad === 'Media' && '●'}
+    {tarea.prioridad === 'Baja' && '▼'}
+  </span>
 
-                    {estaAtrasada(tarea) && (
-                      <span className="late-icon">
-                        ⚠
-                      </span>
-                    )}
-
-                    <div>
-
-                      <div>
-                        {tarea.nombre}
-
-                        {tarea.es_hito && (
-                          <span className="hito-badge">
-                            ◆
-                          </span>
-                        )}
-                      </div>
-
-                      {tarea.dependencia_id && (
-                        <small className="dependencia-text">
-                          Depende de: {nombreDependencia(tarea)}
-                        </small>
-                      )}
-
-                    </div>
-
-                  </div>
+  <span>{tarea.nombre}</span>
+</div>
 
                   <div>
                     {tarea.responsable}
@@ -1060,13 +1228,9 @@ function posicionHoy() {
                   </div>
 
                   <div>
-                    <span
-                      className={colorEstado(
-                        tarea.estado
-                      )}
-                    >
-                      {tarea.estado}
-                    </span>
+                    <span className={colorEstadoTarea(tarea)}>
+  {estadoVisual(tarea)}
+</span>
                   </div>
 
                   <div className="row-actions">
@@ -1111,16 +1275,41 @@ function posicionHoy() {
             <section className="gantt-panel dynamic-gantt">
 
   <div className="gantt-title-row">
+  <div className="gantt-title-left">
+    <h2>Gantt de seguimiento</h2>
 
-    <h2>
-      Gantt de seguimiento
-    </h2>
+    <div className="gantt-legend">
+      <span className="legend-chip pendiente">
+        <i />
+        Pendiente
+      </span>
 
-    <span>
-      Lunes a viernes
-    </span>
+      <span className="legend-chip en-curso">
+        <i />
+        En curso
+      </span>
 
+      <span className="legend-chip finalizado">
+        <i />
+        Finalizado
+      </span>
+
+      <span className="legend-chip vencido">
+        <i />
+        Vencido
+      </span>
+
+      <span className="legend-chip bloqueado">
+        <i />
+        Bloqueado
+      </span>
+    </div>
   </div>
+
+  <span className="gantt-days-label">
+    Lunes a viernes
+  </span>
+</div>
 
   <div
     className="days-header"
@@ -1256,9 +1445,18 @@ function posicionHoy() {
               key={tarea.id}
             >
 
-              <div className="task-name">
-                {tarea.nombre}
-              </div>
+              <div className="task-title-with-priority">
+  <span
+    className={`priority-icon ${tarea.prioridad?.toLowerCase()}`}
+    title={`Prioridad ${tarea.prioridad || 'Media'}`}
+  >
+    {tarea.prioridad === 'Alta' && '▲'}
+    {tarea.prioridad === 'Media' && '●'}
+    {tarea.prioridad === 'Baja' && '▼'}
+  </span>
+
+  <span>{tarea.nombre}</span>
+</div>
 
               <div>
                 {tarea.responsable}
@@ -1275,11 +1473,9 @@ function posicionHoy() {
               </div>
 
               <div>
-                <span
-                  className={colorEstado(tarea.estado)}
-                >
-                  {tarea.estado}
-                </span>
+                <span className={colorEstadoTarea(tarea)}>
+  {estadoVisual(tarea)}
+</span>
               </div>
 
               <div className="row-actions">
@@ -1321,7 +1517,99 @@ function posicionHoy() {
         </section>
       )}
 
-     
+  
+  <>
+    {/* todo tu contenido principal */}
+    <main>
+    </main>
+
+    {/* MODAL NUEVO PROYECTO */}
+    {modalProyectoOpen && (
+      <div className="modal-overlay">
+        <div className="modal project-modal">
+
+          <div className="modal-header">
+            <div>
+              <h2>Nuevo proyecto</h2>
+              <p>Creá un nuevo espacio de planificación.</p>
+            </div>
+
+            <button
+              type="button"
+              className="close-btn"
+              onClick={() => setModalProyectoOpen(false)}
+            >
+              ×
+            </button>
+          </div>
+
+          <form onSubmit={crearProyecto}>
+
+            <div className="form-group full">
+              <label>Nombre del proyecto</label>
+
+              <input
+                value={nuevoProyecto.nombre}
+                onChange={(e) =>
+                  setNuevoProyecto((actual) => ({
+                    ...actual,
+                    nombre: e.target.value,
+                  }))
+                }
+                placeholder="Ej: Migración tecnológica"
+                autoFocus
+              />
+            </div>
+
+            <div className="form-group full">
+              <label>Descripción</label>
+
+              <textarea
+                className="project-description"
+                value={nuevoProyecto.descripcion}
+                onChange={(e) =>
+                  setNuevoProyecto((actual) => ({
+                    ...actual,
+                    descripcion: e.target.value,
+                  }))
+                }
+                placeholder="Descripción breve del proyecto"
+                rows="3"
+              />
+            </div>
+
+            <div className="modal-actions">
+
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setModalProyectoOpen(false)}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                className="btn-primary"
+              >
+                Crear proyecto
+              </button>
+
+            </div>
+
+          </form>
+        </div>
+      </div>
+    )}
+
+    {/* MODAL DE TAREAS QUE YA TENÍAS */}
+    {modalOpen && (
+      <div className="modal-overlay">
+        ...
+      </div>
+    )}
+  </>
+)
 
       {modalOpen && (
 

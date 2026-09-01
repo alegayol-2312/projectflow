@@ -1812,8 +1812,9 @@ p {
 ========================================== */
 
 .task-row.task-outside-month {
-  opacity: 0.42;
+  opacity: 1;
 }
+
 
 
 /* ==========================================
@@ -1985,7 +1986,7 @@ p {
 /* Filas fuera del mes seleccionado */
 
 .task-row.task-outside-month {
-  opacity: 0.42;
+  opacity: 1;
 }
 
 /* Acciones compactas */
@@ -2145,4 +2146,301 @@ p {
   border-radius: 15px;
   background: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.estado.vencido,
+.vencido {
+  color: #ff4d61;
+
+  background:
+    rgba(255, 77, 97, 0.12);
+
+  border:
+    1px solid rgba(255, 77, 97, 0.28);
+
+  box-shadow:
+    0 0 10px rgba(255, 77, 97, 0.08);
+}
+
+/* ==========================================
+   MULTIPROYECTO
+========================================== */
+
+.project-selector-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.project-selector {
+  min-width: 210px;
+}
+
+.new-project-button {
+  height: 38px;
+
+  padding: 0 12px;
+
+  border-radius: 9px;
+
+  border:
+    1px solid rgba(0, 217, 255, 0.28);
+
+  background:
+    rgba(0, 217, 255, 0.07);
+
+  color: #00d9ff;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.new-project-button:hover {
+  background:
+    rgba(0, 217, 255, 0.13);
+
+  border-color:
+    rgba(0, 217, 255, 0.5);
+}
+
+.project-modal {
+  max-width: 560px;
+}
+
+.project-description {
+  width: 100%;
+
+  resize: vertical;
+
+  min-height: 85px;
+
+  border:
+    1px solid #2a3441;
+
+  border-radius: 9px;
+
+  padding: 11px 12px;
+
+  background: #080c12;
+
+  color: white;
+
+  outline: none;
+
+  font-family: inherit;
+}
+
+.project-description:focus {
+  border-color: #00d9ff;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(0, 217, 255, 0.06);
+}
+
+/* ==========================================
+   LEYENDA ESTADOS GANTT
+========================================== */
+
+.gantt-title-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.gantt-title-left h2 {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.gantt-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  height: 24px;
+  padding: 0 9px;
+
+  border-radius: 999px;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.035);
+
+  white-space: nowrap;
+}
+
+.legend-chip i {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  display: block;
+}
+
+/* Pendiente */
+.legend-chip.pendiente {
+  color: #5ab9ff;
+}
+
+.legend-chip.pendiente i {
+  background: #5ab9ff;
+}
+
+/* En curso */
+.legend-chip.en-curso {
+  color: #a56cff;
+}
+
+.legend-chip.en-curso i {
+  background: #a56cff;
+}
+
+/* Finalizado */
+.legend-chip.finalizado {
+  color: #45f28c;
+}
+
+.legend-chip.finalizado i {
+  background: #45f28c;
+}
+
+/* Vencido */
+.legend-chip.vencido {
+  color: #ff596d;
+}
+
+.legend-chip.vencido i {
+  background: #ff596d;
+}
+
+/* Bloqueado */
+.legend-chip.bloqueado {
+  color: #ff9f43;
+}
+
+.legend-chip.bloqueado i {
+  background: #ff9f43;
+}
+
+.gantt-days-label {
+  margin-left: auto;
+
+  color: #718093;
+
+  font-size: 9px;
+
+  white-space: nowrap;
+}
+
+/* ==========================================
+   PRIORIDAD DE TAREAS
+========================================== */
+
+.task-title-with-priority {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.priority-icon {
+  width: 18px;
+  height: 18px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 5px;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.priority-icon.alta {
+  color: #ff596d;
+  background: rgba(255, 89, 109, 0.12);
+  border: 1px solid rgba(255, 89, 109, 0.25);
+}
+
+.priority-icon.media {
+  color: #ffb84d;
+  background: rgba(255, 184, 77, 0.10);
+  border: 1px solid rgba(255, 184, 77, 0.22);
+}
+
+.priority-icon.baja {
+  color: #5ab9ff;
+  background: rgba(90, 185, 255, 0.10);
+  border: 1px solid rgba(90, 185, 255, 0.22);
+}
+
+.bar-bloqueado {
+  background: linear-gradient(
+    90deg,
+    #ff8a35,
+    #ffad4d
+  ) !important;
+
+  border-color: rgba(255, 159, 67, 0.55) !important;
+
+  color: #15100a !important;
+}
+
+.task-title-with-priority {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.priority-icon {
+  width: 18px;
+  height: 18px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 5px;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.priority-icon.alta {
+  color: #ff596d;
+  background: rgba(255, 89, 109, 0.12);
+  border: 1px solid rgba(255, 89, 109, 0.25);
+}
+
+.priority-icon.media {
+  color: #ffb84d;
+  background: rgba(255, 184, 77, 0.10);
+  border: 1px solid rgba(255, 184, 77, 0.22);
+}
+
+.priority-icon.baja {
+  color: #5ab9ff;
+  background: rgba(90, 185, 255, 0.10);
+  border: 1px solid rgba(90, 185, 255, 0.22);
 }
