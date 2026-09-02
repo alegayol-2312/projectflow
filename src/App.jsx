@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './index.css'
 import { supabase } from './lib/supabase'
 import logoGP from './assets/logo-gp.png'
@@ -14,20 +14,6 @@ const formularioVacio = {
   hito: false,
 }
 
-const nombresMeses = [
-  'Enero',
-  'Febrero',
-  'Marzo',
-  'Abril',
-  'Mayo',
-  'Junio',
-  'Julio',
-  'Agosto',
-  'Septiembre',
-  'Octubre',
-  'Noviembre',
-  'Diciembre',
-]
 
 function App() {
   const [session, setSession] = useState(null)
@@ -49,7 +35,6 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
 })
   const [tareas, setTareas] = useState([])
   const [historial, setHistorial] = useState([])
-  const [historialExpandido, setHistorialExpandido] = useState(false)
   const [perfiles, setPerfiles] = useState([])
 
   const [modalOpen, setModalOpen] = useState(false)
@@ -62,16 +47,14 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [vista, setVista] = useState('gantt')
   const [filtroPrioridad, setFiltroPrioridad] = useState('Todas')
 
-  // MES QUE ESTAMOS MIRANDO EN EL GANTT
+  // AÑO QUE ESTAMOS MIRANDO EN EL GANTT
   const hoyReal = new Date()
-
-  const [mesVisualizado, setMesVisualizado] = useState(
-    hoyReal.getMonth()
-  )
 
   const [anioVisualizado, setAnioVisualizado] = useState(
     hoyReal.getFullYear()
   )
+
+  const ganttScrollRef = useRef(null)
 
   useEffect(() => {
     iniciarApp()
@@ -89,6 +72,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   if (session) {
     cargarProyectos()
     cargarPerfiles()
+    cargarHistorial()
   }
 }, [session])
 
@@ -109,6 +93,7 @@ useEffect(() => {
 
   setFiltroResponsable('Todos')
   setFiltroEstado('Todos')
+  setFiltroPrioridad('Todas')
 
   cargarTareas(proyectoSeleccionadoId)
 
@@ -229,9 +214,9 @@ useEffect(() => {
 
   async function cargarHistorial() {
     const { data: historyData, error: historyError } = await supabase
-  .from('task_history')
-  .select('*')
-  .order('created_at', { ascending: false })
+      .from('task_history')
+      .select('*')
+      .order('created_at', { ascending: false })
 
     if (historyError) {
       console.error('Error historial:', historyError)
@@ -242,9 +227,25 @@ useEffect(() => {
       .from('profiles')
       .select('*')
 
-    const historialConUsuario = (historyData || []).map((item) => {
+    const { data: tasksData } = await supabase
+      .from('tasks')
+      .select('id, nombre, project_id')
+
+    const { data: projectsData } = await supabase
+      .from('projects')
+      .select('id, nombre')
+
+    const historialCompleto = (historyData || []).map((item) => {
       const perfil = profilesData?.find(
         (profile) => profile.id === item.user_id
+      )
+
+      const tarea = tasksData?.find(
+        (task) => task.id === item.task_id
+      )
+
+      const proyectoHistorial = projectsData?.find(
+        (project) => project.id === tarea?.project_id
       )
 
       return {
@@ -253,10 +254,16 @@ useEffect(() => {
           perfil?.nombre ||
           perfil?.email ||
           'Usuario',
+        tarea_nombre:
+          tarea?.nombre ||
+          'Tarea eliminada',
+        proyecto_nombre:
+          proyectoHistorial?.nombre ||
+          'Sin proyecto',
       }
     })
 
-    setHistorial(historialConUsuario)
+    setHistorial(historialCompleto)
   }
 
   function parseDate(fecha) {
@@ -597,25 +604,89 @@ async function crearProyecto(event) {
     ])
   }
 
- // =========================
-// NAVEGACIÓN DEL GANTT
+  function exportarCSV() {
+  if (!tareasFiltradas.length) {
+    alert('No hay tareas para exportar.')
+    return
+  }
+
+  const encabezados = [
+    'Tarea',
+    'Responsable',
+    'Inicio',
+    'Duración',
+    'Fecha fin',
+    'Estado',
+    'Prioridad',
+    'Hito',
+  ]
+
+  const filas = tareasFiltradas.map((tarea) => [
+    tarea.nombre || '',
+    tarea.responsable || '',
+    tarea.fecha_inicio || '',
+    tarea.duracion_dias || '',
+    calcularFin(
+      tarea.fecha_inicio,
+      tarea.duracion_dias
+    ),
+    estadoVisual(tarea),
+    tarea.prioridad || '',
+    tarea.es_hito ? 'Sí' : 'No',
+  ])
+
+  const contenido = [
+    encabezados,
+    ...filas,
+  ]
+    .map((fila) =>
+      fila
+        .map((valor) => {
+          const texto = String(valor ?? '')
+            .replace(/"/g, '""')
+
+          return `"${texto}"`
+        })
+        .join(';')
+    )
+    .join('\n')
+
+  const blob = new Blob(
+    ['\ufeff' + contenido],
+    {
+      type: 'text/csv;charset=utf-8;',
+    }
+  )
+
+  const url = URL.createObjectURL(blob)
+
+  const link = document.createElement('a')
+
+  const nombreProyecto =
+    proyecto?.nombre
+      ?.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_') ||
+    'proyecto'
+
+  const fecha = new Date()
+    .toISOString()
+    .slice(0, 10)
+
+  link.href = url
+  link.download =
+    `${nombreProyecto}_${fecha}.csv`
+
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+
+  URL.revokeObjectURL(url)
+}
+
+// =========================
+// NAVEGACIÓN DEL GANTT CONTINUO
 // =========================
 
-function irAHoy() {
-  const hoy = new Date()
-
-  setMesVisualizado(hoy.getMonth())
-  setAnioVisualizado(hoy.getFullYear())
-}
-
-function cambiarMesDirecto(valor) {
-  if (!valor) return
-
-  const [anio, mes] = valor.split('-').map(Number)
-
-  setAnioVisualizado(anio)
-  setMesVisualizado(mes - 1)
-}
+const ANCHO_DIA_GANTT = 34
 
 function mismaFecha(a, b) {
   return (
@@ -627,35 +698,36 @@ function mismaFecha(a, b) {
 
 function inicialDiaSemanaFecha(fecha) {
   const letras = ['D', 'L', 'M', 'M', 'J', 'V', 'S']
-
   return letras[fecha.getDay()]
 }
 
-const diasHabilesMes = useMemo(() => {
-  const ultimoDia = new Date(
-    anioVisualizado,
-    mesVisualizado + 1,
-    0
-  ).getDate()
+function nombreMesCorto(fecha) {
+  return fecha.toLocaleDateString('es-AR', {
+    month: 'short',
+  }).replace('.', '')
+}
 
+const diasHabilesAnio = useMemo(() => {
   const lista = []
 
-  for (let dia = 1; dia <= ultimoDia; dia++) {
-    const fecha = new Date(
-      anioVisualizado,
-      mesVisualizado,
-      dia
-    )
+  const fecha = new Date(anioVisualizado, 0, 1)
+  const fin = new Date(anioVisualizado, 11, 31)
 
+  while (fecha <= fin) {
     const numeroDia = fecha.getDay()
 
     if (numeroDia !== 0 && numeroDia !== 6) {
-      lista.push(fecha)
+      lista.push(new Date(fecha))
     }
+
+    fecha.setDate(fecha.getDate() + 1)
   }
 
   return lista
-}, [mesVisualizado, anioVisualizado])
+}, [anioVisualizado])
+
+const anchoGanttAnio =
+  diasHabilesAnio.length * ANCHO_DIA_GANTT
 
 function posicionBarra(tarea) {
   const inicioTarea = parseDate(tarea.fecha_inicio)
@@ -668,12 +740,12 @@ function posicionBarra(tarea) {
   if (
     !inicioTarea ||
     !finTarea ||
-    diasHabilesMes.length === 0
+    diasHabilesAnio.length === 0
   ) {
     return null
   }
 
-  const diasVisibles = diasHabilesMes.filter((fecha) => {
+  const diasVisibles = diasHabilesAnio.filter((fecha) => {
     return (
       fecha >= inicioTarea &&
       fecha <= finTarea
@@ -686,34 +758,32 @@ function posicionBarra(tarea) {
 
   const primerDiaVisible = diasVisibles[0]
 
-  const indiceInicio = diasHabilesMes.findIndex((fecha) =>
+  const indiceInicio = diasHabilesAnio.findIndex((fecha) =>
     mismaFecha(fecha, primerDiaVisible)
   )
 
   return {
-    left: `${
-      (indiceInicio / diasHabilesMes.length) * 100
-    }%`,
-
-    width: `${
-      (diasVisibles.length / diasHabilesMes.length) * 100
-    }%`,
-
+    left: `${indiceInicio * ANCHO_DIA_GANTT}px`,
+    width: `${Math.max(
+      diasVisibles.length * ANCHO_DIA_GANTT,
+      8
+    )}px`,
     center: `${
-      (
-        (indiceInicio + diasVisibles.length / 2) /
-        diasHabilesMes.length
-      ) * 100
-    }%`,
+      (indiceInicio + diasVisibles.length / 2) *
+      ANCHO_DIA_GANTT
+    }px`,
   }
 }
 
 function posicionHoy() {
   const hoy = new Date()
-
   hoy.setHours(0, 0, 0, 0)
 
-  const indiceHoy = diasHabilesMes.findIndex((fecha) =>
+  if (hoy.getFullYear() !== anioVisualizado) {
+    return null
+  }
+
+  const indiceHoy = diasHabilesAnio.findIndex((fecha) =>
     mismaFecha(fecha, hoy)
   )
 
@@ -722,10 +792,103 @@ function posicionHoy() {
   }
 
   return (
-    ((indiceHoy + 0.5) / diasHabilesMes.length) *
-    100
+    (indiceHoy + 0.5) *
+    ANCHO_DIA_GANTT
   )
 }
+
+function moverGantt(direccion) {
+  const contenedor = ganttScrollRef.current
+
+  if (!contenedor) return
+
+  const desplazamiento =
+    Math.max(contenedor.clientWidth * 0.8, 650)
+
+  contenedor.scrollBy({
+    left:
+      direccion === 'derecha'
+        ? desplazamiento
+        : -desplazamiento,
+    behavior: 'smooth',
+  })
+}
+
+function irAHoy() {
+  const hoy = new Date()
+  const anioHoy = hoy.getFullYear()
+
+  if (anioVisualizado !== anioHoy) {
+    setAnioVisualizado(anioHoy)
+    return
+  }
+
+  requestAnimationFrame(() => {
+    scrollAHoy()
+  })
+}
+
+function scrollAHoy() {
+  const contenedor = ganttScrollRef.current
+
+  if (!contenedor) return
+
+  const hoy = new Date()
+
+  if (hoy.getFullYear() !== anioVisualizado) {
+    contenedor.scrollTo({
+      left: 0,
+      behavior: 'smooth',
+    })
+    return
+  }
+
+  const indiceHoy = diasHabilesAnio.findIndex((fecha) =>
+    mismaFecha(fecha, hoy)
+  )
+
+  if (indiceHoy === -1) return
+
+  const posicion =
+    indiceHoy * ANCHO_DIA_GANTT
+
+  contenedor.scrollTo({
+    left: Math.max(
+      0,
+      posicion - contenedor.clientWidth * 0.25
+    ),
+    behavior: 'smooth',
+  })
+}
+
+function cambiarAnio(valor) {
+  const anio = Number(valor)
+
+  if (!anio) return
+
+  setAnioVisualizado(anio)
+}
+
+useEffect(() => {
+  const contenedor = ganttScrollRef.current
+
+  if (!contenedor) return
+
+  const hoy = new Date()
+
+  const timer = window.setTimeout(() => {
+    if (anioVisualizado === hoy.getFullYear()) {
+      scrollAHoy()
+    } else {
+      contenedor.scrollTo({
+        left: 0,
+        behavior: 'auto',
+      })
+    }
+  }, 0)
+
+  return () => window.clearTimeout(timer)
+}, [anioVisualizado, diasHabilesAnio])
 
   const responsables = useMemo(() => {
     return perfiles
@@ -829,6 +992,7 @@ function colorEstadoTarea(tarea) {
 
 
   function colorBarra(tarea) {
+    if (estaAtrasada(tarea)) return 'bar-overdue'
     if (tarea.estado === 'Finalizado') return 'bar-green'
     if (tarea.estado === 'Bloqueado') return 'bar-blocked'
     if (tarea.estado === 'En curso') return 'bar-purple'
@@ -858,10 +1022,6 @@ function colorEstadoTarea(tarea) {
     )
   }
 
-  const historialVisible =
-  historialExpandido
-    ? historial
-    : historial.slice(0, 5)
 
   if (loading) {
     return (
@@ -1067,6 +1227,7 @@ function colorEstadoTarea(tarea) {
           <option>Pendiente</option>
           <option>En curso</option>
           <option>Finalizado</option>
+          <option>Vencido</option>
           <option>Bloqueado</option>
         </select>
 
@@ -1089,6 +1250,27 @@ function colorEstadoTarea(tarea) {
           >
             Tabla
           </button>
+
+          <button
+            className={vista === 'historial' ? 'active' : ''}
+            onClick={() =>
+              setVista('historial')
+            }
+          >
+            Historial
+          </button>
+
+{vista === 'tabla' && (
+            <div className="export-actions">
+              <button
+                type="button"
+                className="export-button"
+                onClick={exportarCSV}
+              >
+                Exportar Excel
+              </button>
+            </div>
+          )}
 
         </div>
 
@@ -1131,40 +1313,62 @@ function colorEstadoTarea(tarea) {
       {vista === 'gantt' && (
         <>
           <section className="gantt-navigation">
+            <div className="gantt-period-title">
+              <span>Período visualizado</span>
 
-  <div className="gantt-period-title">
+              <strong>
+                Año {anioVisualizado}
+              </strong>
+            </div>
 
-    <span>Período visualizado</span>
+            <div className="gantt-nav-right">
+              <button
+                type="button"
+                className="gantt-scroll-button"
+                onClick={() => moverGantt('izquierda')}
+                title="Mover Gantt hacia la izquierda"
+              >
+                ←
+              </button>
 
-    <strong>
-      {nombresMeses[mesVisualizado]} {anioVisualizado}
-    </strong>
+              <button
+                className="today-button"
+                onClick={irAHoy}
+              >
+                Hoy
+              </button>
 
-  </div>
+              <select
+                className="year-picker"
+                value={anioVisualizado}
+                onChange={(e) =>
+                  cambiarAnio(e.target.value)
+                }
+              >
+                {Array.from(
+                  { length: 7 },
+                  (_, indice) =>
+                    hoyReal.getFullYear() - 2 + indice
+                ).map((anio) => (
+                  <option
+                    key={anio}
+                    value={anio}
+                  >
+                    {anio}
+                  </option>
+                ))}
+              </select>
 
-  <div className="gantt-nav-right">
-
-    <button
-      className="today-button"
-      onClick={irAHoy}
-    >
-      Hoy
-    </button>
-
-    <input
-      className="month-picker"
-      type="month"
-      value={`${anioVisualizado}-${String(
-        mesVisualizado + 1
-      ).padStart(2, '0')}`}
-      onChange={(e) =>
-        cambiarMesDirecto(e.target.value)
-      }
-    />
-
-  </div>
-
-</section>
+              <button
+                type="button"
+                className="gantt-scroll-button"
+                onClick={() => moverGantt('derecha')}
+                title="Mover Gantt hacia la derecha"
+              >
+                →
+              </button>
+            </div>
+          </section>
 
           <main className="workspace gantt-workspace">
 
@@ -1273,144 +1477,181 @@ function colorEstadoTarea(tarea) {
             </section>
 
             <section className="gantt-panel dynamic-gantt">
+              <div className="gantt-title-row">
+                <div className="gantt-title-left">
+                  <h2>Gantt de seguimiento</h2>
 
-  <div className="gantt-title-row">
-  <div className="gantt-title-left">
-    <h2>Gantt de seguimiento</h2>
+                  <div className="gantt-legend">
+                    <span className="legend-chip pendiente">
+                      <i />
+                      Pendiente
+                    </span>
 
-    <div className="gantt-legend">
-      <span className="legend-chip pendiente">
-        <i />
-        Pendiente
-      </span>
+                    <span className="legend-chip en-curso">
+                      <i />
+                      En curso
+                    </span>
 
-      <span className="legend-chip en-curso">
-        <i />
-        En curso
-      </span>
+                    <span className="legend-chip finalizado">
+                      <i />
+                      Finalizado
+                    </span>
 
-      <span className="legend-chip finalizado">
-        <i />
-        Finalizado
-      </span>
+                    <span className="legend-chip vencido">
+                      <i />
+                      Vencido
+                    </span>
 
-      <span className="legend-chip vencido">
-        <i />
-        Vencido
-      </span>
-
-      <span className="legend-chip bloqueado">
-        <i />
-        Bloqueado
-      </span>
-    </div>
-  </div>
-
-  <span className="gantt-days-label">
-    Lunes a viernes
-  </span>
-</div>
-
-  <div
-    className="days-header"
-    style={{
-      gridTemplateColumns:
-        `repeat(${diasHabilesMes.length}, 1fr)`,
-    }}
-  >
-    {diasHabilesMes.map((fecha) => (
-      <div
-        key={fecha.toISOString()}
-        className="day-header"
-      >
-        <span>
-          {inicialDiaSemanaFecha(fecha)}
-        </span>
-
-        <strong>
-          {fecha.getDate()}
-        </strong>
-      </div>
-    ))}
-  </div>
-
-  <div className="dynamic-gantt-body">
-
-                {hoyPos !== null && (
-                  <div
-                    className="today-line-real"
-                    style={{
-                      left: `${hoyPos}%`,
-                    }}
-                  >
-                    <span>
-                      HOY
+                    <span className="legend-chip bloqueado">
+                      <i />
+                      Bloqueado
                     </span>
                   </div>
-                )}
+                </div>
 
-                {tareasFiltradas.map((tarea) => {
-
-                  const posicion =
-                    posicionBarra(tarea)
-
-                  return (
-                    <div
-                      className="dynamic-gantt-row"
-                      key={tarea.id}
-                    >
-
-                      <div
-  className="day-background-grid"
-  style={{
-    gridTemplateColumns:
-      `repeat(${diasHabilesMes.length}, 1fr)`,
-  }}
->
-  {diasHabilesMes.map((fecha) => (
-    <div
-      key={fecha.toISOString()}
-      className="day-cell"
-    />
-  ))}
-</div>
-
-                      {posicion && (
-                        tarea.es_hito
-                          ? (
-                            <div
-                            
-  className="gantt-milestone"
-  style={{
-    left: posicion.center,
-  }}
-  title={tarea.nombre}
->
-  ◆
-</div>
-                          )
-                          : (
-                            <div
-                              className={`bar dynamic-bar ${colorBarra(
-                                tarea
-                              )}`}
-                              style={posicion}
-                              title={`${tarea.nombre} · ${calcularFin(
-                                tarea.fecha_inicio,
-                                tarea.duracion_dias
-                              )}`}
-                            >
-                              {calcularAvance(tarea)}%
-                            </div>
-                          )
-                      )}
-
-                    </div>
-                  )
-                })}
-
+                <span className="gantt-days-label">
+                  Lunes a viernes · desplazamiento continuo
+                </span>
               </div>
 
+              <div
+                className="gantt-horizontal-scroll"
+                ref={ganttScrollRef}
+              >
+                <div
+                  className="gantt-year-canvas"
+                  style={{
+                    width: `${anchoGanttAnio}px`,
+                    minWidth: `${anchoGanttAnio}px`,
+                  }}
+                >
+                  <div
+                    className="days-header year-days-header"
+                    style={{
+                      gridTemplateColumns:
+                        `repeat(${diasHabilesAnio.length}, ${ANCHO_DIA_GANTT}px)`,
+                    }}
+                  >
+                    {diasHabilesAnio.map((fecha, indice) => {
+                      const primerDiaMes =
+                        indice === 0 ||
+                        fecha.getMonth() !==
+                          diasHabilesAnio[indice - 1].getMonth()
+
+                      return (
+                        <div
+                          key={fecha.toISOString()}
+                          className={`day-header ${
+                            primerDiaMes
+                              ? 'month-start'
+                              : ''
+                          }`}
+                        >
+                          {primerDiaMes && (
+                            <span className="month-label">
+                              {nombreMesCorto(fecha)}
+                            </span>
+                          )}
+
+                          <span>
+                            {inicialDiaSemanaFecha(fecha)}
+                          </span>
+
+                          <strong>
+                            {fecha.getDate()}
+                          </strong>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  <div
+                    className="dynamic-gantt-body"
+                    style={{
+                      width: `${anchoGanttAnio}px`,
+                      minWidth: `${anchoGanttAnio}px`,
+                    }}
+                  >
+                    {hoyPos !== null && (
+                      <div
+                        className="today-line-real"
+                        style={{
+                          left: `${hoyPos}px`,
+                        }}
+                      >
+                        <span>HOY</span>
+                      </div>
+                    )}
+
+                    {tareasFiltradas.map((tarea) => {
+                      const posicion =
+                        posicionBarra(tarea)
+
+                      return (
+                        <div
+                          className="dynamic-gantt-row"
+                          key={tarea.id}
+                        >
+                          <div
+                            className="day-background-grid"
+                            style={{
+                              gridTemplateColumns:
+                                `repeat(${diasHabilesAnio.length}, ${ANCHO_DIA_GANTT}px)`,
+                            }}
+                          >
+                            {diasHabilesAnio.map((fecha, indice) => {
+                              const primerDiaMes =
+                                indice === 0 ||
+                                fecha.getMonth() !==
+                                  diasHabilesAnio[indice - 1].getMonth()
+
+                              return (
+                                <div
+                                  key={fecha.toISOString()}
+                                  className={`day-cell ${
+                                    primerDiaMes
+                                      ? 'month-start'
+                                      : ''
+                                  }`}
+                                />
+                              )
+                            })}
+                          </div>
+
+                          {posicion && (
+                            tarea.es_hito
+                              ? (
+                                <div
+                                  className="gantt-milestone"
+                                  style={{
+                                    left: posicion.center,
+                                  }}
+                                  title={tarea.nombre}
+                                >
+                                  ◆
+                                </div>
+                              )
+                              : (
+                                <div
+                                  className={`bar dynamic-bar ${colorBarra(
+                                    tarea
+                                  )}`}
+                                  style={posicion}
+                                  title={`${tarea.nombre} · ${calcularFin(
+                                    tarea.fecha_inicio,
+                                    tarea.duracion_dias
+                                  )}`}
+                                >
+                                  {calcularAvance(tarea)}%
+                                </div>
+                              )
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
             </section>
 
           </main>
@@ -1418,49 +1659,47 @@ function colorEstadoTarea(tarea) {
       )}
 
       {vista === 'tabla' && (
-        <section className="task-panel">
-
+        <section className="table-view">
           <div className="section-title">
-            <h2>Vista tabla</h2>
-
+            <h2>Lista de tareas</h2>
             <span>
-              {tareasFiltradas.length} tareas
+              {tareasFiltradas.length} de {tareas.length}
             </span>
           </div>
 
           <div className="table-header task-grid">
-
             <div>Tarea</div>
             <div>Responsable</div>
             <div>Inicio</div>
             <div>Días</div>
             <div>Estado</div>
             <div>Acciones</div>
-
           </div>
 
           {tareasFiltradas.map((tarea) => (
-            <div
-              className="task-grid task-row"
-              key={tarea.id}
-            >
-
-              <div className="task-title-with-priority">
-  <span
-    className={`priority-icon ${tarea.prioridad?.toLowerCase()}`}
-    title={`Prioridad ${tarea.prioridad || 'Media'}`}
-  >
-    {tarea.prioridad === 'Alta' && '▲'}
-    {tarea.prioridad === 'Media' && '●'}
-    {tarea.prioridad === 'Baja' && '▼'}
-  </span>
-
-  <span>{tarea.nombre}</span>
-</div>
-
+            <div className="task-grid task-row" key={tarea.id}>
               <div>
-                {tarea.responsable}
+                <div className="task-title-with-priority">
+                  <span
+                    className={`priority-icon ${tarea.prioridad?.toLowerCase()}`}
+                    title={`Prioridad ${tarea.prioridad || 'Media'}`}
+                  >
+                    {tarea.prioridad === 'Alta' && '▲'}
+                    {tarea.prioridad === 'Media' && '●'}
+                    {tarea.prioridad === 'Baja' && '▼'}
+                  </span>
+
+                  <span>{tarea.nombre}</span>
+                </div>
+
+                {tarea.dependencia_id && (
+                  <span className="dependencia-text">
+                    Depende de: {nombreDependencia(tarea)}
+                  </span>
+                )}
               </div>
+
+              <div>{tarea.responsable}</div>
 
               <div>
                 {parseDate(
@@ -1468,23 +1707,19 @@ function colorEstadoTarea(tarea) {
                 )?.toLocaleDateString('es-AR')}
               </div>
 
-              <div>
-                {tarea.duracion_dias}
-              </div>
+              <div>{tarea.duracion_dias}</div>
 
               <div>
                 <span className={colorEstadoTarea(tarea)}>
-  {estadoVisual(tarea)}
-</span>
+                  {estadoVisual(tarea)}
+                </span>
               </div>
 
               <div className="row-actions">
-
                 <button
                   className="mini-button edit"
-                  onClick={() =>
-                    abrirEditar(tarea)
-                  }
+                  onClick={() => abrirEditar(tarea)}
+                  title="Editar"
                 >
                   ✎
                 </button>
@@ -1492,9 +1727,8 @@ function colorEstadoTarea(tarea) {
                 {tarea.estado !== 'Finalizado' && (
                   <button
                     className="mini-button success"
-                    onClick={() =>
-                      finalizarTarea(tarea)
-                    }
+                    onClick={() => finalizarTarea(tarea)}
+                    title="Finalizar"
                   >
                     ✓
                   </button>
@@ -1502,114 +1736,164 @@ function colorEstadoTarea(tarea) {
 
                 <button
                   className="mini-button danger"
-                  onClick={() =>
-                    eliminarTarea(tarea)
-                  }
+                  onClick={() => eliminarTarea(tarea)}
+                  title="Eliminar"
                 >
                   ×
                 </button>
-
               </div>
-
             </div>
           ))}
 
+          {tareasFiltradas.length === 0 && (
+            <div className="empty-state">
+              <h3>No hay tareas</h3>
+              <p>No hay tareas que coincidan con los filtros seleccionados.</p>
+            </div>
+          )}
         </section>
       )}
 
-  
-  <>
-    {/* todo tu contenido principal */}
-    <main>
-    </main>
 
-    {/* MODAL NUEVO PROYECTO */}
-    {modalProyectoOpen && (
-      <div className="modal-overlay">
-        <div className="modal project-modal">
-
-          <div className="modal-header">
+      {vista === 'historial' && (
+        <section className="history-page">
+          <div className="history-page-header">
             <div>
-              <h2>Nuevo proyecto</h2>
-              <p>Creá un nuevo espacio de planificación.</p>
+              <h2>Historial de actividad</h2>
+              <p>
+                Todos los cambios registrados en tareas de todos los proyectos.
+              </p>
             </div>
 
-            <button
-              type="button"
-              className="close-btn"
-              onClick={() => setModalProyectoOpen(false)}
-            >
-              ×
-            </button>
+            <span className="history-count">
+              {historial.length} movimientos
+            </span>
           </div>
 
-          <form onSubmit={crearProyecto}>
+          <div className="history-table-header">
+            <div>Fecha</div>
+            <div>Proyecto</div>
+            <div>Tarea</div>
+            <div>Usuario</div>
+            <div>Acción</div>
+            <div>Detalle</div>
+          </div>
 
-            <div className="form-group full">
-              <label>Nombre del proyecto</label>
+          <div className="history-page-list">
+            {historial.map((item) => (
+              <div
+                className="history-table-row"
+                key={item.id}
+              >
+                <div className="history-date">
+                  {formatoFechaHora(item.created_at)}
+                </div>
 
-              <input
-                value={nuevoProyecto.nombre}
-                onChange={(e) =>
-                  setNuevoProyecto((actual) => ({
-                    ...actual,
-                    nombre: e.target.value,
-                  }))
-                }
-                placeholder="Ej: Migración tecnológica"
-                autoFocus
-              />
-            </div>
+                <div className="history-project">
+                  {item.proyecto_nombre}
+                </div>
 
-            <div className="form-group full">
-              <label>Descripción</label>
+                <div className="history-task">
+                  {item.tarea_nombre}
+                </div>
 
-              <textarea
-                className="project-description"
-                value={nuevoProyecto.descripcion}
-                onChange={(e) =>
-                  setNuevoProyecto((actual) => ({
-                    ...actual,
-                    descripcion: e.target.value,
-                  }))
-                }
-                placeholder="Descripción breve del proyecto"
-                rows="3"
-              />
-            </div>
+                <div>
+                  {item.usuario_nombre}
+                </div>
 
-            <div className="modal-actions">
+                <div>
+                  <span className="history-action-chip">
+                    {item.accion}
+                  </span>
+                </div>
+
+                <div className="history-detail">
+                  {item.detalle || '—'}
+                </div>
+              </div>
+            ))}
+
+            {historial.length === 0 && (
+              <div className="history-empty">
+                Todavía no hay movimientos registrados.
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {modalProyectoOpen && (
+        <div className="modal-overlay">
+          <div className="modal project-modal">
+            <div className="modal-header">
+              <div>
+                <h2>Nuevo proyecto</h2>
+                <p>Creá un nuevo espacio de planificación.</p>
+              </div>
 
               <button
                 type="button"
-                className="btn-secondary"
+                className="close-btn"
                 onClick={() => setModalProyectoOpen(false)}
               >
-                Cancelar
+                ×
               </button>
-
-              <button
-                type="submit"
-                className="btn-primary"
-              >
-                Crear proyecto
-              </button>
-
             </div>
 
-          </form>
-        </div>
-      </div>
-    )}
+            <form onSubmit={crearProyecto}>
+              <div className="form-group full">
+                <label>Nombre del proyecto</label>
 
-    {/* MODAL DE TAREAS QUE YA TENÍAS */}
-    {modalOpen && (
-      <div className="modal-overlay">
-        ...
-      </div>
-    )}
-  </>
-)
+                <input
+                  value={nuevoProyecto.nombre}
+                  onChange={(e) =>
+                    setNuevoProyecto((actual) => ({
+                      ...actual,
+                      nombre: e.target.value,
+                    }))
+                  }
+                  placeholder="Ej: Migración tecnológica"
+                  autoFocus
+                />
+              </div>
+
+              <div className="form-group full">
+                <label>Descripción</label>
+
+                <textarea
+                  className="project-description"
+                  value={nuevoProyecto.descripcion}
+                  onChange={(e) =>
+                    setNuevoProyecto((actual) => ({
+                      ...actual,
+                      descripcion: e.target.value,
+                    }))
+                  }
+                  placeholder="Descripción breve del proyecto"
+                  rows="3"
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setModalProyectoOpen(false)}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn-primary"
+                >
+                  Crear proyecto
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {modalOpen && (
 
