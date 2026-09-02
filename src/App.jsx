@@ -5,7 +5,9 @@ import logoGP from './assets/logo-gp.png'
 
 const formularioVacio = {
   nombre: '',
-  responsable: '',
+  responsableAnalista: '',
+  responsableDesarrollador: '',
+  comentario: '',
   inicio: '',
   duracion: 1,
   estado: 'Pendiente',
@@ -34,6 +36,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   descripcion: '',
 })
   const [tareas, setTareas] = useState([])
+  const [todasLasTareas, setTodasLasTareas] = useState([])
   const [historial, setHistorial] = useState([])
   const [perfiles, setPerfiles] = useState([])
 
@@ -73,11 +76,23 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
     cargarProyectos()
     cargarPerfiles()
     cargarHistorial()
+    cargarTodasLasTareas()
   }
 }, [session])
 
 useEffect(() => {
   if (!proyectoSeleccionadoId) {
+    return
+  }
+
+  setFiltroResponsable('Todos')
+  setFiltroEstado('Todos')
+  setFiltroPrioridad('Todas')
+
+  if (proyectoSeleccionadoId === '__all__') {
+    setProyecto(null)
+    setTareas([])
+    cargarTodasLasTareas()
     return
   }
 
@@ -90,11 +105,6 @@ useEffect(() => {
   }
 
   setProyecto(proyectoActivo)
-
-  setFiltroResponsable('Todos')
-  setFiltroEstado('Todos')
-  setFiltroPrioridad('Todas')
-
   cargarTareas(proyectoSeleccionadoId)
 
 }, [proyectoSeleccionadoId, proyectos])
@@ -180,6 +190,20 @@ useEffect(() => {
     }
 
     setPerfiles(data || [])
+  }
+
+  async function cargarTodasLasTareas() {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('fecha_inicio', { ascending: true })
+
+    if (error) {
+      console.error('Error cargando todas las tareas:', error)
+      return
+    }
+
+    setTodasLasTareas(data || [])
   }
 
   async function cargarTareas(projectId) {
@@ -374,7 +398,14 @@ useEffect(() => {
 
     setForm({
       nombre: tarea.nombre,
-      responsable: tarea.responsable,
+      responsableAnalista:
+        tarea.responsable_analista ||
+        tarea.responsable ||
+        '',
+      responsableDesarrollador:
+        tarea.responsable_desarrollador ||
+        '',
+      comentario: tarea.comentario || '',
       inicio: tarea.fecha_inicio,
       duracion: tarea.duracion_dias,
       estado: tarea.estado,
@@ -395,8 +426,15 @@ useEffect(() => {
   async function guardarTarea(event) {
     event.preventDefault()
 
-    if (!form.nombre || !form.responsable || !form.inicio) {
-      alert('Completá nombre, responsable y fecha de inicio.')
+    if (
+      !form.nombre ||
+      !form.responsableAnalista ||
+      !form.responsableDesarrollador ||
+      !form.inicio
+    ) {
+      alert(
+        'Completá nombre, responsable analista, responsable desarrollador y fecha de inicio.'
+      )
       return
     }
 
@@ -405,7 +443,10 @@ useEffect(() => {
         .from('tasks')
         .update({
           nombre: form.nombre,
-          responsable: form.responsable,
+          responsable: form.responsableAnalista,
+          responsable_analista: form.responsableAnalista,
+          responsable_desarrollador: form.responsableDesarrollador,
+          comentario: form.comentario.trim(),
           fecha_inicio: form.inicio,
           duracion_dias: Number(form.duracion),
           estado: form.estado,
@@ -455,7 +496,10 @@ useEffect(() => {
         .insert({
           project_id: proyecto.id,
           nombre: form.nombre,
-          responsable: form.responsable,
+          responsable: form.responsableAnalista,
+          responsable_analista: form.responsableAnalista,
+          responsable_desarrollador: form.responsableDesarrollador,
+          comentario: form.comentario.trim(),
           fecha_inicio: form.inicio,
           duracion_dias: Number(form.duracion),
           estado: form.estado,
@@ -499,6 +543,7 @@ useEffect(() => {
 
     await Promise.all([
       cargarTareas(proyecto.id),
+      cargarTodasLasTareas(),
       cargarHistorial(),
     ])
   }
@@ -577,6 +622,7 @@ async function crearProyecto(event) {
 
     await Promise.all([
       cargarTareas(proyecto.id),
+      cargarTodasLasTareas(),
       cargarHistorial(),
     ])
   }
@@ -600,6 +646,7 @@ async function crearProyecto(event) {
 
     await Promise.all([
       cargarTareas(proyecto.id),
+      cargarTodasLasTareas(),
       cargarHistorial(),
     ])
   }
@@ -612,7 +659,9 @@ async function crearProyecto(event) {
 
   const encabezados = [
     'Tarea',
-    'Responsable',
+    'Responsable Analista',
+    'Responsable Desarrollador',
+    'Comentario',
     'Inicio',
     'Duración',
     'Fecha fin',
@@ -623,7 +672,9 @@ async function crearProyecto(event) {
 
   const filas = tareasFiltradas.map((tarea) => [
     tarea.nombre || '',
-    tarea.responsable || '',
+    tarea.responsable_analista || tarea.responsable || '',
+    tarea.responsable_desarrollador || '',
+    tarea.comentario || '',
     tarea.fecha_inicio || '',
     tarea.duracion_dias || '',
     calcularFin(
@@ -900,6 +951,8 @@ const tareasFiltradas = useMemo(() => {
   return tareas.filter((tarea) => {
     const cumpleResponsable =
       filtroResponsable === 'Todos' ||
+      tarea.responsable_analista === filtroResponsable ||
+      tarea.responsable_desarrollador === filtroResponsable ||
       tarea.responsable === filtroResponsable
 
     const cumpleEstado =
@@ -1023,6 +1076,153 @@ function colorEstadoTarea(tarea) {
   }
 
 
+
+  const dashboardProyectos = useMemo(() => {
+    return proyectos.map((proyectoItem) => {
+      const tareasProyecto =
+        todasLasTareas.filter(
+          (tarea) =>
+            tarea.project_id === proyectoItem.id
+        )
+
+      const total = tareasProyecto.length
+
+      const finalizadas =
+        tareasProyecto.filter(
+          (tarea) =>
+            tarea.estado === 'Finalizado'
+        ).length
+
+      const enCurso =
+        tareasProyecto.filter(
+          (tarea) =>
+            tarea.estado === 'En curso'
+        ).length
+
+      const vencidas =
+        tareasProyecto.filter(
+          (tarea) => estaAtrasada(tarea)
+        ).length
+
+      const bloqueadas =
+        tareasProyecto.filter(
+          (tarea) =>
+            tarea.estado === 'Bloqueado'
+        ).length
+
+      const avance =
+        total === 0
+          ? 0
+          : Math.round(
+              tareasProyecto.reduce(
+                (acc, tarea) =>
+                  acc + calcularAvance(tarea),
+                0
+              ) / total
+            )
+
+      const hitosPendientes =
+        tareasProyecto
+          .filter(
+            (tarea) =>
+              tarea.es_hito &&
+              tarea.estado !== 'Finalizado' &&
+              tarea.fecha_inicio
+          )
+          .sort(
+            (a, b) =>
+              parseDate(a.fecha_inicio) -
+              parseDate(b.fecha_inicio)
+          )
+
+      const proximoHito =
+        hitosPendientes[0] || null
+
+      const fechasFin =
+        tareasProyecto
+          .map((tarea) =>
+            calcularFechaFinDate(
+              tarea.fecha_inicio,
+              tarea.duracion_dias
+            )
+          )
+          .filter(Boolean)
+
+      const fechaFin =
+        fechasFin.length > 0
+          ? new Date(
+              Math.max(
+                ...fechasFin.map(
+                  (fecha) => fecha.getTime()
+                )
+              )
+            )
+          : null
+
+      return {
+        ...proyectoItem,
+        total,
+        finalizadas,
+        enCurso,
+        vencidas,
+        bloqueadas,
+        avance,
+        proximoHito,
+        fechaFin,
+      }
+    })
+  }, [proyectos, todasLasTareas])
+
+  const metricasGlobales = useMemo(() => {
+    const totalProyectos =
+      dashboardProyectos.length
+
+    const activos =
+      dashboardProyectos.filter(
+        (proyectoItem) =>
+          proyectoItem.estado !== 'Finalizado'
+      ).length
+
+    const totalTareas =
+      todasLasTareas.length
+
+    const vencidas =
+      todasLasTareas.filter(
+        (tarea) => estaAtrasada(tarea)
+      ).length
+
+    const bloqueadas =
+      todasLasTareas.filter(
+        (tarea) =>
+          tarea.estado === 'Bloqueado'
+      ).length
+
+    const avancePromedio =
+      totalTareas === 0
+        ? 0
+        : Math.round(
+            todasLasTareas.reduce(
+              (acc, tarea) =>
+                acc + calcularAvance(tarea),
+              0
+            ) / totalTareas
+          )
+
+    return {
+      totalProyectos,
+      activos,
+      totalTareas,
+      vencidas,
+      bloqueadas,
+      avancePromedio,
+    }
+  }, [dashboardProyectos, todasLasTareas])
+
+  function abrirProyectoDesdeDashboard(projectId) {
+    setProyectoSeleccionadoId(projectId)
+    setVista('gantt')
+  }
+
   if (loading) {
     return (
       <div className="login-screen">
@@ -1104,7 +1304,11 @@ function colorEstadoTarea(tarea) {
             <h1>Grupo Petersen</h1>
 
 <p>
-  Proyecto: {proyecto?.nombre || 'Sin proyecto'}
+  Proyecto: {
+    proyectoSeleccionadoId === '__all__'
+      ? 'Todos los proyectos'
+      : proyecto?.nombre || 'Sin proyecto'
+  }
 </p>
           </div>
 
@@ -1126,6 +1330,14 @@ function colorEstadoTarea(tarea) {
           <button
             className="btn-primary"
             onClick={abrirNuevaTarea}
+            disabled={
+              proyectoSeleccionadoId === '__all__'
+            }
+            title={
+              proyectoSeleccionadoId === '__all__'
+                ? 'Seleccioná un proyecto para crear una tarea'
+                : 'Crear nueva tarea'
+            }
           >
             + Nueva tarea
           </button>
@@ -1145,6 +1357,9 @@ function colorEstadoTarea(tarea) {
       setProyectoSeleccionadoId(e.target.value)
     }
   >
+    <option value="__all__">
+      Todos los proyectos
+    </option>
 
     {proyectos.map((proyectoItem) => (
 
@@ -1171,6 +1386,8 @@ function colorEstadoTarea(tarea) {
 
 </div>
 
+        {proyectoSeleccionadoId !== '__all__' && (
+          <>
         <select
           value={filtroResponsable}
           onChange={(e) =>
@@ -1273,9 +1490,44 @@ function colorEstadoTarea(tarea) {
           )}
 
         </div>
+          </>
+        )}
 
       </section>
 
+      {proyectoSeleccionadoId === '__all__' ? (
+        <section className="kpis global-kpis">
+          <div className="kpi">
+            <span>Proyectos</span>
+            <strong>{metricasGlobales.totalProyectos}</strong>
+            <small>{metricasGlobales.activos} activos</small>
+          </div>
+
+          <div className="kpi green">
+            <span>Total tareas</span>
+            <strong>{metricasGlobales.totalTareas}</strong>
+            <small>Todos los proyectos</small>
+          </div>
+
+          <div className="kpi orange">
+            <span>Vencidas</span>
+            <strong>{metricasGlobales.vencidas}</strong>
+            <small>Requieren seguimiento</small>
+          </div>
+
+          <div className="kpi purple">
+            <span>Bloqueadas</span>
+            <strong>{metricasGlobales.bloqueadas}</strong>
+            <small>Con impedimentos</small>
+          </div>
+
+          <div className="kpi pink">
+            <span>Avance promedio</span>
+            <strong>{metricasGlobales.avancePromedio}%</strong>
+            <small>Cartera completa</small>
+          </div>
+        </section>
+      ) : (
       <section className="kpis">
 
         <div className="kpi">
@@ -1309,8 +1561,154 @@ function colorEstadoTarea(tarea) {
         </div>
 
       </section>
+      )}
 
-      {vista === 'gantt' && (
+      {proyectoSeleccionadoId === '__all__' && (
+        <section className="portfolio-dashboard">
+          <div className="portfolio-header">
+            <div>
+              <span className="portfolio-eyebrow">
+                Vista ejecutiva
+              </span>
+
+              <h2>Todos los proyectos</h2>
+
+              <p>
+                Resumen general de avance, vencimientos, bloqueos e hitos.
+              </p>
+            </div>
+          </div>
+
+          <div className="portfolio-table-header">
+            <div>Proyecto</div>
+            <div>Estado</div>
+            <div>Tareas</div>
+            <div>Finalizadas</div>
+            <div>En curso</div>
+            <div>Vencidas</div>
+            <div>Bloqueadas</div>
+            <div>Avance</div>
+            <div>Próximo hito</div>
+            <div>Fin estimado</div>
+          </div>
+
+          <div className="portfolio-list">
+            {dashboardProyectos.map(
+              (proyectoItem) => (
+                <div
+                  className="portfolio-row"
+                  key={proyectoItem.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() =>
+                    abrirProyectoDesdeDashboard(
+                      proyectoItem.id
+                    )
+                  }
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === 'Enter' ||
+                      event.key === ' '
+                    ) {
+                      abrirProyectoDesdeDashboard(
+                        proyectoItem.id
+                      )
+                    }
+                  }}
+                  title={`Abrir ${proyectoItem.nombre}`}
+                >
+                  <div className="portfolio-project">
+                    <span className="portfolio-project-dot" />
+                    <strong>
+                      {proyectoItem.nombre}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span className="portfolio-status">
+                      {proyectoItem.estado || 'En curso'}
+                    </span>
+                  </div>
+
+                  <div className="portfolio-number">
+                    {proyectoItem.total}
+                  </div>
+
+                  <div className="portfolio-number done">
+                    {proyectoItem.finalizadas}
+                  </div>
+
+                  <div className="portfolio-number progress">
+                    {proyectoItem.enCurso}
+                  </div>
+
+                  <div className="portfolio-number late">
+                    {proyectoItem.vencidas}
+                  </div>
+
+                  <div className="portfolio-number blocked">
+                    {proyectoItem.bloqueadas}
+                  </div>
+
+                  <div>
+                    <div className="portfolio-progress-cell">
+                      <div className="portfolio-progress-track">
+                        <div
+                          className="portfolio-progress-fill"
+                          style={{
+                            width: `${proyectoItem.avance}%`,
+                          }}
+                        />
+                      </div>
+
+                      <span>
+                        {proyectoItem.avance}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="portfolio-milestone">
+                    {proyectoItem.proximoHito ? (
+                      <>
+                        <strong>
+                          {proyectoItem.proximoHito.nombre}
+                        </strong>
+
+                        <span>
+                          {parseDate(
+                            proyectoItem.proximoHito.fecha_inicio
+                          )?.toLocaleDateString('es-AR')}
+                        </span>
+                      </>
+                    ) : (
+                      <span>Sin hitos pendientes</span>
+                    )}
+                  </div>
+
+                  <div className="portfolio-end-date">
+                    {proyectoItem.fechaFin
+                      ? proyectoItem.fechaFin.toLocaleDateString(
+                          'es-AR'
+                        )
+                      : '—'}
+                  </div>
+                </div>
+              )
+            )}
+
+            {dashboardProyectos.length === 0 && (
+              <div className="empty-state">
+                <h3>No hay proyectos</h3>
+                <p>
+                  Creá el primer proyecto para comenzar.
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {proyectoSeleccionadoId !== '__all__' && vista === 'gantt' && (
         <>
           <section className="gantt-navigation">
             <div className="gantt-period-title">
@@ -1385,7 +1783,7 @@ function colorEstadoTarea(tarea) {
               <div className="table-header task-grid">
 
                 <div>Tarea</div>
-                <div>Responsable</div>
+                <div>Equipo</div>
                 <div>Inicio</div>
                 <div>Días</div>
                 <div>Estado</div>
@@ -1415,10 +1813,34 @@ function colorEstadoTarea(tarea) {
   </span>
 
   <span>{tarea.nombre}</span>
+
+  {tarea.comentario?.trim() && (
+    <button
+      type="button"
+      className="task-comment-icon"
+      title={tarea.comentario}
+      onClick={() =>
+        window.alert(tarea.comentario)
+      }
+      aria-label={`Ver comentario de ${tarea.nombre}`}
+    >
+      💬
+    </button>
+  )}
 </div>
 
-                  <div>
-                    {tarea.responsable}
+                  <div className="task-responsibles">
+                    <span>
+                      <b>A:</b>{' '}
+                      {tarea.responsable_analista ||
+                        tarea.responsable ||
+                        '—'}
+                    </span>
+                    <span>
+                      <b>D:</b>{' '}
+                      {tarea.responsable_desarrollador ||
+                        '—'}
+                    </span>
                   </div>
 
                   <div>
@@ -1658,7 +2080,7 @@ function colorEstadoTarea(tarea) {
         </>
       )}
 
-      {vista === 'tabla' && (
+      {proyectoSeleccionadoId !== '__all__' && vista === 'tabla' && (
         <section className="table-view">
           <div className="section-title">
             <h2>Lista de tareas</h2>
@@ -1669,7 +2091,7 @@ function colorEstadoTarea(tarea) {
 
           <div className="table-header task-grid">
             <div>Tarea</div>
-            <div>Responsable</div>
+            <div>Equipo</div>
             <div>Inicio</div>
             <div>Días</div>
             <div>Estado</div>
@@ -1690,6 +2112,20 @@ function colorEstadoTarea(tarea) {
                   </span>
 
                   <span>{tarea.nombre}</span>
+
+                  {tarea.comentario?.trim() && (
+                    <button
+                      type="button"
+                      className="task-comment-icon"
+                      title={tarea.comentario}
+                      onClick={() =>
+                        window.alert(tarea.comentario)
+                      }
+                      aria-label={`Ver comentario de ${tarea.nombre}`}
+                    >
+                      💬
+                    </button>
+                  )}
                 </div>
 
                 {tarea.dependencia_id && (
@@ -1699,7 +2135,19 @@ function colorEstadoTarea(tarea) {
                 )}
               </div>
 
-              <div>{tarea.responsable}</div>
+              <div className="task-responsibles">
+                <span>
+                  <b>A:</b>{' '}
+                  {tarea.responsable_analista ||
+                    tarea.responsable ||
+                    '—'}
+                </span>
+                <span>
+                  <b>D:</b>{' '}
+                  {tarea.responsable_desarrollador ||
+                    '—'}
+                </span>
+              </div>
 
               <div>
                 {parseDate(
@@ -1755,7 +2203,7 @@ function colorEstadoTarea(tarea) {
       )}
 
 
-      {vista === 'historial' && (
+      {proyectoSeleccionadoId !== '__all__' && vista === 'historial' && (
         <section className="history-page">
           <div className="history-page-header">
             <div>
@@ -1948,16 +2396,43 @@ function colorEstadoTarea(tarea) {
                 <div className="form-group">
 
                   <label>
-                    Responsable
+                    Responsable Analista
                   </label>
 
                   <select
-                    name="responsable"
-                    value={form.responsable}
+                    name="responsableAnalista"
+                    value={form.responsableAnalista}
                     onChange={handleChange}
                   >
                     <option value="">
-                      Seleccionar responsable
+                      Seleccionar analista
+                    </option>
+
+                    {perfiles.map((perfil) => (
+                      <option
+                        key={perfil.id}
+                        value={perfil.nombre}
+                      >
+                        {perfil.nombre}
+                      </option>
+                    ))}
+                  </select>
+
+                </div>
+
+                <div className="form-group">
+
+                  <label>
+                    Responsable Desarrollador
+                  </label>
+
+                  <select
+                    name="responsableDesarrollador"
+                    value={form.responsableDesarrollador}
+                    onChange={handleChange}
+                  >
+                    <option value="">
+                      Seleccionar desarrollador
                     </option>
 
                     {perfiles.map((perfil) => (
@@ -2074,6 +2549,20 @@ function colorEstadoTarea(tarea) {
 
                 </div>
 
+              </div>
+
+              <div className="form-group full task-comment-field">
+                <label>
+                  Comentario de la tarea
+                </label>
+
+                <textarea
+                  name="comentario"
+                  value={form.comentario}
+                  onChange={handleChange}
+                  placeholder="Escribí un comentario, aclaración o seguimiento..."
+                  rows="3"
+                />
               </div>
 
               <div className="form-check-row">

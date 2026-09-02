@@ -2773,3 +2773,374 @@ p {
     min-width: 1050px;
   }
 }
+
+
+/* ==========================================
+   DASHBOARD TODOS LOS PROYECTOS
+========================================== */
+
+.btn-primary:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+.portfolio-dashboard {
+  border: 1px solid #222a35;
+  border-radius: 15px;
+  overflow: hidden;
+  background: #0d1117;
+}
+
+.portfolio-header {
+  min-height: 88px;
+  padding: 18px 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-bottom: 1px solid #222a35;
+
+  background:
+    radial-gradient(
+      circle at 0% 0%,
+      rgba(0, 217, 255, 0.08),
+      transparent 34%
+    ),
+    #0d1117;
+}
+
+.portfolio-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+
+  color: #00d9ff;
+  font-size: 9px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.portfolio-header h2 {
+  font-size: 19px;
+}
+
+.portfolio-header p {
+  margin-top: 5px;
+  color: #7f8a99;
+  font-size: 11px;
+}
+
+.portfolio-table-header,
+.portfolio-row {
+  display: grid;
+
+  grid-template-columns:
+    minmax(180px, 1.5fr)
+    95px
+    62px
+    78px
+    70px
+    68px
+    75px
+    minmax(125px, 1fr)
+    minmax(175px, 1.3fr)
+    92px;
+
+  gap: 10px;
+  align-items: center;
+}
+
+.portfolio-table-header {
+  min-height: 44px;
+  padding: 0 16px;
+
+  background: #090d13;
+  color: #718090;
+
+  border-bottom: 1px solid #222934;
+
+  font-size: 9px;
+  font-weight: 750;
+
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.portfolio-row {
+  min-height: 66px;
+  padding: 9px 16px;
+
+  border-bottom: 1px solid #191f28;
+
+  color: #b9c2cd;
+  font-size: 11px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.portfolio-row:hover,
+.portfolio-row:focus-visible {
+  background: rgba(0, 217, 255, 0.035);
+  outline: none;
+}
+
+.portfolio-row:last-child {
+  border-bottom: 0;
+}
+
+.portfolio-project {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.portfolio-project-dot {
+  width: 8px;
+  height: 8px;
+
+  flex: 0 0 8px;
+
+  border-radius: 50%;
+
+  background: #00d9ff;
+
+  box-shadow:
+    0 0 10px rgba(0, 217, 255, 0.24);
+}
+
+.portfolio-project strong {
+  min-width: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #eef2f6;
+  font-size: 11px;
+}
+
+.portfolio-status {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 23px;
+  padding: 3px 8px;
+
+  border-radius: 999px;
+
+  color: #b07aff;
+  background: rgba(176, 122, 255, 0.1);
+  border: 1px solid rgba(176, 122, 255, 0.17);
+
+  font-size: 9px;
+  font-weight: 750;
+
+  white-space: nowrap;
+}
+
+.portfolio-number {
+  font-weight: 800;
+  color: #dfe5ec;
+}
+
+.portfolio-number.done {
+  color: #45f59c;
+}
+
+.portfolio-number.progress {
+  color: #b07aff;
+}
+
+.portfolio-number.late {
+  color: #ff596d;
+}
+
+.portfolio-number.blocked {
+  color: #ffb84d;
+}
+
+.portfolio-progress-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.portfolio-progress-track {
+  flex: 1;
+  min-width: 55px;
+
+  height: 6px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #1c242e;
+}
+
+.portfolio-progress-fill {
+  height: 100%;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      90deg,
+      #00d9ff,
+      #45f59c
+    );
+}
+
+.portfolio-progress-cell > span {
+  width: 34px;
+
+  color: #dbe3eb;
+  font-size: 10px;
+  font-weight: 800;
+
+  text-align: right;
+}
+
+.portfolio-milestone {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.portfolio-milestone strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #ff52c8;
+  font-size: 10px;
+}
+
+.portfolio-milestone span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #718090;
+  font-size: 9px;
+}
+
+.portfolio-end-date {
+  color: #9ca7b5;
+  font-size: 10px;
+}
+
+@media (max-width: 1250px) {
+  .portfolio-dashboard {
+    overflow-x: auto;
+  }
+
+  .portfolio-table-header,
+  .portfolio-row {
+    min-width: 1180px;
+  }
+}
+
+
+/* ==========================================
+   RESPONSABLES ANALISTA / DESARROLLADOR
+========================================== */
+
+.task-responsibles {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  color: #aab4c0;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.task-responsibles span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-responsibles b {
+  color: #718090;
+  font-weight: 800;
+}
+
+/* ==========================================
+   COMENTARIO EN TAREA
+========================================== */
+
+.task-comment-icon {
+  width: 22px;
+  height: 22px;
+
+  flex: 0 0 22px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-left: 2px;
+  padding: 0;
+
+  border-radius: 7px;
+  border: 1px solid rgba(0, 217, 255, 0.20);
+
+  background: rgba(0, 217, 255, 0.06);
+  color: #00d9ff;
+
+  font-size: 11px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.task-comment-icon:hover {
+  background: rgba(0, 217, 255, 0.13);
+  border-color: rgba(0, 217, 255, 0.42);
+}
+
+.task-comment-field {
+  margin-top: 18px;
+}
+
+.task-comment-field textarea {
+  width: 100%;
+  min-height: 82px;
+
+  resize: vertical;
+
+  border: 1px solid #2a3441;
+  border-radius: 9px;
+
+  padding: 11px 12px;
+
+  background: #080c12;
+  color: white;
+
+  outline: none;
+  font: inherit;
+}
+
+.task-comment-field textarea:focus {
+  border-color: #00d9ff;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(0, 217, 255, 0.06);
+}
