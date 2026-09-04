@@ -3964,3 +3964,23 @@ p {
     width: 100%;
   }
 }
+
+
+/* ==========================================
+   CAPACITY - HORAS SUPERPUESTAS
+========================================== */
+
+.capacity-dev-metrics .overlap {
+  color: #ffb84d;
+  font-weight: 750;
+}
+
+.capacity-dev-metrics .overlap b {
+  color: #ffcf83;
+}
+
+.capacity-dev-metrics .overlap::before {
+  content: '⚠';
+  margin-right: 4px;
+  font-size: 8px;
+}

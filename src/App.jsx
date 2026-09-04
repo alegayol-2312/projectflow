@@ -1519,6 +1519,84 @@ function colorEstadoTarea(tarea) {
     }
   }
 
+
+  function horasSuperpuestasDesarrollador(tareasVentana) {
+    if (
+      !fechaClaveDate ||
+      diasCapacity.length === 0
+    ) {
+      return 0
+    }
+
+    let totalSuperpuesto = 0
+
+    diasCapacity.forEach((dia) => {
+      const cargasDelDia =
+        tareasVentana
+          .map((tarea) => {
+            const inicioTarea =
+              parseDate(tarea.fecha_inicio)
+
+            const finTarea =
+              calcularFechaFinDate(
+                tarea.fecha_inicio,
+                tarea.duracion_dias
+              )
+
+            if (
+              !inicioTarea ||
+              !finTarea ||
+              dia < inicioTarea ||
+              dia > finTarea
+            ) {
+              return 0
+            }
+
+            const diasHabilesTarea =
+              diasHabilesEntre(
+                inicioTarea,
+                finTarea
+              ).length
+
+            if (diasHabilesTarea === 0) {
+              return 0
+            }
+
+            const horasTotales =
+              Number(tarea.horas_estimadas) > 0
+                ? Number(tarea.horas_estimadas)
+                : diasHabilesTarea *
+                  HORAS_DIA_CAPACITY
+
+            return (
+              horasTotales /
+              diasHabilesTarea
+            )
+          })
+          .filter((horas) => horas > 0)
+
+      if (cargasDelDia.length <= 1) {
+        return
+      }
+
+      const horasTotalesDia =
+        cargasDelDia.reduce(
+          (acc, horas) =>
+            acc + horas,
+          0
+        )
+
+      const mayorCargaIndividual =
+        Math.max(...cargasDelDia)
+
+      totalSuperpuesto +=
+        horasTotalesDia -
+        mayorCargaIndividual
+    })
+
+    return totalSuperpuesto
+  }
+
   const capacityDesarrolladores = useMemo(() => {
     if (
       !fechaClaveDate ||
@@ -1573,6 +1651,11 @@ function colorEstadoTarea(tarea) {
         horasCapacidad -
         horasAsignadas
 
+      const horasSuperpuestas =
+        horasSuperpuestasDesarrollador(
+          tareasVentana
+        )
+
       const finalizadas =
         tareasVentana.filter(
           (tarea) =>
@@ -1625,6 +1708,7 @@ function colorEstadoTarea(tarea) {
         horasCapacidad,
         horasAsignadas,
         horasDisponibles,
+        horasSuperpuestas,
         finalizadas,
         totalTareas:
           tareasVentana.length,
@@ -2997,6 +3081,17 @@ function colorEstadoTarea(tarea) {
 
                         <span
                           className={
+                            dev.horasSuperpuestas > 0
+                              ? 'overlap'
+                              : ''
+                          }
+                        >
+                          <b>Superpuesta:</b>{' '}
+                          {dev.horasSuperpuestas.toFixed(1)} h
+                        </span>
+
+                        <span
+                          className={
                             dev.horasDisponibles < 0
                               ? 'negative'
                               : 'available'
@@ -3146,7 +3241,7 @@ function colorEstadoTarea(tarea) {
                                     tarea
                                   )} · ${horasTareaEnVentana(
                                     tarea
-                                  ).toFixed(1)} h`}
+                                  ).toFixed(1)} h en período`}
                                 >
                                   <span>
                                     {tarea.nombre}
