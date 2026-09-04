@@ -330,6 +330,90 @@ useEffect(() => {
     return new Date(year, month - 1, day)
   }
 
+
+  function parseDateTime(fecha) {
+    if (!fecha) return null
+
+    const parsed = new Date(fecha)
+
+    if (Number.isNaN(parsed.getTime())) {
+      return null
+    }
+
+    parsed.setHours(0, 0, 0, 0)
+    return parsed
+  }
+
+  function diferenciaDiasHabiles(fechaDesde, fechaHasta) {
+    if (!fechaDesde || !fechaHasta) {
+      return null
+    }
+
+    const desde = fechaSinHora(fechaDesde)
+    const hasta = fechaSinHora(fechaHasta)
+
+    if (mismaFecha(desde, hasta)) {
+      return 0
+    }
+
+    const sentido = hasta > desde ? 1 : -1
+    let total = 0
+    const cursor = new Date(desde)
+
+    while (!mismaFecha(cursor, hasta)) {
+      cursor.setDate(
+        cursor.getDate() + sentido
+      )
+
+      if (
+        cursor.getDay() !== 0 &&
+        cursor.getDay() !== 6
+      ) {
+        total += sentido
+      }
+    }
+
+    return total
+  }
+
+  function fechaFinRealTarea(tarea) {
+    if (
+      tarea.es_hito ||
+      tarea.estado !== 'Finalizado' ||
+      !tarea.fecha_finalizacion
+    ) {
+      return null
+    }
+
+    return parseDateTime(
+      tarea.fecha_finalizacion
+    )
+  }
+
+  function desvioTarea(tarea) {
+    const finReal =
+      fechaFinRealTarea(tarea)
+
+    if (!finReal || tarea.es_hito) {
+      return null
+    }
+
+    const finEstimado =
+      calcularFechaFinDate(
+        tarea.fecha_inicio,
+        tarea.duracion_dias
+      )
+
+    if (!finEstimado) {
+      return null
+    }
+
+    return diferenciaDiasHabiles(
+      finEstimado,
+      finReal
+    )
+  }
+
   function calcularFechaFinDate(inicio, duracion) {
     const fecha = parseDate(inicio)
 
@@ -807,7 +891,9 @@ async function crearProyecto(event) {
     'Horas estimadas',
     'Inicio',
     'Duración',
-    'Fecha fin',
+    'Fin estimado',
+    'Fin real',
+    'Desvío días hábiles',
     'Estado',
     'Prioridad',
     'Hito',
@@ -825,6 +911,10 @@ async function crearProyecto(event) {
       tarea.fecha_inicio,
       tarea.duracion_dias
     ),
+    fechaFinRealTarea(tarea)
+      ?.toLocaleDateString('es-AR') ||
+      '',
+    desvioTarea(tarea) ?? '',
     estadoVisual(tarea),
     tarea.prioridad || '',
     tarea.es_hito ? 'Sí' : 'No',
@@ -1378,6 +1468,37 @@ function colorEstadoTarea(tarea) {
     return resultado
   }, [tareasFiltradas])
 
+
+
+  const tareasVisualesGantt = useMemo(() => {
+    const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0)
+
+    return tareasVisuales.filter((tarea) => {
+      if (
+        tarea.es_hito ||
+        tarea.estado !== 'Finalizado'
+      ) {
+        return true
+      }
+
+      const finReal =
+        fechaFinRealTarea(tarea)
+
+      // Tareas históricas sin fecha real:
+      // las conservamos para no ocultarlas por error.
+      if (!finReal) {
+        return true
+      }
+
+      const limite = new Date(finReal)
+      limite.setDate(
+        limite.getDate() + 10
+      )
+
+      return hoy <= limite
+    })
+  }, [tareasVisuales])
 
   const HORAS_DIA_CAPACITY = 6.5
   const ANCHO_DIA_CAPACITY = 38
@@ -3090,7 +3211,7 @@ function colorEstadoTarea(tarea) {
                 <h2>Tareas</h2>
 
                 <span>
-                  {tareasFiltradas.length} de {tareas.length}
+                  {tareasVisualesGantt.length} visibles · {tareas.length} totales
                 </span>
               </div>
 
@@ -3105,7 +3226,7 @@ function colorEstadoTarea(tarea) {
 
               </div>
 
-              {tareasVisuales.map((tarea) => (
+              {tareasVisualesGantt.map((tarea) => (
 
                 <div
   className={`task-grid task-row ${
@@ -3386,7 +3507,7 @@ function colorEstadoTarea(tarea) {
                       </div>
                     )}
 
-                    {tareasVisuales.map((tarea) => {
+                    {tareasVisualesGantt.map((tarea) => {
                       const posicion =
                         posicionBarra(tarea)
 
@@ -3484,6 +3605,9 @@ function colorEstadoTarea(tarea) {
             <div>Equipo</div>
             <div>Inicio</div>
             <div>Días</div>
+            <div>Fin estimado</div>
+            <div>Fin real</div>
+            <div>Desvío</div>
             <div>Acciones</div>
           </div>
 
@@ -3604,6 +3728,49 @@ function colorEstadoTarea(tarea) {
               </div>
 
               <div>{tarea.duracion_dias}</div>
+
+              <div className="task-date-cell">
+                {tarea.es_hito
+                  ? (
+                      fechaFinHito(tarea)
+                        ?.toLocaleDateString('es-AR') ||
+                      '—'
+                    )
+                  : (
+                      calcularFechaFinDate(
+                        tarea.fecha_inicio,
+                        tarea.duracion_dias
+                      )?.toLocaleDateString('es-AR') ||
+                      '—'
+                    )}
+              </div>
+
+              <div className="task-date-cell">
+                {fechaFinRealTarea(tarea)
+                  ?.toLocaleDateString('es-AR') ||
+                  '—'}
+              </div>
+
+              <div
+                className={`task-deviation ${
+                  desvioTarea(tarea) === null
+                    ? ''
+                    : desvioTarea(tarea) > 0
+                      ? 'late'
+                      : desvioTarea(tarea) < 0
+                        ? 'early'
+                        : 'on-time'
+                }`}
+                title="Desvío en días hábiles: Fin real - Fin estimado"
+              >
+                {desvioTarea(tarea) === null
+                  ? '—'
+                  : desvioTarea(tarea) === 0
+                    ? '0'
+                    : desvioTarea(tarea) > 0
+                      ? `+${desvioTarea(tarea)}`
+                      : desvioTarea(tarea)}
+              </div>
 
               <div className="row-actions">
                 <button

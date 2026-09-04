@@ -4436,3 +4436,60 @@ p {
   color: #dce7f1;
   text-shadow: none;
 }
+
+
+/* ==========================================
+   TABLA - FIN ESTIMADO / REAL / DESVIO
+========================================== */
+
+.table-view {
+  overflow-x: auto;
+}
+
+.table-view .task-grid {
+  grid-template-columns:
+    minmax(230px, 1.7fr)
+    26px
+    minmax(180px, 1.25fr)
+    92px
+    48px
+    100px
+    100px
+    62px
+    72px !important;
+
+  min-width: 1040px;
+  gap: 7px !important;
+}
+
+.table-view .task-date-cell {
+  white-space: nowrap;
+}
+
+.table-view .task-deviation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 36px;
+
+  font-size: 9px;
+  font-weight: 850;
+
+  border-radius: 6px;
+}
+
+.table-view .task-deviation.on-time {
+  color: #45f59c;
+  background: rgba(69, 245, 156, 0.08);
+}
+
+.table-view .task-deviation.early {
+  color: #61c7ff;
+  background: rgba(97, 199, 255, 0.08);
+}
+
+.table-view .task-deviation.late {
+  color: #ff6b7c;
+  background: rgba(255, 107, 124, 0.09);
+}
