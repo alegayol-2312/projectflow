@@ -3711,3 +3711,256 @@ p {
       60px !important;
   }
 }
+
+
+/* ==========================================
+   CAPACITY
+========================================== */
+
+.capacity-section {
+  border: 1px solid #222a35;
+  border-radius: 15px;
+  overflow: hidden;
+  background: #0d1117;
+}
+
+.capacity-toolbar {
+  min-height: 84px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #222a35;
+}
+
+.capacity-eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: #00d9ff;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.capacity-toolbar h2 {
+  font-size: 18px;
+}
+
+.capacity-toolbar p {
+  margin-top: 5px;
+  color: #7e8997;
+  font-size: 11px;
+}
+
+.capacity-date-control {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: #8793a3;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.capacity-date-control input {
+  min-width: 155px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid #2a3440;
+  background: #10151c;
+  color: #e4e9ef;
+  color-scheme: dark;
+}
+
+.capacity-workspace {
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  min-width: 0;
+}
+
+.capacity-team-panel {
+  position: relative;
+  z-index: 3;
+  border-right: 1px solid #222a35;
+  background: #0d1117;
+}
+
+.capacity-team-header {
+  height: 54px;
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(150px, 1.3fr);
+  gap: 10px;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 1px solid #222934;
+  background: #090d13;
+  color: #718090;
+  font-size: 9px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.capacity-team-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(150px, 1.3fr);
+  gap: 10px;
+  align-items: center;
+  padding: 7px 14px;
+  border-bottom: 1px solid #191f28;
+}
+
+.capacity-dev-name {
+  color: #edf2f7;
+  font-size: 11px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.capacity-dev-metrics {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #8995a4;
+  font-size: 8.5px;
+}
+
+.capacity-dev-metrics b {
+  color: #a9b4c0;
+  font-weight: 750;
+}
+
+.capacity-dev-metrics .available {
+  color: #45f59c;
+}
+
+.capacity-dev-metrics .negative {
+  color: #ff596d;
+}
+
+.capacity-gantt-panel {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.capacity-gantt-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #384554 #0b0f15;
+}
+
+.capacity-canvas {
+  position: relative;
+}
+
+.capacity-days-header {
+  height: 54px;
+  display: grid;
+  background: #090d13;
+  border-bottom: 1px solid #222934;
+}
+
+.capacity-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-right: 1px solid #181f28;
+  color: #718090;
+}
+
+.capacity-day small {
+  font-size: 8px;
+}
+
+.capacity-day strong {
+  color: #bac4cf;
+  font-size: 10px;
+}
+
+.capacity-day.month-start,
+.capacity-grid-day.month-start {
+  border-left: 2px solid rgba(0, 217, 255, 0.42);
+}
+
+.capacity-month {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  color: #00d9ff;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+
+.capacity-gantt-row {
+  position: relative;
+  border-bottom: 1px solid #191f28;
+}
+
+.capacity-grid-bg {
+  position: absolute;
+  inset: 0;
+  display: grid;
+}
+
+.capacity-grid-day {
+  border-right: 1px solid #171d25;
+}
+
+.capacity-task-bar {
+  position: absolute;
+  height: 18px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 0 6px;
+  border-radius: 5px;
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.capacity-task-bar span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.capacity-empty {
+  padding: 42px 20px;
+  color: #7f8a98;
+  text-align: center;
+  font-size: 12px;
+}
+
+@media (max-width: 1050px) {
+  .capacity-workspace {
+    grid-template-columns: 300px minmax(760px, 1fr);
+  }
+
+  .capacity-section {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .capacity-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .capacity-date-control input {
+    width: 100%;
+  }
+}

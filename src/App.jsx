@@ -11,6 +11,7 @@ const formularioVacio = {
   comentario: '',
   inicio: '',
   duracion: 1,
+  horasEstimadas: 6.5,
   estado: 'Pendiente',
   prioridad: 'Media',
   dependencia: '',
@@ -59,6 +60,22 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   )
 
   const ganttScrollRef = useRef(null)
+
+  const finMesActual = new Date(
+    hoyReal.getFullYear(),
+    hoyReal.getMonth() + 1,
+    0
+  )
+
+  const fechaClaveInicial = [
+    finMesActual.getFullYear(),
+    String(finMesActual.getMonth() + 1).padStart(2, '0'),
+    String(finMesActual.getDate()).padStart(2, '0'),
+  ].join('-')
+
+  const [fechaClave, setFechaClave] = useState(
+    fechaClaveInicial
+  )
 
   useEffect(() => {
     iniciarApp()
@@ -410,6 +427,9 @@ useEffect(() => {
       comentario: tarea.comentario || '',
       inicio: tarea.fecha_inicio,
       duracion: tarea.duracion_dias,
+      horasEstimadas:
+        tarea.horas_estimadas ??
+        Number(tarea.duracion_dias || 1) * 6.5,
       estado: tarea.estado,
       prioridad: tarea.prioridad,
       dependencia: tarea.dependencia_id || '',
@@ -465,6 +485,10 @@ useEffect(() => {
               : null,
           comentario: form.comentario.trim(),
           fecha_inicio: form.inicio,
+          horas_estimadas:
+            form.tipo === 'Tarea'
+              ? Number(form.horasEstimadas || 0)
+              : 0,
           duracion_dias:
             form.tipo === 'Hito'
               ? 1
@@ -538,6 +562,10 @@ useEffect(() => {
               : null,
           comentario: form.comentario.trim(),
           fecha_inicio: form.inicio,
+          horas_estimadas:
+            form.tipo === 'Tarea'
+              ? Number(form.horasEstimadas || 0)
+              : 0,
           duracion_dias:
             form.tipo === 'Hito'
               ? 1
@@ -736,6 +764,7 @@ async function crearProyecto(event) {
     'Responsable Analista',
     'Responsable Desarrollador',
     'Comentario',
+    'Horas estimadas',
     'Inicio',
     'Duración',
     'Fecha fin',
@@ -749,6 +778,7 @@ async function crearProyecto(event) {
     tarea.responsable_analista || tarea.responsable || '',
     tarea.responsable_desarrollador || '',
     tarea.comentario || '',
+    tarea.horas_estimadas || '',
     tarea.fecha_inicio || '',
     tarea.duracion_dias || '',
     calcularFin(
@@ -1308,6 +1338,326 @@ function colorEstadoTarea(tarea) {
     return resultado
   }, [tareasFiltradas])
 
+
+  const HORAS_DIA_CAPACITY = 6.5
+  const ANCHO_DIA_CAPACITY = 38
+
+  function fechaSinHora(fecha) {
+    const copia = new Date(fecha)
+    copia.setHours(0, 0, 0, 0)
+    return copia
+  }
+
+  function esDiaHabil(fecha) {
+    const dia = fecha.getDay()
+    return dia !== 0 && dia !== 6
+  }
+
+  function diasHabilesEntre(inicio, fin) {
+    if (!inicio || !fin || fin < inicio) {
+      return []
+    }
+
+    const lista = []
+    const cursor = fechaSinHora(inicio)
+    const limite = fechaSinHora(fin)
+
+    while (cursor <= limite) {
+      if (esDiaHabil(cursor)) {
+        lista.push(new Date(cursor))
+      }
+      cursor.setDate(cursor.getDate() + 1)
+    }
+
+    return lista
+  }
+
+  const fechaClaveDate = useMemo(() => {
+    return parseDate(fechaClave)
+  }, [fechaClave])
+
+  const hoyCapacity = useMemo(() => {
+    return fechaSinHora(new Date())
+  }, [])
+
+  const diasCapacity = useMemo(() => {
+    if (
+      !fechaClaveDate ||
+      fechaClaveDate < hoyCapacity
+    ) {
+      return []
+    }
+
+    return diasHabilesEntre(
+      hoyCapacity,
+      fechaClaveDate
+    )
+  }, [fechaClaveDate, hoyCapacity])
+
+  const anchoCapacity =
+    Math.max(
+      diasCapacity.length * ANCHO_DIA_CAPACITY,
+      760
+    )
+
+  function horasTareaEnVentana(tarea) {
+    if (
+      tarea.es_hito ||
+      !tarea.fecha_inicio ||
+      !fechaClaveDate
+    ) {
+      return 0
+    }
+
+    const inicioTarea =
+      parseDate(tarea.fecha_inicio)
+
+    const finTarea =
+      calcularFechaFinDate(
+        tarea.fecha_inicio,
+        tarea.duracion_dias
+      )
+
+    if (!inicioTarea || !finTarea) {
+      return 0
+    }
+
+    const inicioVentana =
+      inicioTarea > hoyCapacity
+        ? inicioTarea
+        : hoyCapacity
+
+    const finVentana =
+      finTarea < fechaClaveDate
+        ? finTarea
+        : fechaClaveDate
+
+    const totalDiasTarea =
+      diasHabilesEntre(
+        inicioTarea,
+        finTarea
+      ).length
+
+    const diasDentroVentana =
+      diasHabilesEntre(
+        inicioVentana,
+        finVentana
+      ).length
+
+    if (
+      totalDiasTarea === 0 ||
+      diasDentroVentana === 0
+    ) {
+      return 0
+    }
+
+    const horasTotales =
+      Number(tarea.horas_estimadas) > 0
+        ? Number(tarea.horas_estimadas)
+        : totalDiasTarea * HORAS_DIA_CAPACITY
+
+    return (
+      horasTotales *
+      (
+        diasDentroVentana /
+        totalDiasTarea
+      )
+    )
+  }
+
+  function posicionCapacityTarea(tarea) {
+    if (
+      diasCapacity.length === 0 ||
+      !tarea.fecha_inicio
+    ) {
+      return null
+    }
+
+    const inicioTarea =
+      parseDate(tarea.fecha_inicio)
+
+    const finTarea =
+      calcularFechaFinDate(
+        tarea.fecha_inicio,
+        tarea.duracion_dias
+      )
+
+    if (!inicioTarea || !finTarea) {
+      return null
+    }
+
+    const diasVisibles =
+      diasCapacity.filter(
+        (fecha) =>
+          fecha >= inicioTarea &&
+          fecha <= finTarea
+      )
+
+    if (diasVisibles.length === 0) {
+      return null
+    }
+
+    const primerDia = diasVisibles[0]
+
+    const indiceInicio =
+      diasCapacity.findIndex(
+        (fecha) =>
+          mismaFecha(fecha, primerDia)
+      )
+
+    return {
+      left:
+        indiceInicio * ANCHO_DIA_CAPACITY,
+      width:
+        Math.max(
+          diasVisibles.length *
+            ANCHO_DIA_CAPACITY,
+          12
+        ),
+      inicio: inicioTarea,
+      fin: finTarea,
+    }
+  }
+
+  const capacityDesarrolladores = useMemo(() => {
+    if (
+      !fechaClaveDate ||
+      fechaClaveDate < hoyCapacity
+    ) {
+      return []
+    }
+
+    const nombres = Array.from(
+      new Set(
+        todasLasTareas
+          .filter(
+            (tarea) =>
+              !tarea.es_hito &&
+              tarea.responsable_desarrollador
+          )
+          .map(
+            (tarea) =>
+              tarea.responsable_desarrollador
+          )
+      )
+    ).sort()
+
+    const horasCapacidad =
+      diasCapacity.length *
+      HORAS_DIA_CAPACITY
+
+    return nombres.map((nombre) => {
+      const tareasDev =
+        todasLasTareas.filter(
+          (tarea) =>
+            !tarea.es_hito &&
+            tarea.responsable_desarrollador ===
+              nombre
+        )
+
+      const tareasVentana =
+        tareasDev.filter(
+          (tarea) =>
+            posicionCapacityTarea(tarea)
+        )
+
+      const horasAsignadas =
+        tareasVentana.reduce(
+          (acc, tarea) =>
+            acc +
+            horasTareaEnVentana(tarea),
+          0
+        )
+
+      const horasDisponibles =
+        horasCapacidad -
+        horasAsignadas
+
+      const finalizadas =
+        tareasVentana.filter(
+          (tarea) =>
+            tarea.estado === 'Finalizado'
+        ).length
+
+      const tareasConPosicion =
+        tareasVentana
+          .map((tarea) => ({
+            tarea,
+            posicion:
+              posicionCapacityTarea(tarea),
+          }))
+          .sort(
+            (a, b) =>
+              a.posicion.inicio -
+              b.posicion.inicio
+          )
+
+      const finCarriles = []
+      const asignaciones = []
+
+      tareasConPosicion.forEach((item) => {
+        let carril =
+          finCarriles.findIndex(
+            (fechaFin) =>
+              fechaFin <
+              item.posicion.inicio
+          )
+
+        if (carril === -1) {
+          carril =
+            finCarriles.length
+          finCarriles.push(
+            item.posicion.fin
+          )
+        } else {
+          finCarriles[carril] =
+            item.posicion.fin
+        }
+
+        asignaciones.push({
+          ...item,
+          carril,
+        })
+      })
+
+      return {
+        nombre,
+        horasCapacidad,
+        horasAsignadas,
+        horasDisponibles,
+        finalizadas,
+        totalTareas:
+          tareasVentana.length,
+        asignaciones,
+        rowHeight:
+          Math.max(
+            72,
+            28 +
+              Math.max(
+                1,
+                finCarriles.length
+              ) *
+                24
+          ),
+      }
+    })
+  }, [
+    todasLasTareas,
+    diasCapacity,
+    fechaClaveDate,
+    hoyCapacity,
+  ])
+
+  function nombreProyectoDeTarea(tarea) {
+    return (
+      proyectos.find(
+        (item) =>
+          item.id === tarea.project_id
+      )?.nombre ||
+      'Sin proyecto'
+    )
+  }
+
   const dashboardProyectos = useMemo(() => {
     return proyectos.map((proyectoItem) => {
       const tareasProyecto =
@@ -1706,6 +2056,15 @@ function colorEstadoTarea(tarea) {
             }
           >
             Historial
+          </button>
+
+          <button
+            className={vista === 'capacity' ? 'active' : ''}
+            onClick={() =>
+              setVista('capacity')
+            }
+          >
+            Capacity
           </button>
 
 {vista === 'tabla' && (
@@ -2555,6 +2914,258 @@ function colorEstadoTarea(tarea) {
       )}
 
 
+      {proyectoSeleccionadoId !== '__all__' && vista === 'capacity' && (
+        <section className="capacity-section">
+          <div className="capacity-toolbar">
+            <div>
+              <span className="capacity-eyebrow">
+                Disponibilidad del equipo
+              </span>
+
+              <h2>Capacity</h2>
+
+              <p>
+                6,5 horas disponibles por día hábil.
+                La carga considera tareas de todos los proyectos.
+              </p>
+            </div>
+
+            <label className="capacity-date-control">
+              <span>Fecha Clave</span>
+
+              <input
+                type="date"
+                value={fechaClave}
+                min={[
+                  hoyCapacity.getFullYear(),
+                  String(
+                    hoyCapacity.getMonth() + 1
+                  ).padStart(2, '0'),
+                  String(
+                    hoyCapacity.getDate()
+                  ).padStart(2, '0'),
+                ].join('-')}
+                onChange={(e) =>
+                  setFechaClave(
+                    e.target.value
+                  )
+                }
+              />
+            </label>
+          </div>
+
+          {!fechaClaveDate ||
+          fechaClaveDate < hoyCapacity ? (
+            <div className="capacity-empty">
+              Elegí una Fecha Clave igual o posterior a hoy.
+            </div>
+          ) : capacityDesarrolladores.length === 0 ? (
+            <div className="capacity-empty">
+              Todavía no hay desarrolladores asignados a tareas.
+            </div>
+          ) : (
+            <div className="capacity-workspace">
+              <div className="capacity-team-panel">
+                <div className="capacity-team-header">
+                  <div>Desarrollador</div>
+                  <div>Capacidad</div>
+                </div>
+
+                {capacityDesarrolladores.map(
+                  (dev) => (
+                    <div
+                      className="capacity-team-row"
+                      key={dev.nombre}
+                      style={{
+                        height: `${dev.rowHeight}px`,
+                      }}
+                    >
+                      <div className="capacity-dev-name">
+                        {dev.nombre}
+                      </div>
+
+                      <div className="capacity-dev-metrics">
+                        <span>
+                          <b>Capacidad:</b>{' '}
+                          {dev.horasCapacidad.toFixed(1)} h
+                        </span>
+
+                        <span>
+                          <b>Asignadas:</b>{' '}
+                          {dev.horasAsignadas.toFixed(1)} h
+                        </span>
+
+                        <span
+                          className={
+                            dev.horasDisponibles < 0
+                              ? 'negative'
+                              : 'available'
+                          }
+                        >
+                          <b>Disponibles:</b>{' '}
+                          {dev.horasDisponibles.toFixed(1)} h
+                        </span>
+
+                        <span>
+                          <b>Tareas:</b>{' '}
+                          {dev.finalizadas}/{dev.totalTareas}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+
+              <div className="capacity-gantt-panel">
+                <div className="capacity-gantt-scroll">
+                  <div
+                    className="capacity-canvas"
+                    style={{
+                      width: `${anchoCapacity}px`,
+                      minWidth: `${anchoCapacity}px`,
+                    }}
+                  >
+                    <div
+                      className="capacity-days-header"
+                      style={{
+                        gridTemplateColumns:
+                          `repeat(${diasCapacity.length}, ${ANCHO_DIA_CAPACITY}px)`,
+                      }}
+                    >
+                      {diasCapacity.map(
+                        (fecha, indice) => {
+                          const cambioMes =
+                            indice === 0 ||
+                            fecha.getMonth() !==
+                              diasCapacity[
+                                indice - 1
+                              ].getMonth()
+
+                          return (
+                            <div
+                              className={`capacity-day ${
+                                cambioMes
+                                  ? 'month-start'
+                                  : ''
+                              }`}
+                              key={fecha.toISOString()}
+                            >
+                              {cambioMes && (
+                                <span className="capacity-month">
+                                  {fecha
+                                    .toLocaleDateString(
+                                      'es-AR',
+                                      {
+                                        month:
+                                          'short',
+                                      }
+                                    )
+                                    .replace(
+                                      '.',
+                                      ''
+                                    )
+                                    .toUpperCase()}
+                                </span>
+                              )}
+
+                              <small>
+                                {inicialDiaSemanaFecha(
+                                  fecha
+                                )}
+                              </small>
+
+                              <strong>
+                                {fecha.getDate()}
+                              </strong>
+                            </div>
+                          )
+                        }
+                      )}
+                    </div>
+
+                    <div className="capacity-gantt-body">
+                      {capacityDesarrolladores.map(
+                        (dev) => (
+                          <div
+                            className="capacity-gantt-row"
+                            key={dev.nombre}
+                            style={{
+                              height: `${dev.rowHeight}px`,
+                            }}
+                          >
+                            <div
+                              className="capacity-grid-bg"
+                              style={{
+                                gridTemplateColumns:
+                                  `repeat(${diasCapacity.length}, ${ANCHO_DIA_CAPACITY}px)`,
+                              }}
+                            >
+                              {diasCapacity.map(
+                                (fecha, indice) => {
+                                  const cambioMes =
+                                    indice === 0 ||
+                                    fecha.getMonth() !==
+                                      diasCapacity[
+                                        indice - 1
+                                      ].getMonth()
+
+                                  return (
+                                    <div
+                                      key={fecha.toISOString()}
+                                      className={`capacity-grid-day ${
+                                        cambioMes
+                                          ? 'month-start'
+                                          : ''
+                                      }`}
+                                    />
+                                  )
+                                }
+                              )}
+                            </div>
+
+                            {dev.asignaciones.map(
+                              ({
+                                tarea,
+                                posicion,
+                                carril,
+                              }) => (
+                                <div
+                                  key={tarea.id}
+                                  className={`capacity-task-bar ${colorBarra(
+                                    tarea
+                                  )}`}
+                                  style={{
+                                    left: `${posicion.left}px`,
+                                    width: `${posicion.width}px`,
+                                    top: `${
+                                      10 +
+                                      carril * 24
+                                    }px`,
+                                  }}
+                                  title={`${tarea.nombre} · ${nombreProyectoDeTarea(
+                                    tarea
+                                  )} · ${horasTareaEnVentana(
+                                    tarea
+                                  ).toFixed(1)} h`}
+                                >
+                                  <span>
+                                    {tarea.nombre}
+                                  </span>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
       {proyectoSeleccionadoId !== '__all__' && vista === 'historial' && (
         <section className="history-page">
           <div className="history-page-header">
@@ -2880,6 +3491,24 @@ function colorEstadoTarea(tarea) {
                   />
 
                 </div>
+                )}
+
+                {form.tipo === 'Tarea' && (
+                  <div className="form-group">
+                    <label>
+                      Horas estimadas
+                    </label>
+
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      name="horasEstimadas"
+                      value={form.horasEstimadas}
+                      onChange={handleChange}
+                      placeholder="Ej: 13"
+                    />
+                  </div>
                 )}
 
                 {form.tipo === 'Tarea' && (
