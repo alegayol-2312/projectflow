@@ -5,6 +5,7 @@ import logoGP from './assets/logo-gp.png'
 
 const formularioVacio = {
   nombre: '',
+  tipo: 'Tarea',
   responsableAnalista: '',
   responsableDesarrollador: '',
   comentario: '',
@@ -13,7 +14,7 @@ const formularioVacio = {
   estado: 'Pendiente',
   prioridad: 'Media',
   dependencia: '',
-  hito: false,
+  hitoPadre: '',
 }
 
 
@@ -398,6 +399,7 @@ useEffect(() => {
 
     setForm({
       nombre: tarea.nombre,
+      tipo: tarea.es_hito ? 'Hito' : 'Tarea',
       responsableAnalista:
         tarea.responsable_analista ||
         tarea.responsable ||
@@ -411,7 +413,7 @@ useEffect(() => {
       estado: tarea.estado,
       prioridad: tarea.prioridad,
       dependencia: tarea.dependencia_id || '',
-      hito: tarea.es_hito,
+      hitoPadre: tarea.hito_padre_id || '',
     })
 
     setModalOpen(true)
@@ -426,14 +428,20 @@ useEffect(() => {
   async function guardarTarea(event) {
     event.preventDefault()
 
+    if (!form.nombre || !form.inicio) {
+      alert('Completá nombre y fecha de inicio.')
+      return
+    }
+
     if (
-      !form.nombre ||
-      !form.responsableAnalista ||
-      !form.responsableDesarrollador ||
-      !form.inicio
+      form.tipo === 'Tarea' &&
+      (
+        !form.responsableAnalista ||
+        !form.responsableDesarrollador
+      )
     ) {
       alert(
-        'Completá nombre, responsable analista, responsable desarrollador y fecha de inicio.'
+        'Para una tarea completá responsable analista y responsable desarrollador.'
       )
       return
     }
@@ -443,17 +451,37 @@ useEffect(() => {
         .from('tasks')
         .update({
           nombre: form.nombre,
-          responsable: form.responsableAnalista,
-          responsable_analista: form.responsableAnalista,
-          responsable_desarrollador: form.responsableDesarrollador,
+          responsable:
+            form.tipo === 'Tarea'
+              ? form.responsableAnalista
+              : '',
+          responsable_analista:
+            form.tipo === 'Tarea'
+              ? form.responsableAnalista
+              : null,
+          responsable_desarrollador:
+            form.tipo === 'Tarea'
+              ? form.responsableDesarrollador
+              : null,
           comentario: form.comentario.trim(),
           fecha_inicio: form.inicio,
-          duracion_dias: Number(form.duracion),
-          estado: form.estado,
+          duracion_dias:
+            form.tipo === 'Hito'
+              ? 1
+              : Number(form.duracion),
+          estado:
+            form.tipo === 'Hito'
+              ? 'Pendiente'
+              : form.estado,
           prioridad: form.prioridad,
-          es_hito: form.hito,
+          es_hito: form.tipo === 'Hito',
+          hito_padre_id:
+            form.tipo === 'Tarea' && form.hitoPadre
+              ? form.hitoPadre
+              : null,
 
           fecha_finalizacion:
+            form.tipo === 'Tarea' &&
             form.estado === 'Finalizado'
               ? tareaEditando.fecha_finalizacion ||
                 new Date().toISOString()
@@ -496,18 +524,38 @@ useEffect(() => {
         .insert({
           project_id: proyecto.id,
           nombre: form.nombre,
-          responsable: form.responsableAnalista,
-          responsable_analista: form.responsableAnalista,
-          responsable_desarrollador: form.responsableDesarrollador,
+          responsable:
+            form.tipo === 'Tarea'
+              ? form.responsableAnalista
+              : '',
+          responsable_analista:
+            form.tipo === 'Tarea'
+              ? form.responsableAnalista
+              : null,
+          responsable_desarrollador:
+            form.tipo === 'Tarea'
+              ? form.responsableDesarrollador
+              : null,
           comentario: form.comentario.trim(),
           fecha_inicio: form.inicio,
-          duracion_dias: Number(form.duracion),
-          estado: form.estado,
+          duracion_dias:
+            form.tipo === 'Hito'
+              ? 1
+              : Number(form.duracion),
+          estado:
+            form.tipo === 'Hito'
+              ? 'Pendiente'
+              : form.estado,
           prioridad: form.prioridad,
-          es_hito: form.hito,
+          es_hito: form.tipo === 'Hito',
+          hito_padre_id:
+            form.tipo === 'Tarea' && form.hitoPadre
+              ? form.hitoPadre
+              : null,
           created_by: session.user.id,
 
           fecha_finalizacion:
+            form.tipo === 'Tarea' &&
             form.estado === 'Finalizado'
               ? new Date().toISOString()
               : null,
@@ -597,6 +645,30 @@ async function crearProyecto(event) {
 }
 
   async function finalizarTarea(tarea) {
+    if (tarea.es_hito) {
+      const hijas = tareasDelHito(tarea.id)
+
+      if (hijas.length === 0) {
+        alert(
+          'El hito no tiene tareas vinculadas. Vinculá tareas antes de finalizarlo.'
+        )
+        return
+      }
+
+      const pendientes =
+        hijas.filter(
+          (item) =>
+            item.estado !== 'Finalizado'
+        )
+
+      if (pendientes.length > 0) {
+        alert(
+          `El hito no puede finalizarse: quedan ${pendientes.length} tarea(s) sin finalizar.`
+        )
+        return
+      }
+    }
+
     const { error } = await supabase
       .from('tasks')
       .update({
@@ -632,7 +704,7 @@ async function crearProyecto(event) {
       `¿Eliminar "${tarea.nombre}"?`
     )
 
-    if (!confirmar) return
+    if (!confirmar) return false
 
     const { error } = await supabase
       .from('tasks')
@@ -641,7 +713,7 @@ async function crearProyecto(event) {
 
     if (error) {
       alert('No se pudo eliminar.')
-      return
+      return false
     }
 
     await Promise.all([
@@ -649,6 +721,8 @@ async function crearProyecto(event) {
       cargarTodasLasTareas(),
       cargarHistorial(),
     ])
+
+    return true
   }
 
   function exportarCSV() {
@@ -783,10 +857,13 @@ const anchoGanttAnio =
 function posicionBarra(tarea) {
   const inicioTarea = parseDate(tarea.fecha_inicio)
 
-  const finTarea = calcularFechaFinDate(
-    tarea.fecha_inicio,
-    tarea.duracion_dias
-  )
+  const finTarea =
+    tarea.es_hito
+      ? fechaFinHito(tarea)
+      : calcularFechaFinDate(
+          tarea.fecha_inicio,
+          tarea.duracion_dias
+        )
 
   if (
     !inicioTarea ||
@@ -1013,11 +1090,122 @@ const tareasFiltradas = useMemo(() => {
   }, [tareas])
 
   function estadoVisual(tarea) {
+  if (tarea.es_hito) {
+    return estadoHito(tarea)
+  }
+
   if (estaAtrasada(tarea)) {
     return 'Vencido'
   }
 
   return tarea.estado
+}
+
+function tareasDelHito(hitoId) {
+  return tareas.filter(
+    (tarea) =>
+      !tarea.es_hito &&
+      tarea.hito_padre_id === hitoId
+  )
+}
+
+function fechaFinHito(hito) {
+  const hijas = tareasDelHito(hito.id)
+
+  if (hijas.length === 0) {
+    return parseDate(hito.fecha_inicio)
+  }
+
+  const fechasFin = hijas
+    .map((tarea) =>
+      calcularFechaFinDate(
+        tarea.fecha_inicio,
+        tarea.duracion_dias
+      )
+    )
+    .filter(Boolean)
+
+  if (fechasFin.length === 0) {
+    return parseDate(hito.fecha_inicio)
+  }
+
+  return new Date(
+    Math.max(
+      ...fechasFin.map(
+        (fecha) => fecha.getTime()
+      )
+    )
+  )
+}
+
+function estadoHito(hito) {
+  const hijas = tareasDelHito(hito.id)
+
+  if (hijas.length === 0) {
+    return 'Pendiente'
+  }
+
+  const todasFinalizadas =
+    hijas.every(
+      (tarea) =>
+        tarea.estado === 'Finalizado'
+    )
+
+  if (todasFinalizadas) {
+    return 'Finalizado'
+  }
+
+  const algunaBloqueada =
+    hijas.some(
+      (tarea) =>
+        tarea.estado === 'Bloqueado'
+    )
+
+  if (algunaBloqueada) {
+    return 'Bloqueado'
+  }
+
+  const algunaEnCurso =
+    hijas.some(
+      (tarea) =>
+        tarea.estado === 'En curso'
+    )
+
+  if (algunaEnCurso) {
+    return 'En curso'
+  }
+
+  return 'Pendiente'
+}
+
+function calcularAvanceHito(hito) {
+  const hijas = tareasDelHito(hito.id)
+
+  if (hijas.length === 0) return 0
+
+  return Math.round(
+    hijas.reduce(
+      (acc, tarea) =>
+        acc + calcularAvance(tarea),
+      0
+    ) / hijas.length
+  )
+}
+
+function formatoFecha(fecha) {
+  return fecha
+    ? fecha.toLocaleDateString('es-AR')
+    : ''
+}
+
+function claseEstadoPunto(tarea) {
+  const estado = estadoVisual(tarea)
+
+  if (estado === 'En curso') {
+    return 'en-curso'
+  }
+
+  return estado.toLowerCase()
 }
 
 function colorEstadoTarea(tarea) {
@@ -1076,6 +1264,49 @@ function colorEstadoTarea(tarea) {
   }
 
 
+
+
+  const tareasVisuales = useMemo(() => {
+    const resultado = []
+
+    const hitos = tareasFiltradas.filter(
+      (tarea) => tarea.es_hito
+    )
+
+    const tareasSueltas = tareasFiltradas.filter(
+      (tarea) =>
+        !tarea.es_hito &&
+        !tarea.hito_padre_id
+    )
+
+    hitos.forEach((hito) => {
+      resultado.push(hito)
+
+      const hijas = tareasFiltradas
+        .filter(
+          (tarea) =>
+            !tarea.es_hito &&
+            tarea.hito_padre_id === hito.id
+        )
+        .sort(
+          (a, b) =>
+            parseDate(a.fecha_inicio) -
+            parseDate(b.fecha_inicio)
+        )
+
+      resultado.push(...hijas)
+    })
+
+    resultado.push(
+      ...tareasSueltas.sort(
+        (a, b) =>
+          parseDate(a.fecha_inicio) -
+          parseDate(b.fecha_inicio)
+      )
+    )
+
+    return resultado
+  }, [tareasFiltradas])
 
   const dashboardProyectos = useMemo(() => {
     return proyectos.map((proyectoItem) => {
@@ -1783,26 +2014,40 @@ function colorEstadoTarea(tarea) {
               <div className="table-header task-grid">
 
                 <div>Tarea</div>
+                <div aria-label="Estado"></div>
                 <div>Equipo</div>
                 <div>Inicio</div>
                 <div>Días</div>
-                <div>Estado</div>
                 <div>Acciones</div>
 
               </div>
 
-              {tareasFiltradas.map((tarea) => (
+              {tareasVisuales.map((tarea) => (
 
                 <div
   className={`task-grid task-row ${
     posicionBarra(tarea)
       ? ''
       : 'task-outside-month'
+  } ${
+    tarea.hito_padre_id
+      ? 'task-child-row'
+      : ''
+  } ${
+    tarea.es_hito
+      ? 'task-hito-row'
+      : ''
   }`}
   key={tarea.id}
 >
 
-                  <div className="task-title-with-priority">
+                  <div
+                    className={`task-title-with-priority ${
+                      tarea.es_hito
+                        ? 'task-title-hito'
+                        : ''
+                    }`}
+                  >
   <span
     className={`priority-icon ${tarea.prioridad?.toLowerCase()}`}
     title={`Prioridad ${tarea.prioridad || 'Media'}`}
@@ -1812,7 +2057,26 @@ function colorEstadoTarea(tarea) {
     {tarea.prioridad === 'Baja' && '▼'}
   </span>
 
-  <span>{tarea.nombre}</span>
+  {tarea.hito_padre_id && !tarea.es_hito && (
+    <span
+      className="task-child-arrow"
+      title="Tarea vinculada a un hito"
+    >
+      ↳
+    </span>
+  )}
+
+  {tarea.es_hito && (
+    <span className="hito-label">
+      HITO
+    </span>
+  )}
+
+  <span>
+    {tarea.es_hito
+      ? tarea.nombre.toUpperCase()
+      : tarea.nombre}
+  </span>
 
   {tarea.comentario?.trim() && (
     <button
@@ -1829,18 +2093,50 @@ function colorEstadoTarea(tarea) {
   )}
 </div>
 
+                  <div className="status-dot-cell">
+                    <span
+                      className={`status-dot ${claseEstadoPunto(tarea)}`}
+                      title={estadoVisual(tarea)}
+                      aria-label={`Estado: ${estadoVisual(tarea)}`}
+                    />
+                  </div>
+
+                  {tarea.hito_padre_id && (
+                    <span className="task-parent-hito">
+                      {tareas.find(
+                        (hito) =>
+                          hito.id === tarea.hito_padre_id
+                      )?.nombre || 'Hito'}
+                    </span>
+                  )}
+
                   <div className="task-responsibles">
-                    <span>
-                      <b>A:</b>{' '}
-                      {tarea.responsable_analista ||
-                        tarea.responsable ||
-                        '—'}
-                    </span>
-                    <span>
-                      <b>D:</b>{' '}
-                      {tarea.responsable_desarrollador ||
-                        '—'}
-                    </span>
+                    {tarea.es_hito ? (
+                      <>
+                        <span>
+                          <b>Tareas:</b>{' '}
+                          {tareasDelHito(tarea.id).length}
+                        </span>
+                        <span>
+                          <b>Estado:</b>{' '}
+                          {estadoHito(tarea)}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span>
+                          <b>A:</b>{' '}
+                          {tarea.responsable_analista ||
+                            tarea.responsable ||
+                            '—'}
+                        </span>
+                        <span>
+                          <b>D:</b>{' '}
+                          {tarea.responsable_desarrollador ||
+                            '—'}
+                        </span>
+                      </>
+                    )}
                   </div>
 
                   <div>
@@ -1850,13 +2146,22 @@ function colorEstadoTarea(tarea) {
                   </div>
 
                   <div>
-                    {tarea.duracion_dias}
-                  </div>
-
-                  <div>
-                    <span className={colorEstadoTarea(tarea)}>
-  {estadoVisual(tarea)}
-</span>
+                    {tarea.es_hito
+                      ? (
+                          fechaFinHito(tarea)
+                            ? Math.max(
+                                1,
+                                Math.floor(
+                                  (
+                                    fechaFinHito(tarea) -
+                                    parseDate(tarea.fecha_inicio)
+                                  ) /
+                                  86400000
+                                ) + 1
+                              )
+                            : 1
+                        )
+                      : tarea.duracion_dias}
                   </div>
 
                   <div className="row-actions">
@@ -1870,25 +2175,21 @@ function colorEstadoTarea(tarea) {
                       ✎
                     </button>
 
-                    {tarea.estado !== 'Finalizado' && (
+                    {estadoVisual(tarea) !== 'Finalizado' && (
                       <button
                         className="mini-button success"
                         onClick={() =>
                           finalizarTarea(tarea)
                         }
+                        title={
+                          tarea.es_hito
+                            ? 'Finalizar hito cuando todas sus tareas estén finalizadas'
+                            : 'Finalizar tarea'
+                        }
                       >
                         ✓
                       </button>
                     )}
-
-                    <button
-                      className="mini-button danger"
-                      onClick={() =>
-                        eliminarTarea(tarea)
-                      }
-                    >
-                      ×
-                    </button>
 
                   </div>
 
@@ -1931,9 +2232,6 @@ function colorEstadoTarea(tarea) {
                   </div>
                 </div>
 
-                <span className="gantt-days-label">
-                  Lunes a viernes · desplazamiento continuo
-                </span>
               </div>
 
               <div
@@ -2005,13 +2303,21 @@ function colorEstadoTarea(tarea) {
                       </div>
                     )}
 
-                    {tareasFiltradas.map((tarea) => {
+                    {tareasVisuales.map((tarea) => {
                       const posicion =
                         posicionBarra(tarea)
 
                       return (
                         <div
-                          className="dynamic-gantt-row"
+                          className={`dynamic-gantt-row ${
+                            tarea.hito_padre_id
+                              ? 'gantt-child-row'
+                              : ''
+                          } ${
+                            tarea.es_hito
+                              ? 'gantt-hito-row'
+                              : ''
+                          }`}
                           key={tarea.id}
                         >
                           <div
@@ -2044,13 +2350,13 @@ function colorEstadoTarea(tarea) {
                             tarea.es_hito
                               ? (
                                 <div
-                                  className="gantt-milestone"
-                                  style={{
-                                    left: posicion.center,
-                                  }}
-                                  title={tarea.nombre}
+                                  className="bar dynamic-bar bar-hito"
+                                  style={posicion}
+                                  title={`${tarea.nombre} · ${formatoFecha(
+                                    fechaFinHito(tarea)
+                                  )}`}
                                 >
-                                  ◆
+                                  HITO · {calcularAvanceHito(tarea)}%
                                 </div>
                               )
                               : (
@@ -2091,17 +2397,34 @@ function colorEstadoTarea(tarea) {
 
           <div className="table-header task-grid">
             <div>Tarea</div>
+            <div aria-label="Estado"></div>
             <div>Equipo</div>
             <div>Inicio</div>
             <div>Días</div>
-            <div>Estado</div>
             <div>Acciones</div>
           </div>
 
-          {tareasFiltradas.map((tarea) => (
-            <div className="task-grid task-row" key={tarea.id}>
+          {tareasVisuales.map((tarea) => (
+            <div
+              className={`task-grid task-row ${
+                tarea.hito_padre_id
+                  ? 'task-child-row'
+                  : ''
+              } ${
+                tarea.es_hito
+                  ? 'task-hito-row'
+                  : ''
+              }`}
+              key={tarea.id}
+            >
               <div>
-                <div className="task-title-with-priority">
+                <div
+                  className={`task-title-with-priority ${
+                    tarea.es_hito
+                      ? 'task-title-hito'
+                      : ''
+                  }`}
+                >
                   <span
                     className={`priority-icon ${tarea.prioridad?.toLowerCase()}`}
                     title={`Prioridad ${tarea.prioridad || 'Media'}`}
@@ -2111,7 +2434,26 @@ function colorEstadoTarea(tarea) {
                     {tarea.prioridad === 'Baja' && '▼'}
                   </span>
 
-                  <span>{tarea.nombre}</span>
+                  {tarea.hito_padre_id && !tarea.es_hito && (
+                    <span
+                      className="task-child-arrow"
+                      title="Tarea vinculada a un hito"
+                    >
+                      ↳
+                    </span>
+                  )}
+
+                  {tarea.es_hito && (
+                    <span className="hito-label">
+                      HITO
+                    </span>
+                  )}
+
+                  <span>
+                    {tarea.es_hito
+                      ? tarea.nombre.toUpperCase()
+                      : tarea.nombre}
+                  </span>
 
                   {tarea.comentario?.trim() && (
                     <button
@@ -2135,18 +2477,41 @@ function colorEstadoTarea(tarea) {
                 )}
               </div>
 
+              <div className="status-dot-cell">
+                <span
+                  className={`status-dot ${claseEstadoPunto(tarea)}`}
+                  title={estadoVisual(tarea)}
+                  aria-label={`Estado: ${estadoVisual(tarea)}`}
+                />
+              </div>
+
               <div className="task-responsibles">
-                <span>
-                  <b>A:</b>{' '}
-                  {tarea.responsable_analista ||
-                    tarea.responsable ||
-                    '—'}
-                </span>
-                <span>
-                  <b>D:</b>{' '}
-                  {tarea.responsable_desarrollador ||
-                    '—'}
-                </span>
+                {tarea.es_hito ? (
+                  <>
+                    <span>
+                      <b>Tareas:</b>{' '}
+                      {tareasDelHito(tarea.id).length}
+                    </span>
+                    <span>
+                      <b>Estado:</b>{' '}
+                      {estadoHito(tarea)}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span>
+                      <b>A:</b>{' '}
+                      {tarea.responsable_analista ||
+                        tarea.responsable ||
+                        '—'}
+                    </span>
+                    <span>
+                      <b>D:</b>{' '}
+                      {tarea.responsable_desarrollador ||
+                        '—'}
+                    </span>
+                  </>
+                )}
               </div>
 
               <div>
@@ -2156,12 +2521,6 @@ function colorEstadoTarea(tarea) {
               </div>
 
               <div>{tarea.duracion_dias}</div>
-
-              <div>
-                <span className={colorEstadoTarea(tarea)}>
-                  {estadoVisual(tarea)}
-                </span>
-              </div>
 
               <div className="row-actions">
                 <button
@@ -2182,13 +2541,6 @@ function colorEstadoTarea(tarea) {
                   </button>
                 )}
 
-                <button
-                  className="mini-button danger"
-                  onClick={() => eliminarTarea(tarea)}
-                  title="Eliminar"
-                >
-                  ×
-                </button>
               </div>
             </div>
           ))}
@@ -2391,8 +2743,55 @@ function colorEstadoTarea(tarea) {
 
               </div>
 
+              <div className="form-group full">
+                <label>
+                  Tipo
+                </label>
+
+                <div className="task-type-selector">
+                  <button
+                    type="button"
+                    className={
+                      form.tipo === 'Tarea'
+                        ? 'active'
+                        : ''
+                    }
+                    onClick={() =>
+                      setForm((actual) => ({
+                        ...actual,
+                        tipo: 'Tarea',
+                      }))
+                    }
+                  >
+                    Tarea
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      form.tipo === 'Hito'
+                        ? 'active hito'
+                        : 'hito'
+                    }
+                    onClick={() =>
+                      setForm((actual) => ({
+                        ...actual,
+                        tipo: 'Hito',
+                        responsableAnalista: '',
+                        responsableDesarrollador: '',
+                        dependencia: '',
+                        hitoPadre: '',
+                      }))
+                    }
+                  >
+                    Hito
+                  </button>
+                </div>
+              </div>
+
               <div className="form-grid">
 
+                {form.tipo === 'Tarea' && (
                 <div className="form-group">
 
                   <label>
@@ -2419,7 +2818,9 @@ function colorEstadoTarea(tarea) {
                   </select>
 
                 </div>
+                )}
 
+                {form.tipo === 'Tarea' && (
                 <div className="form-group">
 
                   <label>
@@ -2446,6 +2847,7 @@ function colorEstadoTarea(tarea) {
                   </select>
 
                 </div>
+                )}
 
                 <div className="form-group">
 
@@ -2462,6 +2864,7 @@ function colorEstadoTarea(tarea) {
 
                 </div>
 
+                {form.tipo === 'Tarea' && (
                 <div className="form-group">
 
                   <label>
@@ -2477,7 +2880,9 @@ function colorEstadoTarea(tarea) {
                   />
 
                 </div>
+                )}
 
+                {form.tipo === 'Tarea' && (
                 <div className="form-group">
 
                   <label>
@@ -2496,6 +2901,7 @@ function colorEstadoTarea(tarea) {
                   </select>
 
                 </div>
+                )}
 
                 <div className="form-group">
 
@@ -2515,6 +2921,7 @@ function colorEstadoTarea(tarea) {
 
                 </div>
 
+                {form.tipo === 'Tarea' && (
                 <div className="form-group">
 
                   <label>
@@ -2548,6 +2955,40 @@ function colorEstadoTarea(tarea) {
                   </select>
 
                 </div>
+                )}
+
+                {form.tipo === 'Tarea' && (
+                  <div className="form-group">
+                    <label>
+                      Hito / Épica
+                    </label>
+
+                    <select
+                      name="hitoPadre"
+                      value={form.hitoPadre}
+                      onChange={handleChange}
+                    >
+                      <option value="">
+                        Sin hito
+                      </option>
+
+                      {tareas
+                        .filter(
+                          (tarea) =>
+                            tarea.es_hito &&
+                            tarea.id !== tareaEditando?.id
+                        )
+                        .map((tarea) => (
+                          <option
+                            key={tarea.id}
+                            value={tarea.id}
+                          >
+                            {tarea.nombre}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
 
               </div>
 
@@ -2565,58 +3006,71 @@ function colorEstadoTarea(tarea) {
                 />
               </div>
 
-              <div className="form-check-row">
-
-                <input
-                  type="checkbox"
-                  id="hito"
-                  name="hito"
-                  checked={form.hito}
-                  onChange={handleChange}
-                />
-
-                <label htmlFor="hito">
-                  Marcar como hito
-                </label>
-
-              </div>
 
               {form.inicio && (
-
                 <div className="fecha-preview">
-
-                  Fecha fin calculada:
-
-                  <strong>
-                    {' '}
-                    {calcularFin(
-                      form.inicio,
-                      form.duracion
-                    )}
-                  </strong>
-
+                  {form.tipo === 'Hito' ? (
+                    <>
+                      Fecha fin del hito:
+                      <strong>
+                        {' '}
+                        automática según la tarea vinculada que finalice más tarde
+                      </strong>
+                    </>
+                  ) : (
+                    <>
+                      Fecha fin calculada:
+                      <strong>
+                        {' '}
+                        {calcularFin(
+                          form.inicio,
+                          form.duracion
+                        )}
+                      </strong>
+                    </>
+                  )}
                 </div>
-
               )}
 
-              <div className="modal-actions">
+              <div className="modal-actions modal-actions-task">
 
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={cerrarModal}
-                >
-                  Cancelar
-                </button>
+                {tareaEditando && (
+                  <button
+                    type="button"
+                    className="btn-delete-task"
+                    onClick={async () => {
+                      const eliminado =
+                        await eliminarTarea(tareaEditando)
 
-                <button
-                  className="btn-primary"
-                  type="submit"
-                >
-                  {tareaEditando
-                    ? 'Guardar cambios'
-                    : 'Crear tarea'}
-                </button>
+                      if (eliminado) {
+                        cerrarModal()
+                      }
+                    }}
+                  >
+                    Eliminar
+                  </button>
+                )}
+
+                <div className="modal-actions-right">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={cerrarModal}
+                  >
+                    Cancelar
+                  </button>
+
+                  <button
+                    className="btn-primary"
+                    type="submit"
+                  >
+                    {tareaEditando
+                      ? 'Guardar cambios'
+                      : form.tipo === 'Hito'
+                        ? 'Crear hito'
+                        : 'Crear tarea'}
+                  </button>
+                </div>
 
               </div>
 
