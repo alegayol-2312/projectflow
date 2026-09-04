@@ -335,11 +335,34 @@ useEffect(() => {
 
     if (!fecha) return null
 
-    const fin = new Date(fecha)
+    const diasObjetivo =
+      Math.max(1, Number(duracion) || 1)
 
-    fin.setDate(
-      fin.getDate() + Number(duracion) - 1
-    )
+    const fin = new Date(fecha)
+    fin.setHours(0, 0, 0, 0)
+
+    // La duración se interpreta como DÍAS HÁBILES.
+    // Si el inicio cae en fin de semana, comienza a contar
+    // desde el siguiente día hábil.
+    while (
+      fin.getDay() === 0 ||
+      fin.getDay() === 6
+    ) {
+      fin.setDate(fin.getDate() + 1)
+    }
+
+    let diasContados = 1
+
+    while (diasContados < diasObjetivo) {
+      fin.setDate(fin.getDate() + 1)
+
+      if (
+        fin.getDay() !== 0 &&
+        fin.getDay() !== 6
+      ) {
+        diasContados += 1
+      }
+    }
 
     return fin
   }
@@ -376,15 +399,24 @@ useEffect(() => {
       return 100
     }
 
-    const diasPasados =
-      Math.floor(
-        (hoy - inicio) / 86400000
-      ) + 1
+    let diasHabilesPasados = 0
+    const cursor = new Date(inicio)
+
+    while (cursor <= hoy) {
+      if (
+        cursor.getDay() !== 0 &&
+        cursor.getDay() !== 6
+      ) {
+        diasHabilesPasados += 1
+      }
+
+      cursor.setDate(cursor.getDate() + 1)
+    }
 
     return Math.min(
       100,
       Math.round(
-        (diasPasados /
+        (diasHabilesPasados /
           Number(tarea.duracion_dias)) *
           100
       )
@@ -1459,6 +1491,9 @@ function colorEstadoTarea(tarea) {
       return 0
     }
 
+    // Si hay horas estimadas manuales, se distribuyen
+    // sobre los días hábiles reales de la tarea.
+    // Si no hay estimación, usamos 6,5 h por día hábil.
     const horasTotales =
       Number(tarea.horas_estimadas) > 0
         ? Number(tarea.horas_estimadas)
@@ -1821,6 +1856,9 @@ function colorEstadoTarea(tarea) {
       return 0
     }
 
+    // Si hay horas estimadas manuales, se distribuyen
+    // sobre los días hábiles reales de la tarea.
+    // Si no hay estimación, usamos 6,5 h por día hábil.
     const horasTotales =
       Number(tarea.horas_estimadas) > 0
         ? Number(tarea.horas_estimadas)
@@ -2027,36 +2065,40 @@ function colorEstadoTarea(tarea) {
   }, [todasLasTareas])
 
   function colorHeatmap(porcentaje) {
-    const valor =
-      Math.max(0, porcentaje)
+    const valor = Math.max(0, porcentaje)
 
-    const decena =
-      Math.floor(valor / 10)
+    if (valor === 0) {
+      return 'hsl(210 18% 24%)'
+    }
+
+    if (valor <= 20) {
+      return 'hsl(145 58% 31%)'
+    }
 
     if (valor <= 40) {
-      const luz =
-        Math.max(30, 55 - decena * 5)
-      return `hsl(145 65% ${luz}%)`
+      return 'hsl(145 62% 45%)'
     }
 
-    if (valor <= 50) {
-      return 'hsl(48 92% 52%)'
+    if (valor <= 60) {
+      return 'hsl(48 90% 52%)'
     }
 
-    if (valor < 70) {
-      const luz =
-        valor < 60 ? 52 : 44
-      return `hsl(28 92% ${luz}%)`
+    if (valor <= 80) {
+      return 'hsl(28 92% 50%)'
+    }
+
+    if (valor <= 100) {
+      return 'hsl(354 78% 52%)'
     }
 
     const exceso =
       Math.min(
-        5,
-        Math.floor((valor - 70) / 10)
+        4,
+        Math.floor((valor - 100) / 20)
       )
 
-    return `hsl(354 78% ${
-      55 - exceso * 5
+    return `hsl(278 58% ${
+      52 - exceso * 5
     }%)`
   }
 
@@ -2135,39 +2177,79 @@ function colorEstadoTarea(tarea) {
         nombre,
         semanas:
           semanasHeatmap.map((semana) => {
-            const capacidad =
-              semana.dias.length *
-              HORAS_DIA_CAPACITY
+            const diasHabilesSemana =
+              semana.dias.length
 
-            const asignadas =
-              todasLasTareas
-                .filter(
-                  (tarea) =>
-                    !tarea.es_hito &&
-                    tarea.responsable_desarrollador ===
-                      nombre
+            let diasTareaAsignados = 0
+            let diasConOcupacion = 0
+
+            semana.dias.forEach((dia) => {
+              const tareasDelDia =
+                todasLasTareas.filter(
+                  (tarea) => {
+                    if (
+                      tarea.es_hito ||
+                      tarea.responsable_desarrollador !==
+                        nombre ||
+                      !tarea.fecha_inicio
+                    ) {
+                      return false
+                    }
+
+                    const inicioTarea =
+                      parseDate(
+                        tarea.fecha_inicio
+                      )
+
+                    const finTarea =
+                      calcularFechaFinDate(
+                        tarea.fecha_inicio,
+                        tarea.duracion_dias
+                      )
+
+                    if (
+                      !inicioTarea ||
+                      !finTarea
+                    ) {
+                      return false
+                    }
+
+                    return (
+                      dia >= inicioTarea &&
+                      dia <= finTarea
+                    )
+                  }
                 )
-                .reduce(
-                  (acc, tarea) =>
-                    acc +
-                    horasTareaEnRango(
-                      tarea,
-                      semana.inicio,
-                      semana.fin
-                    ),
-                  0
-                )
+
+              if (tareasDelDia.length > 0) {
+                diasConOcupacion += 1
+              }
+
+              diasTareaAsignados +=
+                tareasDelDia.length
+            })
 
             const porcentaje =
-              capacidad > 0
-                ? (asignadas / capacidad) *
-                  100
+              diasHabilesSemana > 0
+                ? (
+                    diasTareaAsignados /
+                    diasHabilesSemana
+                  ) * 100
                 : 0
+
+            const diasSuperpuestos =
+              Math.max(
+                0,
+                diasTareaAsignados -
+                  diasConOcupacion
+              )
 
             return {
               ...semana,
-              capacidad,
-              asignadas,
+              diasHabilesSemana,
+              diasTareaAsignados,
+              diasConOcupacion,
+              diasSuperpuestos,
               porcentaje,
             }
           }),
@@ -3583,10 +3665,13 @@ function colorEstadoTarea(tarea) {
           </div>
 
           <div className="heatmap-legend">
-            <span><i className="heat-legend green" />≤ 40% Disponible</span>
-            <span><i className="heat-legend yellow" />41–50% Atención</span>
-            <span><i className="heat-legend orange" />51–69% Carga alta</span>
-            <span><i className="heat-legend red" />≥ 70% Riesgo</span>
+            <span><i className="heat-legend free" />0% Libre</span>
+            <span><i className="heat-legend green-dark" />20% · 1 día</span>
+            <span><i className="heat-legend green-light" />40% · 2 días</span>
+            <span><i className="heat-legend yellow" />60% · 3 días</span>
+            <span><i className="heat-legend orange" />80% · 4 días</span>
+            <span><i className="heat-legend red" />100% · 5 días</span>
+            <span><i className="heat-legend purple" />&gt;100% · Superposición</span>
           </div>
 
           {heatmapDesarrolladores.length === 0 ? (
@@ -3633,17 +3718,28 @@ function colorEstadoTarea(tarea) {
                           semana.porcentaje
                         ),
                       }}
-                      title={`${dev.nombre} · ${semana.asignadas.toFixed(
-                        1
-                      )} h / ${semana.capacidad.toFixed(1)} h`}
+                      title={`${dev.nombre} · ${semana.diasTareaAsignados} día(s)-tarea sobre ${semana.diasHabilesSemana} día(s) hábil(es)${semana.diasSuperpuestos > 0 ? ` · ${semana.diasSuperpuestos} día(s) superpuesto(s)` : ''}`}
                     >
                       <strong>
                         {semana.porcentaje.toFixed(0)}%
                       </strong>
+
                       <small>
-                        {semana.asignadas.toFixed(1)} /{' '}
-                        {semana.capacidad.toFixed(1)} h
+                        {semana.diasConOcupacion}/{semana.diasHabilesSemana} días ocupados
                       </small>
+
+                      {semana.diasSuperpuestos > 0 && (
+                        <small className="heatmap-overlap">
+                          +{semana.diasSuperpuestos} superpuesto
+                          {semana.diasSuperpuestos !== 1 ? 's' : ''}
+                        </small>
+                      )}
+
+                      {semana.porcentaje === 0 && (
+                        <small className="heatmap-free">
+                          Libre
+                        </small>
+                      )}
                     </div>
                   ))}
                 </div>

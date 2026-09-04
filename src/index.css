@@ -4383,3 +4383,56 @@ p {
     overflow-x: auto;
   }
 }
+
+
+/* ==========================================
+   HEATMAP POR DIAS HABILES
+========================================== */
+
+.heat-legend.free {
+  background: hsl(210 18% 24%);
+}
+
+.heat-legend.green-dark {
+  background: hsl(145 58% 31%);
+}
+
+.heat-legend.green-light {
+  background: hsl(145 62% 45%);
+}
+
+.heat-legend.yellow {
+  background: hsl(48 90% 52%);
+}
+
+.heat-legend.orange {
+  background: hsl(28 92% 50%);
+}
+
+.heat-legend.red {
+  background: hsl(354 78% 52%);
+}
+
+.heat-legend.purple {
+  background: hsl(278 58% 52%);
+}
+
+.heatmap-overlap {
+  margin-top: 3px;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: rgba(25, 10, 35, 0.22);
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 850;
+}
+
+.heatmap-free {
+  margin-top: 3px;
+  color: #b9c8d8;
+  font-weight: 800;
+}
+
+.heatmap-cell[style*="210 18% 24%"] {
+  color: #dce7f1;
+  text-shadow: none;
+}
