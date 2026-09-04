@@ -77,6 +77,20 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
     fechaClaveInicial
   )
 
+  const mesHeatmapInicial = [
+    hoyReal.getFullYear(),
+    String(hoyReal.getMonth() + 1).padStart(2, '0'),
+  ].join('-')
+
+  const [mesHeatmap, setMesHeatmap] = useState(
+    mesHeatmapInicial
+  )
+
+  const [offsetSemana, setOffsetSemana] = useState(0)
+
+  const [asignandoBacklogId, setAsignandoBacklogId] =
+    useState(null)
+
   useEffect(() => {
     iniciarApp()
 
@@ -455,13 +469,10 @@ useEffect(() => {
 
     if (
       form.tipo === 'Tarea' &&
-      (
-        !form.responsableAnalista ||
-        !form.responsableDesarrollador
-      )
+      !form.responsableAnalista
     ) {
       alert(
-        'Para una tarea completá responsable analista y responsable desarrollador.'
+        'Para una tarea completá al menos el responsable analista.'
       )
       return
     }
@@ -620,7 +631,6 @@ useEffect(() => {
     await Promise.all([
       cargarTareas(proyecto.id),
       cargarTodasLasTareas(),
-      cargarHistorial(),
     ])
   }
 async function crearProyecto(event) {
@@ -723,7 +733,6 @@ async function crearProyecto(event) {
     await Promise.all([
       cargarTareas(proyecto.id),
       cargarTodasLasTareas(),
-      cargarHistorial(),
     ])
   }
 
@@ -747,7 +756,6 @@ async function crearProyecto(event) {
     await Promise.all([
       cargarTareas(proyecto.id),
       cargarTodasLasTareas(),
-      cargarHistorial(),
     ])
 
     return true
@@ -1742,6 +1750,538 @@ function colorEstadoTarea(tarea) {
     )
   }
 
+
+  function inicioSemana(fecha) {
+    const base = fechaSinHora(fecha)
+    const dia = base.getDay()
+    const diferencia = dia === 0 ? -6 : 1 - dia
+    base.setDate(base.getDate() + diferencia)
+    return base
+  }
+
+  function finSemana(fecha) {
+    const inicio = inicioSemana(fecha)
+    const fin = new Date(inicio)
+    fin.setDate(fin.getDate() + 4)
+    return fin
+  }
+
+  function sumarDias(fecha, cantidad) {
+    const copia = fechaSinHora(fecha)
+    copia.setDate(copia.getDate() + cantidad)
+    return copia
+  }
+
+  function horasTareaEnRango(tarea, inicioRango, finRango) {
+    if (
+      tarea.es_hito ||
+      !tarea.fecha_inicio ||
+      !inicioRango ||
+      !finRango
+    ) {
+      return 0
+    }
+
+    const inicioTarea = parseDate(tarea.fecha_inicio)
+    const finTarea = calcularFechaFinDate(
+      tarea.fecha_inicio,
+      tarea.duracion_dias
+    )
+
+    if (!inicioTarea || !finTarea) {
+      return 0
+    }
+
+    const inicioVentana =
+      inicioTarea > inicioRango
+        ? inicioTarea
+        : inicioRango
+
+    const finVentana =
+      finTarea < finRango
+        ? finTarea
+        : finRango
+
+    const totalDiasTarea =
+      diasHabilesEntre(
+        inicioTarea,
+        finTarea
+      ).length
+
+    const diasDentro =
+      diasHabilesEntre(
+        inicioVentana,
+        finVentana
+      ).length
+
+    if (
+      totalDiasTarea === 0 ||
+      diasDentro === 0
+    ) {
+      return 0
+    }
+
+    const horasTotales =
+      Number(tarea.horas_estimadas) > 0
+        ? Number(tarea.horas_estimadas)
+        : totalDiasTarea * HORAS_DIA_CAPACITY
+
+    return (
+      horasTotales *
+      (diasDentro / totalDiasTarea)
+    )
+  }
+
+  function desarrolladoresConocidos() {
+    const asignados = Array.from(
+      new Set(
+        todasLasTareas
+          .filter(
+            (tarea) =>
+              !tarea.es_hito &&
+              tarea.responsable_desarrollador
+          )
+          .map(
+            (tarea) =>
+              tarea.responsable_desarrollador
+          )
+      )
+    ).sort()
+
+    if (asignados.length > 0) {
+      return asignados
+    }
+
+    return perfiles
+      .map((perfil) => perfil.nombre)
+      .filter(Boolean)
+      .sort()
+  }
+
+  function ocupacionDesarrolladorEnRango(
+    nombre,
+    inicio,
+    fin,
+    excluirTareaId = null
+  ) {
+    const dias =
+      diasHabilesEntre(inicio, fin)
+
+    const capacidad =
+      dias.length *
+      HORAS_DIA_CAPACITY
+
+    const asignadas =
+      todasLasTareas
+        .filter(
+          (tarea) =>
+            !tarea.es_hito &&
+            tarea.id !== excluirTareaId &&
+            tarea.responsable_desarrollador ===
+              nombre
+        )
+        .reduce(
+          (acc, tarea) =>
+            acc +
+            horasTareaEnRango(
+              tarea,
+              inicio,
+              fin
+            ),
+          0
+        )
+
+    return {
+      capacidad,
+      asignadas,
+      disponibles:
+        capacidad - asignadas,
+      porcentaje:
+        capacidad > 0
+          ? (asignadas / capacidad) * 100
+          : 0,
+    }
+  }
+
+  function sugerenciaParaTarea(tarea) {
+    const desarrolladores =
+      desarrolladoresConocidos()
+
+    if (desarrolladores.length === 0) {
+      return null
+    }
+
+    const inicio =
+      hoyCapacity
+
+    const finTarea =
+      calcularFechaFinDate(
+        tarea.fecha_inicio,
+        tarea.duracion_dias
+      )
+
+    const fin =
+      finTarea && finTarea > inicio
+        ? finTarea
+        : sumarDias(inicio, 20)
+
+    const horasTarea =
+      Number(tarea.horas_estimadas) > 0
+        ? Number(tarea.horas_estimadas)
+        : Math.max(
+            1,
+            diasHabilesEntre(
+              parseDate(tarea.fecha_inicio),
+              finTarea
+            ).length
+          ) *
+          HORAS_DIA_CAPACITY
+
+    const opciones =
+      desarrolladores.map((nombre) => {
+        const ocupacion =
+          ocupacionDesarrolladorEnRango(
+            nombre,
+            inicio,
+            fin,
+            tarea.id
+          )
+
+        return {
+          nombre,
+          ...ocupacion,
+          disponiblesPost:
+            ocupacion.disponibles -
+            horasTarea,
+        }
+      })
+
+    return opciones.sort(
+      (a, b) =>
+        b.disponiblesPost -
+        a.disponiblesPost
+    )[0]
+  }
+
+  async function asignarBacklog(
+    tarea,
+    desarrollador
+  ) {
+    if (!desarrollador) {
+      return
+    }
+
+    setAsignandoBacklogId(tarea.id)
+
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        responsable_desarrollador:
+          desarrollador,
+        updated_at:
+          new Date().toISOString(),
+      })
+      .eq('id', tarea.id)
+
+    if (error) {
+      alert(
+        `No se pudo asignar: ${error.message}`
+      )
+      setAsignandoBacklogId(null)
+      return
+    }
+
+    await supabase
+      .from('task_history')
+      .insert({
+        task_id: tarea.id,
+        user_id: session.user.id,
+        accion: 'Desarrollador asignado',
+        detalle:
+          `Se asignó "${tarea.nombre}" a ${desarrollador}`,
+      })
+
+    await Promise.all([
+      cargarTodasLasTareas(),
+      proyecto?.id
+        ? cargarTareas(proyecto.id)
+        : Promise.resolve(),
+    ])
+
+    setAsignandoBacklogId(null)
+  }
+
+  const backlogSinAsignar = useMemo(() => {
+    return todasLasTareas
+      .filter(
+        (tarea) =>
+          !tarea.es_hito &&
+          !tarea.responsable_desarrollador &&
+          tarea.estado !== 'Finalizado'
+      )
+      .sort(
+        (a, b) =>
+          parseDate(a.fecha_inicio) -
+          parseDate(b.fecha_inicio)
+      )
+  }, [todasLasTareas])
+
+  function colorHeatmap(porcentaje) {
+    const valor =
+      Math.max(0, porcentaje)
+
+    const decena =
+      Math.floor(valor / 10)
+
+    if (valor <= 40) {
+      const luz =
+        Math.max(30, 55 - decena * 5)
+      return `hsl(145 65% ${luz}%)`
+    }
+
+    if (valor <= 50) {
+      return 'hsl(48 92% 52%)'
+    }
+
+    if (valor < 70) {
+      const luz =
+        valor < 60 ? 52 : 44
+      return `hsl(28 92% ${luz}%)`
+    }
+
+    const exceso =
+      Math.min(
+        5,
+        Math.floor((valor - 70) / 10)
+      )
+
+    return `hsl(354 78% ${
+      55 - exceso * 5
+    }%)`
+  }
+
+  const semanasHeatmap = useMemo(() => {
+    const [anio, mes] =
+      mesHeatmap
+        .split('-')
+        .map(Number)
+
+    if (!anio || !mes) {
+      return []
+    }
+
+    const primerDiaMes =
+      new Date(anio, mes - 1, 1)
+
+    const ultimoDiaMes =
+      new Date(anio, mes, 0)
+
+    const semanas = []
+    let cursor =
+      inicioSemana(primerDiaMes)
+
+    while (cursor <= ultimoDiaMes) {
+      const inicio = new Date(cursor)
+      const fin = finSemana(cursor)
+
+      const inicioUtil =
+        inicio < primerDiaMes
+          ? primerDiaMes
+          : inicio
+
+      const finUtil =
+        fin > ultimoDiaMes
+          ? ultimoDiaMes
+          : fin
+
+      const dias =
+        diasHabilesEntre(
+          inicioUtil,
+          finUtil
+        )
+
+      if (dias.length > 0) {
+        semanas.push({
+          inicio: inicioUtil,
+          fin: finUtil,
+          dias,
+          etiqueta:
+            `${inicioUtil.toLocaleDateString(
+              'es-AR',
+              {
+                day: '2-digit',
+                month: '2-digit',
+              }
+            )} - ${finUtil.toLocaleDateString(
+              'es-AR',
+              {
+                day: '2-digit',
+                month: '2-digit',
+              }
+            )}`,
+        })
+      }
+
+      cursor =
+        sumarDias(cursor, 7)
+    }
+
+    return semanas
+  }, [mesHeatmap])
+
+  const heatmapDesarrolladores = useMemo(() => {
+    return desarrolladoresConocidos()
+      .map((nombre) => ({
+        nombre,
+        semanas:
+          semanasHeatmap.map((semana) => {
+            const capacidad =
+              semana.dias.length *
+              HORAS_DIA_CAPACITY
+
+            const asignadas =
+              todasLasTareas
+                .filter(
+                  (tarea) =>
+                    !tarea.es_hito &&
+                    tarea.responsable_desarrollador ===
+                      nombre
+                )
+                .reduce(
+                  (acc, tarea) =>
+                    acc +
+                    horasTareaEnRango(
+                      tarea,
+                      semana.inicio,
+                      semana.fin
+                    ),
+                  0
+                )
+
+            const porcentaje =
+              capacidad > 0
+                ? (asignadas / capacidad) *
+                  100
+                : 0
+
+            return {
+              ...semana,
+              capacidad,
+              asignadas,
+              porcentaje,
+            }
+          }),
+      }))
+  }, [
+    todasLasTareas,
+    semanasHeatmap,
+    perfiles,
+  ])
+
+  const inicioSemanaActual = useMemo(() => {
+    const inicio =
+      inicioSemana(new Date())
+
+    return sumarDias(
+      inicio,
+      offsetSemana * 7
+    )
+  }, [offsetSemana])
+
+  const diasSemanaActual = useMemo(() => {
+    return Array.from(
+      { length: 5 },
+      (_, indice) =>
+        sumarDias(
+          inicioSemanaActual,
+          indice
+        )
+    )
+  }, [inicioSemanaActual])
+
+  const semanaDesarrolladores = useMemo(() => {
+    const fin =
+      diasSemanaActual[
+        diasSemanaActual.length - 1
+      ]
+
+    return desarrolladoresConocidos()
+      .map((nombre) => {
+        const tareas =
+          todasLasTareas.filter(
+            (tarea) =>
+              !tarea.es_hito &&
+              tarea.responsable_desarrollador ===
+                nombre &&
+              horasTareaEnRango(
+                tarea,
+                inicioSemanaActual,
+                fin
+              ) > 0
+          )
+
+        const dias =
+          diasSemanaActual.map((dia) => {
+            const tareasDia =
+              tareas
+                .filter(
+                  (tarea) =>
+                    horasTareaEnRango(
+                      tarea,
+                      dia,
+                      dia
+                    ) > 0
+                )
+                .map((tarea) => ({
+                  tarea,
+                  horas:
+                    horasTareaEnRango(
+                      tarea,
+                      dia,
+                      dia
+                    ),
+                }))
+
+            const asignadas =
+              tareasDia.reduce(
+                (acc, item) =>
+                  acc + item.horas,
+                0
+              )
+
+            return {
+              fecha: dia,
+              asignadas,
+              disponibles:
+                HORAS_DIA_CAPACITY -
+                asignadas,
+              porcentaje:
+                (asignadas /
+                  HORAS_DIA_CAPACITY) *
+                100,
+              tareasDia,
+            }
+          })
+
+        return {
+          nombre,
+          tareas,
+          dias,
+          totalAsignado:
+            dias.reduce(
+              (acc, dia) =>
+                acc + dia.asignadas,
+              0
+            ),
+        }
+      })
+  }, [
+    todasLasTareas,
+    diasSemanaActual,
+    inicioSemanaActual,
+    perfiles,
+  ])
+
   const dashboardProyectos = useMemo(() => {
     return proyectos.map((proyectoItem) => {
       const tareasProyecto =
@@ -2134,21 +2674,39 @@ function colorEstadoTarea(tarea) {
           </button>
 
           <button
-            className={vista === 'historial' ? 'active' : ''}
-            onClick={() =>
-              setVista('historial')
-            }
-          >
-            Historial
-          </button>
-
-          <button
             className={vista === 'capacity' ? 'active' : ''}
             onClick={() =>
               setVista('capacity')
             }
           >
             Capacity
+          </button>
+
+          <button
+            className={vista === 'heatmap' ? 'active' : ''}
+            onClick={() =>
+              setVista('heatmap')
+            }
+          >
+            Heatmap
+          </button>
+
+          <button
+            className={vista === 'backlog' ? 'active' : ''}
+            onClick={() =>
+              setVista('backlog')
+            }
+          >
+            Backlog
+          </button>
+
+          <button
+            className={vista === 'semana' ? 'active' : ''}
+            onClick={() =>
+              setVista('semana')
+            }
+          >
+            Semana
           </button>
 
 {vista === 'tabla' && (
@@ -2998,7 +3556,351 @@ function colorEstadoTarea(tarea) {
       )}
 
 
-      {proyectoSeleccionadoId !== '__all__' && vista === 'capacity' && (
+
+      {vista === 'heatmap' && (
+        <section className="planning-section">
+          <div className="planning-toolbar">
+            <div>
+              <span className="planning-eyebrow">
+                Ocupación semanal
+              </span>
+              <h2>Heatmap</h2>
+              <p>
+                Porcentaje de capacidad utilizada por desarrollador y semana.
+              </p>
+            </div>
+
+            <label className="planning-control">
+              <span>Mes</span>
+              <input
+                type="month"
+                value={mesHeatmap}
+                onChange={(e) =>
+                  setMesHeatmap(e.target.value)
+                }
+              />
+            </label>
+          </div>
+
+          <div className="heatmap-legend">
+            <span><i className="heat-legend green" />≤ 40% Disponible</span>
+            <span><i className="heat-legend yellow" />41–50% Atención</span>
+            <span><i className="heat-legend orange" />51–69% Carga alta</span>
+            <span><i className="heat-legend red" />≥ 70% Riesgo</span>
+          </div>
+
+          {heatmapDesarrolladores.length === 0 ? (
+            <div className="capacity-empty">
+              No hay desarrolladores con asignaciones para mostrar.
+            </div>
+          ) : (
+            <div
+              className="heatmap-grid"
+              style={{
+                gridTemplateColumns:
+                  `190px repeat(${semanasHeatmap.length}, minmax(120px, 1fr))`,
+              }}
+            >
+              <div className="heatmap-header dev">
+                Desarrollador
+              </div>
+
+              {semanasHeatmap.map((semana) => (
+                <div
+                  className="heatmap-header"
+                  key={semana.etiqueta}
+                >
+                  {semana.etiqueta}
+                </div>
+              ))}
+
+              {heatmapDesarrolladores.map((dev) => (
+                <div
+                  className="heatmap-row-fragment"
+                  key={dev.nombre}
+                  style={{ display: 'contents' }}
+                >
+                  <div className="heatmap-dev">
+                    {dev.nombre}
+                  </div>
+
+                  {dev.semanas.map((semana) => (
+                    <div
+                      className="heatmap-cell"
+                      key={`${dev.nombre}-${semana.etiqueta}`}
+                      style={{
+                        background: colorHeatmap(
+                          semana.porcentaje
+                        ),
+                      }}
+                      title={`${dev.nombre} · ${semana.asignadas.toFixed(
+                        1
+                      )} h / ${semana.capacidad.toFixed(1)} h`}
+                    >
+                      <strong>
+                        {semana.porcentaje.toFixed(0)}%
+                      </strong>
+                      <small>
+                        {semana.asignadas.toFixed(1)} /{' '}
+                        {semana.capacidad.toFixed(1)} h
+                      </small>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {vista === 'backlog' && (
+        <section className="planning-section">
+          <div className="planning-toolbar">
+            <div>
+              <span className="planning-eyebrow">
+                Trabajo pendiente de asignación
+              </span>
+              <h2>Backlog sin asignar</h2>
+              <p>
+                La recomendación prioriza al desarrollador con mayor capacidad libre.
+              </p>
+            </div>
+
+            <div className="backlog-count">
+              {backlogSinAsignar.length}
+              <span>sin asignar</span>
+            </div>
+          </div>
+
+          {backlogSinAsignar.length === 0 ? (
+            <div className="capacity-empty">
+              No hay tareas pendientes de desarrollador.
+            </div>
+          ) : (
+            <div className="backlog-list">
+              <div className="backlog-header">
+                <div>Tarea</div>
+                <div>Proyecto</div>
+                <div>Horas</div>
+                <div>Fecha fin</div>
+                <div>Sugerencia automática</div>
+                <div>Acción</div>
+              </div>
+
+              {backlogSinAsignar.map((tarea) => {
+                const sugerencia =
+                  sugerenciaParaTarea(tarea)
+
+                return (
+                  <div
+                    className="backlog-row"
+                    key={tarea.id}
+                  >
+                    <div>
+                      <strong>{tarea.nombre}</strong>
+                      <small>
+                        Analista:{' '}
+                        {tarea.responsable_analista ||
+                          tarea.responsable ||
+                          '—'}
+                      </small>
+                    </div>
+
+                    <div>
+                      {nombreProyectoDeTarea(tarea)}
+                    </div>
+
+                    <div>
+                      {Number(
+                        tarea.horas_estimadas || 0
+                      ).toFixed(1)} h
+                    </div>
+
+                    <div>
+                      {calcularFechaFinDate(
+                        tarea.fecha_inicio,
+                        tarea.duracion_dias
+                      )?.toLocaleDateString('es-AR')}
+                    </div>
+
+                    <div>
+                      {sugerencia ? (
+                        <div className="suggestion-box">
+                          <strong>
+                            {sugerencia.nombre}
+                          </strong>
+                          <small>
+                            Quedaría con{' '}
+                            {sugerencia.disponiblesPost.toFixed(
+                              1
+                            )}{' '}
+                            h libres
+                          </small>
+                        </div>
+                      ) : (
+                        'Sin sugerencia'
+                      )}
+                    </div>
+
+                    <div>
+                      <button
+                        className="assign-button"
+                        disabled={
+                          !sugerencia ||
+                          asignandoBacklogId === tarea.id
+                        }
+                        onClick={() =>
+                          asignarBacklog(
+                            tarea,
+                            sugerencia?.nombre
+                          )
+                        }
+                      >
+                        {asignandoBacklogId === tarea.id
+                          ? 'Asignando...'
+                          : 'Asignar'}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {vista === 'semana' && (
+        <section className="planning-section">
+          <div className="planning-toolbar">
+            <div>
+              <span className="planning-eyebrow">
+                Extracción semanal
+              </span>
+              <h2>Vista semanal</h2>
+              <p>
+                Carga diaria por desarrollador para la semana seleccionada.
+              </p>
+            </div>
+
+            <div className="week-nav">
+              <button
+                onClick={() =>
+                  setOffsetSemana((actual) => actual - 1)
+                }
+              >
+                ←
+              </button>
+
+              <button
+                className="week-today"
+                onClick={() => setOffsetSemana(0)}
+              >
+                Semana actual
+              </button>
+
+              <button
+                onClick={() =>
+                  setOffsetSemana((actual) => actual + 1)
+                }
+              >
+                →
+              </button>
+            </div>
+          </div>
+
+          {semanaDesarrolladores.length === 0 ? (
+            <div className="capacity-empty">
+              No hay desarrolladores con carga para mostrar.
+            </div>
+          ) : (
+            <div
+              className="week-grid"
+              style={{
+                gridTemplateColumns:
+                  '190px repeat(5, minmax(150px, 1fr))',
+              }}
+            >
+              <div className="week-header dev">
+                Desarrollador
+              </div>
+
+              {diasSemanaActual.map((dia) => (
+                <div
+                  className="week-header"
+                  key={dia.toISOString()}
+                >
+                  <strong>
+                    {dia.toLocaleDateString('es-AR', {
+                      weekday: 'short',
+                    })}
+                  </strong>
+                  <span>
+                    {dia.toLocaleDateString('es-AR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                    })}
+                  </span>
+                </div>
+              ))}
+
+              {semanaDesarrolladores.map((dev) => (
+                <div
+                  className="week-row-fragment"
+                  key={dev.nombre}
+                  style={{ display: 'contents' }}
+                >
+                  <div className="week-dev">
+                    <strong>{dev.nombre}</strong>
+                    <small>
+                      {dev.totalAsignado.toFixed(1)} h asignadas
+                    </small>
+                  </div>
+
+                  {dev.dias.map((dia) => (
+                    <div
+                      className="week-cell"
+                      key={`${dev.nombre}-${dia.fecha.toISOString()}`}
+                      style={{
+                        borderTopColor: colorHeatmap(
+                          dia.porcentaje
+                        ),
+                      }}
+                    >
+                      <div className="week-hours">
+                        <strong>
+                          {dia.asignadas.toFixed(1)} h
+                        </strong>
+                        <span>
+                          {dia.disponibles.toFixed(1)} h libres
+                        </span>
+                      </div>
+
+                      <div className="week-tasks">
+                        {dia.tareasDia.map((item) => (
+                          <span
+                            key={item.tarea.id}
+                            title={`${item.tarea.nombre} · ${item.horas.toFixed(
+                              1
+                            )} h`}
+                          >
+                            {item.tarea.nombre}
+                          </span>
+                        ))}
+
+                        {dia.tareasDia.length === 0 && (
+                          <em>Sin carga</em>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {vista === 'capacity' && (
         <section className="capacity-section">
           <div className="capacity-toolbar">
             <div>
@@ -3261,73 +4163,6 @@ function colorEstadoTarea(tarea) {
         </section>
       )}
 
-      {proyectoSeleccionadoId !== '__all__' && vista === 'historial' && (
-        <section className="history-page">
-          <div className="history-page-header">
-            <div>
-              <h2>Historial de actividad</h2>
-              <p>
-                Todos los cambios registrados en tareas de todos los proyectos.
-              </p>
-            </div>
-
-            <span className="history-count">
-              {historial.length} movimientos
-            </span>
-          </div>
-
-          <div className="history-table-header">
-            <div>Fecha</div>
-            <div>Proyecto</div>
-            <div>Tarea</div>
-            <div>Usuario</div>
-            <div>Acción</div>
-            <div>Detalle</div>
-          </div>
-
-          <div className="history-page-list">
-            {historial.map((item) => (
-              <div
-                className="history-table-row"
-                key={item.id}
-              >
-                <div className="history-date">
-                  {formatoFechaHora(item.created_at)}
-                </div>
-
-                <div className="history-project">
-                  {item.proyecto_nombre}
-                </div>
-
-                <div className="history-task">
-                  {item.tarea_nombre}
-                </div>
-
-                <div>
-                  {item.usuario_nombre}
-                </div>
-
-                <div>
-                  <span className="history-action-chip">
-                    {item.accion}
-                  </span>
-                </div>
-
-                <div className="history-detail">
-                  {item.detalle || '—'}
-                </div>
-              </div>
-            ))}
-
-            {historial.length === 0 && (
-              <div className="history-empty">
-                Todavía no hay movimientos registrados.
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
       {modalProyectoOpen && (
         <div className="modal-overlay">
           <div className="modal project-modal">
@@ -3539,7 +4374,7 @@ function colorEstadoTarea(tarea) {
                     onChange={handleChange}
                   >
                     <option value="">
-                      Seleccionar desarrollador
+                      Sin asignar / Backlog
                     </option>
 
                     {perfiles.map((perfil) => (
