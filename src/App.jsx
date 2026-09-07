@@ -3436,6 +3436,26 @@ function colorEstadoTarea(tarea) {
                   </div>
                 </div>
 
+                <div className="gantt-title-scroll-controls">
+                  <button
+                    type="button"
+                    className="gantt-scroll-button"
+                    onClick={() => moverGantt('izquierda')}
+                    title="Mover Gantt hacia la izquierda"
+                  >
+                    ←
+                  </button>
+
+                  <button
+                    type="button"
+                    className="gantt-scroll-button"
+                    onClick={() => moverGantt('derecha')}
+                    title="Mover Gantt hacia la derecha"
+                  >
+                    →
+                  </button>
+                </div>
+
               </div>
 
               <div

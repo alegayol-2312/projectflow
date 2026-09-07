@@ -4493,3 +4493,381 @@ p {
   color: #ff6b7c;
   background: rgba(255, 107, 124, 0.09);
 }
+
+
+/* ==========================================
+   CONTROLES SUPERIORES DE SCROLL DEL GANTT
+========================================== */
+
+.gantt-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gantt-title-left {
+  min-width: 0;
+  flex: 1;
+}
+
+.gantt-title-scroll-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.gantt-title-scroll-controls .gantt-scroll-button {
+  width: 32px;
+  height: 30px;
+  padding: 0;
+}
+
+
+/* ==========================================
+   CAPACITY / HEATMAP / SEMANA - MAYOR LEGIBILIDAD
+========================================== */
+
+/* ------------------------------
+   CAPACITY
+------------------------------ */
+
+.capacity-workspace {
+  grid-template-columns:
+    430px
+    minmax(0, 1fr) !important;
+}
+
+.capacity-team-header {
+  grid-template-columns:
+    minmax(150px, 1.1fr)
+    minmax(220px, 1.5fr) !important;
+
+  padding: 0 16px !important;
+
+  font-size: 11px !important;
+}
+
+.capacity-team-row {
+  grid-template-columns:
+    minmax(150px, 1.1fr)
+    minmax(220px, 1.5fr) !important;
+
+  padding: 9px 16px !important;
+}
+
+.capacity-dev-name {
+  font-size: 13px !important;
+  line-height: 1.25;
+}
+
+.capacity-dev-metrics {
+  gap: 4px !important;
+
+  font-size: 10.5px !important;
+  line-height: 1.3;
+}
+
+.capacity-dev-metrics b {
+  font-size: 10.5px;
+}
+
+.capacity-toolbar p {
+  font-size: 12px !important;
+}
+
+/* ------------------------------
+   HEATMAP
+------------------------------ */
+
+.heatmap-grid {
+  grid-auto-rows: minmax(70px, auto);
+}
+
+.heatmap-header {
+  min-height: 48px !important;
+
+  padding: 10px 12px !important;
+
+  font-size: 10.5px !important;
+}
+
+.heatmap-dev {
+  min-height: 70px !important;
+
+  padding: 12px 16px !important;
+
+  font-size: 12px !important;
+}
+
+.heatmap-cell {
+  min-height: 70px !important;
+
+  padding: 10px 12px !important;
+}
+
+.heatmap-cell strong {
+  font-size: 17px !important;
+}
+
+.heatmap-cell small {
+  font-size: 9.5px !important;
+}
+
+.heatmap-legend {
+  gap: 20px !important;
+
+  padding: 12px 18px !important;
+
+  font-size: 10px !important;
+}
+
+.heat-legend {
+  width: 10px !important;
+  height: 10px !important;
+}
+
+/* ------------------------------
+   SEMANA
+------------------------------ */
+
+.week-grid {
+  grid-auto-rows: minmax(118px, auto);
+}
+
+.week-header {
+  min-height: 52px !important;
+
+  padding: 9px 10px !important;
+
+  font-size: 10px !important;
+}
+
+.week-dev {
+  min-height: 118px !important;
+
+  padding: 14px 16px !important;
+}
+
+.week-dev strong {
+  font-size: 12px !important;
+}
+
+.week-dev small {
+  font-size: 9px !important;
+}
+
+.week-cell {
+  min-height: 118px !important;
+
+  padding: 10px 11px !important;
+}
+
+.week-hours strong {
+  font-size: 11.5px !important;
+}
+
+.week-hours span {
+  font-size: 9px !important;
+}
+
+.week-tasks span {
+  padding: 5px 7px !important;
+
+  font-size: 9px !important;
+}
+
+.week-tasks em {
+  font-size: 9px !important;
+}
+
+/* ------------------------------
+   ANCHO DE PANEL LATERAL
+------------------------------ */
+
+@media (min-width: 1200px) {
+  .capacity-workspace {
+    grid-template-columns:
+      450px
+      minmax(0, 1fr) !important;
+  }
+
+  .heatmap-grid {
+    grid-template-columns:
+      230px
+      repeat(
+        var(--heatmap-cols, 5),
+        minmax(120px, 1fr)
+      );
+  }
+}
+
+@media (max-width: 1050px) {
+  .capacity-workspace {
+    grid-template-columns:
+      390px
+      minmax(700px, 1fr) !important;
+  }
+}
+
+
+/* ==========================================
+   AJUSTE CAPACITY + CONTRASTE HEATMAP/SEMANA
+========================================== */
+
+/* ------------------------------
+   CAPACITY: MÁS ALTO POR DESARROLLADOR
+------------------------------ */
+
+.capacity-team-row {
+  min-height: 118px !important;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+}
+
+.capacity-gantt-row {
+  min-height: 118px !important;
+}
+
+.capacity-dev-name {
+  align-self: center;
+  font-size: 13.5px !important;
+}
+
+.capacity-dev-metrics {
+  justify-content: center;
+  gap: 6px !important;
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+}
+
+.capacity-dev-metrics span {
+  display: block;
+  white-space: nowrap;
+}
+
+.capacity-dev-metrics b {
+  font-size: 11px !important;
+}
+
+/* ------------------------------
+   HEATMAP: MEJOR CONTRASTE
+------------------------------ */
+
+.heatmap-cell {
+  color: #08130d !important;
+  text-shadow: none !important;
+}
+
+.heatmap-cell strong {
+  color: #07110c !important;
+  font-weight: 900 !important;
+}
+
+.heatmap-cell small {
+  color: #102118 !important;
+  font-weight: 800 !important;
+}
+
+.heatmap-cell[style*="210 18% 24%"] {
+  color: #edf4fa !important;
+}
+
+.heatmap-cell[style*="210 18% 24%"] strong,
+.heatmap-cell[style*="210 18% 24%"] small {
+  color: #edf4fa !important;
+}
+
+.heatmap-overlap {
+  background: rgba(20, 8, 30, 0.38) !important;
+  color: #ffffff !important;
+}
+
+.heatmap-free {
+  color: #d8e5ef !important;
+}
+
+/* ------------------------------
+   SEMANA: FONDO + TEXTO CONTRASTADO
+------------------------------ */
+
+.week-cell {
+  background: #10161f !important;
+  color: #e7edf4 !important;
+}
+
+.week-cell:nth-child(even) {
+  background: #0d131b !important;
+}
+
+.week-hours strong {
+  color: #ffffff !important;
+}
+
+.week-hours span {
+  color: #aeb9c6 !important;
+}
+
+.week-tasks span {
+  background: #18283d !important;
+  color: #d9e7ff !important;
+  border: 1px solid rgba(120, 170, 255, 0.16);
+}
+
+.week-tasks em {
+  color: #8d99a7 !important;
+}
+
+.week-dev {
+  background: #0f151d !important;
+}
+
+.week-dev strong {
+  color: #ffffff !important;
+}
+
+.week-dev small {
+  color: #a7b2be !important;
+}
+
+.week-header {
+  background: #090e14 !important;
+}
+
+.week-header strong {
+  color: #f2f6fa !important;
+}
+
+.week-header span {
+  color: #a1acb8 !important;
+}
+
+
+/* ==========================================
+   HEATMAP - TEXTO SIEMPRE BLANCO
+========================================== */
+
+.heatmap-cell,
+.heatmap-cell strong,
+.heatmap-cell small,
+.heatmap-cell .heatmap-overlap,
+.heatmap-cell .heatmap-free {
+  color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+.heatmap-dev,
+.heatmap-header {
+  color: #ffffff !important;
+}
+
+.heatmap-header strong,
+.heatmap-header span {
+  color: #ffffff !important;
+}
+
+.heatmap-legend,
+.heatmap-legend span {
+  color: #ffffff !important;
+}
