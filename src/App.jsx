@@ -379,7 +379,9 @@ useEffect(() => {
   function fechaFinRealTarea(tarea) {
     if (
       tarea.es_hito ||
-      tarea.estado !== 'Finalizado' ||
+      !['Finalizado', 'Desestimado'].includes(
+        tarea.estado
+      ) ||
       !tarea.fecha_finalizacion
     ) {
       return null
@@ -460,7 +462,10 @@ useEffect(() => {
   }
 
   function calcularAvance(tarea) {
-    if (tarea.estado === 'Finalizado') {
+    if (
+      tarea.estado === 'Finalizado' ||
+      tarea.estado === 'Desestimado'
+    ) {
       return 100
     }
 
@@ -508,7 +513,10 @@ useEffect(() => {
   }
 
   function estaAtrasada(tarea) {
-    if (tarea.estado === 'Finalizado') {
+    if (
+      tarea.estado === 'Finalizado' ||
+      tarea.estado === 'Desestimado'
+    ) {
       return false
     }
 
@@ -633,7 +641,9 @@ useEffect(() => {
 
           fecha_finalizacion:
             form.tipo === 'Tarea' &&
-            form.estado === 'Finalizado'
+            ['Finalizado', 'Desestimado'].includes(
+              form.estado
+            )
               ? tareaEditando.fecha_finalizacion ||
                 new Date().toISOString()
               : null,
@@ -1214,26 +1224,35 @@ const tareasFiltradas = useMemo(() => {
 ])
 
   const metricas = useMemo(() => {
-    const total = tareas.length
+    const tareasContabilizables =
+      tareas.filter(
+        (tarea) =>
+          tarea.estado !== 'Desestimado'
+      )
+
+    const total =
+      tareasContabilizables.length
 
     const finalizadas =
-      tareas.filter(
+      tareasContabilizables.filter(
         (t) => t.estado === 'Finalizado'
       ).length
 
     const enCurso =
-      tareas.filter(
+      tareasContabilizables.filter(
         (t) => t.estado === 'En curso'
       ).length
 
     const atrasadas =
-      tareas.filter(estaAtrasada).length
+      tareasContabilizables.filter(
+        estaAtrasada
+      ).length
 
     const promedio =
       total === 0
         ? 0
         : Math.round(
-            tareas.reduce(
+            tareasContabilizables.reduce(
               (acc, tarea) =>
                 acc + calcularAvance(tarea),
               0
@@ -1308,7 +1327,9 @@ function estadoHito(hito) {
   const todasFinalizadas =
     hijas.every(
       (tarea) =>
-        tarea.estado === 'Finalizado'
+        ['Finalizado', 'Desestimado'].includes(
+          tarea.estado
+        )
     )
 
   if (todasFinalizadas) {
@@ -1475,6 +1496,10 @@ function colorEstadoTarea(tarea) {
     hoy.setHours(0, 0, 0, 0)
 
     return tareasVisuales.filter((tarea) => {
+      if (tarea.estado === 'Desestimado') {
+        return false
+      }
+
       if (
         tarea.es_hito ||
         tarea.estado !== 'Finalizado'
@@ -1564,6 +1589,7 @@ function colorEstadoTarea(tarea) {
   function horasTareaEnVentana(tarea) {
     if (
       tarea.es_hito ||
+      tarea.estado === 'Desestimado' ||
       !tarea.fecha_inicio ||
       !fechaClaveDate
     ) {
@@ -1775,6 +1801,7 @@ function colorEstadoTarea(tarea) {
           .filter(
             (tarea) =>
               !tarea.es_hito &&
+              tarea.estado !== 'Desestimado' &&
               tarea.responsable_desarrollador
           )
           .map(
@@ -1793,6 +1820,7 @@ function colorEstadoTarea(tarea) {
         todasLasTareas.filter(
           (tarea) =>
             !tarea.es_hito &&
+            tarea.estado !== 'Desestimado' &&
             tarea.responsable_desarrollador ===
               nombre
         )
@@ -1931,6 +1959,7 @@ function colorEstadoTarea(tarea) {
   function horasTareaEnRango(tarea, inicioRango, finRango) {
     if (
       tarea.es_hito ||
+      tarea.estado === 'Desestimado' ||
       !tarea.fecha_inicio ||
       !inicioRango ||
       !finRango
@@ -1998,6 +2027,7 @@ function colorEstadoTarea(tarea) {
           .filter(
             (tarea) =>
               !tarea.es_hito &&
+              tarea.estado !== 'Desestimado' &&
               tarea.responsable_desarrollador
           )
           .map(
@@ -2035,6 +2065,7 @@ function colorEstadoTarea(tarea) {
         .filter(
           (tarea) =>
             !tarea.es_hito &&
+            tarea.estado !== 'Desestimado' &&
             tarea.id !== excluirTareaId &&
             tarea.responsable_desarrollador ===
               nombre
@@ -2176,7 +2207,9 @@ function colorEstadoTarea(tarea) {
         (tarea) =>
           !tarea.es_hito &&
           !tarea.responsable_desarrollador &&
-          tarea.estado !== 'Finalizado'
+          !['Finalizado', 'Desestimado'].includes(
+            tarea.estado
+          )
       )
       .sort(
         (a, b) =>
@@ -2310,6 +2343,7 @@ function colorEstadoTarea(tarea) {
                   (tarea) => {
                     if (
                       tarea.es_hito ||
+                      tarea.estado === 'Desestimado' ||
                       tarea.responsable_desarrollador !==
                         nombre ||
                       !tarea.fecha_inicio
@@ -2414,6 +2448,7 @@ function colorEstadoTarea(tarea) {
           todasLasTareas.filter(
             (tarea) =>
               !tarea.es_hito &&
+              tarea.estado !== 'Desestimado' &&
               tarea.responsable_desarrollador ===
                 nombre &&
               horasTareaEnRango(
@@ -2490,7 +2525,8 @@ function colorEstadoTarea(tarea) {
       const tareasProyecto =
         todasLasTareas.filter(
           (tarea) =>
-            tarea.project_id === proyectoItem.id
+            tarea.project_id === proyectoItem.id &&
+            tarea.estado !== 'Desestimado'
         )
 
       const total = tareasProyecto.length
@@ -2591,16 +2627,22 @@ function colorEstadoTarea(tarea) {
           proyectoItem.estado !== 'Finalizado'
       ).length
 
+    const tareasContabilizables =
+      todasLasTareas.filter(
+        (tarea) =>
+          tarea.estado !== 'Desestimado'
+      )
+
     const totalTareas =
-      todasLasTareas.length
+      tareasContabilizables.length
 
     const vencidas =
-      todasLasTareas.filter(
+      tareasContabilizables.filter(
         (tarea) => estaAtrasada(tarea)
       ).length
 
     const bloqueadas =
-      todasLasTareas.filter(
+      tareasContabilizables.filter(
         (tarea) =>
           tarea.estado === 'Bloqueado'
       ).length
@@ -2609,7 +2651,7 @@ function colorEstadoTarea(tarea) {
       totalTareas === 0
         ? 0
         : Math.round(
-            todasLasTareas.reduce(
+            tareasContabilizables.reduce(
               (acc, tarea) =>
                 acc + calcularAvance(tarea),
               0
@@ -2852,6 +2894,7 @@ function colorEstadoTarea(tarea) {
           <option>Pendiente</option>
           <option>En curso</option>
           <option>Finalizado</option>
+          <option>Desestimado</option>
           <option>Vencido</option>
           <option>Bloqueado</option>
         </select>
@@ -4740,6 +4783,12 @@ function colorEstadoTarea(tarea) {
                     <option>En curso</option>
                     <option>Finalizado</option>
                     <option>Bloqueado</option>
+
+                    {tareaEditando && (
+                      <option>
+                        Desestimado
+                      </option>
+                    )}
                   </select>
 
                 </div>

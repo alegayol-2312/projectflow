@@ -4871,3 +4871,85 @@ p {
 .heatmap-legend span {
   color: #ffffff !important;
 }
+
+
+/* ==========================================
+   BACKLOG - MAYOR LEGIBILIDAD
+========================================== */
+
+.backlog-header {
+  min-height: 48px !important;
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+  font-size: 10px !important;
+  letter-spacing: 0.03em;
+}
+
+.backlog-row {
+  min-height: 78px !important;
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+  font-size: 11px !important;
+  line-height: 1.35;
+}
+
+.backlog-row strong {
+  font-size: 12px !important;
+}
+
+.backlog-row small {
+  font-size: 9.5px !important;
+}
+
+.backlog-header,
+.backlog-row {
+  grid-template-columns:
+    minmax(220px, 1.55fr)
+    minmax(160px, 1.05fr)
+    90px
+    110px
+    minmax(240px, 1.45fr)
+    110px !important;
+  gap: 16px !important;
+}
+
+.suggestion-box {
+  gap: 5px !important;
+}
+
+.suggestion-box strong {
+  font-size: 11.5px !important;
+}
+
+.suggestion-box small {
+  font-size: 9.5px !important;
+}
+
+.assign-button {
+  height: 36px !important;
+  padding: 0 15px !important;
+  font-size: 10px !important;
+}
+
+.backlog-count {
+  min-width: 105px !important;
+}
+
+.backlog-count span {
+  font-size: 9px !important;
+}
+
+
+/* ==========================================
+   ESTADO DESESTIMADO
+========================================== */
+
+.status-dot.desestimado {
+  background: #7f8a98 !important;
+  box-shadow: none !important;
+}
+
+.task-deviation.desestimado {
+  color: #aab4bf;
+  background: rgba(127, 138, 152, 0.10);
+}
