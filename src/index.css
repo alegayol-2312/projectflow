@@ -4953,3 +4953,16 @@ p {
   color: #aab4bf;
   background: rgba(127, 138, 152, 0.10);
 }
+
+
+/* ==========================================
+   TOOLTIP PARA NOMBRE DE TAREA / HITO
+========================================== */
+
+.task-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: help;
+}

@@ -3319,7 +3319,10 @@ function colorEstadoTarea(tarea) {
     </span>
   )}
 
-  <span>
+  <span
+    className="task-name-text"
+    title={tarea.nombre}
+  >
     {tarea.es_hito
       ? tarea.nombre.toUpperCase()
       : tarea.nombre}
@@ -3719,11 +3722,14 @@ function colorEstadoTarea(tarea) {
                     </span>
                   )}
 
-                  <span>
-                    {tarea.es_hito
-                      ? tarea.nombre.toUpperCase()
-                      : tarea.nombre}
-                  </span>
+                  <span
+    className="task-name-text"
+    title={tarea.nombre}
+  >
+    {tarea.es_hito
+      ? tarea.nombre.toUpperCase()
+      : tarea.nombre}
+  </span>
 
                   {tarea.comentario?.trim() && (
                     <button
