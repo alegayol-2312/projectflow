@@ -6057,7 +6057,7 @@ function colorEstadoTarea(tarea) {
                           left: `${Number(card.pos_x) || 80}px`,
                           top: `${Number(card.pos_y) || 80}px`,
                           width: `${Number(card.ancho) || 250}px`,
-                          minHeight: `${Number(card.alto) || 190}px`,
+                          height: `${Number(card.alto) || 190}px`,
                           zIndex:
                             dragInfo?.id === card.id ||
                             resizeInfo?.id === card.id
@@ -6136,15 +6136,7 @@ function colorEstadoTarea(tarea) {
 
                         <h3>{card.titulo}</h3>
 
-                        <p
-                          className="postit-description"
-                          style={{
-                            maxHeight: `${Math.max(
-                              58,
-                              (Number(card.alto) || 190) - 150
-                            )}px`,
-                          }}
-                        >
+                        <p className="postit-description">
                           {card.descripcion ||
                             'Sin descripción'}
                         </p>

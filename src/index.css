@@ -7515,3 +7515,73 @@ p {
     right: 10px !important;
   }
 }
+
+
+/* =========================================================
+   CARDS V4.3 - TEXTO AL ESTIRAR + PAN SIN SCROLLBARS
+========================================================= */
+
+/* La altura guardada es la altura REAL de la card */
+.postit-card {
+  display: flex !important;
+  flex-direction: column !important;
+
+  min-height: 150px !important;
+}
+
+/* El texto usa todo el espacio libre.
+   Al estirar hacia abajo se revela progresivamente. */
+.postit-card .postit-description {
+  flex: 1 1 auto !important;
+
+  min-height: 0 !important;
+  max-height: none !important;
+
+  margin: 0 !important;
+
+  overflow: hidden !important;
+
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+
+  color: #26313a !important;
+
+  font-size: 12.5px !important;
+  line-height: 1.5 !important;
+}
+
+/* Responsable y fechas quedan pegados abajo */
+.postit-card .postit-info {
+  flex: 0 0 auto !important;
+  margin-top: 10px !important;
+}
+
+/* El resize queda siempre abajo */
+.postit-resize-handle {
+  flex: 0 0 auto;
+}
+
+/* Sin barras/flechas de scroll visibles:
+   el board se desplaza únicamente arrastrando el fondo
+   con click izquierdo. */
+.cards-canvas {
+  overflow: auto !important;
+
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.cards-canvas::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+
+/* Feedback visual del pan */
+.cards-canvas {
+  cursor: grab !important;
+}
+
+.cards-canvas.panning {
+  cursor: grabbing !important;
+}
