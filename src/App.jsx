@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import './index.css'
 import { supabase } from './lib/supabase'
 import logoGP from './assets/logo-gp.png'
+import ganttIcon from './assets/icon-gantt.png'
+import cardsIcon from './assets/icon-cards.png'
 
 const formularioVacio = {
   nombre: '',
@@ -90,6 +92,53 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
 
   const [asignandoBacklogId, setAsignandoBacklogId] =
     useState(null)
+
+  // =========================
+  // VISTA PRINCIPAL + CARDS
+  // =========================
+
+  const [vistaPrincipal, setVistaPrincipal] = useState('gantt')
+
+  const [boards, setBoards] = useState([])
+  const [boardSeleccionadoId, setBoardSeleccionadoId] = useState('')
+  const [cards, setCards] = useState([])
+  const [cardLinks, setCardLinks] = useState([])
+
+  const [boardEditando, setBoardEditando] = useState(null)
+  const [linkDraft, setLinkDraft] = useState(null)
+
+  const [conexionPendiente, setConexionPendiente] = useState(null)
+  const [tipoConexion, setTipoConexion] = useState('Relacionada')
+
+  const [resizeInfo, setResizeInfo] = useState(null)
+
+  const [modalBoardOpen, setModalBoardOpen] = useState(false)
+  const [modalCardOpen, setModalCardOpen] = useState(false)
+
+  const [nuevoBoard, setNuevoBoard] = useState({
+    nombre: '',
+    descripcion: '',
+  })
+
+  const [cardEditando, setCardEditando] = useState(null)
+
+  const cardVacia = {
+    titulo: '',
+    descripcion: '',
+    responsable: '',
+    fecha_inicio: '',
+    fecha_fin: '',
+    color: 'yellow',
+    pos_x: 80,
+    pos_y: 80,
+    ancho: 250,
+    alto: 190,
+  }
+
+  const [formCard, setFormCard] = useState(cardVacia)
+
+  const [dragInfo, setDragInfo] = useState(null)
+  const boardCanvasRef = useRef(null)
 
   useEffect(() => {
     iniciarApp()
@@ -975,6 +1024,632 @@ async function crearProyecto(event) {
   document.body.removeChild(link)
 
   URL.revokeObjectURL(url)
+}
+
+
+// =========================
+// CARDS / BOARDS
+// =========================
+
+async function cargarBoards() {
+  const { data, error } = await supabase
+    .from('card_boards')
+    .select('*')
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    console.error('Error cargando boards:', error)
+    return
+  }
+
+  const lista = data || []
+  setBoards(lista)
+
+  if (lista.length === 0) {
+    setBoardSeleccionadoId('')
+    setCards([])
+    return
+  }
+
+  if (
+    !boardSeleccionadoId ||
+    !lista.some(
+      (board) => board.id === boardSeleccionadoId
+    )
+  ) {
+    setBoardSeleccionadoId(lista[0].id)
+  }
+}
+
+async function cargarCards(boardId) {
+  if (!boardId) {
+    setCards([])
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('cards')
+    .select('*')
+    .eq('board_id', boardId)
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    console.error('Error cargando cards:', error)
+    return
+  }
+
+  setCards(data || [])
+}
+
+async function cargarCardLinks(boardId) {
+  if (!boardId) {
+    setCardLinks([])
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('card_links')
+    .select('*')
+    .eq('board_id', boardId)
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    console.error('Error cargando conexiones:', error)
+    return
+  }
+
+  setCardLinks(data || [])
+}
+
+function iniciarConexion(event, card) {
+  event.stopPropagation()
+  event.preventDefault()
+
+  const canvasRect =
+    boardCanvasRef.current?.getBoundingClientRect()
+
+  if (!canvasRect) return
+
+  const scrollLeft =
+    boardCanvasRef.current.scrollLeft || 0
+
+  const scrollTop =
+    boardCanvasRef.current.scrollTop || 0
+
+  setLinkDraft({
+    sourceCardId: card.id,
+    x1:
+      Number(card.pos_x || 0) +
+      Number(card.ancho || 250),
+    y1:
+      Number(card.pos_y || 0) +
+      Number(card.alto || 190) / 2,
+    x2:
+      event.clientX -
+      canvasRect.left +
+      scrollLeft,
+    y2:
+      event.clientY -
+      canvasRect.top +
+      scrollTop,
+  })
+}
+
+function moverConexion(event) {
+  if (!linkDraft || !boardCanvasRef.current) {
+    return
+  }
+
+  const canvasRect =
+    boardCanvasRef.current.getBoundingClientRect()
+
+  const scrollLeft =
+    boardCanvasRef.current.scrollLeft || 0
+
+  const scrollTop =
+    boardCanvasRef.current.scrollTop || 0
+
+  setLinkDraft((actual) => ({
+    ...actual,
+    x2:
+      event.clientX -
+      canvasRect.left +
+      scrollLeft,
+    y2:
+      event.clientY -
+      canvasRect.top +
+      scrollTop,
+  }))
+}
+
+function terminarConexion(event, targetCard) {
+  event.stopPropagation()
+  event.preventDefault()
+
+  if (!linkDraft) return
+
+  const sourceCardId = linkDraft.sourceCardId
+
+  if (sourceCardId === targetCard.id) {
+    setLinkDraft(null)
+    return
+  }
+
+  const duplicada = cardLinks.some(
+    (link) =>
+      link.source_card_id === sourceCardId &&
+      link.target_card_id === targetCard.id
+  )
+
+  if (duplicada) {
+    setLinkDraft(null)
+    alert('Estas cards ya están conectadas.')
+    return
+  }
+
+  setConexionPendiente({
+    sourceCardId,
+    targetCardId: targetCard.id,
+  })
+
+  setTipoConexion('Relacionada')
+  setLinkDraft(null)
+}
+
+async function guardarConexion() {
+  if (!conexionPendiente) return
+
+  const { error } = await supabase
+    .from('card_links')
+    .insert({
+      board_id: boardSeleccionadoId,
+      source_card_id:
+        conexionPendiente.sourceCardId,
+      target_card_id:
+        conexionPendiente.targetCardId,
+      tipo_relacion: tipoConexion,
+    })
+
+  if (error) {
+    alert(
+      `No se pudo crear la conexión: ${error.message}`
+    )
+    return
+  }
+
+  setConexionPendiente(null)
+  setTipoConexion('Relacionada')
+
+  await cargarCardLinks(boardSeleccionadoId)
+}
+
+async function eliminarConexion(link) {
+  const confirmar = window.confirm(
+    `¿Eliminar la conexión "${link.tipo_relacion}"?`
+  )
+
+  if (!confirmar) return
+
+  const { error } = await supabase
+    .from('card_links')
+    .delete()
+    .eq('id', link.id)
+
+  if (error) {
+    alert(`No se pudo eliminar la conexión: ${error.message}`)
+    return
+  }
+
+  await cargarCardLinks(boardSeleccionadoId)
+}
+
+
+function iniciarResizeCard(event, card) {
+  event.stopPropagation()
+  event.preventDefault()
+
+  setResizeInfo({
+    id: card.id,
+    startY: event.clientY,
+    startHeight:
+      Number(card.alto) || 190,
+  })
+}
+
+function moverResizeCard(event) {
+  if (!resizeInfo) return
+
+  const diferencia =
+    event.clientY - resizeInfo.startY
+
+  const nuevaAltura =
+    Math.max(
+      150,
+      resizeInfo.startHeight +
+        diferencia
+    )
+
+  setCards((actual) =>
+    actual.map((card) =>
+      card.id === resizeInfo.id
+        ? {
+            ...card,
+            alto: nuevaAltura,
+          }
+        : card
+    )
+  )
+}
+
+async function terminarResizeCard() {
+  if (!resizeInfo) return
+
+  const cardActual =
+    cards.find(
+      (card) => card.id === resizeInfo.id
+    )
+
+  setResizeInfo(null)
+
+  if (!cardActual) return
+
+  const { error } = await supabase
+    .from('cards')
+    .update({
+      alto:
+        Number(cardActual.alto) || 190,
+      updated_at:
+        new Date().toISOString(),
+    })
+    .eq('id', cardActual.id)
+
+  if (error) {
+    console.error(
+      'No se pudo guardar el tamaño:',
+      error
+    )
+  }
+}
+
+function cardPorId(id) {
+  return cards.find((card) => card.id === id)
+}
+
+function geometriaLink(link) {
+  const source = cardPorId(link.source_card_id)
+  const target = cardPorId(link.target_card_id)
+
+  if (!source || !target) return null
+
+  const x1 =
+    Number(source.pos_x || 0) +
+    Number(source.ancho || 250)
+
+  const y1 =
+    Number(source.pos_y || 0) +
+    Number(source.alto || 190) / 2
+
+  const x2 =
+    Number(target.pos_x || 0)
+
+  const y2 =
+    Number(target.pos_y || 0) +
+    Number(target.alto || 190) / 2
+
+  const curvatura =
+    Math.max(80, Math.abs(x2 - x1) * 0.45)
+
+  return {
+    x1,
+    y1,
+    x2,
+    y2,
+    path:
+      `M ${x1} ${y1} ` +
+      `C ${x1 + curvatura} ${y1}, ` +
+      `${x2 - curvatura} ${y2}, ` +
+      `${x2} ${y2}`,
+  }
+}
+
+async function guardarBoard(event) {
+  event.preventDefault()
+
+  if (!nuevoBoard.nombre.trim()) {
+    alert('Ingresá un nombre para el board.')
+    return
+  }
+
+  if (boardEditando) {
+    const { error } = await supabase
+      .from('card_boards')
+      .update({
+        nombre: nuevoBoard.nombre.trim(),
+        descripcion: nuevoBoard.descripcion.trim(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', boardEditando.id)
+
+    if (error) {
+      alert(`No se pudo editar el board: ${error.message}`)
+      return
+    }
+  } else {
+    const { data, error } = await supabase
+      .from('card_boards')
+      .insert({
+        nombre: nuevoBoard.nombre.trim(),
+        descripcion: nuevoBoard.descripcion.trim(),
+      })
+      .select()
+      .single()
+
+    if (error) {
+      alert(`No se pudo crear el board: ${error.message}`)
+      return
+    }
+
+    setBoardSeleccionadoId(data.id)
+  }
+
+  setNuevoBoard({
+    nombre: '',
+    descripcion: '',
+  })
+  setBoardEditando(null)
+  setModalBoardOpen(false)
+
+  await cargarBoards()
+}
+
+function abrirNuevoBoard() {
+  setBoardEditando(null)
+  setNuevoBoard({
+    nombre: '',
+    descripcion: '',
+  })
+  setModalBoardOpen(true)
+}
+
+function abrirEditarBoard(board) {
+  setBoardEditando(board)
+  setNuevoBoard({
+    nombre: board.nombre || '',
+    descripcion: board.descripcion || '',
+  })
+  setModalBoardOpen(true)
+}
+
+async function eliminarBoard(board) {
+  const confirmar = window.confirm(
+    `¿Eliminar el board "${board.nombre}"?\n\nSe eliminarán también todas sus cards y conexiones.`
+  )
+
+  if (!confirmar) return
+
+  const { error } = await supabase
+    .from('card_boards')
+    .delete()
+    .eq('id', board.id)
+
+  if (error) {
+    alert(`No se pudo eliminar el board: ${error.message}`)
+    return
+  }
+
+  if (boardSeleccionadoId === board.id) {
+    setBoardSeleccionadoId('')
+    setCards([])
+    setCardLinks([])
+  }
+
+  await cargarBoards()
+}
+
+function abrirNuevaCard() {
+  if (!boardSeleccionadoId) {
+    alert('Primero creá o seleccioná un board.')
+    return
+  }
+
+  setCardEditando(null)
+
+  setFormCard({
+    ...cardVacia,
+    pos_x: 90 + Math.min(cards.length, 6) * 28,
+    pos_y: 90 + Math.min(cards.length, 6) * 24,
+  })
+
+  setModalCardOpen(true)
+}
+
+function abrirEditarCard(card) {
+  setCardEditando(card)
+
+  setFormCard({
+    titulo: card.titulo || '',
+    descripcion: card.descripcion || '',
+    responsable: card.responsable || '',
+    fecha_inicio: card.fecha_inicio || '',
+    fecha_fin: card.fecha_fin || '',
+    color: card.color || 'yellow',
+    pos_x: Number(card.pos_x) || 80,
+    pos_y: Number(card.pos_y) || 80,
+    ancho: Number(card.ancho) || 250,
+    alto: Number(card.alto) || 190,
+  })
+
+  setModalCardOpen(true)
+}
+
+function cerrarModalCard() {
+  setModalCardOpen(false)
+  setCardEditando(null)
+  setFormCard(cardVacia)
+}
+
+async function guardarCard(event) {
+  event.preventDefault()
+
+  if (!formCard.titulo.trim()) {
+    alert('Ingresá un título para la card.')
+    return
+  }
+
+  if (!boardSeleccionadoId) {
+    alert('Seleccioná un board.')
+    return
+  }
+
+  const payload = {
+    board_id: boardSeleccionadoId,
+    titulo: formCard.titulo.trim(),
+    descripcion: formCard.descripcion.trim(),
+    responsable: formCard.responsable || null,
+    fecha_inicio: formCard.fecha_inicio || null,
+    fecha_fin: formCard.fecha_fin || null,
+    color: formCard.color,
+    ancho: Number(formCard.ancho) || 250,
+    alto: Number(formCard.alto) || 190,
+    updated_at: new Date().toISOString(),
+  }
+
+  if (cardEditando) {
+    const { error } = await supabase
+      .from('cards')
+      .update(payload)
+      .eq('id', cardEditando.id)
+
+    if (error) {
+      alert(`No se pudo editar la card: ${error.message}`)
+      return
+    }
+  } else {
+    const { error } = await supabase
+      .from('cards')
+      .insert({
+        ...payload,
+        pos_x: Number(formCard.pos_x) || 80,
+        pos_y: Number(formCard.pos_y) || 80,
+      })
+
+    if (error) {
+      alert(`No se pudo crear la card: ${error.message}`)
+      return
+    }
+  }
+
+  cerrarModalCard()
+  await cargarCards(boardSeleccionadoId)
+}
+
+async function eliminarCard() {
+  if (!cardEditando) return
+
+  const confirmar = window.confirm(
+    `¿Eliminar la card "${cardEditando.titulo}"?`
+  )
+
+  if (!confirmar) return
+
+  const { error } = await supabase
+    .from('cards')
+    .delete()
+    .eq('id', cardEditando.id)
+
+  if (error) {
+    alert(`No se pudo eliminar la card: ${error.message}`)
+    return
+  }
+
+  cerrarModalCard()
+  await cargarCards(boardSeleccionadoId)
+}
+
+function iniciarDragCard(event, card) {
+  if (event.button !== 0) return
+
+  const rect =
+    event.currentTarget.getBoundingClientRect()
+
+  setDragInfo({
+    id: card.id,
+    offsetX: event.clientX - rect.left,
+    offsetY: event.clientY - rect.top,
+  })
+
+  event.preventDefault()
+}
+
+function moverCardEnCanvas(event) {
+  if (
+    !dragInfo ||
+    !boardCanvasRef.current
+  ) {
+    return
+  }
+
+  const canvasRect =
+    boardCanvasRef.current.getBoundingClientRect()
+
+  const scrollLeft =
+    boardCanvasRef.current.scrollLeft || 0
+
+  const scrollTop =
+    boardCanvasRef.current.scrollTop || 0
+
+  const nuevoX =
+    event.clientX -
+    canvasRect.left -
+    dragInfo.offsetX +
+    scrollLeft
+
+  const nuevoY =
+    event.clientY -
+    canvasRect.top -
+    dragInfo.offsetY +
+    scrollTop
+
+  setCards((actual) =>
+    actual.map((card) =>
+      card.id === dragInfo.id
+        ? {
+            ...card,
+            pos_x: Math.max(12, nuevoX),
+            pos_y: Math.max(12, nuevoY),
+          }
+        : card
+    )
+  )
+}
+
+async function terminarDragCard() {
+  if (!dragInfo) return
+
+  const cardActual =
+    cards.find(
+      (card) => card.id === dragInfo.id
+    )
+
+  setDragInfo(null)
+
+  if (!cardActual) return
+
+  const { error } = await supabase
+    .from('cards')
+    .update({
+      pos_x: Number(cardActual.pos_x),
+      pos_y: Number(cardActual.pos_y),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', cardActual.id)
+
+  if (error) {
+    console.error(
+      'No se pudo guardar la posición:',
+      error
+    )
+  }
 }
 
 // =========================
@@ -2673,6 +3348,30 @@ function colorEstadoTarea(tarea) {
     setVista('gantt')
   }
 
+
+  useEffect(() => {
+    if (
+      session &&
+      vistaPrincipal === 'cards'
+    ) {
+      cargarBoards()
+    }
+  }, [session, vistaPrincipal])
+
+  useEffect(() => {
+    if (
+      session &&
+      vistaPrincipal === 'cards'
+    ) {
+      cargarCards(boardSeleccionadoId)
+      cargarCardLinks(boardSeleccionadoId)
+    }
+  }, [
+    session,
+    vistaPrincipal,
+    boardSeleccionadoId,
+  ])
+
   if (loading) {
     return (
       <div className="login-screen">
@@ -2740,28 +3439,83 @@ function colorEstadoTarea(tarea) {
   const hoyPos = posicionHoy()
 
   return (
-    <div className="app">
+    <div className="app-shell">
+      <aside className="visual-sidebar">
+        <a
+          href="https://www.grupopetersen.com.ar/inicio"
+          target="_blank"
+          rel="noreferrer"
+          className="visual-sidebar-gp"
+          title="Grupo Petersen"
+          aria-label="Abrir Grupo Petersen"
+        >
+          <img
+            src={logoGP}
+            alt="Grupo Petersen"
+          />
+        </a>
+
+        <div className="visual-sidebar-divider" />
+
+        <button
+          type="button"
+          className={
+            vistaPrincipal === 'gantt'
+              ? 'visual-sidebar-icon-button active'
+              : 'visual-sidebar-icon-button'
+          }
+          onClick={() => setVistaPrincipal('gantt')}
+          title="Gantt"
+          aria-label="Gantt"
+        >
+          <img
+            src={ganttIcon}
+            alt=""
+            className="visual-sidebar-user-icon"
+          />
+        </button>
+
+        <button
+          type="button"
+          className={
+            vistaPrincipal === 'cards'
+              ? 'visual-sidebar-icon-button active'
+              : 'visual-sidebar-icon-button'
+          }
+          onClick={() => setVistaPrincipal('cards')}
+          title="Boards / Cards"
+          aria-label="Boards / Cards"
+        >
+          <img
+            src={cardsIcon}
+            alt=""
+            className="visual-sidebar-user-icon"
+          />
+        </button>
+      </aside>
+
+      <div className="app app-main">
 
       <header className="topbar">
 
-        <div className="brand-area">
-
-          <div className="logo image-logo">
-  <img src={logoGP} alt="Grupo Petersen" />
-</div>
-
+        <div className="brand-area brand-area-project">
           <div>
-            <h1>Grupo Petersen</h1>
+            <h1>
+              {vistaPrincipal === 'cards'
+                ? 'Boards'
+                : 'Gestión de proyectos'}
+            </h1>
 
-<p>
-  Proyecto: {
-    proyectoSeleccionadoId === '__all__'
-      ? 'Todos los proyectos'
-      : proyecto?.nombre || 'Sin proyecto'
-  }
-</p>
+            <p>
+              {vistaPrincipal === 'cards'
+                ? 'Canvas colaborativo'
+                : `Proyecto: ${
+                    proyectoSeleccionadoId === '__all__'
+                      ? 'Todos los proyectos'
+                      : proyecto?.nombre || 'Sin proyecto'
+                  }`}
+            </p>
           </div>
-
         </div>
 
         <div className="top-actions">
@@ -2777,25 +3531,42 @@ function colorEstadoTarea(tarea) {
             Salir
           </button>
 
-          <button
-            className="btn-primary"
-            onClick={abrirNuevaTarea}
-            disabled={
-              proyectoSeleccionadoId === '__all__'
-            }
-            title={
-              proyectoSeleccionadoId === '__all__'
-                ? 'Seleccioná un proyecto para crear una tarea'
-                : 'Crear nueva tarea'
-            }
-          >
-            + Nueva tarea
-          </button>
+          {vistaPrincipal === 'gantt' ? (
+            <button
+              className="btn-primary"
+              onClick={abrirNuevaTarea}
+              disabled={
+                proyectoSeleccionadoId === '__all__'
+              }
+              title={
+                proyectoSeleccionadoId === '__all__'
+                  ? 'Seleccioná un proyecto para crear una tarea'
+                  : 'Crear nueva tarea'
+              }
+            >
+              + Nueva tarea
+            </button>
+          ) : (
+            <button
+              className="btn-primary"
+              onClick={abrirNuevaCard}
+              disabled={!boardSeleccionadoId}
+              title={
+                boardSeleccionadoId
+                  ? 'Crear nueva card'
+                  : 'Creá o seleccioná un board'
+              }
+            >
+              + Nueva card
+            </button>
+          )}
 
         </div>
 
       </header>
 
+      {vistaPrincipal === 'gantt' && (
+        <>
       <section className="filters">
 
         <div className="project-selector-group">
@@ -4495,6 +5266,861 @@ function colorEstadoTarea(tarea) {
         </section>
       )}
 
+
+        </>
+      )}
+
+      {vistaPrincipal === 'cards' && (
+        <section className="cards-page">
+          <div className="cards-toolbar">
+            <div>
+              <span className="cards-eyebrow">
+                Canvas colaborativo
+              </span>
+
+              <h2>Boards</h2>
+
+              <p>
+                Elegí un board y organizá cards libres,
+                Se libre.
+              </p>
+            </div>
+
+            <div className="cards-toolbar-actions">
+              <button
+                type="button"
+                className="cards-secondary-button"
+                onClick={abrirNuevoBoard}
+              >
+                + Nuevo board
+              </button>
+
+              {boardSeleccionadoId && (
+                <button
+                  type="button"
+                  className="cards-primary-button"
+                  onClick={abrirNuevaCard}
+                >
+                  + Nueva card
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="cards-layout">
+            <aside className="boards-panel">
+              <div className="boards-panel-header">
+                <div>
+                  <span>Mis boards</span>
+                  <strong>
+                    {boards.length}
+                  </strong>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={abrirNuevoBoard}
+                  title="Crear board"
+                >
+                  +
+                </button>
+              </div>
+
+              <div className="boards-list">
+                {boards.map((board) => (
+                  <div
+                    key={board.id}
+                    className={
+                      board.id === boardSeleccionadoId
+                        ? 'board-list-item active'
+                        : 'board-list-item'
+                    }
+                  >
+                    <button
+                      type="button"
+                      className="board-list-main"
+                      onClick={() =>
+                        setBoardSeleccionadoId(
+                          board.id
+                        )
+                      }
+                      title={board.descripcion || board.nombre}
+                    >
+                      <span className="board-list-pin">
+                        ●
+                      </span>
+
+                      <span className="board-list-copy">
+                        <strong>
+                          {board.nombre}
+                        </strong>
+
+                        <small>
+                          {board.descripcion ||
+                            'Sin descripción'}
+                        </small>
+                      </span>
+                    </button>
+
+                    <div className="board-list-actions">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          abrirEditarBoard(board)
+                        }
+                        title="Editar board"
+                      >
+                        ✎
+                      </button>
+
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() =>
+                          eliminarBoard(board)
+                        }
+                        title="Eliminar board"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {boards.length === 0 && (
+                  <div className="boards-list-empty">
+                    <span>
+                      Todavía no hay boards.
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={abrirNuevoBoard}
+                    >
+                      Crear el primero
+                    </button>
+                  </div>
+                )}
+              </div>
+            </aside>
+
+            <div className="cards-board-area">
+              {!boardSeleccionadoId ? (
+                <div className="board-welcome">
+                  <div className="board-welcome-note">
+                    <div className="board-welcome-pin" />
+
+                    <strong>
+                      Seleccioná un board
+                    </strong>
+
+                    <span>
+                      Elegí uno del panel izquierdo
+                      para entrar al canvas y ver sus cards.
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="cards-board-meta">
+                    <div>
+                      <strong>
+                        {boards.find(
+                          (board) =>
+                            board.id ===
+                            boardSeleccionadoId
+                        )?.nombre || 'Board'}
+                      </strong>
+
+                      <span>
+                        {boards.find(
+                          (board) =>
+                            board.id ===
+                            boardSeleccionadoId
+                        )?.descripcion ||
+                          'Canvas colaborativo'}
+                      </span>
+                    </div>
+
+                    <div className="cards-board-meta-actions">
+                      <span className="cards-counter">
+                        {cards.length} card
+                        {cards.length === 1 ? '' : 's'}
+                      </span>
+
+                      <button
+                        type="button"
+                        className="cards-primary-button compact"
+                        onClick={abrirNuevaCard}
+                      >
+                        + Card
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    ref={boardCanvasRef}
+                    className="cards-canvas"
+                    onMouseMove={(event) => {
+                      moverCardEnCanvas(event)
+                      moverConexion(event)
+                      moverResizeCard(event)
+                    }}
+                    onMouseUp={() => {
+                      terminarDragCard()
+                      terminarResizeCard()
+                    }}
+                    onMouseLeave={() => {
+                      terminarDragCard()
+                      terminarResizeCard()
+                      setLinkDraft(null)
+                    }}
+                  >
+                    <div className="cards-cork-texture" />
+
+                    <svg
+                      className="card-links-layer"
+                      width="2400"
+                      height="1600"
+                      viewBox="0 0 2400 1600"
+                    >
+                      <defs>
+                        <marker
+                          id="arrow-blue"
+                          markerWidth="10"
+                          markerHeight="10"
+                          refX="8"
+                          refY="3"
+                          orient="auto"
+                          markerUnits="strokeWidth"
+                        >
+                          <path
+                            d="M0,0 L0,6 L9,3 z"
+                            fill="#4188ff"
+                          />
+                        </marker>
+
+                        <marker
+                          id="arrow-red"
+                          markerWidth="10"
+                          markerHeight="10"
+                          refX="8"
+                          refY="3"
+                          orient="auto"
+                          markerUnits="strokeWidth"
+                        >
+                          <path
+                            d="M0,0 L0,6 L9,3 z"
+                            fill="#ef4b5e"
+                          />
+                        </marker>
+                      </defs>
+
+                      {cardLinks.map((link) => {
+                        const geo =
+                          geometriaLink(link)
+
+                        if (!geo) return null
+
+                        const esBloqueo =
+                          link.tipo_relacion === 'Bloquea'
+
+                        const esDependencia =
+                          link.tipo_relacion === 'Depende de'
+
+                        const stroke =
+                          esBloqueo
+                            ? '#ef4b5e'
+                            : esDependencia
+                              ? '#4188ff'
+                              : '#f3c747'
+
+                        return (
+                          <g key={link.id}>
+                            <path
+                              d={geo.path}
+                              className="card-link-hit"
+                              onClick={() =>
+                                eliminarConexion(link)
+                              }
+                            />
+
+                            <path
+                              d={geo.path}
+                              className="card-link-line"
+                              stroke={stroke}
+                              markerEnd={
+                                esBloqueo
+                                  ? 'url(#arrow-red)'
+                                  : esDependencia
+                                    ? 'url(#arrow-blue)'
+                                    : undefined
+                              }
+                            />
+
+                            <circle
+                              cx={geo.x1}
+                              cy={geo.y1}
+                              r="7"
+                              className="card-link-pin source"
+                            />
+
+                            <circle
+                              cx={geo.x2}
+                              cy={geo.y2}
+                              r="7"
+                              className="card-link-pin target"
+                            />
+
+                            <text
+                              x={(geo.x1 + geo.x2) / 2}
+                              y={(geo.y1 + geo.y2) / 2 - 8}
+                              className="card-link-label"
+                            >
+                              {link.tipo_relacion}
+                            </text>
+                          </g>
+                        )
+                      })}
+
+                      {linkDraft && (
+                        <path
+                          d={
+                            `M ${linkDraft.x1} ${linkDraft.y1} ` +
+                            `C ${linkDraft.x1 + 90} ${linkDraft.y1}, ` +
+                            `${linkDraft.x2 - 90} ${linkDraft.y2}, ` +
+                            `${linkDraft.x2} ${linkDraft.y2}`
+                          }
+                          className="card-link-draft"
+                        />
+                      )}
+                    </svg>
+
+                    {cards.map((card) => (
+                      <article
+                        key={card.id}
+                        className={`postit-card ${card.color} ${
+                          dragInfo?.id === card.id
+                            ? 'dragging'
+                            : ''
+                        }`}
+                        style={{
+                          left: `${Number(card.pos_x) || 80}px`,
+                          top: `${Number(card.pos_y) || 80}px`,
+                          width: `${Number(card.ancho) || 250}px`,
+                          minHeight: `${Number(card.alto) || 190}px`,
+                        }}
+                        onMouseDown={(event) =>
+                          iniciarDragCard(event, card)
+                        }
+                        onDoubleClick={() =>
+                          abrirEditarCard(card)
+                        }
+                        title="Arrastrá para mover · Doble click para editar"
+                      >
+                        <div className="postit-pin">
+                          <span />
+                        </div>
+
+                        <button
+                          type="button"
+                          className="card-thread-pin card-thread-pin-left"
+                          onMouseDown={(e) =>
+                            e.stopPropagation()
+                          }
+                          onMouseUp={(e) =>
+                            terminarConexion(e, card)
+                          }
+                          title="Soltar aquí una conexión"
+                          aria-label="Recibir conexión"
+                        />
+
+                        <button
+                          type="button"
+                          className="card-thread-pin card-thread-pin-right"
+                          onMouseDown={(e) =>
+                            iniciarConexion(e, card)
+                          }
+                          title="Arrastrar hilo desde esta card"
+                          aria-label="Crear conexión"
+                        />
+
+                        <button
+                          type="button"
+                          className="postit-menu"
+                          onMouseDown={(e) =>
+                            e.stopPropagation()
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            abrirEditarCard(card)
+                          }}
+                          title="Editar card"
+                        >
+                          •••
+                        </button>
+
+                        <h3>{card.titulo}</h3>
+
+                        <p>
+                          {card.descripcion ||
+                            'Sin descripción'}
+                        </p>
+
+                        <div className="postit-info">
+                          <span>
+                            <b>Responsable</b>
+                            {card.responsable ||
+                              'Sin asignar'}
+                          </span>
+
+                          <span>
+                            <b>Fechas</b>
+                            {card.fecha_inicio || '—'}
+                            {' → '}
+                            {card.fecha_fin || '—'}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="postit-resize-handle"
+                          onMouseDown={(event) =>
+                            iniciarResizeCard(
+                              event,
+                              card
+                            )
+                          }
+                          title="Arrastrá hacia abajo para cambiar el alto"
+                          aria-label="Cambiar alto de la card"
+                        >
+                          <span />
+                        </button>
+                      </article>
+                    ))}
+
+                    {cards.length === 0 && (
+                      <div className="cards-empty">
+                        <div className="cards-empty-pin" />
+
+                        <strong>
+                          Este board está vacío
+                        </strong>
+
+                        <span>
+                          Creá una card y empezá
+                          a armar el mapa visual.
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={abrirNuevaCard}
+                        >
+                          + Nueva card
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+
+      {conexionPendiente && (
+        <div className="modal-overlay">
+          <div className="modal-card connection-modal">
+            <div className="card-modal-heading">
+              <div>
+                <span>Nuevo hilo</span>
+                <h3>Tipo de conexión</h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setConexionPendiente(null)
+                  setTipoConexion('Relacionada')
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="connection-preview">
+              <div>
+                <span>Origen</span>
+                <strong>
+                  {cardPorId(
+                    conexionPendiente.sourceCardId
+                  )?.titulo || 'Card'}
+                </strong>
+              </div>
+
+              <span className="connection-preview-arrow">
+                →
+              </span>
+
+              <div>
+                <span>Destino</span>
+                <strong>
+                  {cardPorId(
+                    conexionPendiente.targetCardId
+                  )?.titulo || 'Card'}
+                </strong>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Relación</label>
+
+              <select
+                value={tipoConexion}
+                onChange={(event) =>
+                  setTipoConexion(
+                    event.target.value
+                  )
+                }
+              >
+                <option value="Relacionada">
+                  Relacionada
+                </option>
+
+                <option value="Depende de">
+                  Depende de
+                </option>
+
+                <option value="Bloquea">
+                  Bloquea
+                </option>
+              </select>
+            </div>
+
+            <div className="connection-type-help">
+              {tipoConexion === 'Relacionada' && (
+                <span>
+                  Hilo amarillo: relación visual entre ambas cards.
+                </span>
+              )}
+
+              {tipoConexion === 'Depende de' && (
+                <span>
+                  Hilo azul con flecha: la card destino depende de la card origen.
+                </span>
+              )}
+
+              {tipoConexion === 'Bloquea' && (
+                <span>
+                  Hilo rojo con flecha: la card origen bloquea a la card destino.
+                </span>
+              )}
+            </div>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  setConexionPendiente(null)
+                  setTipoConexion('Relacionada')
+                }}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={guardarConexion}
+              >
+                Crear hilo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalBoardOpen && (
+        <div className="modal-overlay">
+          <div className="modal-card card-modal-small">
+            <form onSubmit={guardarBoard}>
+              <div className="card-modal-heading">
+                <div>
+                  <span>
+                    {boardEditando
+                      ? 'Editar espacio'
+                      : 'Nuevo espacio'}
+                  </span>
+                  <h3>
+                    {boardEditando
+                      ? 'Editar board'
+                      : 'Crear board'}
+                  </h3>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalBoardOpen(false)
+                    setBoardEditando(null)
+                    setNuevoBoard({
+                      nombre: '',
+                      descripcion: '',
+                    })
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="form-group">
+                <label>Nombre del board</label>
+
+                <input
+                  type="text"
+                  value={nuevoBoard.nombre}
+                  onChange={(e) =>
+                    setNuevoBoard((actual) => ({
+                      ...actual,
+                      nombre: e.target.value,
+                    }))
+                  }
+                  placeholder="Ej: Migración Banco1"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Descripción</label>
+
+                <textarea
+                  rows="4"
+                  value={nuevoBoard.descripcion}
+                  onChange={(e) =>
+                    setNuevoBoard((actual) => ({
+                      ...actual,
+                      descripcion: e.target.value,
+                    }))
+                  }
+                  placeholder="Objetivo o alcance del board..."
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    setModalBoardOpen(false)
+                    setBoardEditando(null)
+                    setNuevoBoard({
+                      nombre: '',
+                      descripcion: '',
+                    })
+                  }}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  className="btn-primary"
+                  type="submit"
+                >
+                  {boardEditando
+                    ? 'Guardar cambios'
+                    : 'Crear board'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {modalCardOpen && (
+        <div className="modal-overlay">
+          <div className="modal-card cards-editor-modal">
+            <form onSubmit={guardarCard}>
+              <div className="card-modal-heading">
+                <div>
+                  <span>
+                    {cardEditando
+                      ? 'Editar post-it'
+                      : 'Nuevo post-it'}
+                  </span>
+
+                  <h3>
+                    {cardEditando
+                      ? 'Editar card'
+                      : 'Nueva card'}
+                  </h3>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={cerrarModalCard}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="form-grid">
+                <div className="form-group full">
+                  <label>Título</label>
+
+                  <input
+                    type="text"
+                    value={formCard.titulo}
+                    onChange={(e) =>
+                      setFormCard((actual) => ({
+                        ...actual,
+                        titulo: e.target.value,
+                      }))
+                    }
+                    placeholder="Título de la card"
+                  />
+                </div>
+
+                <div className="form-group full">
+                  <label>Descripción</label>
+
+                  <textarea
+                    rows="4"
+                    value={formCard.descripcion}
+                    onChange={(e) =>
+                      setFormCard((actual) => ({
+                        ...actual,
+                        descripcion: e.target.value,
+                      }))
+                    }
+                    placeholder="Descripción breve..."
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Responsable</label>
+
+                  <select
+                    value={formCard.responsable}
+                    onChange={(e) =>
+                      setFormCard((actual) => ({
+                        ...actual,
+                        responsable: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">
+                      Sin asignar
+                    </option>
+
+                    {perfiles.map((perfil) => (
+                      <option
+                        key={perfil.id}
+                        value={perfil.nombre}
+                      >
+                        {perfil.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Color</label>
+
+                  <select
+                    value={formCard.color}
+                    onChange={(e) =>
+                      setFormCard((actual) => ({
+                        ...actual,
+                        color: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="yellow">
+                      Amarillo
+                    </option>
+                    <option value="pink">
+                      Rosa
+                    </option>
+                    <option value="blue">
+                      Celeste
+                    </option>
+                    <option value="green">
+                      Verde
+                    </option>
+                    <option value="peach">
+                      Durazno
+                    </option>
+                    <option value="purple">
+                      Violeta
+                    </option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Fecha inicio</label>
+
+                  <input
+                    type="date"
+                    value={formCard.fecha_inicio}
+                    onChange={(e) =>
+                      setFormCard((actual) => ({
+                        ...actual,
+                        fecha_inicio: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Fecha fin</label>
+
+                  <input
+                    type="date"
+                    value={formCard.fecha_fin}
+                    onChange={(e) =>
+                      setFormCard((actual) => ({
+                        ...actual,
+                        fecha_fin: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="modal-actions modal-actions-task">
+                {cardEditando && (
+                  <button
+                    type="button"
+                    className="btn-delete-task"
+                    onClick={eliminarCard}
+                  >
+                    Eliminar
+                  </button>
+                )}
+
+                <div className="modal-actions-right">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={cerrarModalCard}
+                  >
+                    Cancelar
+                  </button>
+
+                  <button
+                    className="btn-primary"
+                    type="submit"
+                  >
+                    Guardar
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {modalProyectoOpen && (
         <div className="modal-overlay">
           <div className="modal project-modal">
@@ -4979,6 +6605,7 @@ function colorEstadoTarea(tarea) {
 
       )}
 
+      </div>
     </div>
   )
 }
