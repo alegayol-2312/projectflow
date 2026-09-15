@@ -5315,7 +5315,7 @@ p {
       rgba(92, 53, 24, .12),
       transparent 40%
     ),
-    #5d6670;
+    #7d5633;
 
   cursor: default;
 }
@@ -6665,4 +6665,853 @@ p {
 .cards-primary-button,
 .board-selector {
   font-size: 11px !important;
+}
+
+
+/* =========================================================
+   CARDS V3 - ZOOM / PAN / CAPAS / ESTADOS / COMENTARIOS
+========================================================= */
+
+.cards-board-meta-actions {
+  gap: 10px !important;
+}
+
+.board-view-controls {
+  height: 32px;
+
+  display: inline-flex;
+  align-items: center;
+
+  overflow: hidden;
+
+  border: 1px solid #2a3744;
+  border-radius: 8px;
+
+  background: #101820;
+}
+
+.board-view-controls > button {
+  min-width: 32px;
+  height: 30px;
+
+  border: 0;
+  border-right: 1px solid #26323e;
+
+  background: transparent;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 850;
+
+  cursor: pointer;
+}
+
+.board-view-controls > button:hover {
+  background: #182330;
+}
+
+.board-view-controls > span {
+  min-width: 48px;
+
+  color: #ffffff !important;
+
+  font-size: 10px !important;
+  font-weight: 800;
+  text-align: center;
+}
+
+.board-view-controls .board-center-button {
+  min-width: 62px;
+
+  border-left: 1px solid #26323e;
+  border-right: 0;
+
+  font-size: 9px;
+}
+
+.cards-canvas {
+  cursor: grab;
+}
+
+.cards-canvas.panning {
+  cursor: grabbing;
+}
+
+.board-zoom-spacer {
+  position: relative;
+}
+
+.board-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  transform-origin: 0 0;
+
+  background: #8a6748;
+}
+
+.board-world .cards-cork-texture {
+  z-index: 0;
+}
+
+.postit-badges {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  margin: 3px 25px 8px 0;
+}
+
+.postit-type-badge,
+.postit-status-badge {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 18px;
+
+  padding: 2px 6px;
+
+  border-radius: 999px;
+
+  font-size: 7.5px;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+.postit-type-badge {
+  background: rgba(24, 30, 34, .13);
+  color: rgba(20, 27, 32, .78);
+}
+
+.postit-status-badge {
+  background: rgba(255,255,255,.4);
+  color: #263039;
+}
+
+.postit-status-badge.en-curso {
+  background: #d9e8ff;
+  color: #1f5aa9;
+}
+
+.postit-status-badge.finalizado {
+  background: #d7f3df;
+  color: #287544;
+}
+
+.postit-status-badge.bloqueado {
+  background: #ffd9dd;
+  color: #9d2535;
+}
+
+.card-layer-tools {
+  margin-top: 18px;
+
+  padding: 12px;
+
+  border: 1px solid #273440;
+  border-radius: 10px;
+
+  background: #0d141b;
+}
+
+.card-layer-tools > span {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 850;
+
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.card-layer-tools > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.card-layer-tools button {
+  min-height: 34px;
+
+  padding: 0 10px;
+
+  border: 1px solid #304050;
+  border-radius: 8px;
+
+  background: #121c26;
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+.card-layer-tools button:hover {
+  border-color: #547499;
+  background: #172432;
+}
+
+.card-comments-section {
+  margin-top: 14px;
+
+  padding: 12px;
+
+  border: 1px solid #273440;
+  border-radius: 10px;
+
+  background: #0d141b;
+}
+
+.card-comments-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 10px;
+}
+
+.card-comments-title > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-comments-title span {
+  color: #8ca0b5;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.card-comments-title strong {
+  color: #ffffff;
+
+  font-size: 12px;
+}
+
+.card-comments-title small {
+  min-width: 24px;
+  height: 24px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background: #172432;
+  color: #ffffff;
+
+  font-size: 9px;
+}
+
+.card-comments-list {
+  max-height: 190px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  overflow-y: auto;
+}
+
+.card-comment {
+  position: relative;
+
+  padding: 9px 30px 9px 10px;
+
+  border: 1px solid #24313e;
+  border-radius: 9px;
+
+  background: #111a23;
+}
+
+.card-comment > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-comment strong {
+  color: #ffffff;
+  font-size: 9px;
+}
+
+.card-comment span {
+  color: #9eacbb !important;
+  font-size: 8px !important;
+}
+
+.card-comment p {
+  margin: 6px 0 0;
+
+  color: #e5ebf2;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.card-comment > button {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+
+  width: 20px;
+  height: 20px;
+
+  border: 0;
+  border-radius: 5px;
+
+  background: transparent;
+  color: #9eacbb;
+
+  cursor: pointer;
+}
+
+.card-comment > button:hover {
+  background: rgba(255, 90, 105, .1);
+  color: #ff7382;
+}
+
+.card-comments-empty {
+  padding: 12px;
+
+  border: 1px dashed #2b3946;
+  border-radius: 8px;
+
+  color: #c7d1dc;
+
+  font-size: 9px;
+  text-align: center;
+}
+
+.card-comment-compose {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto;
+
+  gap: 8px;
+
+  margin-top: 10px;
+}
+
+.card-comment-compose textarea {
+  min-height: 54px;
+
+  resize: vertical;
+
+  border: 1px solid #2b3946;
+  border-radius: 8px;
+
+  background: #0b1117;
+  color: #ffffff;
+
+  font-size: 10px;
+}
+
+.card-comment-compose button {
+  align-self: stretch;
+
+  padding: 0 12px;
+
+  border: 1px solid #3e76ff;
+  border-radius: 8px;
+
+  background: #326dff;
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.card-comment-compose button:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+/* La nota prescinde visualmente de datos operativos */
+.postit-card:has(.postit-type-badge:first-child) {
+  transition:
+    transform .16s ease,
+    box-shadow .16s ease;
+}
+
+@media (max-width: 1050px) {
+  .board-view-controls .board-center-button {
+    display: none;
+  }
+}
+
+
+/* =========================================================
+   CARDS V4 - AJUSTES DE PRUEBA / DRAWER / ZOOM FIJO
+========================================================= */
+
+/* El board completo conserva SIEMPRE el color elegido */
+.cards-board-area,
+.cards-canvas,
+.board-zoom-spacer,
+.board-world {
+  background: #5d6670 !important;
+}
+
+.cards-canvas {
+  background-color: #5d6670 !important;
+}
+
+.board-world {
+  background-color: #5d6670 !important;
+}
+
+/* Zoom fijo, superpuesto arriba a la derecha del board */
+.cards-board-area {
+  position: relative;
+}
+
+.board-zoom-overlay {
+  position: absolute;
+  top: 60px;
+  right: 16px;
+  z-index: 80;
+
+  height: 36px;
+
+  display: inline-flex;
+  align-items: center;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 9px;
+
+  background: rgba(12, 18, 25, .92);
+
+  box-shadow:
+    0 8px 22px rgba(0,0,0,.28);
+
+  backdrop-filter: blur(8px);
+}
+
+.board-zoom-overlay button {
+  min-width: 36px;
+  height: 34px;
+
+  border: 0;
+  border-right: 1px solid rgba(255,255,255,.10);
+
+  background: transparent;
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 850;
+
+  cursor: pointer;
+}
+
+.board-zoom-overlay button:hover {
+  background: rgba(255,255,255,.08);
+}
+
+.board-zoom-overlay span {
+  min-width: 52px;
+
+  color: #ffffff !important;
+
+  font-size: 10.5px !important;
+  font-weight: 850;
+  text-align: center;
+}
+
+.board-zoom-overlay .board-center-button {
+  min-width: 64px;
+
+  border-right: 0;
+
+  font-size: 9px;
+}
+
+/* Botón Note separado visualmente */
+.cards-note-button {
+  min-height: 30px;
+
+  padding: 0 11px;
+
+  border: 1px solid #9d7cf0;
+  border-radius: 8px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7354bd,
+      #9a78e4
+    );
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 850;
+
+  cursor: pointer;
+}
+
+.cards-note-button:hover {
+  filter: brightness(1.08);
+}
+
+/* Editor lateral: fondo sólido, siempre legible */
+.card-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+
+  background: rgba(2, 6, 10, .48);
+
+  pointer-events: auto;
+}
+
+.card-editor-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+
+  width: min(560px, 96vw);
+  height: 100vh;
+
+  overflow-y: auto;
+
+  padding: 22px;
+
+  border-left: 1px solid #2a3643;
+
+  background:
+    linear-gradient(
+      180deg,
+      #111821 0%,
+      #0c1219 100%
+    );
+
+  box-shadow:
+    -22px 0 50px rgba(0,0,0,.38);
+}
+
+.card-editor-drawer form {
+  min-height: 100%;
+}
+
+.card-editor-drawer .card-modal-heading {
+  position: sticky;
+  top: -22px;
+  z-index: 3;
+
+  margin: -22px -22px 18px;
+  padding: 20px 22px 14px;
+
+  border-bottom: 1px solid #25313d;
+
+  background: #10171f;
+}
+
+.card-editor-drawer .form-group label {
+  color: #ffffff !important;
+  font-size: 11.5px !important;
+}
+
+.card-editor-drawer input,
+.card-editor-drawer textarea,
+.card-editor-drawer select {
+  background: #080e14 !important;
+  color: #ffffff !important;
+
+  font-size: 11.5px !important;
+}
+
+.card-type-readonly {
+  min-height: 41px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 12px;
+
+  border: 1px solid #2a3643;
+  border-radius: 9px;
+
+  background: #111a23;
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* Más opciones de post-it */
+.postit-card.orange {
+  background:
+    linear-gradient(
+      145deg,
+      #ffc078,
+      #f2a65b
+    );
+}
+
+.postit-card.red {
+  background:
+    linear-gradient(
+      145deg,
+      #ffb1b8,
+      #f38c98
+    );
+}
+
+.postit-card.teal {
+  background:
+    linear-gradient(
+      145deg,
+      #9fe2df,
+      #75c9c7
+    );
+}
+
+.postit-card.gray {
+  background:
+    linear-gradient(
+      145deg,
+      #d3d8de,
+      #b8c0c9
+    );
+}
+
+.postit-card.cream {
+  background:
+    linear-gradient(
+      145deg,
+      #fff0c8,
+      #f5dfab
+    );
+}
+
+.postit-card.lavender {
+  background:
+    linear-gradient(
+      145deg,
+      #e3d2ff,
+      #cbb3f2
+    );
+}
+
+/* Card más legible */
+.postit-card h3 {
+  font-size: 18px !important;
+}
+
+.postit-description {
+  min-height: 58px;
+
+  overflow: hidden;
+
+  color: #26313a !important;
+
+  font-size: 12.5px !important;
+  line-height: 1.5 !important;
+
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.postit-info span {
+  font-size: 11px !important;
+}
+
+.postit-info b {
+  font-size: 9px !important;
+}
+
+/* Cuando la card crece, el espacio extra se usa para mostrar descripción */
+.postit-card {
+  box-sizing: border-box;
+}
+
+@media (max-width: 760px) {
+  .board-zoom-overlay {
+    top: 58px;
+    right: 8px;
+  }
+
+  .board-zoom-overlay .board-center-button {
+    display: none;
+  }
+
+  .card-editor-drawer {
+    width: 100vw;
+  }
+}
+
+
+/* =========================================================
+   CARDS V4.1 - AJUSTE ZOOM + BOTONES
+========================================================= */
+
+/* Zoom más abajo, ya dentro del board */
+.board-zoom-overlay {
+  top: 82px !important;
+  right: 18px !important;
+}
+
+/* + Card y + Note alineados en horizontal */
+.cards-board-meta-actions {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 10px !important;
+}
+
+/* Botones un poco más grandes */
+.cards-board-meta-actions .cards-primary-button.compact,
+.cards-board-meta-actions .cards-note-button.compact {
+  min-width: 86px !important;
+  height: 36px !important;
+  padding: 0 14px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  font-size: 10.5px !important;
+  font-weight: 850 !important;
+
+  white-space: nowrap !important;
+}
+
+/* Que el contador no empuje los botones hacia abajo */
+.cards-counter {
+  flex: 0 0 auto;
+}
+
+/* Un poco más de aire en la barra superior del board */
+.cards-board-meta {
+  min-height: 54px !important;
+}
+
+@media (max-width: 900px) {
+  .cards-board-meta-actions {
+    flex-wrap: wrap !important;
+  }
+
+  .board-zoom-overlay {
+    top: 96px !important;
+  }
+}
+
+
+/* =========================================================
+   CARDS V4.2 - ZOOM ANCLADO AL BOARD + CARD/NOTE EN FILA
+========================================================= */
+
+.cards-canvas-shell {
+  position: relative;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Ahora el zoom está ANCLADO al canvas, no al encabezado */
+.cards-canvas-shell .board-zoom-overlay {
+  position: absolute !important;
+  top: 12px !important;
+  right: 16px !important;
+  z-index: 120 !important;
+
+  margin: 0 !important;
+}
+
+/* Evita que reglas anteriores lo vuelvan a empujar */
+.cards-board-area > .board-zoom-overlay {
+  display: none !important;
+}
+
+/* Acciones del board */
+.cards-board-meta {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 18px !important;
+}
+
+.cards-board-meta > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.cards-board-meta-actions {
+  flex: 0 0 auto !important;
+
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+
+  white-space: nowrap !important;
+}
+
+.card-create-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+
+  flex-wrap: nowrap !important;
+}
+
+.card-create-actions .cards-primary-button.compact,
+.card-create-actions .cards-note-button.compact {
+  width: auto !important;
+  min-width: 94px !important;
+  height: 38px !important;
+
+  padding: 0 16px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  flex: 0 0 auto !important;
+
+  font-size: 11px !important;
+  font-weight: 850 !important;
+
+  white-space: nowrap !important;
+}
+
+/* El contador queda en la misma línea, pero no desplaza los botones */
+.cards-counter {
+  flex: 0 0 auto !important;
+}
+
+/* En pantallas angostas primero ocultamos el contador, no apilamos Card/Note */
+@media (max-width: 980px) {
+  .cards-counter {
+    display: none !important;
+  }
+
+  .cards-board-meta-actions {
+    flex-wrap: nowrap !important;
+  }
+
+  .card-create-actions {
+    flex-wrap: nowrap !important;
+  }
+
+  .cards-canvas-shell .board-zoom-overlay {
+    top: 10px !important;
+    right: 10px !important;
+  }
 }

@@ -112,6 +112,12 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
 
   const [resizeInfo, setResizeInfo] = useState(null)
 
+  const [boardZoom, setBoardZoom] = useState(0.8)
+  const [panInfo, setPanInfo] = useState(null)
+
+  const [comentariosCard, setComentariosCard] = useState([])
+  const [nuevoComentario, setNuevoComentario] = useState('')
+
   const [modalBoardOpen, setModalBoardOpen] = useState(false)
   const [modalCardOpen, setModalCardOpen] = useState(false)
 
@@ -125,6 +131,8 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const cardVacia = {
     titulo: '',
     descripcion: '',
+    tipo: 'Card',
+    estado: 'Pendiente',
     responsable: '',
     fecha_inicio: '',
     fecha_fin: '',
@@ -133,6 +141,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
     pos_y: 80,
     ancho: 250,
     alto: 190,
+    z_index: 10,
   }
 
   const [formCard, setFormCard] = useState(cardVacia)
@@ -1071,6 +1080,7 @@ async function cargarCards(boardId) {
     .from('cards')
     .select('*')
     .eq('board_id', boardId)
+    .order('z_index', { ascending: true })
     .order('created_at', { ascending: true })
 
   if (error) {
@@ -1101,6 +1111,336 @@ async function cargarCardLinks(boardId) {
   setCardLinks(data || [])
 }
 
+
+async function cargarComentariosCard(cardId) {
+  if (!cardId) {
+    setComentariosCard([])
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('card_comments')
+    .select('*')
+    .eq('card_id', cardId)
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    console.error('Error cargando comentarios:', error)
+    return
+  }
+
+  setComentariosCard(data || [])
+}
+
+async function agregarComentario() {
+  if (
+    !cardEditando ||
+    !nuevoComentario.trim()
+  ) {
+    return
+  }
+
+  const autor =
+    session?.user?.email || 'Usuario'
+
+  const { error } = await supabase
+    .from('card_comments')
+    .insert({
+      card_id: cardEditando.id,
+      autor,
+      comentario:
+        nuevoComentario.trim(),
+    })
+
+  if (error) {
+    alert(
+      `No se pudo guardar el comentario: ${error.message}`
+    )
+    return
+  }
+
+  setNuevoComentario('')
+  await cargarComentariosCard(cardEditando.id)
+}
+
+async function eliminarComentario(comentario) {
+  const confirmar = window.confirm(
+    '¿Eliminar este comentario?'
+  )
+
+  if (!confirmar) return
+
+  const { error } = await supabase
+    .from('card_comments')
+    .delete()
+    .eq('id', comentario.id)
+
+  if (error) {
+    alert(
+      `No se pudo eliminar el comentario: ${error.message}`
+    )
+    return
+  }
+
+  await cargarComentariosCard(cardEditando.id)
+}
+
+function cambiarZoom(delta) {
+  setBoardZoom((actual) =>
+    Math.min(
+      1.4,
+      Math.max(
+        0.5,
+        Math.round(
+          (actual + delta) * 10
+        ) / 10
+      )
+    )
+  )
+}
+
+function iniciarPanCanvas(event) {
+  if (
+    event.button !== 0 ||
+    !boardCanvasRef.current
+  ) {
+    return
+  }
+
+  const esFondo =
+    event.target.classList.contains(
+      'cards-canvas'
+    ) ||
+    event.target.classList.contains(
+      'board-zoom-spacer'
+    ) ||
+    event.target.classList.contains(
+      'board-world'
+    ) ||
+    event.target.classList.contains(
+      'cards-cork-texture'
+    )
+
+  if (!esFondo) return
+
+  setPanInfo({
+    startX: event.clientX,
+    startY: event.clientY,
+    scrollLeft:
+      boardCanvasRef.current.scrollLeft,
+    scrollTop:
+      boardCanvasRef.current.scrollTop,
+  })
+
+  event.preventDefault()
+}
+
+function moverPanCanvas(event) {
+  if (
+    !panInfo ||
+    !boardCanvasRef.current
+  ) {
+    return
+  }
+
+  boardCanvasRef.current.scrollLeft =
+    panInfo.scrollLeft -
+    (event.clientX - panInfo.startX)
+
+  boardCanvasRef.current.scrollTop =
+    panInfo.scrollTop -
+    (event.clientY - panInfo.startY)
+}
+
+function terminarPanCanvas() {
+  setPanInfo(null)
+}
+
+function centrarBoard() {
+  if (!boardCanvasRef.current) return
+
+  const canvas =
+    boardCanvasRef.current
+
+  const cardsActivas = cards
+
+  if (cardsActivas.length === 0) {
+    canvas.scrollTo({
+      left: 0,
+      top: 0,
+      behavior: 'smooth',
+    })
+    return
+  }
+
+  const minX = Math.min(
+    ...cardsActivas.map(
+      (card) => Number(card.pos_x) || 0
+    )
+  )
+
+  const maxX = Math.max(
+    ...cardsActivas.map(
+      (card) =>
+        (Number(card.pos_x) || 0) +
+        (Number(card.ancho) || 250)
+    )
+  )
+
+  const minY = Math.min(
+    ...cardsActivas.map(
+      (card) => Number(card.pos_y) || 0
+    )
+  )
+
+  const maxY = Math.max(
+    ...cardsActivas.map(
+      (card) =>
+        (Number(card.pos_y) || 0) +
+        (Number(card.alto) || 190)
+    )
+  )
+
+  const centroX =
+    ((minX + maxX) / 2) *
+    boardZoom
+
+  const centroY =
+    ((minY + maxY) / 2) *
+    boardZoom
+
+  canvas.scrollTo({
+    left:
+      Math.max(
+        0,
+        centroX -
+          canvas.clientWidth / 2
+      ),
+    top:
+      Math.max(
+        0,
+        centroY -
+          canvas.clientHeight / 2
+      ),
+    behavior: 'smooth',
+  })
+}
+
+async function duplicarCard(card) {
+  if (!card) return
+
+  const maxZ =
+    Math.max(
+      10,
+      ...cards.map(
+        (item) =>
+          Number(item.z_index) || 10
+      )
+    ) + 1
+
+  const { data, error } = await supabase
+    .from('cards')
+    .insert({
+      board_id: card.board_id,
+      titulo: `${card.titulo} copia`,
+      descripcion:
+        card.descripcion || '',
+      tipo: card.tipo || 'Card',
+      estado:
+        card.estado || 'Pendiente',
+      responsable:
+        card.tipo === 'Nota'
+          ? null
+          : card.responsable || null,
+      fecha_inicio:
+        card.tipo === 'Nota'
+          ? null
+          : card.fecha_inicio || null,
+      fecha_fin:
+        card.tipo === 'Nota'
+          ? null
+          : card.fecha_fin || null,
+      color: card.color || 'yellow',
+      pos_x:
+        (Number(card.pos_x) || 80) +
+        30,
+      pos_y:
+        (Number(card.pos_y) || 80) +
+        30,
+      ancho:
+        Number(card.ancho) || 250,
+      alto:
+        Number(card.alto) || 190,
+      z_index: maxZ,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    alert(
+      `No se pudo duplicar la card: ${error.message}`
+    )
+    return
+  }
+
+  cerrarModalCard()
+  await cargarCards(boardSeleccionadoId)
+
+  if (data) {
+    abrirEditarCard(data)
+  }
+}
+
+async function moverCardCapa(card, direccion) {
+  if (!card) return
+
+  const valores = cards.map(
+    (item) =>
+      Number(item.z_index) || 10
+  )
+
+  const nuevoZ =
+    direccion === 'frente'
+      ? Math.max(10, ...valores) + 1
+      : Math.min(10, ...valores) - 1
+
+  const { error } = await supabase
+    .from('cards')
+    .update({
+      z_index: nuevoZ,
+      updated_at:
+        new Date().toISOString(),
+    })
+    .eq('id', card.id)
+
+  if (error) {
+    alert(
+      `No se pudo cambiar la capa: ${error.message}`
+    )
+    return
+  }
+
+  setCards((actual) =>
+    actual.map((item) =>
+      item.id === card.id
+        ? {
+            ...item,
+            z_index: nuevoZ,
+          }
+        : item
+    )
+  )
+
+  setCardEditando((actual) =>
+    actual
+      ? {
+          ...actual,
+          z_index: nuevoZ,
+        }
+      : actual
+  )
+}
+
 function iniciarConexion(event, card) {
   event.stopPropagation()
   event.preventDefault()
@@ -1125,13 +1465,17 @@ function iniciarConexion(event, card) {
       Number(card.pos_y || 0) +
       Number(card.alto || 190) / 2,
     x2:
-      event.clientX -
-      canvasRect.left +
-      scrollLeft,
+      (
+        event.clientX -
+        canvasRect.left +
+        scrollLeft
+      ) / boardZoom,
     y2:
-      event.clientY -
-      canvasRect.top +
-      scrollTop,
+      (
+        event.clientY -
+        canvasRect.top +
+        scrollTop
+      ) / boardZoom,
   })
 }
 
@@ -1152,13 +1496,17 @@ function moverConexion(event) {
   setLinkDraft((actual) => ({
     ...actual,
     x2:
-      event.clientX -
-      canvasRect.left +
-      scrollLeft,
+      (
+        event.clientX -
+        canvasRect.left +
+        scrollLeft
+      ) / boardZoom,
     y2:
-      event.clientY -
-      canvasRect.top +
-      scrollTop,
+      (
+        event.clientY -
+        canvasRect.top +
+        scrollTop
+      ) / boardZoom,
   }))
 }
 
@@ -1260,7 +1608,10 @@ function moverResizeCard(event) {
   if (!resizeInfo) return
 
   const diferencia =
-    event.clientY - resizeInfo.startY
+    (
+      event.clientY -
+      resizeInfo.startY
+    ) / boardZoom
 
   const nuevaAltura =
     Math.max(
@@ -1446,7 +1797,7 @@ async function eliminarBoard(board) {
   await cargarBoards()
 }
 
-function abrirNuevaCard() {
+function abrirNuevaCard(tipo = 'Card') {
   if (!boardSeleccionadoId) {
     alert('Primero creá o seleccioná un board.')
     return
@@ -1454,10 +1805,25 @@ function abrirNuevaCard() {
 
   setCardEditando(null)
 
+  const maxZ =
+    Math.max(
+      10,
+      ...cards.map(
+        (item) =>
+          Number(item.z_index) || 10
+      )
+    ) + 1
+
   setFormCard({
     ...cardVacia,
+    tipo,
+    estado:
+      tipo === 'Nota'
+        ? 'Nota'
+        : 'Pendiente',
     pos_x: 90 + Math.min(cards.length, 6) * 28,
     pos_y: 90 + Math.min(cards.length, 6) * 24,
+    z_index: maxZ,
   })
 
   setModalCardOpen(true)
@@ -1469,6 +1835,8 @@ function abrirEditarCard(card) {
   setFormCard({
     titulo: card.titulo || '',
     descripcion: card.descripcion || '',
+    tipo: card.tipo || 'Card',
+    estado: card.estado || 'Pendiente',
     responsable: card.responsable || '',
     fecha_inicio: card.fecha_inicio || '',
     fecha_fin: card.fecha_fin || '',
@@ -1477,8 +1845,11 @@ function abrirEditarCard(card) {
     pos_y: Number(card.pos_y) || 80,
     ancho: Number(card.ancho) || 250,
     alto: Number(card.alto) || 190,
+    z_index: Number(card.z_index) || 10,
   })
 
+  setNuevoComentario('')
+  cargarComentariosCard(card.id)
   setModalCardOpen(true)
 }
 
@@ -1486,6 +1857,8 @@ function cerrarModalCard() {
   setModalCardOpen(false)
   setCardEditando(null)
   setFormCard(cardVacia)
+  setComentariosCard([])
+  setNuevoComentario('')
 }
 
 async function guardarCard(event) {
@@ -1501,16 +1874,35 @@ async function guardarCard(event) {
     return
   }
 
+  const esNota =
+    formCard.tipo === 'Nota'
+
   const payload = {
     board_id: boardSeleccionadoId,
     titulo: formCard.titulo.trim(),
     descripcion: formCard.descripcion.trim(),
-    responsable: formCard.responsable || null,
-    fecha_inicio: formCard.fecha_inicio || null,
-    fecha_fin: formCard.fecha_fin || null,
+    tipo: formCard.tipo,
+    estado:
+      esNota
+        ? 'Nota'
+        : formCard.estado,
+    responsable:
+      esNota
+        ? null
+        : formCard.responsable || null,
+    fecha_inicio:
+      esNota
+        ? null
+        : formCard.fecha_inicio || null,
+    fecha_fin:
+      esNota
+        ? null
+        : formCard.fecha_fin || null,
     color: formCard.color,
     ancho: Number(formCard.ancho) || 250,
     alto: Number(formCard.alto) || 190,
+    z_index:
+      Number(formCard.z_index) || 10,
     updated_at: new Date().toISOString(),
   }
 
@@ -1531,6 +1923,8 @@ async function guardarCard(event) {
         ...payload,
         pos_x: Number(formCard.pos_x) || 80,
         pos_y: Number(formCard.pos_y) || 80,
+        z_index:
+          Number(formCard.z_index) || 10,
       })
 
     if (error) {
@@ -1599,16 +1993,20 @@ function moverCardEnCanvas(event) {
     boardCanvasRef.current.scrollTop || 0
 
   const nuevoX =
-    event.clientX -
-    canvasRect.left -
-    dragInfo.offsetX +
-    scrollLeft
+    (
+      event.clientX -
+      canvasRect.left +
+      scrollLeft
+    ) / boardZoom -
+    dragInfo.offsetX / boardZoom
 
   const nuevoY =
-    event.clientY -
-    canvasRect.top -
-    dragInfo.offsetY +
-    scrollTop
+    (
+      event.clientY -
+      canvasRect.top +
+      scrollTop
+    ) / boardZoom -
+    dragInfo.offsetY / boardZoom
 
   setCards((actual) =>
     actual.map((card) =>
@@ -3531,7 +3929,7 @@ function colorEstadoTarea(tarea) {
             Salir
           </button>
 
-          {vistaPrincipal === 'gantt' ? (
+          {vistaPrincipal === 'gantt' && (
             <button
               className="btn-primary"
               onClick={abrirNuevaTarea}
@@ -3545,19 +3943,6 @@ function colorEstadoTarea(tarea) {
               }
             >
               + Nueva tarea
-            </button>
-          ) : (
-            <button
-              className="btn-primary"
-              onClick={abrirNuevaCard}
-              disabled={!boardSeleccionadoId}
-              title={
-                boardSeleccionadoId
-                  ? 'Crear nueva card'
-                  : 'Creá o seleccioná un board'
-              }
-            >
-              + Nueva card
             </button>
           )}
 
@@ -5278,11 +5663,10 @@ function colorEstadoTarea(tarea) {
                 Canvas colaborativo
               </span>
 
-              <h2>Boards</h2>
+              <h2>Cards</h2>
 
               <p>
-                Elegí un board y organizá cards libres,
-                Se libre.
+                Elegí un board y organizá cards libres, Se libre
               </p>
             </div>
 
@@ -5295,15 +5679,7 @@ function colorEstadoTarea(tarea) {
                 + Nuevo board
               </button>
 
-              {boardSeleccionadoId && (
-                <button
-                  type="button"
-                  className="cards-primary-button"
-                  onClick={abrirNuevaCard}
-                >
-                  + Nueva card
-                </button>
-              )}
+
             </div>
           </div>
 
@@ -5448,35 +5824,108 @@ function colorEstadoTarea(tarea) {
                         {cards.length === 1 ? '' : 's'}
                       </span>
 
-                      <button
-                        type="button"
-                        className="cards-primary-button compact"
-                        onClick={abrirNuevaCard}
-                      >
-                        + Card
-                      </button>
+                      <div className="card-create-actions">
+                        <button
+                          type="button"
+                          className="cards-primary-button compact"
+                          onClick={() =>
+                            abrirNuevaCard('Card')
+                          }
+                        >
+                          + Card
+                        </button>
+
+                        <button
+                          type="button"
+                          className="cards-note-button compact"
+                          onClick={() =>
+                            abrirNuevaCard('Nota')
+                          }
+                        >
+                          + Note
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  <div
-                    ref={boardCanvasRef}
-                    className="cards-canvas"
+                  <div className="cards-canvas-shell">
+                    <div className="board-zoom-overlay">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        cambiarZoom(-0.1)
+                      }
+                      title="Alejar"
+                    >
+                      −
+                    </button>
+
+                    <span>
+                      {Math.round(
+                        boardZoom * 100
+                      )}%
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        cambiarZoom(0.1)
+                      }
+                      title="Acercar"
+                    >
+                      +
+                    </button>
+
+                    <button
+                      type="button"
+                      className="board-center-button"
+                      onClick={centrarBoard}
+                      title="Centrar board"
+                    >
+                      Centrar
+                    </button>
+                  </div>
+
+                    <div
+                      ref={boardCanvasRef}
+                    className={`cards-canvas ${
+                      panInfo ? 'panning' : ''
+                    }`}
+                    onMouseDown={iniciarPanCanvas}
                     onMouseMove={(event) => {
                       moverCardEnCanvas(event)
                       moverConexion(event)
                       moverResizeCard(event)
+                      moverPanCanvas(event)
                     }}
                     onMouseUp={() => {
                       terminarDragCard()
                       terminarResizeCard()
+                      terminarPanCanvas()
                     }}
                     onMouseLeave={() => {
                       terminarDragCard()
                       terminarResizeCard()
+                      terminarPanCanvas()
                       setLinkDraft(null)
                     }}
                   >
-                    <div className="cards-cork-texture" />
+                    <div
+                      className="board-zoom-spacer"
+                      style={{
+                        width: `${2400 * boardZoom}px`,
+                        height: `${1600 * boardZoom}px`,
+                      }}
+                    >
+                      <div
+                        className="board-world"
+                        style={{
+                          width: '2400px',
+                          height: '1600px',
+                          transform: `scale(${boardZoom})`,
+                        }}
+                      >
+                        <div className="cards-cork-texture" />
 
                     <svg
                       className="card-links-layer"
@@ -5609,6 +6058,11 @@ function colorEstadoTarea(tarea) {
                           top: `${Number(card.pos_y) || 80}px`,
                           width: `${Number(card.ancho) || 250}px`,
                           minHeight: `${Number(card.alto) || 190}px`,
+                          zIndex:
+                            dragInfo?.id === card.id ||
+                            resizeInfo?.id === card.id
+                              ? 999
+                              : Number(card.z_index) || 10,
                         }}
                         onMouseDown={(event) =>
                           iniciarDragCard(event, card)
@@ -5660,27 +6114,57 @@ function colorEstadoTarea(tarea) {
                           •••
                         </button>
 
+                        <div className="postit-badges">
+                          <span className="postit-type-badge">
+                            {card.tipo === 'Nota'
+                              ? 'NOTA'
+                              : 'CARD'}
+                          </span>
+
+                          {card.tipo !== 'Nota' && (
+                            <span
+                              className={`postit-status-badge ${(
+                                card.estado || 'Pendiente'
+                              )
+                                .toLowerCase()
+                                .replaceAll(' ', '-')}`}
+                            >
+                              {card.estado || 'Pendiente'}
+                            </span>
+                          )}
+                        </div>
+
                         <h3>{card.titulo}</h3>
 
-                        <p>
+                        <p
+                          className="postit-description"
+                          style={{
+                            maxHeight: `${Math.max(
+                              58,
+                              (Number(card.alto) || 190) - 150
+                            )}px`,
+                          }}
+                        >
                           {card.descripcion ||
                             'Sin descripción'}
                         </p>
 
-                        <div className="postit-info">
-                          <span>
-                            <b>Responsable</b>
-                            {card.responsable ||
-                              'Sin asignar'}
-                          </span>
+                        {card.tipo !== 'Nota' && (
+                          <div className="postit-info">
+                            <span>
+                              <b>Responsable</b>
+                              {card.responsable ||
+                                'Sin asignar'}
+                            </span>
 
-                          <span>
-                            <b>Fechas</b>
-                            {card.fecha_inicio || '—'}
-                            {' → '}
-                            {card.fecha_fin || '—'}
-                          </span>
-                        </div>
+                            <span>
+                              <b>Fechas</b>
+                              {card.fecha_inicio || '—'}
+                              {' → '}
+                              {card.fecha_fin || '—'}
+                            </span>
+                          </div>
+                        )}
 
                         <button
                           type="button"
@@ -5720,7 +6204,10 @@ function colorEstadoTarea(tarea) {
                         </button>
                       </div>
                     )}
+                      </div>
+                    </div>
                   </div>
+                </div>
                 </>
               )}
             </div>
@@ -5938,8 +6425,8 @@ function colorEstadoTarea(tarea) {
       )}
 
       {modalCardOpen && (
-        <div className="modal-overlay">
-          <div className="modal-card cards-editor-modal">
+        <div className="card-drawer-overlay">
+          <aside className="card-editor-drawer">
             <form onSubmit={guardarCard}>
               <div className="card-modal-heading">
                 <div>
@@ -5965,6 +6452,37 @@ function colorEstadoTarea(tarea) {
               </div>
 
               <div className="form-grid">
+                <div className="form-group">
+                  <label>Tipo</label>
+
+                  <div className="card-type-readonly">
+                    {formCard.tipo === 'Nota'
+                      ? 'Nota'
+                      : 'Card'}
+                  </div>
+                </div>
+
+                {formCard.tipo !== 'Nota' && (
+                  <div className="form-group">
+                    <label>Estado</label>
+
+                    <select
+                      value={formCard.estado}
+                      onChange={(e) =>
+                        setFormCard((actual) => ({
+                          ...actual,
+                          estado: e.target.value,
+                        }))
+                      }
+                    >
+                      <option>Pendiente</option>
+                      <option>En curso</option>
+                      <option>Finalizado</option>
+                      <option>Bloqueado</option>
+                    </select>
+                  </div>
+                )}
+
                 <div className="form-group full">
                   <label>Título</label>
 
@@ -5997,7 +6515,8 @@ function colorEstadoTarea(tarea) {
                   />
                 </div>
 
-                <div className="form-group">
+                {formCard.tipo !== 'Nota' && (
+                  <div className="form-group">
                   <label>Responsable</label>
 
                   <select
@@ -6022,7 +6541,9 @@ function colorEstadoTarea(tarea) {
                       </option>
                     ))}
                   </select>
-                </div>
+                  </div>
+
+                )}
 
                 <div className="form-group">
                   <label>Color</label>
@@ -6054,10 +6575,30 @@ function colorEstadoTarea(tarea) {
                     <option value="purple">
                       Violeta
                     </option>
+                    <option value="orange">
+                      Naranja
+                    </option>
+                    <option value="red">
+                      Rojo suave
+                    </option>
+                    <option value="teal">
+                      Turquesa
+                    </option>
+                    <option value="gray">
+                      Gris
+                    </option>
+                    <option value="cream">
+                      Crema
+                    </option>
+                    <option value="lavender">
+                      Lavanda
+                    </option>
                   </select>
                 </div>
 
-                <div className="form-group">
+                {formCard.tipo !== 'Nota' && (
+                  <>
+                    <div className="form-group">
                   <label>Fecha inicio</label>
 
                   <input
@@ -6070,9 +6611,9 @@ function colorEstadoTarea(tarea) {
                       }))
                     }
                   />
-                </div>
+                    </div>
 
-                <div className="form-group">
+                    <div className="form-group">
                   <label>Fecha fin</label>
 
                   <input
@@ -6085,8 +6626,136 @@ function colorEstadoTarea(tarea) {
                       }))
                     }
                   />
-                </div>
+                    </div>
+                  </>
+                )}
               </div>
+
+              {cardEditando && (
+                <>
+                  <div className="card-layer-tools">
+                    <span>Acciones visuales</span>
+
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          duplicarCard(cardEditando)
+                        }
+                      >
+                        Duplicar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          moverCardCapa(
+                            cardEditando,
+                            'frente'
+                          )
+                        }
+                      >
+                        Traer al frente
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          moverCardCapa(
+                            cardEditando,
+                            'fondo'
+                          )
+                        }
+                      >
+                        Mandar atrás
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="card-comments-section">
+                    <div className="card-comments-title">
+                      <div>
+                        <span>Colaboración</span>
+                        <strong>Comentarios</strong>
+                      </div>
+
+                      <small>
+                        {comentariosCard.length}
+                      </small>
+                    </div>
+
+                    <div className="card-comments-list">
+                      {comentariosCard.map(
+                        (comentario) => (
+                          <div
+                            className="card-comment"
+                            key={comentario.id}
+                          >
+                            <div>
+                              <strong>
+                                {comentario.autor}
+                              </strong>
+
+                              <span>
+                                {new Date(
+                                  comentario.created_at
+                                ).toLocaleString(
+                                  'es-AR'
+                                )}
+                              </span>
+                            </div>
+
+                            <p>
+                              {comentario.comentario}
+                            </p>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                eliminarComentario(
+                                  comentario
+                                )
+                              }
+                              title="Eliminar comentario"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )
+                      )}
+
+                      {comentariosCard.length === 0 && (
+                        <div className="card-comments-empty">
+                          Todavía no hay comentarios.
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="card-comment-compose">
+                      <textarea
+                        rows="2"
+                        value={nuevoComentario}
+                        onChange={(e) =>
+                          setNuevoComentario(
+                            e.target.value
+                          )
+                        }
+                        placeholder="Escribí un comentario..."
+                      />
+
+                      <button
+                        type="button"
+                        onClick={agregarComentario}
+                        disabled={
+                          !nuevoComentario.trim()
+                        }
+                      >
+                        Comentar
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div className="modal-actions modal-actions-task">
                 {cardEditando && (
@@ -6117,7 +6786,7 @@ function colorEstadoTarea(tarea) {
                 </div>
               </div>
             </form>
-          </div>
+          </aside>
         </div>
       )}
 
