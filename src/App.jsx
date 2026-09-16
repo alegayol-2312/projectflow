@@ -43,7 +43,7 @@ const formularioVacio = {
 const PROCESO_COMPONENTES = [
   {
     tipo: 'InicioFin',
-    label: 'Terminador',
+    label: 'Texto',
     tituloDefault: 'Inicio / Fin',
     color: '#cfe3cd',
     icon: processTerminatorIcon,
@@ -85,7 +85,7 @@ const PROCESO_COMPONENTES = [
   },
   {
     tipo: 'Referencia',
-    label: 'Referencia',
+    label: 'Inicio-Fin',
     tituloDefault: 'Referencia',
     color: '#cfe3cd',
     icon: processReferenceIcon,
