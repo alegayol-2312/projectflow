@@ -7637,7 +7637,7 @@ p {
 
 .board-archive-button {
   position: absolute;
-  left: 100px;
+  left: 16px;
   bottom: 16px;
   z-index: 125;
   width: 58px;
@@ -8134,7 +8134,7 @@ strong {
 .board-archive-button {
   position: fixed !important;
 
-  left: 370px !important;
+  left: 340px !important;
   bottom: 24px !important;
 
   z-index: 300 !important;
@@ -8221,4 +8221,1444 @@ strong {
     left: 16px !important;
     bottom: 16px !important;
   }
+}
+
+
+/* =========================================================
+   PROCESS MVP - MAPEO SIMPLE DE PROCESOS
+========================================================= */
+.process-page {
+  height: calc(100vh - 74px);
+  padding: 18px 20px 20px;
+  overflow: hidden;
+  background: #0f151b;
+}
+
+.process-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.process-eyebrow {
+  color: #7f91a2;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.process-toolbar h2 {
+  margin: 2px 0 2px;
+  color: #fff;
+  font-size: 24px;
+}
+
+.process-toolbar p {
+  margin: 0;
+  color: #98a8b7;
+  font-size: 10.5px;
+}
+
+.process-secondary-button,
+.process-no-selection button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid #334351;
+  border-radius: 8px;
+  background: #17212a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.process-layout {
+  display: grid;
+  grid-template-columns: 245px minmax(0, 1fr);
+  height: calc(100% - 76px);
+  gap: 12px;
+}
+
+.process-list-panel {
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #24313c;
+  border-radius: 12px;
+  background: #121a21;
+}
+
+.process-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px;
+  border-bottom: 1px solid #24313c;
+}
+
+.process-list-header > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.process-list-header span,
+.process-list-header strong {
+  color: #dbe5ee;
+  font-size: 10px;
+}
+
+.process-list-header button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #334351;
+  border-radius: 7px;
+  background: #19242d;
+  color: #fff;
+  cursor: pointer;
+}
+
+.process-list {
+  height: calc(100% - 57px);
+  overflow: auto;
+  padding: 8px;
+  scrollbar-width: none;
+}
+.process-list::-webkit-scrollbar { display: none; }
+
+.process-list-item {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 7px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: #10171e;
+}
+
+.process-list-item.active {
+  border-color: #4d7ea3;
+  background: #18232d;
+}
+
+.process-list-main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 10px 34px 10px 10px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.process-list-main strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+}
+.process-list-main span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #8293a2;
+  font-size: 8.5px;
+}
+
+.process-list-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #8293a2;
+  cursor: pointer;
+}
+
+.process-list-empty {
+  padding: 14px;
+  color: #899aa9;
+  font-size: 9.5px;
+  text-align: center;
+}
+
+.process-workspace {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #283641;
+  border-radius: 12px;
+  background: #1b252e;
+}
+
+.process-no-selection {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: #fff;
+}
+.process-no-selection span {
+  max-width: 420px;
+  color: #93a3b2;
+  font-size: 10px;
+  text-align: center;
+}
+
+.process-canvas-header {
+  height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0 14px;
+  border-bottom: 1px solid #2c3a45;
+  background: #141d24;
+}
+.process-canvas-header > div:first-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.process-canvas-header strong { color: #fff; font-size: 11px; }
+.process-canvas-header span { color: #8fa0af; font-size: 8.8px; }
+
+.process-shape-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.process-shape-actions button {
+  height: 34px;
+  padding: 0 11px;
+  border: 1px solid #354755;
+  border-radius: 8px;
+  background: #1b2934;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.process-canvas {
+  height: calc(100% - 66px);
+  overflow: auto;
+  position: relative;
+  scrollbar-width: none;
+  background-color: #27323b;
+  background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.process-canvas::-webkit-scrollbar { display: none; }
+
+.process-world {
+  position: relative;
+  width: 2400px;
+  height: 1500px;
+}
+
+.process-links-layer {
+  position: absolute;
+  inset: 0;
+  width: 2400px;
+  height: 1500px;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.process-link-path {
+  fill: none;
+  stroke: #b9c5cf;
+  stroke-width: 3;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+.process-links-layer marker path { fill: #b9c5cf; }
+
+.process-node {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 16px 18px;
+  box-sizing: border-box;
+  border: 2px solid #95a8b7;
+  background: #eef3f7;
+  color: #111820;
+  box-shadow: 0 8px 18px rgba(0,0,0,.22);
+  cursor: grab;
+  user-select: none;
+}
+.process-node:active { cursor: grabbing; }
+.process-node-actividad { border-radius: 10px; }
+.process-node-iniciofin { border-radius: 999px; }
+.process-node-decision {
+  transform: rotate(45deg);
+  border-radius: 8px;
+}
+.process-node-decision > *:not(.process-node-connector) {
+  transform: rotate(-45deg);
+}
+
+.process-node-type {
+  color: #647686;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.process-node strong {
+  max-width: 100%;
+  color: #111820;
+  font-size: 11px;
+  line-height: 1.25;
+  text-align: center;
+}
+.process-node.connecting {
+  border-color: #14c6b5;
+  box-shadow: 0 0 0 4px rgba(20,198,181,.18), 0 8px 18px rgba(0,0,0,.22);
+}
+
+.process-node-connector {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  padding: 0;
+  border: 3px solid #27323b;
+  border-radius: 50%;
+  background: #14c6b5;
+  cursor: crosshair;
+  z-index: 7;
+}
+.process-node-connector.left { left: -10px; }
+.process-node-connector.right { right: -10px; }
+.process-node-decision .process-node-connector {
+  transform: rotate(-45deg);
+}
+
+.process-empty-canvas {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 22px;
+  border: 1px dashed #677785;
+  border-radius: 12px;
+  background: rgba(17,24,30,.68);
+  color: #fff;
+}
+.process-empty-canvas span { color: #99a8b5; font-size: 9px; }
+.process-drawer textarea { resize: vertical; }
+
+@media (max-width: 980px) {
+  .process-layout { grid-template-columns: 200px minmax(0,1fr); }
+  .process-shape-actions button { padding: 0 8px; font-size: 8px; }
+}
+
+
+/* =========================================================
+   PROCESS V6.1 - PANEL INTUITIVO + COMPONENTES
+========================================================= */
+
+.process-layout {
+  display: grid !important;
+  grid-template-columns: 280px minmax(0, 1fr) !important;
+  gap: 16px !important;
+  min-height: 0;
+  height: calc(100vh - 176px);
+}
+
+.process-left-panel {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 1px 240px;
+  min-height: 0;
+  overflow: hidden;
+
+  border: 1px solid rgba(84, 108, 127, .35);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(12, 18, 25, .96), rgba(10, 16, 22, .96));
+  box-shadow: 0 18px 34px rgba(0,0,0,.24);
+}
+
+.process-left-top {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.process-left-divider {
+  height: 1px;
+  background: rgba(84, 108, 127, .28);
+}
+
+.process-list-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.process-list-scroll-button {
+  width: 30px !important;
+}
+
+.process-list {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.process-components-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 14px 14px 16px;
+}
+
+.process-components-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.process-components-header span {
+  display: block;
+  color: #8fb2d7;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.process-components-header strong {
+  display: block;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.process-components-header small {
+  color: #93a5b5;
+  font-size: 10px;
+}
+
+.process-components-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  overflow: auto;
+  min-height: 0;
+  padding-right: 4px;
+}
+
+.process-component-chip {
+  position: relative;
+  min-height: 58px;
+  padding: 10px 12px;
+  border: 2px solid rgba(16, 25, 34, .9);
+  color: #1e2933;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.15;
+  cursor: grab;
+  box-shadow: 0 8px 18px rgba(0,0,0,.18);
+  background: #cfe3cd !important;
+  user-select: none;
+}
+
+.process-component-chip span {
+  position: relative;
+  z-index: 2;
+}
+
+.process-component-chip:active {
+  cursor: grabbing;
+}
+
+.process-workspace {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.process-canvas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(84,108,127,.3);
+  border-radius: 16px;
+  background: rgba(11, 18, 24, .88);
+}
+
+.process-canvas {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid rgba(84,108,127,.3);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,.08) 1px, transparent 0) 0 0 / 28px 28px,
+    linear-gradient(180deg, #0f151b, #111922);
+}
+
+.process-world {
+  position: relative;
+  width: 2400px;
+  height: 1500px;
+}
+
+.process-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 2px solid rgba(20, 24, 29, .92);
+  color: #20272f !important;
+  text-align: center;
+  box-shadow: 0 12px 24px rgba(0,0,0,.18);
+  cursor: grab;
+}
+
+.process-node strong {
+  color: #20272f !important;
+  font-size: 13px !important;
+  line-height: 1.2;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.process-node-type {
+  color: rgba(32,39,47,.72) !important;
+  font-size: 9.5px !important;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.process-node.connecting {
+  box-shadow: 0 0 0 3px rgba(20,198,181,.4), 0 12px 24px rgba(0,0,0,.18);
+}
+
+.process-node-connector {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 2px solid #24313b;
+  border-radius: 999px;
+  background: #16c8b7;
+  box-shadow: 0 3px 8px rgba(0,0,0,.2);
+  z-index: 5;
+}
+.process-node-connector.left { left: -9px; top: 50%; transform: translateY(-50%); }
+.process-node-connector.right { right: -9px; top: 50%; transform: translateY(-50%); }
+.process-node-connector.top { top: -9px; left: 50%; transform: translateX(-50%); }
+.process-node-connector.bottom { bottom: -9px; left: 50%; transform: translateX(-50%); }
+
+.process-node-iniciofin,
+.process-component-chip.process-node-iniciofin {
+  border-radius: 999px;
+}
+
+.process-node-actividad,
+.process-component-chip.process-node-actividad {
+  border-radius: 12px;
+}
+
+.process-node-documento,
+.process-component-chip.process-node-documento {
+  border-radius: 12px;
+  clip-path: polygon(0 0, 100% 0, 100% 84%, 84% 92%, 68% 86%, 52% 92%, 36% 86%, 18% 92%, 0 84%);
+}
+
+.process-node-decision,
+.process-component-chip.process-node-decision {
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.process-node-basededatos,
+.process-component-chip.process-node-basededatos {
+  border-radius: 999px / 18px;
+}
+
+.process-node-procesopredefinido,
+.process-component-chip.process-node-procesopredefinido {
+  border-radius: 12px;
+}
+.process-node-procesopredefinido::before,
+.process-node-procesopredefinido::after,
+.process-component-chip.process-node-procesopredefinido::before,
+.process-component-chip.process-node-procesopredefinido::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  width: 10px;
+  border-left: 2px solid rgba(24,31,38,.72);
+  border-right: 2px solid rgba(24,31,38,.72);
+}
+.process-node-procesopredefinido::before,
+.process-component-chip.process-node-procesopredefinido::before {
+  left: 10px;
+}
+.process-node-procesopredefinido::after,
+.process-component-chip.process-node-procesopredefinido::after {
+  right: 10px;
+}
+
+.process-node-referencia,
+.process-component-chip.process-node-referencia {
+  border-radius: 999px;
+}
+
+.process-node-retraso,
+.process-component-chip.process-node-retraso {
+  border-radius: 999px 12px 12px 999px;
+}
+
+.process-node-enlacefuera,
+.process-component-chip.process-node-enlacefuera {
+  border-radius: 10px;
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%);
+}
+
+.process-node-datos,
+.process-component-chip.process-node-datos {
+  border-radius: 8px;
+  clip-path: polygon(12% 0, 100% 0, 88% 100%, 0 100%);
+}
+
+.process-empty-canvas {
+  top: 48%;
+}
+
+@media (max-width: 980px) {
+  .process-layout {
+    grid-template-columns: 240px minmax(0, 1fr) !important;
+  }
+  .process-components-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   PROCESS V6.2 - PANEL COMPONENTES MÁS ARRIBA
+========================================================= */
+
+/* Divide el panel izquierdo aproximadamente a la mitad:
+   procesos arriba / componentes abajo */
+.process-left-panel {
+  grid-template-rows:
+    minmax(0, 52%)
+    1px
+    minmax(0, calc(48% - 1px)) !important;
+}
+
+/* Los componentes aprovechan mejor el espacio disponible */
+.process-components-panel {
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.process-components-grid {
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+
+/* =========================================================
+   PROCESS V6.3 - ICONOS PNG + RESIZE + ROTACIÓN + HILOS DRAG
+========================================================= */
+
+.process-component-chip {
+  min-height: 92px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  padding: 8px !important;
+
+  border: 1px solid rgba(101,123,139,.28) !important;
+  border-radius: 12px !important;
+
+  background: #111a22 !important;
+  color: #e8eff5 !important;
+
+  box-shadow: none !important;
+}
+
+.process-component-chip:hover {
+  border-color: #5796c5 !important;
+  background: #16222c !important;
+}
+
+.process-component-chip > span {
+  color: #dbe5ed !important;
+  font-size: 9px !important;
+  font-weight: 750 !important;
+}
+
+.process-component-icon {
+  position: relative;
+  width: 76px;
+  height: 58px;
+  flex: 0 0 auto;
+}
+
+.process-component-icon img,
+.process-node-visual img {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  user-select: none;
+  pointer-events: none;
+
+  mix-blend-mode: multiply;
+}
+
+.process-icon-fill {
+  position: absolute;
+  inset: 0;
+
+  background: var(--process-color);
+
+  -webkit-mask-image: var(--process-icon);
+  mask-image: var(--process-icon);
+
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+
+  -webkit-mask-position: center;
+  mask-position: center;
+
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+/* Ya no usamos las formas CSS: el PNG define la geometría */
+.process-node,
+.process-node-iniciofin,
+.process-node-actividad,
+.process-node-documento,
+.process-node-decision,
+.process-node-basededatos,
+.process-node-procesopredefinido,
+.process-node-referencia,
+.process-node-preparacion,
+.process-node-notaproceso,
+.process-node-datos,
+.process-node-entradamanual,
+.process-node-operacionmanual,
+.process-node-conectorvertical {
+  border: 0 !important;
+  border-radius: 0 !important;
+  clip-path: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.process-node {
+  overflow: visible !important;
+  transform-origin: center center;
+}
+
+.process-node-visual {
+  position: absolute;
+  inset: 0;
+}
+
+.process-node-copy {
+  position: absolute;
+  inset: 14% 15%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 3;
+
+  pointer-events: none;
+
+  transform-origin: center center;
+}
+
+.process-node-type {
+  margin-bottom: 3px;
+  color: rgba(23,30,36,.64) !important;
+  font-size: 8px !important;
+}
+
+.process-node strong {
+  color: #111820 !important;
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+  text-align: center !important;
+
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* Conectores en los cuatro lados: ahora son handles de arrastre */
+.process-node-connector {
+  width: 15px !important;
+  height: 15px !important;
+
+  border: 3px solid #25333e !important;
+  background: #15c7b5 !important;
+
+  opacity: .9;
+
+  cursor: crosshair !important;
+}
+
+.process-node:hover .process-node-connector {
+  opacity: 1;
+}
+
+.process-node-connector.left {
+  left: -9px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+.process-node-connector.right {
+  right: -9px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+.process-node-connector.top {
+  top: -9px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+.process-node-connector.bottom {
+  bottom: -9px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+.process-node-resize {
+  position: absolute;
+  right: -8px;
+  bottom: -8px;
+
+  width: 18px;
+  height: 18px;
+
+  border: 2px solid #d9e4ec;
+  border-radius: 5px;
+
+  background: #16212a;
+
+  z-index: 9;
+
+  cursor: nwse-resize;
+}
+
+.process-node.connecting .process-node-visual {
+  filter: drop-shadow(0 0 7px rgba(21,199,181,.8));
+}
+
+/* Flechas */
+.process-links-layer {
+  pointer-events: none;
+}
+
+.process-link-group {
+  pointer-events: none;
+}
+
+.process-link-path {
+  pointer-events: stroke !important;
+  cursor: pointer !important;
+  stroke-width: 3 !important;
+}
+
+.process-link-path:hover {
+  stroke: #22d3c5 !important;
+  stroke-width: 4 !important;
+}
+
+.process-link-draft {
+  stroke-dasharray: 8 7;
+  opacity: .8;
+  pointer-events: none !important;
+}
+
+.process-link-label {
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.process-link-label rect {
+  fill: #111a22;
+  stroke: #526775;
+  stroke-width: 1;
+}
+
+.process-link-label text {
+  fill: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+}
+
+.process-link-drawer-help {
+  margin-top: 10px;
+  padding: 10px 12px;
+
+  border: 1px solid #273641;
+  border-radius: 9px;
+
+  background: #0e161d;
+  color: #9fb0bd;
+
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+/* Rotación */
+.process-rotation-control {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 54px;
+  gap: 12px;
+  align-items: center;
+}
+
+.process-rotation-control input[type='range'] {
+  width: 100%;
+}
+
+.process-rotation-control strong {
+  min-height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #31424f;
+  border-radius: 8px;
+
+  background: #101922;
+  color: #ffffff;
+
+  font-size: 11px;
+}
+
+/* Componentes más cómodos en el panel */
+.process-components-grid {
+  grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+  gap: 8px !important;
+  padding-bottom: 8px;
+}
+
+@media (max-width: 980px) {
+  .process-components-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+/* ===== Process V6.4 ajustes visuales, PDF, archivo y fondos ===== */
+.process-list-actions img,
+.process-canvas-actions img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  filter: brightness(1.15);
+}
+
+.process-canvas-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.process-canvas-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-danger-inline {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 94, 114, .35);
+  border-radius: 10px;
+  background: rgba(86, 19, 28, .55);
+  color: #ffd1d9;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.process-canvas {
+  position: relative;
+  background: var(--process-canvas-bg, #0b1220) !important;
+}
+
+.process-world {
+  background: var(--process-canvas-bg, #0b1220) !important;
+}
+
+.process-canvas-bg-picker {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 18;
+  display: flex;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  background: rgba(10,16,24,.78);
+  backdrop-filter: blur(10px);
+}
+
+.process-bg-dot {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,.45);
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px transparent;
+}
+.process-bg-dot.active {
+  box-shadow: 0 0 0 2px #17d2c0;
+}
+.process-bg-dot.white { background: #ffffff; }
+.process-bg-dot.black { background: #0b1220; }
+.process-bg-dot.board { background: #5d6670; }
+
+.process-node-connector {
+  width: 12px !important;
+  height: 12px !important;
+  border-width: 2px !important;
+}
+.process-node-connector.left { left: -5px !important; }
+.process-node-connector.right { right: -5px !important; }
+.process-node-connector.top { top: -5px !important; }
+.process-node-connector.bottom { bottom: -5px !important; }
+
+.process-node-resize {
+  right: -6px;
+  bottom: -6px;
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+  background: #111c24;
+}
+
+.process-rotation-select select {
+  width: 100%;
+}
+
+
+/* =========================================================
+   PROCESS V6.5 - GEOMETRÍA DE CONEXIONES REHECHA
+   - PNG sin márgenes transparentes
+   - Conectores pegados al borde
+   - Punto inferior fuera del centro
+   - Resize proporcional
+========================================================= */
+
+/*
+  IMPORTANTE:
+  Había reglas antiguas con:
+    top: 50%;
+    margin-top: -8px;
+  aplicadas a TODOS los conectores.
+  Por eso el conector inferior podía aparecer dentro del componente.
+  Primero reseteamos toda la geometría.
+*/
+.process-node .process-node-connector {
+  position: absolute !important;
+
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  width: 11px !important;
+  height: 11px !important;
+
+  border: 2px solid #26343e !important;
+  border-radius: 50% !important;
+
+  background: #19cbbb !important;
+
+  transform: none !important;
+
+  z-index: 20 !important;
+
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.18),
+    0 2px 5px rgba(0,0,0,.30);
+
+  cursor: crosshair !important;
+}
+
+/* Centro del punto prácticamente sobre el borde de la figura */
+.process-node .process-node-connector.left {
+  left: -4px !important;
+  top: 50% !important;
+
+  transform:
+    translateY(-50%) !important;
+}
+
+.process-node .process-node-connector.right {
+  right: -4px !important;
+  top: 50% !important;
+
+  transform:
+    translateY(-50%) !important;
+}
+
+.process-node .process-node-connector.top {
+  top: -4px !important;
+  left: 50% !important;
+
+  transform:
+    translateX(-50%) !important;
+}
+
+.process-node .process-node-connector.bottom {
+  bottom: -4px !important;
+  left: 50% !important;
+
+  top: auto !important;
+  margin-top: 0 !important;
+
+  transform:
+    translateX(-50%) !important;
+}
+
+/*
+  El contenedor y el PNG ahora comparten la misma proporción.
+  El PNG ocupa el nodo completo; no hay una caja invisible enorme
+  alrededor de la figura.
+*/
+.process-node-visual {
+  position: absolute !important;
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.process-node-visual img {
+  position: absolute !important;
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: contain !important;
+
+  display: block !important;
+
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+/* Resize: visualmente separado de los conectores */
+.process-node-resize {
+  right: -7px !important;
+  bottom: -7px !important;
+
+  width: 13px !important;
+  height: 13px !important;
+
+  border: 2px solid #dce6ed !important;
+  border-radius: 4px !important;
+
+  background: #0f1820 !important;
+
+  z-index: 25 !important;
+
+  cursor: nwse-resize !important;
+}
+
+/* Las flechas tienen prioridad visual pero no interfieren con los nodos */
+.process-links-layer {
+  z-index: 4 !important;
+}
+
+.process-node {
+  z-index: 10 !important;
+  overflow: visible !important;
+}
+
+.process-link-path {
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+/* Mientras se redimensiona no animamos nada: unión estable */
+.process-node,
+.process-node-visual,
+.process-node-connector,
+.process-link-path {
+  transition: none !important;
+}
+
+
+/* =========================================================
+   PROCESS V6.6 - TEXTO LIMPIO EN CANVAS
+========================================================= */
+
+.process-node-copy {
+  gap: 0 !important;
+}
+
+.process-node-copy .process-node-type {
+  display: none !important;
+}
+
+.process-node-copy strong {
+  margin: 0 !important;
+  padding: 0 6px !important;
+
+  font-size: 12.5px !important;
+  font-weight: 750 !important;
+  line-height: 1.25 !important;
+
+  text-align: center !important;
+}
+
+
+/* =========================================================
+   V6.7 - PALETAS FIJAS / CARD->GANTT / PDF / FLECHAS
+========================================================= */
+
+/* Process: la paleta queda fija dentro de la ventana del canvas */
+.process-canvas-bg-picker {
+  position: sticky !important;
+  top: 10px !important;
+  left: 12px !important;
+
+  width: max-content;
+
+  z-index: 80 !important;
+
+  margin: 10px 0 -42px 12px !important;
+}
+
+/* Cards: misma paleta de fondo */
+.cards-canvas-bg-picker {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+
+  z-index: 150;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 7px 9px;
+
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 999px;
+
+  background: rgba(10,16,24,.80);
+
+  box-shadow:
+    0 8px 18px rgba(0,0,0,.22);
+
+  backdrop-filter: blur(10px);
+}
+
+.cards-bg-dot {
+  width: 16px;
+  height: 16px;
+
+  padding: 0;
+
+  border: 2px solid rgba(255,255,255,.48);
+  border-radius: 50%;
+
+  cursor: pointer;
+
+  box-shadow: 0 0 0 2px transparent;
+}
+
+.cards-bg-dot.active {
+  box-shadow:
+    0 0 0 2px #17d2c0;
+}
+
+.cards-bg-dot.white {
+  background: #ffffff;
+}
+
+.cards-bg-dot.black {
+  background: #0b1220;
+}
+
+.cards-bg-dot.board {
+  background: #5d6670;
+}
+
+/* Pisa los fondos históricos hardcodeados */
+.cards-board-area,
+.cards-canvas,
+.board-zoom-spacer,
+.board-world {
+  background:
+    var(--cards-board-bg, #5d6670)
+    !important;
+}
+
+/* Gantt desde Card */
+.card-gantt-action {
+  border-color:
+    rgba(78,161,255,.45) !important;
+
+  color: #8fc2ff !important;
+}
+
+.card-gantt-action.linked {
+  border-color:
+    rgba(47,191,143,.45) !important;
+
+  color: #79d6b4 !important;
+}
+
+.card-gantt-converter {
+  margin-top: 12px;
+  padding: 12px;
+
+  border:
+    1px solid #2c3b47;
+  border-radius: 10px;
+
+  background: #0d151c;
+}
+
+.card-gantt-converter label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #ffffff;
+
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.card-gantt-converter select {
+  width: 100%;
+  min-height: 38px;
+
+  border:
+    1px solid #344553;
+  border-radius: 8px;
+
+  background: #101a22;
+  color: #ffffff;
+}
+
+.card-gantt-converter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  margin-top: 10px;
+}
+
+.card-gantt-converter small {
+  display: block;
+
+  margin-top: 9px;
+
+  color: #91a2b0;
+
+  font-size: 8.5px;
+  line-height: 1.4;
+}
+
+/* Flechas Process */
+.process-link-path.dashed {
+  stroke-dasharray:
+    9 7 !important;
+}
+
+.process-link-color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+
+  margin-top: 7px;
+}
+
+.process-link-color-options button {
+  width: 30px;
+  height: 30px;
+
+  padding: 0;
+
+  border:
+    3px solid transparent;
+  border-radius: 50%;
+
+  cursor: pointer;
+}
+
+.process-link-color-options button.active {
+  border-color: #ffffff;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(255,255,255,.16);
 }

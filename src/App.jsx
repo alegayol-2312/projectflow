@@ -5,6 +5,24 @@ import logoGP from './assets/logo-gp.png'
 import ganttIcon from './assets/icon-gantt.png'
 import cardsIcon from './assets/icon-cards.png'
 import archiveIcon from './assets/icon-archive.png'
+import processIcon from './assets/icon-process.png'
+
+import processTerminatorIcon from './assets/process/process-terminador.png'
+import processReferenceIcon from './assets/process/process-referencia.png'
+import processDecisionIcon from './assets/process/process-decision.png'
+import processDatabaseIcon from './assets/process/process-basededatos.png'
+import processPreparationIcon from './assets/process/process-preparacion.png'
+import processActivityIcon from './assets/process/process-proceso.png'
+import processPredefinedIcon from './assets/process/process-predefinido.png'
+import processDocumentIcon from './assets/process/process-documento.png'
+import processNoteIcon from './assets/process/process-nota.png'
+import processDataIcon from './assets/process/process-datos.png'
+import processManualInputIcon from './assets/process/process-entradamanual.png'
+import processManualOperationIcon from './assets/process/process-operacionmanual.png'
+import processVerticalConnectorIcon from './assets/process/process-conectorvertical.png'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
+
 
 const formularioVacio = {
   nombre: '',
@@ -19,6 +37,112 @@ const formularioVacio = {
   prioridad: 'Media',
   dependencia: '',
   hitoPadre: '',
+}
+
+
+const PROCESO_COMPONENTES = [
+  {
+    tipo: 'InicioFin',
+    label: 'Terminador',
+    tituloDefault: 'Inicio / Fin',
+    color: '#cfe3cd',
+    icon: processTerminatorIcon,
+  },
+  {
+    tipo: 'Actividad',
+    label: 'Proceso',
+    tituloDefault: 'Actividad',
+    color: '#cfe3cd',
+    icon: processActivityIcon,
+  },
+  {
+    tipo: 'Documento',
+    label: 'Documento',
+    tituloDefault: 'Documento',
+    color: '#cfe3cd',
+    icon: processDocumentIcon,
+  },
+  {
+    tipo: 'Decision',
+    label: 'Decisión',
+    tituloDefault: 'Decisión',
+    color: '#cfe3cd',
+    icon: processDecisionIcon,
+  },
+  {
+    tipo: 'BaseDeDatos',
+    label: 'Base de datos',
+    tituloDefault: 'Base de datos',
+    color: '#cfe3cd',
+    icon: processDatabaseIcon,
+  },
+  {
+    tipo: 'ProcesoPredefinido',
+    label: 'Proceso predefinido',
+    tituloDefault: 'Proceso predefinido',
+    color: '#cfe3cd',
+    icon: processPredefinedIcon,
+  },
+  {
+    tipo: 'Referencia',
+    label: 'Referencia',
+    tituloDefault: 'Referencia',
+    color: '#cfe3cd',
+    icon: processReferenceIcon,
+  },
+  {
+    tipo: 'Preparacion',
+    label: 'Preparación',
+    tituloDefault: 'Preparación',
+    color: '#cfe3cd',
+    icon: processPreparationIcon,
+  },
+  {
+    tipo: 'NotaProceso',
+    label: 'Nota',
+    tituloDefault: 'Nota',
+    color: '#fff4b8',
+    icon: processNoteIcon,
+  },
+  {
+    tipo: 'Datos',
+    label: 'Datos',
+    tituloDefault: 'Datos',
+    color: '#cfe3cd',
+    icon: processDataIcon,
+  },
+  {
+    tipo: 'EntradaManual',
+    label: 'Entrada manual',
+    tituloDefault: 'Entrada manual',
+    color: '#cfe3cd',
+    icon: processManualInputIcon,
+  },
+  {
+    tipo: 'OperacionManual',
+    label: 'Operación manual',
+    tituloDefault: 'Operación manual',
+    color: '#cfe3cd',
+    icon: processManualOperationIcon,
+  },
+  {
+    tipo: 'ConectorVertical',
+    label: 'Conector',
+    tituloDefault: 'Conector',
+    color: '#cfe3cd',
+    icon: processVerticalConnectorIcon,
+  },
+]
+
+function plantillaProceso(tipo) {
+  return (
+    PROCESO_COMPONENTES.find((item) => item.tipo === tipo) ||
+    PROCESO_COMPONENTES.find((item) => item.tipo === 'Actividad')
+  )
+}
+
+function etiquetaTipoProceso(tipo) {
+  return plantillaProceso(tipo)?.label || 'Proceso'
 }
 
 
@@ -125,6 +249,39 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
 
   const [formZone, setFormZone] = useState(zoneVacia)
 
+  const [processMaps, setProcessMaps] = useState([])
+  const [processSeleccionadoId, setProcessSeleccionadoId] = useState(null)
+  const [processNodes, setProcessNodes] = useState([])
+  const [processLinks, setProcessLinks] = useState([])
+  const [processMapDrawerOpen, setProcessMapDrawerOpen] = useState(false)
+  const [processNodeDrawerOpen, setProcessNodeDrawerOpen] = useState(false)
+  const [processNodeEditando, setProcessNodeEditando] = useState(null)
+  const [processDragInfo, setProcessDragInfo] = useState(null)
+  const [processResizeInfo, setProcessResizeInfo] = useState(null)
+  const [processConnectSource, setProcessConnectSource] = useState(null)
+  const [processLinkDraft, setProcessLinkDraft] = useState(null)
+  const [processLinkDrawerOpen, setProcessLinkDrawerOpen] = useState(false)
+  const [processLinkEditando, setProcessLinkEditando] = useState(null)
+  const [processLinkLabel, setProcessLinkLabel] = useState('')
+  const [processLinkStyle, setProcessLinkStyle] = useState('continua')
+  const [processLinkColor, setProcessLinkColor] = useState('#b9c5cf')
+  const [processArchiveOpen, setProcessArchiveOpen] = useState(false)
+  const [processMapsArchivados, setProcessMapsArchivados] = useState([])
+  const [nuevoProcessMap, setNuevoProcessMap] = useState({
+    nombre: '',
+    descripcion: '',
+  })
+  const [formProcessNode, setFormProcessNode] = useState({
+    tipo: 'Actividad',
+    titulo: '',
+    color: plantillaProceso('Actividad').color,
+    rotacion: 0,
+  })
+
+  const processListRef = useRef(null)
+  const processCanvasPrintRef = useRef(null)
+
+
   const [boardEditando, setBoardEditando] = useState(null)
   const [linkDraft, setLinkDraft] = useState(null)
 
@@ -148,6 +305,8 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   })
 
   const [cardEditando, setCardEditando] = useState(null)
+  const [cardGanttOpen, setCardGanttOpen] = useState(false)
+  const [cardGanttProjectId, setCardGanttProjectId] = useState('')
 
   const cardVacia = {
     titulo: '',
@@ -1510,6 +1669,904 @@ function eliminarChecklistItem(id) {
   }))
 }
 
+
+async function cargarProcessMaps() {
+  const { data, error } = await supabase
+    .from('process_maps')
+    .select('*')
+    .eq('archivado', false)
+    .order('updated_at', { ascending: false })
+
+  if (error) {
+    console.error('Error cargando procesos:', error)
+    return
+  }
+
+  const lista = data || []
+  setProcessMaps(lista)
+
+  if (!processSeleccionadoId && lista.length > 0) {
+    setProcessSeleccionadoId(lista[0].id)
+  } else if (
+    processSeleccionadoId &&
+    !lista.some((item) => item.id === processSeleccionadoId)
+  ) {
+    setProcessSeleccionadoId(lista[0]?.id || null)
+  }
+}
+
+async function cargarProcessMapsArchivados() {
+  const { data, error } = await supabase
+    .from('process_maps')
+    .select('*')
+    .eq('archivado', true)
+    .order('updated_at', { ascending: false })
+
+  if (error) {
+    console.error('Error cargando procesos archivados:', error)
+    return
+  }
+
+  setProcessMapsArchivados(data || [])
+}
+
+async function cargarProcessCanvas(processId) {
+  if (!processId) {
+    setProcessNodes([])
+    setProcessLinks([])
+    return
+  }
+
+  const [{ data: nodes, error: nodesError }, { data: links, error: linksError }] =
+    await Promise.all([
+      supabase
+        .from('process_nodes')
+        .select('*')
+        .eq('process_id', processId)
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('process_links')
+        .select('*')
+        .eq('process_id', processId)
+        .order('created_at', { ascending: true }),
+    ])
+
+  if (nodesError) console.error('Error cargando nodos:', nodesError)
+  if (linksError) console.error('Error cargando enlaces:', linksError)
+
+  setProcessNodes(nodes || [])
+  setProcessLinks(links || [])
+}
+
+function abrirNuevoProcessMap() {
+  setNuevoProcessMap({ nombre: '', descripcion: '' })
+  setProcessMapDrawerOpen(true)
+}
+
+async function guardarProcessMap(event) {
+  event.preventDefault()
+
+  if (!nuevoProcessMap.nombre.trim()) {
+    alert('Ingresá un nombre para el proceso.')
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('process_maps')
+    .insert({
+      nombre: nuevoProcessMap.nombre.trim(),
+      descripcion: nuevoProcessMap.descripcion.trim() || null,
+      canvas_bg: '#0b1220',
+      archivado: false,
+      updated_at: new Date().toISOString(),
+    })
+    .select()
+    .single()
+
+  if (error) {
+    alert(`No se pudo crear el proceso: ${error.message}`)
+    return
+  }
+
+  setProcessMapDrawerOpen(false)
+  await cargarProcessMaps()
+  setProcessSeleccionadoId(data.id)
+}
+
+async function eliminarProcessMap(process) {
+  const confirmar = window.confirm(
+    `¿Eliminar el proceso "${process.nombre}" y todo su contenido?`
+  )
+  if (!confirmar) return
+
+  const { error } = await supabase
+    .from('process_maps')
+    .delete()
+    .eq('id', process.id)
+
+  if (error) {
+    alert(`No se pudo eliminar el proceso: ${error.message}`)
+    return
+  }
+
+  const restantes = processMaps.filter((item) => item.id !== process.id)
+  setProcessMaps(restantes)
+  setProcessSeleccionadoId(restantes[0]?.id || null)
+}
+
+async function archivarProcessMap(process) {
+  const confirmar = window.confirm(
+    `¿Archivar el proceso "${process.nombre}"?`
+  )
+  if (!confirmar) return
+
+  const { error } = await supabase
+    .from('process_maps')
+    .update({
+      archivado: true,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', process.id)
+
+  if (error) {
+    alert(`No se pudo archivar el proceso: ${error.message}`)
+    return
+  }
+
+  if (processSeleccionadoId === process.id) {
+    setProcessSeleccionadoId(null)
+    setProcessNodes([])
+    setProcessLinks([])
+  }
+
+  await Promise.all([
+    cargarProcessMaps(),
+    cargarProcessMapsArchivados(),
+  ])
+}
+
+async function restaurarProcessMap(process) {
+  const { error } = await supabase
+    .from('process_maps')
+    .update({
+      archivado: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', process.id)
+
+  if (error) {
+    alert(`No se pudo restaurar el proceso: ${error.message}`)
+    return
+  }
+
+  await Promise.all([
+    cargarProcessMaps(),
+    cargarProcessMapsArchivados(),
+  ])
+  setProcessSeleccionadoId(process.id)
+}
+
+async function actualizarProcessCanvasBg(color) {
+  if (!processSeleccionadoId) return
+
+  const { error } = await supabase
+    .from('process_maps')
+    .update({
+      canvas_bg: color,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', processSeleccionadoId)
+
+  if (error) {
+    alert(`No se pudo actualizar el fondo: ${error.message}`)
+    return
+  }
+
+  setProcessMaps((actual) =>
+    actual.map((item) =>
+      item.id === processSeleccionadoId
+        ? { ...item, canvas_bg: color }
+        : item
+    )
+  )
+}
+
+async function imprimirProcessFlow() {
+  if (!processCanvasPrintRef.current || !processSeleccionadoId) {
+    return
+  }
+
+  if (processNodes.length === 0) {
+    alert('El proceso no tiene componentes para imprimir.')
+    return
+  }
+
+  try {
+    const padding = 80
+
+    const minX = Math.max(
+      0,
+      Math.min(...processNodes.map((node) => Number(node.pos_x))) -
+        padding
+    )
+
+    const minY = Math.max(
+      0,
+      Math.min(...processNodes.map((node) => Number(node.pos_y))) -
+        padding
+    )
+
+    const maxX =
+      Math.max(
+        ...processNodes.map(
+          (node) =>
+            Number(node.pos_x) + Number(node.ancho)
+        )
+      ) + padding
+
+    const maxY =
+      Math.max(
+        ...processNodes.map(
+          (node) =>
+            Number(node.pos_y) + Number(node.alto)
+        )
+      ) + padding
+
+    const captureWidth = Math.max(400, maxX - minX)
+    const captureHeight = Math.max(280, maxY - minY)
+
+    const canvas = await html2canvas(
+      processCanvasPrintRef.current,
+      {
+        backgroundColor: processCanvasBgActual,
+        scale: 1.2,
+        useCORS: true,
+        x: minX,
+        y: minY,
+        width: captureWidth,
+        height: captureHeight,
+        scrollX: 0,
+        scrollY: 0,
+      }
+    )
+
+    const imgData = canvas.toDataURL('image/png')
+
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4',
+    })
+
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+
+    const margin = 8
+    const usableWidth = pageWidth - margin * 2
+    const usableHeight = pageHeight - margin * 2
+
+    const ratio = Math.min(
+      usableWidth / canvas.width,
+      usableHeight / canvas.height
+    )
+
+    const renderWidth = canvas.width * ratio
+    const renderHeight = canvas.height * ratio
+
+    const x = (pageWidth - renderWidth) / 2
+    const y = (pageHeight - renderHeight) / 2
+
+    doc.addImage(
+      imgData,
+      'PNG',
+      x,
+      y,
+      renderWidth,
+      renderHeight
+    )
+
+    const nombre =
+      processMaps.find(
+        (item) => item.id === processSeleccionadoId
+      )?.nombre || 'proceso'
+
+    doc.save(`${nombre}.pdf`)
+  } catch (error) {
+    console.error(error)
+    alert('No se pudo generar el PDF del flujo.')
+  }
+}
+
+function abrirNuevoProcessNode(tipo) {
+  if (!processSeleccionadoId) {
+    alert('Primero creá o seleccioná un proceso.')
+    return
+  }
+
+  const base = plantillaProceso(tipo)
+
+  setProcessNodeEditando(null)
+  setFormProcessNode({
+    tipo,
+    titulo: '',
+    color: base?.color || '#cfe3cd',
+    rotacion: 0,
+  })
+  setProcessNodeDrawerOpen(true)
+}
+
+function abrirEditarProcessNode(node) {
+  setProcessNodeEditando(node)
+  setFormProcessNode({
+    tipo: node.tipo || 'Actividad',
+    titulo: node.titulo || '',
+    color:
+      node.color ||
+      plantillaProceso(node.tipo || 'Actividad')?.color ||
+      '#cfe3cd',
+    rotacion: Number(node.rotacion) || 0,
+  })
+  setProcessNodeDrawerOpen(true)
+}
+
+function cerrarProcessNodeDrawer() {
+  setProcessNodeDrawerOpen(false)
+  setProcessNodeEditando(null)
+  setFormProcessNode({
+    tipo: 'Actividad',
+    titulo: '',
+    color: plantillaProceso('Actividad').color,
+    rotacion: 0,
+  })
+}
+
+function dimensionesProcessNode(tipo) {
+  // Las proporciones respetan los PNG recortados.
+  // Así la figura ocupa realmente el contenedor y los conectores
+  // quedan pegados al borde visual.
+  if (tipo === 'Decision') return { ancho: 126, alto: 126 }
+  if (tipo === 'InicioFin') return { ancho: 190, alto: 96 }
+  if (tipo === 'Documento') return { ancho: 180, alto: 119 }
+  if (tipo === 'BaseDeDatos') return { ancho: 100, alto: 132 }
+  if (tipo === 'ProcesoPredefinido') return { ancho: 190, alto: 96 }
+  if (tipo === 'Referencia') return { ancho: 100, alto: 100 }
+  if (tipo === 'Preparacion') return { ancho: 180, alto: 120 }
+  if (tipo === 'NotaProceso') return { ancho: 140, alto: 143 }
+  if (tipo === 'Datos') return { ancho: 180, alto: 90 }
+  if (tipo === 'EntradaManual') return { ancho: 180, alto: 90 }
+  if (tipo === 'OperacionManual') return { ancho: 180, alto: 90 }
+  if (tipo === 'ConectorVertical') return { ancho: 70, alto: 143 }
+  return { ancho: 120, alto: 120 }
+}
+
+function scrollProcessList(direction) {
+  if (!processListRef.current) return
+  processListRef.current.scrollBy({
+    top: direction === 'up' ? -140 : 140,
+    behavior: 'smooth',
+  })
+}
+
+function iniciarArrastreProcessPalette(event, tipo) {
+  event.dataTransfer.setData('application/process-node', tipo)
+  event.dataTransfer.effectAllowed = 'copy'
+}
+
+async function crearNodoProcesoEnCanvas(tipo, x, y) {
+  if (!processSeleccionadoId) {
+    alert('Primero creá o seleccioná un proceso.')
+    return
+  }
+
+  const base = plantillaProceso(tipo)
+  const dims = dimensionesProcessNode(tipo)
+
+  const { error } = await supabase
+    .from('process_nodes')
+    .insert({
+      process_id: processSeleccionadoId,
+      tipo,
+      titulo: '',
+      color: base?.color || '#cfe3cd',
+      rotacion: 0,
+      pos_x: Math.max(24, Math.round(x)),
+      pos_y: Math.max(24, Math.round(y)),
+      ancho: dims.ancho,
+      alto: dims.alto,
+      updated_at: new Date().toISOString(),
+    })
+
+  if (error) {
+    alert(`No se pudo crear el bloque: ${error.message}`)
+    return
+  }
+
+  await cargarProcessCanvas(processSeleccionadoId)
+}
+
+async function soltarNodoProceso(event) {
+  const tipo = event.dataTransfer.getData('application/process-node')
+  if (!tipo) return
+  event.preventDefault()
+
+  const rect = event.currentTarget.getBoundingClientRect()
+  const dims = dimensionesProcessNode(tipo)
+  const x =
+    event.clientX -
+    rect.left +
+    event.currentTarget.scrollLeft -
+    dims.ancho / 2
+  const y =
+    event.clientY -
+    rect.top +
+    event.currentTarget.scrollTop -
+    dims.alto / 2
+
+  await crearNodoProcesoEnCanvas(tipo, x, y)
+}
+
+async function guardarProcessNode(event) {
+  event.preventDefault()
+
+  if (!formProcessNode.titulo.trim()) {
+    alert('Ingresá un texto para el bloque.')
+    return
+  }
+
+  const colorFinal =
+    formProcessNode.color ||
+    plantillaProceso(formProcessNode.tipo)?.color ||
+    '#cfe3cd'
+
+  if (processNodeEditando) {
+    const { error } = await supabase
+      .from('process_nodes')
+      .update({
+        titulo: formProcessNode.titulo.trim(),
+        tipo: formProcessNode.tipo,
+        color: colorFinal,
+        rotacion: Number(formProcessNode.rotacion) || 0,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', processNodeEditando.id)
+
+    if (error) {
+      alert(`No se pudo editar el bloque: ${error.message}`)
+      return
+    }
+  } else {
+    const dims = dimensionesProcessNode(formProcessNode.tipo)
+    const offset = Math.min(processNodes.length, 8) * 28
+
+    const { error } = await supabase
+      .from('process_nodes')
+      .insert({
+        process_id: processSeleccionadoId,
+        tipo: formProcessNode.tipo,
+        titulo: formProcessNode.titulo.trim(),
+        color: colorFinal,
+        rotacion: Number(formProcessNode.rotacion) || 0,
+        pos_x: 150 + offset,
+        pos_y: 150 + offset,
+        ancho: dims.ancho,
+        alto: dims.alto,
+        updated_at: new Date().toISOString(),
+      })
+
+    if (error) {
+      alert(`No se pudo crear el bloque: ${error.message}`)
+      return
+    }
+  }
+
+  cerrarProcessNodeDrawer()
+  await cargarProcessCanvas(processSeleccionadoId)
+}
+
+async function eliminarProcessNode(node) {
+  const confirmar = window.confirm(`¿Eliminar "${node.titulo}"?`)
+  if (!confirmar) return
+
+  const { error } = await supabase
+    .from('process_nodes')
+    .delete()
+    .eq('id', node.id)
+
+  if (error) {
+    alert(`No se pudo eliminar el bloque: ${error.message}`)
+    return
+  }
+
+  cerrarProcessNodeDrawer()
+  await cargarProcessCanvas(processSeleccionadoId)
+}
+
+function iniciarDragProcessNode(event, node) {
+  if (event.button !== 0) return
+  if (
+    event.target.closest('.process-node-connector') ||
+    event.target.closest('.process-node-resize')
+  ) {
+    return
+  }
+
+  event.stopPropagation()
+
+  const rect = event.currentTarget.getBoundingClientRect()
+  setProcessDragInfo({
+    id: node.id,
+    offsetX: event.clientX - rect.left,
+    offsetY: event.clientY - rect.top,
+  })
+}
+
+function moverProcessNode(event) {
+  if (!processDragInfo) return
+
+  const canvas = event.currentTarget
+  const rect = canvas.getBoundingClientRect()
+
+  const x =
+    event.clientX -
+    rect.left +
+    canvas.scrollLeft -
+    processDragInfo.offsetX
+
+  const y =
+    event.clientY -
+    rect.top +
+    canvas.scrollTop -
+    processDragInfo.offsetY
+
+  setProcessNodes((actual) =>
+    actual.map((node) =>
+      node.id === processDragInfo.id
+        ? {
+            ...node,
+            pos_x: Math.max(20, x),
+            pos_y: Math.max(20, y),
+          }
+        : node
+    )
+  )
+}
+
+async function terminarDragProcessNode() {
+  if (!processDragInfo) return
+
+  const node = processNodes.find(
+    (item) => item.id === processDragInfo.id
+  )
+
+  setProcessDragInfo(null)
+
+  if (!node) return
+
+  await supabase
+    .from('process_nodes')
+    .update({
+      pos_x: Number(node.pos_x),
+      pos_y: Number(node.pos_y),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', node.id)
+}
+
+function iniciarResizeProcessNode(event, node) {
+  event.preventDefault()
+  event.stopPropagation()
+
+  const startWidth = Number(node.ancho) || 180
+  const startHeight = Number(node.alto) || 90
+
+  setProcessResizeInfo({
+    id: node.id,
+    startX: event.clientX,
+    startY: event.clientY,
+    startWidth,
+    startHeight,
+    aspectRatio:
+      startHeight > 0
+        ? startWidth / startHeight
+        : 1,
+  })
+}
+
+function moverResizeProcessNode(event) {
+  if (!processResizeInfo) return
+
+  const dx = event.clientX - processResizeInfo.startX
+  const dy = event.clientY - processResizeInfo.startY
+
+  // Usa el eje que más se movió y conserva la proporción original.
+  // Esto evita que el PNG quede "flotando" dentro de un rectángulo
+  // más grande y mantiene los conectores sobre la figura.
+  const usaX = Math.abs(dx) >= Math.abs(dy)
+
+  let scale = usaX
+    ? (processResizeInfo.startWidth + dx) /
+      processResizeInfo.startWidth
+    : (processResizeInfo.startHeight + dy) /
+      processResizeInfo.startHeight
+
+  scale = Math.max(0.45, scale)
+
+  const nuevoAncho = Math.max(
+    64,
+    processResizeInfo.startWidth * scale
+  )
+
+  const nuevoAlto = Math.max(
+    54,
+    processResizeInfo.startHeight * scale
+  )
+
+  setProcessNodes((actual) =>
+    actual.map((node) =>
+      node.id === processResizeInfo.id
+        ? {
+            ...node,
+            ancho: nuevoAncho,
+            alto: nuevoAlto,
+          }
+        : node
+    )
+  )
+}
+
+async function terminarResizeProcessNode() {
+  if (!processResizeInfo) return
+
+  const node = processNodes.find(
+    (item) => item.id === processResizeInfo.id
+  )
+
+  setProcessResizeInfo(null)
+
+  if (!node) return
+
+  await supabase
+    .from('process_nodes')
+    .update({
+      ancho: Number(node.ancho),
+      alto: Number(node.alto),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', node.id)
+}
+
+function puntoConectorProcess(node, lado) {
+  const x = Number(node.pos_x)
+  const y = Number(node.pos_y)
+  const ancho = Number(node.ancho)
+  const alto = Number(node.alto)
+  const rotacion =
+    ((Number(node.rotacion) || 0) * Math.PI) / 180
+
+  const cx = x + ancho / 2
+  const cy = y + alto / 2
+
+  let dx = 0
+  let dy = 0
+
+  if (lado === 'top') {
+    dy = -alto / 2
+  } else if (lado === 'bottom') {
+    dy = alto / 2
+  } else if (lado === 'left') {
+    dx = -ancho / 2
+  } else {
+    dx = ancho / 2
+  }
+
+  return {
+    x:
+      cx +
+      dx * Math.cos(rotacion) -
+      dy * Math.sin(rotacion),
+    y:
+      cy +
+      dx * Math.sin(rotacion) +
+      dy * Math.cos(rotacion),
+  }
+}
+
+function iniciarConexionProcess(event, node, lado) {
+  if (event.button !== 0) return
+
+  event.preventDefault()
+  event.stopPropagation()
+
+  const punto = puntoConectorProcess(node, lado)
+
+  setProcessConnectSource({
+    id: node.id,
+    titulo: node.titulo,
+    lado,
+  })
+
+  setProcessLinkDraft({
+    sourceNodeId: node.id,
+    sourceSide: lado,
+    startX: punto.x,
+    startY: punto.y,
+    currentX: punto.x,
+    currentY: punto.y,
+  })
+}
+
+function moverConexionProcess(event) {
+  if (!processLinkDraft) return
+
+  const canvas = event.currentTarget
+  const rect = canvas.getBoundingClientRect()
+
+  setProcessLinkDraft((actual) => ({
+    ...actual,
+    currentX:
+      event.clientX -
+      rect.left +
+      canvas.scrollLeft,
+    currentY:
+      event.clientY -
+      rect.top +
+      canvas.scrollTop,
+  }))
+}
+
+function cancelarConexionProcess() {
+  setProcessConnectSource(null)
+  setProcessLinkDraft(null)
+}
+
+async function finalizarConexionProcess(event, targetNode, targetSide) {
+  if (!processLinkDraft) return
+
+  event.preventDefault()
+  event.stopPropagation()
+
+  if (processLinkDraft.sourceNodeId === targetNode.id) {
+    cancelarConexionProcess()
+    return
+  }
+
+  const { error } = await supabase
+    .from('process_links')
+    .insert({
+      process_id: processSeleccionadoId,
+      source_node_id: processLinkDraft.sourceNodeId,
+      target_node_id: targetNode.id,
+      source_side: processLinkDraft.sourceSide,
+      target_side: targetSide,
+      etiqueta: null,
+      estilo: 'continua',
+      color: '#b9c5cf',
+    })
+
+  if (error) {
+    if (error.code !== '23505') {
+      alert(`No se pudo crear la conexión: ${error.message}`)
+    }
+    cancelarConexionProcess()
+    return
+  }
+
+  cancelarConexionProcess()
+  await cargarProcessCanvas(processSeleccionadoId)
+}
+
+function abrirEditarProcessLink(link) {
+  setProcessLinkEditando(link)
+  setProcessLinkLabel(link.etiqueta || '')
+  setProcessLinkStyle(link.estilo || 'continua')
+  setProcessLinkColor(link.color || '#b9c5cf')
+  setProcessLinkDrawerOpen(true)
+}
+
+function cerrarProcessLinkDrawer() {
+  setProcessLinkDrawerOpen(false)
+  setProcessLinkEditando(null)
+  setProcessLinkLabel('')
+  setProcessLinkStyle('continua')
+  setProcessLinkColor('#b9c5cf')
+}
+
+async function guardarProcessLink(event) {
+  event.preventDefault()
+
+  if (!processLinkEditando) return
+
+  const { error } = await supabase
+    .from('process_links')
+    .update({
+      etiqueta: processLinkLabel.trim() || null,
+      estilo: processLinkStyle,
+      color: processLinkColor,
+    })
+    .eq('id', processLinkEditando.id)
+
+  if (error) {
+    alert(`No se pudo guardar el texto de la flecha: ${error.message}`)
+    return
+  }
+
+  cerrarProcessLinkDrawer()
+  await cargarProcessCanvas(processSeleccionadoId)
+}
+
+async function eliminarProcessLink(link) {
+  const confirmar = window.confirm('¿Eliminar esta conexión?')
+  if (!confirmar) return
+
+  const { error } = await supabase
+    .from('process_links')
+    .delete()
+    .eq('id', link.id)
+
+  if (error) {
+    alert(`No se pudo eliminar la conexión: ${error.message}`)
+    return
+  }
+
+  cerrarProcessLinkDrawer()
+  await cargarProcessCanvas(processSeleccionadoId)
+}
+
+function processNodeById(id) {
+  return processNodes.find((item) => item.id === id)
+}
+
+function processLine(link) {
+  const source = processNodeById(link.source_node_id)
+  const target = processNodeById(link.target_node_id)
+
+  if (!source || !target) return null
+
+  const sourceSide = link.source_side || 'right'
+  const targetSide = link.target_side || 'left'
+
+  const p1 = puntoConectorProcess(source, sourceSide)
+  const p2 = puntoConectorProcess(target, targetSide)
+
+  const horizontal =
+    sourceSide === 'left' ||
+    sourceSide === 'right'
+
+  const targetHorizontal =
+    targetSide === 'left' ||
+    targetSide === 'right'
+
+  let d
+
+  if (horizontal && targetHorizontal) {
+    const control = Math.max(70, Math.abs(p2.x - p1.x) * 0.45)
+    const dir1 = sourceSide === 'left' ? -1 : 1
+    const dir2 = targetSide === 'left' ? -1 : 1
+
+    d =
+      `M ${p1.x} ${p1.y} ` +
+      `C ${p1.x + control * dir1} ${p1.y}, ` +
+      `${p2.x + control * dir2} ${p2.y}, ` +
+      `${p2.x} ${p2.y}`
+  } else {
+    const control = Math.max(70, Math.abs(p2.y - p1.y) * 0.45)
+    const dir1 = sourceSide === 'top' ? -1 : 1
+    const dir2 = targetSide === 'top' ? -1 : 1
+
+    d =
+      `M ${p1.x} ${p1.y} ` +
+      `C ${p1.x} ${p1.y + control * dir1}, ` +
+      `${p2.x} ${p2.y + control * dir2}, ` +
+      `${p2.x} ${p2.y}`
+  }
+
+  return {
+    d,
+    midX: (p1.x + p2.x) / 2,
+    midY: (p1.y + p2.y) / 2,
+  }
+}
+
 async function cargarCardLinks(boardId) {
   if (!boardId) {
     setCardLinks([])
@@ -2221,6 +3278,157 @@ async function eliminarBoard(board) {
   await cargarBoards()
 }
 
+async function actualizarBoardCanvasBg(color) {
+  if (!boardSeleccionadoId) return
+
+  const { error } = await supabase
+    .from('card_boards')
+    .update({
+      canvas_bg: color,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', boardSeleccionadoId)
+
+  if (error) {
+    alert(`No se pudo actualizar el fondo del board: ${error.message}`)
+    return
+  }
+
+  setBoards((actual) =>
+    actual.map((board) =>
+      board.id === boardSeleccionadoId
+        ? { ...board, canvas_bg: color }
+        : board
+    )
+  )
+}
+
+
+function abrirCardGantt(card) {
+  if (!card || card.tipo === 'Nota') return
+
+  setCardGanttProjectId(
+    proyectos.find((item) => item.id !== '__all__')?.id || ''
+  )
+  setCardGanttOpen(true)
+}
+
+async function convertirCardEnGantt(card) {
+  if (!card || card.tipo === 'Nota') return
+
+  if (!cardGanttProjectId) {
+    alert('Seleccioná un proyecto.')
+    return
+  }
+
+  const proyectoDestino = proyectos.find(
+    (item) => item.id === cardGanttProjectId
+  )
+
+  if (!proyectoDestino) {
+    alert('No se encontró el proyecto seleccionado.')
+    return
+  }
+
+  const hoyIso = new Date().toISOString().slice(0, 10)
+  const inicio = card.fecha_inicio || hoyIso
+
+  let duracion = 1
+
+  if (card.fecha_inicio && card.fecha_fin) {
+    const desde = parseDate(card.fecha_inicio)
+    const hasta = parseDate(card.fecha_fin)
+
+    if (desde && hasta) {
+      duracion = Math.max(
+        1,
+        diasHabilesEntre(desde, hasta).length
+      )
+    }
+  }
+
+  const estadoPermitido = [
+    'Pendiente',
+    'En curso',
+    'Finalizado',
+    'Bloqueado',
+    'Desestimado',
+  ].includes(card.estado)
+    ? card.estado
+    : 'Pendiente'
+
+  const { data: nuevaTarea, error } = await supabase
+    .from('tasks')
+    .insert({
+      project_id: proyectoDestino.id,
+      nombre: card.titulo || 'Card',
+      responsable: card.responsable || '',
+      responsable_analista:
+        card.responsable || null,
+      responsable_desarrollador: null,
+      comentario: card.descripcion || '',
+      fecha_inicio: inicio,
+      horas_estimadas: Number(duracion) * 6.5,
+      duracion_dias: Number(duracion),
+      estado: estadoPermitido,
+      prioridad: 'Media',
+      es_hito: false,
+      hito_padre_id: null,
+      created_by: session.user.id,
+      fecha_finalizacion:
+        estadoPermitido === 'Finalizado'
+          ? new Date().toISOString()
+          : null,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    alert(`No se pudo crear la tarea Gantt: ${error.message}`)
+    return
+  }
+
+  await supabase
+    .from('task_history')
+    .insert({
+      task_id: nuevaTarea.id,
+      user_id: session.user.id,
+      accion: 'Tarea creada desde Cards',
+      detalle: `Se creó la tarea "${card.titulo}" desde una Card`,
+    })
+
+  const { error: cardError } = await supabase
+    .from('cards')
+    .update({
+      gantt_task_id: nuevaTarea.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', card.id)
+
+  if (cardError) {
+    console.error(
+      'La tarea fue creada pero no se pudo vincular la card:',
+      cardError
+    )
+  }
+
+  setCardGanttOpen(false)
+  setCardGanttProjectId('')
+
+  await Promise.all([
+    cargarCards(boardSeleccionadoId),
+    cargarTodasLasTareas(),
+  ])
+
+  if (proyectoSeleccionadoId === proyectoDestino.id) {
+    await cargarTareas(proyectoDestino.id)
+  }
+
+  alert(
+    `Card convertida en tarea del proyecto "${proyectoDestino.nombre}".`
+  )
+}
+
 function abrirNuevaCard(tipo = 'Card') {
   if (!boardSeleccionadoId) {
     alert('Primero creá o seleccioná un board.')
@@ -2287,6 +3495,8 @@ function cerrarModalCard() {
   setFormCard(cardVacia)
   setComentariosCard([])
   setNuevoComentario('')
+  setCardGanttOpen(false)
+  setCardGanttProjectId('')
 }
 
 async function guardarCard(event) {
@@ -4207,6 +5417,34 @@ function colorEstadoTarea(tarea) {
     boardSeleccionadoId,
   ])
 
+  useEffect(() => {
+    if (session && vistaPrincipal === 'process') {
+      cargarProcessMaps()
+      cargarProcessMapsArchivados()
+    }
+  }, [session, vistaPrincipal])
+
+  useEffect(() => {
+    if (session && vistaPrincipal === 'process') {
+      cargarProcessCanvas(processSeleccionadoId)
+      setProcessConnectSource(null)
+    }
+  }, [session, vistaPrincipal, processSeleccionadoId])
+
+  const processSeleccionado = processMaps.find(
+    (item) => item.id === processSeleccionadoId
+  )
+
+  const processCanvasBgActual =
+    processSeleccionado?.canvas_bg || '#0b1220'
+
+  const boardSeleccionado = boards.find(
+    (item) => item.id === boardSeleccionadoId
+  )
+
+  const boardCanvasBgActual =
+    boardSeleccionado?.canvas_bg || '#5d6670'
+
   if (loading) {
     return (
       <div className="login-screen">
@@ -4327,6 +5565,24 @@ function colorEstadoTarea(tarea) {
             className="visual-sidebar-user-icon"
           />
         </button>
+
+        <button
+          type="button"
+          className={
+            vistaPrincipal === 'process'
+              ? 'visual-sidebar-icon-button active'
+              : 'visual-sidebar-icon-button'
+          }
+          onClick={() => setVistaPrincipal('process')}
+          title="Process"
+          aria-label="Process"
+        >
+          <img
+            src={processIcon}
+            alt=""
+            className="visual-sidebar-user-icon"
+          />
+        </button>
       </aside>
 
       <div className="app app-main">
@@ -4338,13 +5594,17 @@ function colorEstadoTarea(tarea) {
             <h1>
               {vistaPrincipal === 'cards'
                 ? 'Boards'
-                : 'Gestión de proyectos'}
+                : vistaPrincipal === 'process'
+                  ? 'Process'
+                  : 'Gestión de proyectos'}
             </h1>
 
             <p>
               {vistaPrincipal === 'cards'
                 ? 'Canvas colaborativo'
-                : `Proyecto: ${
+                : vistaPrincipal === 'process'
+                  ? 'Mapeo simple de procesos'
+                  : `Proyecto: ${
                     proyectoSeleccionadoId === '__all__'
                       ? 'Todos los proyectos'
                       : proyecto?.nombre || 'Sin proyecto'
@@ -6092,6 +7352,414 @@ function colorEstadoTarea(tarea) {
         </>
       )}
 
+
+      {vistaPrincipal === 'process' && (
+        <section className="process-page">
+          <div className="process-toolbar">
+            <div>
+              <span className="process-eyebrow">Mapa de proceso</span>
+              <h2>Process</h2>
+              <p>
+                Dibujá procesos de negocio simples, conectá pasos y movelos libremente.
+              </p>
+            </div>
+
+            <div className="process-toolbar-actions">
+              <button
+                type="button"
+                className="process-secondary-button"
+                onClick={abrirNuevoProcessMap}
+              >
+                + Nuevo proceso
+              </button>
+            </div>
+          </div>
+
+          <div className="process-layout">
+            <aside className="process-left-panel">
+              <div className="process-left-top">
+                <div className="process-list-header">
+                  <div>
+                    <span>Procesos</span>
+                    <strong>{processMaps.length}</strong>
+                  </div>
+
+                  <div className="process-list-header-actions">
+                    <button
+                      type="button"
+                      className="process-list-scroll-button"
+                      onClick={() => scrollProcessList('up')}
+                      title="Subir"
+                    >
+                      ↑
+                    </button>
+
+                    <button
+                      type="button"
+                      className="process-list-scroll-button"
+                      onClick={() => scrollProcessList('down')}
+                      title="Bajar"
+                    >
+                      ↓
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={abrirNuevoProcessMap}
+                      title="Crear proceso"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className="process-list" ref={processListRef}>
+                  {processMaps.map((process) => (
+                    <div
+                      key={process.id}
+                      className={
+                        process.id === processSeleccionadoId
+                          ? 'process-list-item active'
+                          : 'process-list-item'
+                      }
+                    >
+                      <button
+                        type="button"
+                        className="process-list-main"
+                        onClick={() => setProcessSeleccionadoId(process.id)}
+                      >
+                        <strong>{process.nombre}</strong>
+                        <span>{process.descripcion || 'Sin descripción'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="process-list-delete"
+                        onClick={() => eliminarProcessMap(process)}
+                        title="Eliminar proceso"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+
+                  {processMaps.length === 0 && (
+                    <div className="process-list-empty">
+                      Todavía no hay procesos.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="process-left-divider" />
+
+              <div className="process-components-panel">
+                <div className="process-components-header">
+                  <div>
+                    <span>Componentes</span>
+                    <strong>{PROCESO_COMPONENTES.length}</strong>
+                  </div>
+                  <small>Arrastrá al canvas</small>
+                </div>
+
+                <div className="process-components-grid">
+                  {PROCESO_COMPONENTES.map((component) => (
+                    <button
+                      key={component.tipo}
+                      type="button"
+                      className={`process-component-chip process-node-${component.tipo.toLowerCase()}`}
+                      draggable
+                      onDragStart={(event) =>
+                        iniciarArrastreProcessPalette(event, component.tipo)
+                      }
+                      onClick={() => abrirNuevoProcessNode(component.tipo)}
+                      title="Arrastrar al canvas"
+                    >
+                      <div
+                        className="process-component-icon"
+                        style={{
+                          '--process-icon':
+                            `url(${component.icon})`,
+                          '--process-color':
+                            component.color,
+                        }}
+                      >
+                        <div className="process-icon-fill" />
+                        <img
+                          src={component.icon}
+                          alt=""
+                        />
+                      </div>
+
+                      <span>{component.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </aside>
+
+            <div className="process-workspace">
+              {!processSeleccionadoId ? (
+                <div className="process-no-selection">
+                  <strong>Creá tu primer proceso</strong>
+                  <span>
+                    Empezá con un proceso simple y arrastrá componentes al canvas.
+                  </span>
+                  <button type="button" onClick={abrirNuevoProcessMap}>
+                    + Nuevo proceso
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="process-canvas-header">
+                    <div>
+                      <strong>
+                        {processSeleccionado?.nombre || 'Proceso'}
+                      </strong>
+                      <span>
+                        {processConnectSource
+                          ? `Conectando desde: ${processConnectSource.titulo}`
+                          : 'Arrastrá componentes al canvas. Doble click para editar. Arrastrá desde cualquiera de los 4 puntos verdes para conectar.'}
+                      </span>
+                    </div>
+
+                    <div className="process-canvas-actions">
+                      <button type="button" className="btn-secondary" onClick={imprimirProcessFlow}>
+                        Imprimir flujo
+                      </button>
+                      <button type="button" className="btn-secondary" onClick={() => setProcessArchiveOpen(true)} title="Procesos archivados">
+                        <img src={archiveIcon} alt="" />
+                      </button>
+                      <button type="button" className="btn-secondary" onClick={() => archivarProcessMap(processSeleccionado)}>
+                        Archivar
+                      </button>
+                      <button type="button" className="btn-danger-inline" onClick={() => eliminarProcessMap(processSeleccionado)}>
+                        Borrar
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    className="process-canvas"
+                    style={{ '--process-canvas-bg': processCanvasBgActual }}
+                    onMouseMove={(event) => {
+                      moverProcessNode(event)
+                      moverResizeProcessNode(event)
+                      moverConexionProcess(event)
+                    }}
+                    onMouseUp={() => {
+                      terminarDragProcessNode()
+                      terminarResizeProcessNode()
+                      if (processLinkDraft) {
+                        cancelarConexionProcess()
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      terminarDragProcessNode()
+                      terminarResizeProcessNode()
+                    }}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={soltarNodoProceso}
+                  >
+                    <div className="process-canvas-bg-picker">
+                      {[
+                        { key: '#ffffff', label: 'Blanco', className: 'white' },
+                        { key: '#0b1220', label: 'Negro', className: 'black' },
+                        { key: '#5d6670', label: 'Board', className: 'board' },
+                      ].map((bg) => (
+                        <button
+                          key={bg.key}
+                          type="button"
+                          className={`process-bg-dot ${bg.className} ${processCanvasBgActual === bg.key ? 'active' : ''}`}
+                          onClick={() => actualizarProcessCanvasBg(bg.key)}
+                          title={bg.label}
+                        />
+                      ))}
+                    </div>
+
+                    <div ref={processCanvasPrintRef} className="process-world">
+                      <svg className="process-links-layer" viewBox="0 0 2400 1500">
+                        <defs>
+                          <marker
+                            id="process-arrow"
+                            markerWidth="10"
+                            markerHeight="10"
+                            refX="8"
+                            refY="3"
+                            orient="auto"
+                            markerUnits="strokeWidth"
+                          >
+                            <path d="M0,0 L0,6 L9,3 z" />
+                          </marker>
+                        </defs>
+
+                        {processLinks.map((link) => {
+                          const line = processLine(link)
+                          if (!line) return null
+
+                          return (
+                            <g
+                              key={link.id}
+                              className="process-link-group"
+                            >
+                              <path
+                                d={line.d}
+                                className={`process-link-path ${
+                                  link.estilo === 'punteada'
+                                    ? 'dashed'
+                                    : ''
+                                }`}
+                                style={{
+                                  stroke:
+                                    link.color || '#b9c5cf',
+                                }}
+                                markerEnd="url(#process-arrow)"
+                                onDoubleClick={(event) => {
+                                  event.stopPropagation()
+                                  abrirEditarProcessLink(link)
+                                }}
+                              />
+
+                              {link.etiqueta && (
+                                <g
+                                  className="process-link-label"
+                                  transform={`translate(${line.midX} ${line.midY})`}
+                                  onDoubleClick={(event) => {
+                                    event.stopPropagation()
+                                    abrirEditarProcessLink(link)
+                                  }}
+                                >
+                                  <rect
+                                    x="-52"
+                                    y="-13"
+                                    width="104"
+                                    height="26"
+                                    rx="8"
+                                  />
+                                  <text
+                                    textAnchor="middle"
+                                    dominantBaseline="middle"
+                                  >
+                                    {link.etiqueta}
+                                  </text>
+                                </g>
+                              )}
+                            </g>
+                          )
+                        })}
+
+                        {processLinkDraft && (
+                          <path
+                            d={`M ${processLinkDraft.startX} ${processLinkDraft.startY} L ${processLinkDraft.currentX} ${processLinkDraft.currentY}`}
+                            className="process-link-path process-link-draft"
+                            markerEnd="url(#process-arrow)"
+                          />
+                        )}
+                      </svg>
+
+                      {processNodes.map((node) => (
+                        <div
+                          key={node.id}
+                          className={`process-node ${
+                            processConnectSource?.id === node.id
+                              ? 'connecting'
+                              : ''
+                          }`}
+                          style={{
+                            left: `${Number(node.pos_x)}px`,
+                            top: `${Number(node.pos_y)}px`,
+                            width: `${Number(node.ancho)}px`,
+                            height: `${Number(node.alto)}px`,
+                            transform: `rotate(${Number(node.rotacion) || 0}deg)`,
+                            '--process-icon':
+                              `url(${plantillaProceso(node.tipo)?.icon})`,
+                            '--process-color':
+                              node.color ||
+                              plantillaProceso(node.tipo)?.color ||
+                              '#cfe3cd',
+                          }}
+                          onMouseDown={(event) =>
+                            iniciarDragProcessNode(event, node)
+                          }
+                          onDoubleClick={() =>
+                            abrirEditarProcessNode(node)
+                          }
+                        >
+                          <div className="process-node-visual">
+                            <div className="process-icon-fill" />
+
+                            <img
+                              src={plantillaProceso(node.tipo)?.icon}
+                              alt=""
+                              draggable="false"
+                            />
+                          </div>
+
+                          <div
+                            className="process-node-copy"
+                            style={{
+                              transform: `rotate(${-(
+                                Number(node.rotacion) || 0
+                              )}deg)`,
+                            }}
+                          >
+                            <strong>{node.titulo}</strong>
+                          </div>
+
+                          {['top', 'right', 'bottom', 'left'].map(
+                            (lado) => (
+                              <button
+                                key={lado}
+                                type="button"
+                                className={`process-node-connector ${lado}`}
+                                onMouseDown={(event) =>
+                                  iniciarConexionProcess(
+                                    event,
+                                    node,
+                                    lado
+                                  )
+                                }
+                                onMouseUp={(event) =>
+                                  finalizarConexionProcess(
+                                    event,
+                                    node,
+                                    lado
+                                  )
+                                }
+                                title="Arrastrá desde acá para conectar"
+                              />
+                            )
+                          )}
+
+                          <button
+                            type="button"
+                            className="process-node-resize"
+                            onMouseDown={(event) =>
+                              iniciarResizeProcessNode(
+                                event,
+                                node
+                              )
+                            }
+                            title="Agrandar o achicar"
+                          />
+                        </div>
+                      ))}
+
+                      {processNodes.length === 0 && (
+                        <div className="process-empty-canvas">
+                          <strong>Proceso vacío</strong>
+                          <span>Arrastrá componentes desde el panel izquierdo para empezar.</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
       {vistaPrincipal === 'cards' && (
         <section className="cards-page">
           <div className="cards-toolbar">
@@ -6293,7 +7961,47 @@ function colorEstadoTarea(tarea) {
                     </div>
                   </div>
 
-                  <div className="cards-canvas-shell">
+                  <div
+                    className="cards-canvas-shell"
+                    style={{
+                      '--cards-board-bg':
+                        boardCanvasBgActual,
+                    }}
+                  >
+                    <div className="cards-canvas-bg-picker">
+                      {[
+                        {
+                          key: '#ffffff',
+                          label: 'Blanco',
+                          className: 'white',
+                        },
+                        {
+                          key: '#0b1220',
+                          label: 'Negro',
+                          className: 'black',
+                        },
+                        {
+                          key: '#5d6670',
+                          label: 'Board',
+                          className: 'board',
+                        },
+                      ].map((bg) => (
+                        <button
+                          key={bg.key}
+                          type="button"
+                          className={`cards-bg-dot ${bg.className} ${
+                            boardCanvasBgActual === bg.key
+                              ? 'active'
+                              : ''
+                          }`}
+                          onClick={() =>
+                            actualizarBoardCanvasBg(bg.key)
+                          }
+                          title={bg.label}
+                        />
+                      ))}
+                    </div>
+
                     <div className="board-zoom-overlay">
                     <button
                       type="button"
@@ -7005,6 +8713,327 @@ function colorEstadoTarea(tarea) {
         </div>
       )}
 
+
+
+      {processArchiveOpen && (
+        <div
+          className="card-drawer-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setProcessArchiveOpen(false)
+            }
+          }}
+        >
+          <aside className="card-editor-drawer archive-drawer">
+            <div className="card-modal-heading">
+              <div>
+                <span>Process</span>
+                <h3>Procesos archivados</h3>
+              </div>
+              <button type="button" onClick={() => setProcessArchiveOpen(false)}>×</button>
+            </div>
+
+            <div className="archive-list">
+              {processMapsArchivados.map((process) => (
+                <div key={process.id} className="archive-list-item">
+                  <div>
+                    <strong>{process.nombre}</strong>
+                    <span>{process.descripcion || 'Sin descripción'}</span>
+                  </div>
+
+                  <div className="archive-list-actions">
+                    <button type="button" className="btn-secondary" onClick={() => restaurarProcessMap(process)}>
+                      Restaurar
+                    </button>
+                    <button type="button" className="btn-delete-task" onClick={() => eliminarProcessMap(process)}>
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {processMapsArchivados.length === 0 && (
+                <div className="archive-empty">
+                  No hay procesos archivados.
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {processMapDrawerOpen && (
+        <div className="card-drawer-overlay">
+          <aside className="card-editor-drawer process-drawer">
+            <form onSubmit={guardarProcessMap}>
+              <div className="card-modal-heading">
+                <div>
+                  <span>Process</span>
+                  <h3>Nuevo proceso</h3>
+                </div>
+                <button type="button" onClick={() => setProcessMapDrawerOpen(false)}>×</button>
+              </div>
+
+              <div className="form-group">
+                <label>Nombre</label>
+                <input
+                  value={nuevoProcessMap.nombre}
+                  onChange={(e) => setNuevoProcessMap((actual) => ({ ...actual, nombre: e.target.value }))}
+                  placeholder="Ej: Alta de cliente"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Descripción</label>
+                <textarea
+                  value={nuevoProcessMap.descripcion}
+                  onChange={(e) => setNuevoProcessMap((actual) => ({ ...actual, descripcion: e.target.value }))}
+                  placeholder="Descripción opcional"
+                  rows="4"
+                />
+              </div>
+
+              <div className="connection-drawer-actions">
+                <button type="button" className="btn-secondary" onClick={() => setProcessMapDrawerOpen(false)}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary">Crear proceso</button>
+              </div>
+            </form>
+          </aside>
+        </div>
+      )}
+
+      {processNodeDrawerOpen && (
+        <div className="card-drawer-overlay">
+          <aside className="card-editor-drawer process-drawer">
+            <form onSubmit={guardarProcessNode}>
+              <div className="card-modal-heading">
+                <div>
+                  <span>Bloque de proceso</span>
+                  <h3>{processNodeEditando ? 'Editar bloque' : 'Nuevo bloque'}</h3>
+                </div>
+                <button type="button" onClick={cerrarProcessNodeDrawer}>×</button>
+              </div>
+
+              <div className="form-group">
+                <label>Tipo</label>
+                <select
+                  value={formProcessNode.tipo}
+                  onChange={(e) => {
+                    const nuevoTipo = e.target.value
+                    setFormProcessNode((actual) => ({
+                      ...actual,
+                      tipo: nuevoTipo,
+                      color:
+                        actual.color ||
+                        plantillaProceso(nuevoTipo)?.color ||
+                        '#cfe3cd',
+                    }))
+                  }}
+                  disabled={Boolean(processNodeEditando)}
+                >
+                  {PROCESO_COMPONENTES.map((item) => (
+                    <option key={item.tipo} value={item.tipo}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Texto</label>
+                <textarea
+                  value={formProcessNode.titulo}
+                  onChange={(e) => setFormProcessNode((actual) => ({ ...actual, titulo: e.target.value }))}
+                  placeholder="Escribí el texto que querés mostrar dentro del componente"
+                  rows="4"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Color</label>
+                <select
+                  value={formProcessNode.color}
+                  onChange={(e) =>
+                    setFormProcessNode((actual) => ({
+                      ...actual,
+                      color: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="#cfe3cd">Verde suave</option>
+                  <option value="#fde68a">Amarillo</option>
+                  <option value="#fecaca">Rosa claro</option>
+                  <option value="#bfdbfe">Celeste</option>
+                  <option value="#ddd6fe">Lila</option>
+                  <option value="#fdba74">Naranja</option>
+                  <option value="#e5e7eb">Gris claro</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Rotación</label>
+
+                <div className="process-rotation-select">
+                  <select
+                    value={Number(formProcessNode.rotacion) || 0}
+                    onChange={(e) =>
+                      setFormProcessNode((actual) => ({
+                        ...actual,
+                        rotacion: Number(e.target.value),
+                      }))
+                    }
+                  >
+                    <option value={0}>360° · Original</option>
+                    <option value={90}>90°</option>
+                    <option value={180}>180°</option>
+                    <option value={270}>270°</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="connection-drawer-actions">
+                {processNodeEditando && (
+                  <button
+                    type="button"
+                    className="btn-delete-task"
+                    onClick={() => eliminarProcessNode(processNodeEditando)}
+                  >
+                    Eliminar
+                  </button>
+                )}
+                <button type="button" className="btn-secondary" onClick={cerrarProcessNodeDrawer}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary">Guardar</button>
+              </div>
+            </form>
+          </aside>
+        </div>
+      )}
+
+      {processLinkDrawerOpen && processLinkEditando && (
+        <div
+          className="card-drawer-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              cerrarProcessLinkDrawer()
+            }
+          }}
+        >
+          <aside className="card-editor-drawer process-drawer">
+            <form onSubmit={guardarProcessLink}>
+              <div className="card-modal-heading">
+                <div>
+                  <span>Conexión de proceso</span>
+                  <h3>Editar flecha</h3>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={cerrarProcessLinkDrawer}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="form-group">
+                <label>Texto sobre la flecha</label>
+
+                <input
+                  type="text"
+                  value={processLinkLabel}
+                  onChange={(event) =>
+                    setProcessLinkLabel(event.target.value)
+                  }
+                  placeholder="Ej: Sí, No, Aprobado..."
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Tipo de línea</label>
+
+                <select
+                  value={processLinkStyle}
+                  onChange={(event) =>
+                    setProcessLinkStyle(event.target.value)
+                  }
+                >
+                  <option value="continua">Continua</option>
+                  <option value="punteada">Punteada</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Color</label>
+
+                <div className="process-link-color-options">
+                  {[
+                    '#b9c5cf',
+                    '#22d3c5',
+                    '#4ea1ff',
+                    '#f7c948',
+                    '#ff6b6b',
+                    '#a78bfa',
+                    '#ffffff',
+                    '#111111',
+                  ].map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={
+                        processLinkColor === color
+                          ? 'active'
+                          : ''
+                      }
+                      style={{
+                        backgroundColor: color,
+                      }}
+                      onClick={() =>
+                        setProcessLinkColor(color)
+                      }
+                      aria-label={`Color ${color}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="process-link-drawer-help">
+                Doble click sobre una flecha para volver a editarla.
+              </div>
+
+              <div className="connection-drawer-actions">
+                <button
+                  type="button"
+                  className="btn-delete-task"
+                  onClick={() =>
+                    eliminarProcessLink(processLinkEditando)
+                  }
+                >
+                  Eliminar conexión
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={cerrarProcessLinkDrawer}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn-primary"
+                >
+                  Guardar
+                </button>
+              </div>
+            </form>
+          </aside>
+        </div>
+      )}
+
       {archivoOpen && (
         <div
           className="card-drawer-overlay"
@@ -7506,7 +9535,7 @@ function colorEstadoTarea(tarea) {
               {cardEditando && (
                 <>
                   <div className="card-layer-tools">
-                    <span>Acciones visuales</span>
+                    <span>Acciones</span>
 
                     <div>
                       <button
@@ -7551,7 +9580,94 @@ function colorEstadoTarea(tarea) {
                       >
                         Archivar
                       </button>
+
+                      {cardEditando.tipo !== 'Nota' && (
+                        <button
+                          type="button"
+                          className={`card-gantt-action ${
+                            cardEditando.gantt_task_id
+                              ? 'linked'
+                              : ''
+                          }`}
+                          onClick={() =>
+                            abrirCardGantt(cardEditando)
+                          }
+                        >
+                          {cardEditando.gantt_task_id
+                            ? 'Gantt ✓'
+                            : 'Gantt'}
+                        </button>
+                      )}
                     </div>
+
+                    {cardGanttOpen &&
+                      cardEditando.tipo !== 'Nota' && (
+                        <div className="card-gantt-converter">
+                          <label>
+                            Proyecto destino
+                          </label>
+
+                          <select
+                            value={cardGanttProjectId}
+                            onChange={(event) =>
+                              setCardGanttProjectId(
+                                event.target.value
+                              )
+                            }
+                          >
+                            <option value="">
+                              Seleccionar proyecto...
+                            </option>
+
+                            {proyectos
+                              .filter(
+                                (item) =>
+                                  item.id !== '__all__'
+                              )
+                              .map((item) => (
+                                <option
+                                  key={item.id}
+                                  value={item.id}
+                                >
+                                  {item.nombre}
+                                </option>
+                              ))}
+                          </select>
+
+                          <div className="card-gantt-converter-actions">
+                            <button
+                              type="button"
+                              className="btn-secondary"
+                              onClick={() =>
+                                setCardGanttOpen(false)
+                              }
+                            >
+                              Cancelar
+                            </button>
+
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              onClick={() =>
+                                convertirCardEnGantt(
+                                  cardEditando
+                                )
+                              }
+                            >
+                              Crear tarea
+                            </button>
+                          </div>
+
+                          {cardEditando.gantt_task_id && (
+                            <small>
+                              Esta Card ya tiene una tarea
+                              vinculada. Si creás otra,
+                              se actualizará el vínculo a
+                              la nueva tarea.
+                            </small>
+                          )}
+                        </div>
+                      )}
                   </div>
 
                   <div className="card-comments-section">
