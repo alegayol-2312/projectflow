@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase'
 import logoGP from './assets/logo-gp.png'
 import ganttIcon from './assets/icon-gantt.png'
 import cardsIcon from './assets/icon-cards.png'
+import archiveIcon from './assets/icon-archive.png'
 
 const formularioVacio = {
   nombre: '',
@@ -102,7 +103,27 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [boards, setBoards] = useState([])
   const [boardSeleccionadoId, setBoardSeleccionadoId] = useState('')
   const [cards, setCards] = useState([])
+  const [cardsArchivadas, setCardsArchivadas] = useState([])
+  const [archivoOpen, setArchivoOpen] = useState(false)
+
   const [cardLinks, setCardLinks] = useState([])
+  const [boardZones, setBoardZones] = useState([])
+
+  const [zoneDrawerOpen, setZoneDrawerOpen] = useState(false)
+  const [zoneEditando, setZoneEditando] = useState(null)
+  const [zoneDragInfo, setZoneDragInfo] = useState(null)
+  const [zoneResizeInfo, setZoneResizeInfo] = useState(null)
+
+  const zoneVacia = {
+    titulo: '',
+    color: '#5b8def',
+    pos_x: 120,
+    pos_y: 120,
+    ancho: 520,
+    alto: 300,
+  }
+
+  const [formZone, setFormZone] = useState(zoneVacia)
 
   const [boardEditando, setBoardEditando] = useState(null)
   const [linkDraft, setLinkDraft] = useState(null)
@@ -142,6 +163,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
     ancho: 250,
     alto: 190,
     z_index: 10,
+    checklist: [],
   }
 
   const [formCard, setFormCard] = useState(cardVacia)
@@ -1080,6 +1102,7 @@ async function cargarCards(boardId) {
     .from('cards')
     .select('*')
     .eq('board_id', boardId)
+    .eq('archivada', false)
     .order('z_index', { ascending: true })
     .order('created_at', { ascending: true })
 
@@ -1089,6 +1112,402 @@ async function cargarCards(boardId) {
   }
 
   setCards(data || [])
+}
+
+
+async function cargarCardsArchivadas(boardId) {
+  if (!boardId) {
+    setCardsArchivadas([])
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('cards')
+    .select('*')
+    .eq('board_id', boardId)
+    .eq('archivada', true)
+    .order('updated_at', { ascending: false })
+
+  if (error) {
+    console.error('Error cargando cards archivadas:', error)
+    return
+  }
+
+  setCardsArchivadas(data || [])
+}
+
+async function cargarBoardZones(boardId) {
+  if (!boardId) {
+    setBoardZones([])
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('board_zones')
+    .select('*')
+    .eq('board_id', boardId)
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    console.error('Error cargando zonas:', error)
+    return
+  }
+
+  setBoardZones(data || [])
+}
+
+function abrirNuevaZona() {
+  if (!boardSeleccionadoId) {
+    alert('Primero seleccioná un board.')
+    return
+  }
+
+  setZoneEditando(null)
+  setFormZone({
+    ...zoneVacia,
+    pos_x: 120 + Math.min(boardZones.length, 4) * 35,
+    pos_y: 120 + Math.min(boardZones.length, 4) * 30,
+  })
+  setZoneDrawerOpen(true)
+}
+
+function abrirEditarZona(zona) {
+  setZoneEditando(zona)
+  setFormZone({
+    titulo: zona.titulo || '',
+    color: zona.color || '#5b8def',
+    pos_x: Number(zona.pos_x) || 120,
+    pos_y: Number(zona.pos_y) || 120,
+    ancho: Number(zona.ancho) || 520,
+    alto: Number(zona.alto) || 300,
+  })
+  setZoneDrawerOpen(true)
+}
+
+function cerrarZonaDrawer() {
+  setZoneDrawerOpen(false)
+  setZoneEditando(null)
+  setFormZone(zoneVacia)
+}
+
+async function guardarZona(event) {
+  event.preventDefault()
+
+  if (!formZone.titulo.trim()) {
+    alert('Ingresá un título para la zona.')
+    return
+  }
+
+  const payload = {
+    board_id: boardSeleccionadoId,
+    titulo: formZone.titulo.trim(),
+    color: formZone.color,
+    pos_x: Number(formZone.pos_x) || 120,
+    pos_y: Number(formZone.pos_y) || 120,
+    ancho: Number(formZone.ancho) || 520,
+    alto: Number(formZone.alto) || 300,
+    updated_at: new Date().toISOString(),
+  }
+
+  if (zoneEditando) {
+    const { error } = await supabase
+      .from('board_zones')
+      .update(payload)
+      .eq('id', zoneEditando.id)
+
+    if (error) {
+      alert(`No se pudo editar la zona: ${error.message}`)
+      return
+    }
+  } else {
+    const { error } = await supabase
+      .from('board_zones')
+      .insert(payload)
+
+    if (error) {
+      alert(`No se pudo crear la zona: ${error.message}`)
+      return
+    }
+  }
+
+  cerrarZonaDrawer()
+  await cargarBoardZones(boardSeleccionadoId)
+}
+
+async function eliminarZona(zona) {
+  const confirmar = window.confirm(
+    `¿Eliminar la zona "${zona.titulo}"?`
+  )
+
+  if (!confirmar) return
+
+  const { error } = await supabase
+    .from('board_zones')
+    .delete()
+    .eq('id', zona.id)
+
+  if (error) {
+    alert(`No se pudo eliminar la zona: ${error.message}`)
+    return
+  }
+
+  cerrarZonaDrawer()
+  await cargarBoardZones(boardSeleccionadoId)
+}
+
+function iniciarDragZona(event, zona) {
+  if (event.button !== 0) return
+  event.stopPropagation()
+
+  const rect =
+    event.currentTarget.getBoundingClientRect()
+
+  setZoneDragInfo({
+    id: zona.id,
+    offsetX:
+      (event.clientX - rect.left) / boardZoom,
+    offsetY:
+      (event.clientY - rect.top) / boardZoom,
+  })
+}
+
+function moverZona(event) {
+  if (!zoneDragInfo || !boardCanvasRef.current) {
+    return
+  }
+
+  const canvasRect =
+    boardCanvasRef.current.getBoundingClientRect()
+
+  const nuevoX =
+    (
+      event.clientX -
+      canvasRect.left +
+      boardCanvasRef.current.scrollLeft
+    ) / boardZoom -
+    zoneDragInfo.offsetX
+
+  const nuevoY =
+    (
+      event.clientY -
+      canvasRect.top +
+      boardCanvasRef.current.scrollTop
+    ) / boardZoom -
+    zoneDragInfo.offsetY
+
+  setBoardZones((actual) =>
+    actual.map((zona) =>
+      zona.id === zoneDragInfo.id
+        ? {
+            ...zona,
+            pos_x: Math.max(10, nuevoX),
+            pos_y: Math.max(10, nuevoY),
+          }
+        : zona
+    )
+  )
+}
+
+async function terminarDragZona() {
+  if (!zoneDragInfo) return
+
+  const zona = boardZones.find(
+    (item) => item.id === zoneDragInfo.id
+  )
+
+  setZoneDragInfo(null)
+
+  if (!zona) return
+
+  const { error } = await supabase
+    .from('board_zones')
+    .update({
+      pos_x: Number(zona.pos_x),
+      pos_y: Number(zona.pos_y),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', zona.id)
+
+  if (error) {
+    console.error('No se pudo mover la zona:', error)
+  }
+}
+
+function iniciarResizeZona(event, zona) {
+  event.stopPropagation()
+  event.preventDefault()
+
+  setZoneResizeInfo({
+    id: zona.id,
+    startX: event.clientX,
+    startY: event.clientY,
+    startWidth: Number(zona.ancho) || 520,
+    startHeight: Number(zona.alto) || 300,
+  })
+}
+
+function moverResizeZona(event) {
+  if (!zoneResizeInfo) return
+
+  const dx =
+    (event.clientX - zoneResizeInfo.startX) /
+    boardZoom
+
+  const dy =
+    (event.clientY - zoneResizeInfo.startY) /
+    boardZoom
+
+  setBoardZones((actual) =>
+    actual.map((zona) =>
+      zona.id === zoneResizeInfo.id
+        ? {
+            ...zona,
+            ancho: Math.max(
+              260,
+              zoneResizeInfo.startWidth + dx
+            ),
+            alto: Math.max(
+              160,
+              zoneResizeInfo.startHeight + dy
+            ),
+          }
+        : zona
+    )
+  )
+}
+
+async function terminarResizeZona() {
+  if (!zoneResizeInfo) return
+
+  const zona = boardZones.find(
+    (item) => item.id === zoneResizeInfo.id
+  )
+
+  setZoneResizeInfo(null)
+
+  if (!zona) return
+
+  const { error } = await supabase
+    .from('board_zones')
+    .update({
+      ancho: Number(zona.ancho),
+      alto: Number(zona.alto),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', zona.id)
+
+  if (error) {
+    console.error('No se pudo redimensionar la zona:', error)
+  }
+}
+
+async function archivarCard(card) {
+  if (!card) return
+
+  const confirmar = window.confirm(
+    `¿Archivar "${card.titulo}"?`
+  )
+
+  if (!confirmar) return
+
+  const { error } = await supabase
+    .from('cards')
+    .update({
+      archivada: true,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', card.id)
+
+  if (error) {
+    alert(`No se pudo archivar la card: ${error.message}`)
+    return
+  }
+
+  cerrarModalCard()
+  await cargarCards(boardSeleccionadoId)
+  await cargarCardsArchivadas(boardSeleccionadoId)
+}
+
+async function restaurarCard(card) {
+  const { error } = await supabase
+    .from('cards')
+    .update({
+      archivada: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', card.id)
+
+  if (error) {
+    alert(`No se pudo restaurar la card: ${error.message}`)
+    return
+  }
+
+  await cargarCards(boardSeleccionadoId)
+  await cargarCardsArchivadas(boardSeleccionadoId)
+}
+
+async function eliminarCardArchivada(card) {
+  const confirmar = window.confirm(
+    `¿Eliminar definitivamente "${card.titulo}"?`
+  )
+
+  if (!confirmar) return
+
+  const { error } = await supabase
+    .from('cards')
+    .delete()
+    .eq('id', card.id)
+
+  if (error) {
+    alert(`No se pudo eliminar: ${error.message}`)
+    return
+  }
+
+  await cargarCardsArchivadas(boardSeleccionadoId)
+}
+
+function agregarChecklistItem() {
+  setFormCard((actual) => ({
+    ...actual,
+    checklist: [
+      ...(Array.isArray(actual.checklist)
+        ? actual.checklist
+        : []),
+      {
+        id:
+          globalThis.crypto?.randomUUID?.() ||
+          `${Date.now()}-${Math.random()}`,
+        texto: '',
+        hecho: false,
+      },
+    ],
+  }))
+}
+
+function actualizarChecklistItem(id, cambios) {
+  setFormCard((actual) => ({
+    ...actual,
+    checklist: (
+      Array.isArray(actual.checklist)
+        ? actual.checklist
+        : []
+    ).map((item) =>
+      item.id === id
+        ? { ...item, ...cambios }
+        : item
+    ),
+  }))
+}
+
+function eliminarChecklistItem(id) {
+  setFormCard((actual) => ({
+    ...actual,
+    checklist: (
+      Array.isArray(actual.checklist)
+        ? actual.checklist
+        : []
+    ).filter((item) => item.id !== id),
+  }))
 }
 
 async function cargarCardLinks(boardId) {
@@ -1372,6 +1791,11 @@ async function duplicarCard(card) {
       alto:
         Number(card.alto) || 190,
       z_index: maxZ,
+      checklist:
+        Array.isArray(card.checklist)
+          ? card.checklist
+          : [],
+      archivada: false,
     })
     .select()
     .single()
@@ -1846,6 +2270,10 @@ function abrirEditarCard(card) {
     ancho: Number(card.ancho) || 250,
     alto: Number(card.alto) || 190,
     z_index: Number(card.z_index) || 10,
+    checklist:
+      Array.isArray(card.checklist)
+        ? card.checklist
+        : [],
   })
 
   setNuevoComentario('')
@@ -1903,6 +2331,13 @@ async function guardarCard(event) {
     alto: Number(formCard.alto) || 190,
     z_index:
       Number(formCard.z_index) || 10,
+    checklist:
+      Array.isArray(formCard.checklist)
+        ? formCard.checklist.filter(
+            (item) => item.texto?.trim()
+          )
+        : [],
+    archivada: false,
     updated_at: new Date().toISOString(),
   }
 
@@ -3762,6 +4197,8 @@ function colorEstadoTarea(tarea) {
       vistaPrincipal === 'cards'
     ) {
       cargarCards(boardSeleccionadoId)
+      cargarCardsArchivadas(boardSeleccionadoId)
+      cargarBoardZones(boardSeleccionadoId)
       cargarCardLinks(boardSeleccionadoId)
     }
   }, [
@@ -5844,6 +6281,14 @@ function colorEstadoTarea(tarea) {
                         >
                           + Note
                         </button>
+
+                        <button
+                          type="button"
+                          className="cards-zone-button compact"
+                          onClick={abrirNuevaZona}
+                        >
+                          + Zona
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -5886,7 +6331,32 @@ function colorEstadoTarea(tarea) {
                     </button>
                   </div>
 
-                    <div
+                    
+                    <button
+                      type="button"
+                      className="board-archive-button"
+                      onClick={() => {
+                        setArchivoOpen(true)
+                        cargarCardsArchivadas(
+                          boardSeleccionadoId
+                        )
+                      }}
+                      title="Cards archivadas"
+                      aria-label="Cards archivadas"
+                    >
+                      <img
+                        src={archiveIcon}
+                        alt=""
+                      />
+
+                      {cardsArchivadas.length > 0 && (
+                        <span>
+                          {cardsArchivadas.length}
+                        </span>
+                      )}
+                    </button>
+
+<div
                       ref={boardCanvasRef}
                     className={`cards-canvas ${
                       panInfo ? 'panning' : ''
@@ -5896,16 +6366,22 @@ function colorEstadoTarea(tarea) {
                       moverCardEnCanvas(event)
                       moverConexion(event)
                       moverResizeCard(event)
+                      moverZona(event)
+                      moverResizeZona(event)
                       moverPanCanvas(event)
                     }}
                     onMouseUp={() => {
                       terminarDragCard()
                       terminarResizeCard()
+                      terminarDragZona()
+                      terminarResizeZona()
                       terminarPanCanvas()
                     }}
                     onMouseLeave={() => {
                       terminarDragCard()
                       terminarResizeCard()
+                      terminarDragZona()
+                      terminarResizeZona()
                       terminarPanCanvas()
                       setLinkDraft(null)
                     }}
@@ -5926,6 +6402,72 @@ function colorEstadoTarea(tarea) {
                         }}
                       >
                         <div className="cards-cork-texture" />
+
+                    {boardZones.map((zona) => (
+                      <section
+                        key={zona.id}
+                        className={`board-zone ${
+                          zoneDragInfo?.id === zona.id
+                            ? 'dragging'
+                            : ''
+                        }`}
+                        style={{
+                          left: `${Number(zona.pos_x) || 120}px`,
+                          top: `${Number(zona.pos_y) || 120}px`,
+                          width: `${Number(zona.ancho) || 520}px`,
+                          height: `${Number(zona.alto) || 300}px`,
+                          backgroundColor:
+                            `${zona.color || '#5b8def'}2e`,
+                          borderColor:
+                            `${zona.color || '#5b8def'}99`,
+                        }}
+                        onMouseDown={(event) =>
+                          iniciarDragZona(event, zona)
+                        }
+                        onDoubleClick={(event) => {
+                          event.stopPropagation()
+                          abrirEditarZona(zona)
+                        }}
+                        title="Arrastrá para mover · Doble click para editar"
+                      >
+                        <div
+                          className="board-zone-title"
+                          style={{
+                            backgroundColor:
+                              `${zona.color || '#5b8def'}d9`,
+                          }}
+                        >
+                          {zona.titulo}
+                        </div>
+
+                        <button
+                          type="button"
+                          className="board-zone-edit"
+                          onMouseDown={(e) =>
+                            e.stopPropagation()
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            abrirEditarZona(zona)
+                          }}
+                          title="Editar zona"
+                        >
+                          •••
+                        </button>
+
+                        <button
+                          type="button"
+                          className="board-zone-resize"
+                          onMouseDown={(event) =>
+                            iniciarResizeZona(
+                              event,
+                              zona
+                            )
+                          }
+                          title="Cambiar tamaño de zona"
+                        />
+                      </section>
+                    ))}
 
                     <svg
                       className="card-links-layer"
@@ -6141,6 +6683,30 @@ function colorEstadoTarea(tarea) {
                             'Sin descripción'}
                         </p>
 
+                        {Array.isArray(card.checklist) &&
+                          card.checklist.length > 0 && (
+                            <div className="postit-checklist-preview">
+                              {card.checklist.map((item) => (
+                                <div
+                                  key={item.id}
+                                  className={
+                                    item.hecho
+                                      ? 'done'
+                                      : ''
+                                  }
+                                >
+                                  <span>
+                                    {item.hecho ? '✓' : '○'}
+                                  </span>
+
+                                  <span>
+                                    {item.texto}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
                         {card.tipo !== 'Nota' && (
                           <div className="postit-info">
                             <span>
@@ -6184,16 +6750,29 @@ function colorEstadoTarea(tarea) {
                         </strong>
 
                         <span>
-                          Creá una card y empezá
-                          a armar el mapa visual.
+                          Creá una card o una nota
+                          para empezar a armar el mapa visual.
                         </span>
 
-                        <button
-                          type="button"
-                          onClick={abrirNuevaCard}
-                        >
-                          + Nueva card
-                        </button>
+                        <div className="cards-empty-actions">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              abrirNuevaCard('Card')
+                            }
+                          >
+                            + Card
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              abrirNuevaCard('Nota')
+                            }
+                          >
+                            + Note
+                          </button>
+                        </div>
                       </div>
                     )}
                       </div>
@@ -6209,8 +6788,18 @@ function colorEstadoTarea(tarea) {
 
 
       {conexionPendiente && (
-        <div className="modal-overlay">
-          <div className="modal-card connection-modal">
+        <div
+          className="card-drawer-overlay"
+          onMouseDown={(e) => {
+            if (
+              e.target === e.currentTarget
+            ) {
+              setConexionPendiente(null)
+              setTipoConexion('Relacionada')
+            }
+          }}
+        >
+          <aside className="card-editor-drawer connection-drawer">
             <div className="card-modal-heading">
               <div>
                 <span>Nuevo hilo</span>
@@ -6228,7 +6817,7 @@ function colorEstadoTarea(tarea) {
               </button>
             </div>
 
-            <div className="connection-preview">
+            <div className="connection-preview connection-preview-drawer">
               <div>
                 <span>Origen</span>
                 <strong>
@@ -6297,7 +6886,7 @@ function colorEstadoTarea(tarea) {
               )}
             </div>
 
-            <div className="modal-actions">
+            <div className="connection-drawer-actions">
               <button
                 type="button"
                 className="btn-secondary"
@@ -6317,7 +6906,7 @@ function colorEstadoTarea(tarea) {
                 Crear hilo
               </button>
             </div>
-          </div>
+          </aside>
         </div>
       )}
 
@@ -6413,6 +7002,225 @@ function colorEstadoTarea(tarea) {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {archivoOpen && (
+        <div
+          className="card-drawer-overlay"
+          onMouseDown={(e) => {
+            if (
+              e.target === e.currentTarget
+            ) {
+              setArchivoOpen(false)
+            }
+          }}
+        >
+          <aside className="card-editor-drawer archive-drawer">
+            <div className="card-modal-heading">
+              <div>
+                <span>Archivo</span>
+                <h3>Cards archivadas</h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setArchivoOpen(false)
+                }
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="archive-list">
+              {cardsArchivadas.map((card) => (
+                <div
+                  className="archive-list-item"
+                  key={card.id}
+                >
+                  <div>
+                    <strong>
+                      {card.titulo}
+                    </strong>
+
+                    <span>
+                      {card.tipo === 'Nota'
+                        ? 'Nota'
+                        : card.estado || 'Card'}
+                    </span>
+                  </div>
+
+                  <div className="archive-list-actions">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        restaurarCard(card)
+                      }
+                    >
+                      Restaurar
+                    </button>
+
+                    <button
+                      type="button"
+                      className="danger"
+                      onClick={() =>
+                        eliminarCardArchivada(card)
+                      }
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {cardsArchivadas.length === 0 && (
+                <div className="archive-empty">
+                  No hay cards archivadas en este board.
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {zoneDrawerOpen && (
+        <div
+          className="card-drawer-overlay"
+          onMouseDown={(e) => {
+            if (
+              e.target === e.currentTarget
+            ) {
+              cerrarZonaDrawer()
+            }
+          }}
+        >
+          <aside className="card-editor-drawer zone-editor-drawer">
+            <form onSubmit={guardarZona}>
+              <div className="card-modal-heading">
+                <div>
+                  <span>Organización visual</span>
+                  <h3>
+                    {zoneEditando
+                      ? 'Editar zona'
+                      : 'Nueva zona'}
+                  </h3>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={cerrarZonaDrawer}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="form-group">
+                <label>Título de la zona</label>
+
+                <input
+                  type="text"
+                  value={formZone.titulo}
+                  onChange={(e) =>
+                    setFormZone((actual) => ({
+                      ...actual,
+                      titulo: e.target.value,
+                    }))
+                  }
+                  placeholder="Ej: Infraestructura"
+                />
+              </div>
+
+              <div className="form-group zone-color-field">
+                <label>Color</label>
+
+                <div className="zone-color-options">
+                  {[
+                    '#5b8def',
+                    '#2fbf8f',
+                    '#f0b44d',
+                    '#ed6a5a',
+                    '#a97bdc',
+                    '#d86f9e',
+                    '#6f8794',
+                    '#67b8c7',
+                  ].map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={
+                        formZone.color === color
+                          ? 'active'
+                          : ''
+                      }
+                      style={{
+                        backgroundColor: color,
+                      }}
+                      onClick={() =>
+                        setFormZone((actual) => ({
+                          ...actual,
+                          color,
+                        }))
+                      }
+                      aria-label={`Color ${color}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="zone-preview-card">
+                <div
+                  style={{
+                    borderColor:
+                      formZone.color,
+                    backgroundColor:
+                      `${formZone.color}2e`,
+                  }}
+                >
+                  <strong
+                    style={{
+                      backgroundColor:
+                        formZone.color,
+                    }}
+                  >
+                    {formZone.titulo ||
+                      'Título de zona'}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="modal-actions modal-actions-task">
+                {zoneEditando && (
+                  <button
+                    type="button"
+                    className="btn-delete-task"
+                    onClick={() =>
+                      eliminarZona(zoneEditando)
+                    }
+                  >
+                    Eliminar
+                  </button>
+                )}
+
+                <div className="modal-actions-right">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={cerrarZonaDrawer}
+                  >
+                    Cancelar
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                  >
+                    Guardar zona
+                  </button>
+                </div>
+              </div>
+            </form>
+          </aside>
         </div>
       )}
 
@@ -6623,6 +7431,78 @@ function colorEstadoTarea(tarea) {
                 )}
               </div>
 
+              <div className="card-checklist-editor">
+                <div className="card-checklist-heading">
+                  <div>
+                    <span>Opcional</span>
+                    <strong>Checklist</strong>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={agregarChecklistItem}
+                  >
+                    + Ítem
+                  </button>
+                </div>
+
+                {(formCard.checklist || []).map(
+                  (item) => (
+                    <div
+                      className="card-checklist-row"
+                      key={item.id}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={Boolean(item.hecho)}
+                        onChange={(e) =>
+                          actualizarChecklistItem(
+                            item.id,
+                            {
+                              hecho:
+                                e.target.checked,
+                            }
+                          )
+                        }
+                      />
+
+                      <input
+                        type="text"
+                        value={item.texto}
+                        onChange={(e) =>
+                          actualizarChecklistItem(
+                            item.id,
+                            {
+                              texto:
+                                e.target.value,
+                            }
+                          )
+                        }
+                        placeholder="Escribí un ítem..."
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          eliminarChecklistItem(
+                            item.id
+                          )
+                        }
+                        title="Eliminar ítem"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )
+                )}
+
+                {(formCard.checklist || []).length === 0 && (
+                  <div className="card-checklist-empty">
+                    Sin checklist. Agregala solo si la necesitás.
+                  </div>
+                )}
+              </div>
+
               {cardEditando && (
                 <>
                   <div className="card-layer-tools">
@@ -6660,6 +7540,16 @@ function colorEstadoTarea(tarea) {
                         }
                       >
                         Mandar atrás
+                      </button>
+
+                      <button
+                        type="button"
+                        className="archive-card-action"
+                        onClick={() =>
+                          archivarCard(cardEditando)
+                        }
+                      >
+                        Archivar
                       </button>
                     </div>
                   </div>

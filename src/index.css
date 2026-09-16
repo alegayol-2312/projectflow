@@ -7585,3 +7585,640 @@ p {
 .cards-canvas.panning {
   cursor: grabbing !important;
 }
+
+
+/* =========================================================
+   CARDS V5 - CHECKLIST / ARCHIVO / ZONAS
+========================================================= */
+
+.cards-empty strong {
+  color: #273039 !important;
+  font-size: 15px !important;
+}
+
+.cards-empty span {
+  color: #4f5a62 !important;
+  font-size: 10.5px !important;
+}
+
+.cards-empty-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.cards-empty-actions button {
+  margin-top: 0 !important;
+  min-width: 72px;
+  height: 31px;
+  border: 1px solid rgba(28,35,40,.14) !important;
+  background: rgba(34,43,50,.10) !important;
+  color: #273039 !important;
+  font-size: 9.5px !important;
+  font-weight: 850 !important;
+}
+
+.cards-zone-button {
+  min-width: 86px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 1px solid #2fbf8f;
+  border-radius: 8px;
+  background: linear-gradient(135deg,#218b70,#2fbf8f);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.board-archive-button {
+  position: absolute;
+  left: 100px;
+  bottom: 16px;
+  z-index: 125;
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 14px;
+  background: rgba(14,20,27,.90);
+  box-shadow: 0 10px 26px rgba(0,0,0,.28);
+  cursor: pointer;
+}
+
+.board-archive-button img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.board-archive-button > span {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 21px;
+  height: 21px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ff6575;
+  color: #ffffff !important;
+  font-size: 8px !important;
+  font-weight: 900;
+}
+
+.archive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.archive-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid #283642;
+  border-radius: 10px;
+  background: #101922;
+}
+
+.archive-list-item > div:first-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.archive-list-item strong {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.archive-list-item span {
+  color: #9eacbb !important;
+  font-size: 8.5px !important;
+}
+
+.archive-list-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.archive-list-actions button {
+  min-height: 32px;
+  padding: 0 9px;
+  border: 1px solid #344453;
+  border-radius: 7px;
+  background: #15202a;
+  color: #ffffff;
+  font-size: 8.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.archive-list-actions button.danger {
+  border-color: rgba(255,101,117,.38);
+  color: #ff8894;
+}
+
+.archive-empty {
+  padding: 18px;
+  border: 1px dashed #30404e;
+  border-radius: 10px;
+  color: #d6e0ea;
+  font-size: 10px;
+  text-align: center;
+}
+
+.card-checklist-editor {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid #273440;
+  border-radius: 10px;
+  background: #0d141b;
+}
+
+.card-checklist-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+
+.card-checklist-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-checklist-heading span {
+  color: #93a3b3 !important;
+  font-size: 8px !important;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.card-checklist-heading strong {
+  color: #ffffff;
+  font-size: 11.5px;
+}
+
+.card-checklist-heading > button {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid #344453;
+  border-radius: 7px;
+  background: #15202a;
+  color: #ffffff;
+  font-size: 8.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.card-checklist-row {
+  display: grid;
+  grid-template-columns: 22px minmax(0,1fr) 28px;
+  gap: 7px;
+  align-items: center;
+  margin-top: 7px;
+}
+
+.card-checklist-row input[type='checkbox'] {
+  width: 15px;
+  height: 15px;
+  accent-color: #37a4ff;
+}
+
+.card-checklist-row input[type='text'] {
+  min-height: 34px !important;
+}
+
+.card-checklist-row button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255,101,117,.08);
+  color: #ff7a89;
+  cursor: pointer;
+}
+
+.card-checklist-empty {
+  padding: 10px;
+  border: 1px dashed #2b3946;
+  border-radius: 8px;
+  color: #c5d0db;
+  font-size: 9px;
+}
+
+.archive-card-action {
+  border-color: rgba(240,180,77,.42) !important;
+  color: #f6ca7f !important;
+}
+
+.postit-checklist-preview {
+  flex: 0 1 auto;
+  max-height: 92px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 9px;
+  padding-top: 8px;
+  overflow: hidden;
+  border-top: 1px solid rgba(0,0,0,.09);
+}
+
+.postit-checklist-preview > div {
+  display: grid;
+  grid-template-columns: 13px minmax(0,1fr);
+  gap: 5px;
+  color: #29343d;
+  font-size: 9.5px;
+  line-height: 1.3;
+}
+
+.postit-checklist-preview > div.done {
+  opacity: .58;
+  text-decoration: line-through;
+}
+
+.board-zone {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  border: 2px solid;
+  border-radius: 16px;
+  cursor: grab;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+}
+
+.board-zone.dragging {
+  cursor: grabbing;
+}
+
+.board-zone-title {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 11px;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  box-shadow: 0 5px 12px rgba(0,0,0,.16);
+}
+
+.board-zone-edit {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 30px;
+  height: 27px;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 7px;
+  background: rgba(12,18,24,.55);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.board-zone-resize {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,.62);
+  border-radius: 5px;
+  background: rgba(18,25,31,.82);
+  cursor: nwse-resize;
+}
+
+.zone-color-field {
+  margin-top: 16px;
+}
+
+.zone-color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 4px;
+}
+
+.zone-color-options button {
+  width: 34px;
+  height: 34px;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.zone-color-options button.active {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.18);
+}
+
+.zone-preview-card {
+  margin-top: 20px;
+}
+
+.zone-preview-card > div {
+  min-height: 150px;
+  border: 2px solid;
+  border-radius: 14px;
+  padding: 13px;
+}
+
+.zone-preview-card strong {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 11px;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   CARDS V5.1 - CONEXIÓN EN PANEL DERECHO
+========================================================= */
+
+.connection-drawer {
+  width: min(520px, 96vw) !important;
+}
+
+.connection-drawer .card-modal-heading {
+  position: sticky;
+  top: -22px;
+  z-index: 4;
+
+  margin: -22px -22px 18px;
+  padding: 20px 22px 14px;
+
+  border-bottom: 1px solid #25313d;
+
+  background: #10171f;
+}
+
+.connection-preview-drawer {
+  grid-template-columns:
+    minmax(0, 1fr)
+    34px
+    minmax(0, 1fr);
+
+  margin-bottom: 18px;
+}
+
+.connection-drawer .form-group label {
+  color: #ffffff !important;
+  font-size: 11.5px !important;
+}
+
+.connection-drawer .form-group select {
+  min-height: 42px;
+
+  background: #080e14 !important;
+  color: #ffffff !important;
+
+  font-size: 11.5px !important;
+}
+
+.connection-drawer .connection-type-help {
+  margin-top: 10px;
+
+  color: #dbe4ee !important;
+
+  font-size: 9.5px !important;
+}
+
+.connection-drawer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+
+  margin-top: 18px;
+  padding-top: 14px;
+
+  border-top: 1px solid #25313d;
+}
+
+.connection-drawer-actions button {
+  min-height: 38px;
+
+  padding: 0 14px;
+
+  border-radius: 8px;
+}
+
+
+/* =========================================================
+   TIPOGRAFIA GLOBAL - MONTSERRAT
+   Copiar en src/assets/fonts/:
+   - Montserrat-VariableFont_wght.ttf
+   - Montserrat-Italic-VariableFont_wght.ttf
+========================================================= */
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('./assets/fonts/Montserrat-VariableFont_wght.ttf')
+    format('truetype');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('./assets/fonts/Montserrat-Italic-VariableFont_wght.ttf')
+    format('truetype');
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+html,
+body,
+#root,
+.app-shell,
+.app,
+button,
+input,
+select,
+textarea,
+option {
+  font-family:
+    'Montserrat',
+    'Segoe UI',
+    Arial,
+    sans-serif !important;
+}
+
+body {
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+button,
+select,
+input,
+textarea {
+  font-weight: 600;
+}
+
+h1,
+h2,
+h3,
+h4,
+strong {
+  font-family:
+    'Montserrat',
+    'Segoe UI',
+    Arial,
+    sans-serif !important;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   CARDS V5.2 - ZONA / ARCHIVO FIJO / BOARD SIN SCROLLBAR
+========================================================= */
+
+/* Título de zona más visible, grande y negro */
+.board-zone-title {
+  min-height: 34px !important;
+
+  padding: 0 14px !important;
+
+  color: #111820 !important;
+
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+
+  letter-spacing: 0 !important;
+
+  box-shadow:
+    0 5px 12px rgba(0,0,0,.12) !important;
+}
+
+/* Le damos una leve capa clara para que el negro se lea
+   incluso cuando el color elegido para la zona sea oscuro */
+.board-zone-title {
+  background-image:
+    linear-gradient(
+      rgba(255,255,255,.34),
+      rgba(255,255,255,.34)
+    ) !important;
+  background-blend-mode: screen !important;
+}
+
+/* El archivero queda fijo en pantalla, superpuesto al board.
+   No se mueve al desplazar el canvas. */
+.board-archive-button {
+  position: fixed !important;
+
+  left: 370px !important;
+  bottom: 24px !important;
+
+  z-index: 300 !important;
+
+  width: 62px !important;
+  height: 62px !important;
+
+  margin: 0 !important;
+}
+
+.board-archive-button img {
+  width: 44px !important;
+  height: 44px !important;
+}
+
+/* El área Cards no genera scrollbar externo.
+   El desplazamiento del canvas se sigue haciendo con
+   click izquierdo + arrastre, como venimos usando. */
+.cards-page {
+  overflow: hidden !important;
+}
+
+.cards-layout,
+.cards-board-area,
+.cards-canvas-shell {
+  overflow: hidden !important;
+}
+
+/* El canvas mantiene desplazamiento interno para el pan,
+   pero ocultamos totalmente las barras y las flechas. */
+.cards-canvas {
+  overflow: auto !important;
+
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.cards-canvas::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+
+/* Evita que aparezca el scrollbar lateral del navegador
+   mientras estamos en el layout de Cards por desbordes mínimos */
+.cards-page {
+  max-height: calc(100vh - 74px) !important;
+}
+
+.cards-layout {
+  height: calc(100vh - 174px) !important;
+  min-height: 560px !important;
+}
+
+.cards-board-area,
+.cards-canvas-shell {
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
+.cards-canvas {
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+/* Ajuste responsive del archivero fijo */
+@media (max-width: 980px) {
+  .board-archive-button {
+    left: 270px !important;
+    bottom: 18px !important;
+
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  .board-archive-button img {
+    width: 39px !important;
+    height: 39px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .board-archive-button {
+    left: 16px !important;
+    bottom: 16px !important;
+  }
+}
