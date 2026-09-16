@@ -6,6 +6,7 @@ import ganttIcon from './assets/icon-gantt.png'
 import cardsIcon from './assets/icon-cards.png'
 import archiveIcon from './assets/icon-archive.png'
 import processIcon from './assets/icon-process.png'
+import kanbanIcon from './assets/icon-kanban.png'
 
 import processTerminatorIcon from './assets/process/process-terminador.png'
 import processReferenceIcon from './assets/process/process-referencia.png'
@@ -43,14 +44,14 @@ const formularioVacio = {
 const PROCESO_COMPONENTES = [
   {
     tipo: 'InicioFin',
-    label: 'Proceso',
+    label: 'Terminador',
     tituloDefault: 'Inicio / Fin',
     color: '#cfe3cd',
     icon: processTerminatorIcon,
   },
   {
     tipo: 'Actividad',
-    label: 'Texto',
+    label: 'Proceso',
     tituloDefault: 'Actividad',
     color: '#cfe3cd',
     icon: processActivityIcon,
@@ -85,7 +86,7 @@ const PROCESO_COMPONENTES = [
   },
   {
     tipo: 'Referencia',
-    label: 'Inicio-Fin',
+    label: 'Referencia',
     tituloDefault: 'Referencia',
     color: '#cfe3cd',
     icon: processReferenceIcon,
@@ -144,6 +145,22 @@ function plantillaProceso(tipo) {
 function etiquetaTipoProceso(tipo) {
   return plantillaProceso(tipo)?.label || 'Proceso'
 }
+
+
+const KANBAN_ESTADOS = [
+  'Por hacer',
+  'En curso',
+  'Listo',
+]
+
+const KANBAN_COLORES = [
+  '#f5f0df',
+  '#d9eaf7',
+  '#dff1e7',
+  '#f8dfdf',
+  '#eee3fa',
+  '#f8e8c8',
+]
 
 
 function App() {
@@ -280,6 +297,37 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
 
   const processListRef = useRef(null)
   const processCanvasPrintRef = useRef(null)
+
+
+  const [kanbanProjects, setKanbanProjects] = useState([])
+  const [kanbanProjectId, setKanbanProjectId] = useState('')
+  const [kanbanCards, setKanbanCards] = useState([])
+  const [kanbanArchivedCards, setKanbanArchivedCards] = useState([])
+  const [kanbanHistory, setKanbanHistory] = useState([])
+  const [kanbanProjectDrawerOpen, setKanbanProjectDrawerOpen] = useState(false)
+  const [kanbanCardDrawerOpen, setKanbanCardDrawerOpen] = useState(false)
+  const [kanbanArchiveOpen, setKanbanArchiveOpen] = useState(false)
+  const [kanbanCardEditando, setKanbanCardEditando] = useState(null)
+  const [kanbanDragId, setKanbanDragId] = useState(null)
+  const [kanbanGanttOpen, setKanbanGanttOpen] = useState(false)
+  const [kanbanGanttProjectId, setKanbanGanttProjectId] = useState('')
+  const [nuevoKanbanProject, setNuevoKanbanProject] = useState({
+    nombre: '',
+    descripcion: '',
+  })
+  const kanbanCardVacia = {
+    titulo: '',
+    responsableAnalista: '',
+    responsableDesarrollador: '',
+    fechaInicio: '',
+    duracionDias: 1,
+    horasEstimadas: 6.5,
+    estado: 'Por hacer',
+    prioridad: 'Media',
+    comentario: '',
+    color: '#f5f0df',
+  }
+  const [formKanbanCard, setFormKanbanCard] = useState(kanbanCardVacia)
 
 
   const [boardEditando, setBoardEditando] = useState(null)
@@ -1942,8 +1990,10 @@ async function imprimirProcessFlow() {
     const pageHeight = doc.internal.pageSize.getHeight()
 
     const margin = 8
+    const titleSpace = 11
     const usableWidth = pageWidth - margin * 2
-    const usableHeight = pageHeight - margin * 2
+    const usableHeight =
+      pageHeight - margin * 2 - titleSpace
 
     const ratio = Math.min(
       usableWidth / canvas.width,
@@ -1954,7 +2004,24 @@ async function imprimirProcessFlow() {
     const renderHeight = canvas.height * ratio
 
     const x = (pageWidth - renderWidth) / 2
-    const y = (pageHeight - renderHeight) / 2
+    const y =
+      titleSpace +
+      (usableHeight - renderHeight) / 2 +
+      margin
+
+    const nombre =
+      processMaps.find(
+        (item) => item.id === processSeleccionadoId
+      )?.nombre || 'proceso'
+
+    doc.setFontSize(10)
+    doc.setTextColor(45, 55, 65)
+    doc.text(
+      nombre,
+      pageWidth - margin,
+      8,
+      { align: 'right' }
+    )
 
     doc.addImage(
       imgData,
@@ -1964,11 +2031,6 @@ async function imprimirProcessFlow() {
       renderWidth,
       renderHeight
     )
-
-    const nombre =
-      processMaps.find(
-        (item) => item.id === processSeleccionadoId
-      )?.nombre || 'proceso'
 
     doc.save(`${nombre}.pdf`)
   } catch (error) {
@@ -3285,7 +3347,6 @@ async function actualizarBoardCanvasBg(color) {
     .from('card_boards')
     .update({
       canvas_bg: color,
-      updated_at: new Date().toISOString(),
     })
     .eq('id', boardSeleccionadoId)
 
@@ -5392,6 +5453,515 @@ function colorEstadoTarea(tarea) {
   }
 
 
+
+  async function cargarKanbanProjects() {
+    const { data, error } = await supabase
+      .from('kanban_projects')
+      .select('*')
+      .order('updated_at', { ascending: false })
+
+    if (error) {
+      console.error('Error cargando proyectos Kanban:', error)
+      return
+    }
+
+    const lista = data || []
+    setKanbanProjects(lista)
+
+    if (!kanbanProjectId && lista.length > 0) {
+      setKanbanProjectId(lista[0].id)
+    } else if (
+      kanbanProjectId &&
+      !lista.some((item) => item.id === kanbanProjectId)
+    ) {
+      setKanbanProjectId(lista[0]?.id || '')
+    }
+  }
+
+  async function cargarKanbanCards(projectId) {
+    if (!projectId) {
+      setKanbanCards([])
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('kanban_cards')
+      .select('*')
+      .eq('kanban_project_id', projectId)
+      .eq('archivada', false)
+      .order('updated_at', { ascending: false })
+
+    if (error) {
+      console.error('Error cargando tarjetas Kanban:', error)
+      return
+    }
+
+    setKanbanCards(data || [])
+  }
+
+  async function cargarKanbanArchivedCards(projectId) {
+    if (!projectId) {
+      setKanbanArchivedCards([])
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('kanban_cards')
+      .select('*')
+      .eq('kanban_project_id', projectId)
+      .eq('archivada', true)
+      .order('updated_at', { ascending: false })
+
+    if (error) {
+      console.error('Error cargando archivo Kanban:', error)
+      return
+    }
+
+    setKanbanArchivedCards(data || [])
+  }
+
+  async function cargarKanbanHistory(cardId) {
+    if (!cardId) {
+      setKanbanHistory([])
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('kanban_card_history')
+      .select('*')
+      .eq('kanban_card_id', cardId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error cargando historial Kanban:', error)
+      return
+    }
+
+    setKanbanHistory(data || [])
+  }
+
+  function abrirNuevoKanbanProject() {
+    setNuevoKanbanProject({
+      nombre: '',
+      descripcion: '',
+    })
+    setKanbanProjectDrawerOpen(true)
+  }
+
+  async function guardarKanbanProject(event) {
+    event.preventDefault()
+
+    if (!nuevoKanbanProject.nombre.trim()) {
+      alert('Ingresá un nombre para el proyecto Kanban.')
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('kanban_projects')
+      .insert({
+        nombre: nuevoKanbanProject.nombre.trim(),
+        descripcion:
+          nuevoKanbanProject.descripcion.trim() || null,
+        canvas_bg: '#0b1220',
+        created_by: session.user.id,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      alert(`No se pudo crear el proyecto Kanban: ${error.message}`)
+      return
+    }
+
+    setKanbanProjectDrawerOpen(false)
+    await cargarKanbanProjects()
+    setKanbanProjectId(data.id)
+  }
+
+  async function eliminarKanbanProject(project) {
+    const confirmar = window.confirm(
+      `¿Eliminar el proyecto Kanban "${project.nombre}" y todas sus tarjetas?`
+    )
+    if (!confirmar) return
+
+    const { error } = await supabase
+      .from('kanban_projects')
+      .delete()
+      .eq('id', project.id)
+
+    if (error) {
+      alert(`No se pudo eliminar el proyecto Kanban: ${error.message}`)
+      return
+    }
+
+    if (kanbanProjectId === project.id) {
+      setKanbanProjectId('')
+      setKanbanCards([])
+    }
+
+    await cargarKanbanProjects()
+  }
+
+  async function actualizarKanbanBg(color) {
+    if (!kanbanProjectId) return
+
+    const { error } = await supabase
+      .from('kanban_projects')
+      .update({ canvas_bg: color })
+      .eq('id', kanbanProjectId)
+
+    if (error) {
+      alert(`No se pudo cambiar el fondo Kanban: ${error.message}`)
+      return
+    }
+
+    setKanbanProjects((actual) =>
+      actual.map((item) =>
+        item.id === kanbanProjectId
+          ? { ...item, canvas_bg: color }
+          : item
+      )
+    )
+  }
+
+  function abrirNuevaKanbanCard(estado = 'Por hacer') {
+    if (!kanbanProjectId) {
+      alert('Primero creá o seleccioná un proyecto Kanban.')
+      return
+    }
+
+    setKanbanCardEditando(null)
+    setFormKanbanCard({
+      ...kanbanCardVacia,
+      estado,
+      fechaInicio: new Date().toISOString().slice(0, 10),
+    })
+    setKanbanHistory([])
+    setKanbanGanttOpen(false)
+    setKanbanCardDrawerOpen(true)
+  }
+
+  function abrirEditarKanbanCard(card) {
+    setKanbanCardEditando(card)
+    setFormKanbanCard({
+      titulo: card.titulo || '',
+      responsableAnalista:
+        card.responsable_analista || '',
+      responsableDesarrollador:
+        card.responsable_desarrollador || '',
+      fechaInicio: card.fecha_inicio || '',
+      duracionDias: Number(card.duracion_dias) || 1,
+      horasEstimadas:
+        card.horas_estimadas ??
+        Number(card.duracion_dias || 1) * 6.5,
+      estado: card.estado || 'Por hacer',
+      prioridad: card.prioridad || 'Media',
+      comentario: card.comentario || '',
+      color: card.color || '#f5f0df',
+    })
+    setKanbanGanttOpen(false)
+    setKanbanGanttProjectId('')
+    setKanbanCardDrawerOpen(true)
+    cargarKanbanHistory(card.id)
+  }
+
+  function cerrarKanbanCardDrawer() {
+    setKanbanCardDrawerOpen(false)
+    setKanbanCardEditando(null)
+    setFormKanbanCard(kanbanCardVacia)
+    setKanbanHistory([])
+    setKanbanGanttOpen(false)
+    setKanbanGanttProjectId('')
+  }
+
+  async function guardarKanbanCard(event) {
+    event.preventDefault()
+
+    if (!formKanbanCard.titulo.trim()) {
+      alert('Ingresá un título para la tarjeta Kanban.')
+      return
+    }
+
+    if (!formKanbanCard.fechaInicio) {
+      alert('Ingresá una fecha de inicio.')
+      return
+    }
+
+    const payload = {
+      kanban_project_id: kanbanProjectId,
+      titulo: formKanbanCard.titulo.trim(),
+      responsable_analista:
+        formKanbanCard.responsableAnalista || null,
+      responsable_desarrollador:
+        formKanbanCard.responsableDesarrollador || null,
+      fecha_inicio: formKanbanCard.fechaInicio,
+      duracion_dias:
+        Number(formKanbanCard.duracionDias) || 1,
+      horas_estimadas:
+        Number(formKanbanCard.horasEstimadas) || 0,
+      estado: formKanbanCard.estado,
+      prioridad: formKanbanCard.prioridad,
+      comentario: formKanbanCard.comentario.trim(),
+      color: formKanbanCard.color,
+      updated_at: new Date().toISOString(),
+    }
+
+    if (kanbanCardEditando) {
+      const { error } = await supabase
+        .from('kanban_cards')
+        .update(payload)
+        .eq('id', kanbanCardEditando.id)
+
+      if (error) {
+        alert(`No se pudo editar la tarjeta: ${error.message}`)
+        return
+      }
+
+      await supabase
+        .from('kanban_card_history')
+        .insert({
+          kanban_card_id: kanbanCardEditando.id,
+          user_id: session.user.id,
+          autor: session.user.email,
+          comentario: `Editó la tarjeta "${formKanbanCard.titulo.trim()}"`,
+        })
+    } else {
+      const { data, error } = await supabase
+        .from('kanban_cards')
+        .insert({
+          ...payload,
+          created_by: session.user.id,
+          archivada: false,
+        })
+        .select()
+        .single()
+
+      if (error) {
+        alert(`No se pudo crear la tarjeta: ${error.message}`)
+        return
+      }
+
+      await supabase
+        .from('kanban_card_history')
+        .insert({
+          kanban_card_id: data.id,
+          user_id: session.user.id,
+          autor: session.user.email,
+          comentario: `Creó la tarjeta "${formKanbanCard.titulo.trim()}"`,
+        })
+    }
+
+    cerrarKanbanCardDrawer()
+    await cargarKanbanCards(kanbanProjectId)
+  }
+
+  async function moverKanbanCard(cardId, nuevoEstado) {
+    const card = kanbanCards.find((item) => item.id === cardId)
+    if (!card || card.estado === nuevoEstado) return
+
+    const estadoAnterior = card.estado
+
+    setKanbanCards((actual) =>
+      actual.map((item) =>
+        item.id === cardId
+          ? { ...item, estado: nuevoEstado }
+          : item
+      )
+    )
+
+    const { error } = await supabase
+      .from('kanban_cards')
+      .update({
+        estado: nuevoEstado,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', cardId)
+
+    if (error) {
+      alert(`No se pudo mover la tarjeta: ${error.message}`)
+      await cargarKanbanCards(kanbanProjectId)
+      return
+    }
+
+    await supabase
+      .from('kanban_card_history')
+      .insert({
+        kanban_card_id: cardId,
+        user_id: session.user.id,
+        autor: session.user.email,
+        comentario: `Movió la tarjeta de "${estadoAnterior}" a "${nuevoEstado}"`,
+      })
+  }
+
+  async function archivarKanbanCard(card) {
+    const confirmar = window.confirm(
+      `¿Archivar "${card.titulo}"?`
+    )
+    if (!confirmar) return
+
+    const { error } = await supabase
+      .from('kanban_cards')
+      .update({
+        archivada: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', card.id)
+
+    if (error) {
+      alert(`No se pudo archivar: ${error.message}`)
+      return
+    }
+
+    await supabase
+      .from('kanban_card_history')
+      .insert({
+        kanban_card_id: card.id,
+        user_id: session.user.id,
+        autor: session.user.email,
+        comentario: 'Archivó la tarjeta',
+      })
+
+    cerrarKanbanCardDrawer()
+    await Promise.all([
+      cargarKanbanCards(kanbanProjectId),
+      cargarKanbanArchivedCards(kanbanProjectId),
+    ])
+  }
+
+  async function restaurarKanbanCard(card) {
+    const { error } = await supabase
+      .from('kanban_cards')
+      .update({
+        archivada: false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', card.id)
+
+    if (error) {
+      alert(`No se pudo restaurar: ${error.message}`)
+      return
+    }
+
+    await Promise.all([
+      cargarKanbanCards(kanbanProjectId),
+      cargarKanbanArchivedCards(kanbanProjectId),
+    ])
+  }
+
+  async function eliminarKanbanCard(card) {
+    const confirmar = window.confirm(
+      `¿Eliminar definitivamente "${card.titulo}"?`
+    )
+    if (!confirmar) return
+
+    const { error } = await supabase
+      .from('kanban_cards')
+      .delete()
+      .eq('id', card.id)
+
+    if (error) {
+      alert(`No se pudo eliminar: ${error.message}`)
+      return
+    }
+
+    cerrarKanbanCardDrawer()
+    await Promise.all([
+      cargarKanbanCards(kanbanProjectId),
+      cargarKanbanArchivedCards(kanbanProjectId),
+    ])
+  }
+
+  function abrirKanbanGantt(card) {
+    setKanbanGanttProjectId(
+      proyectos.find((item) => item.id !== '__all__')?.id || ''
+    )
+    setKanbanGanttOpen(true)
+  }
+
+  async function convertirKanbanEnGantt(card) {
+    if (!kanbanGanttProjectId) {
+      alert('Seleccioná un proyecto Gantt.')
+      return
+    }
+
+    const destino = proyectos.find(
+      (item) => item.id === kanbanGanttProjectId
+    )
+
+    if (!destino) return
+
+    const estadoTarea =
+      card.estado === 'Listo'
+        ? 'Finalizado'
+        : card.estado === 'En curso'
+          ? 'En curso'
+          : 'Pendiente'
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        project_id: destino.id,
+        nombre: card.titulo,
+        responsable:
+          card.responsable_analista || '',
+        responsable_analista:
+          card.responsable_analista || null,
+        responsable_desarrollador:
+          card.responsable_desarrollador || null,
+        comentario: card.comentario || '',
+        fecha_inicio:
+          card.fecha_inicio ||
+          new Date().toISOString().slice(0, 10),
+        duracion_dias:
+          Number(card.duracion_dias) || 1,
+        horas_estimadas:
+          Number(card.horas_estimadas) || 0,
+        estado: estadoTarea,
+        prioridad: card.prioridad || 'Media',
+        es_hito: false,
+        hito_padre_id: null,
+        created_by: session.user.id,
+        fecha_finalizacion:
+          estadoTarea === 'Finalizado'
+            ? new Date().toISOString()
+            : null,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      alert(`No se pudo crear la tarea Gantt: ${error.message}`)
+      return
+    }
+
+    await Promise.all([
+      supabase.from('task_history').insert({
+        task_id: data.id,
+        user_id: session.user.id,
+        accion: 'Tarea creada desde Kanban',
+        detalle: `Se creó desde la tarjeta Kanban "${card.titulo}"`,
+      }),
+      supabase
+        .from('kanban_cards')
+        .update({ gantt_task_id: data.id })
+        .eq('id', card.id),
+      supabase.from('kanban_card_history').insert({
+        kanban_card_id: card.id,
+        user_id: session.user.id,
+        autor: session.user.email,
+        comentario: `Creó una tarea Gantt en "${destino.nombre}"`,
+      }),
+    ])
+
+    setKanbanGanttOpen(false)
+    await Promise.all([
+      cargarKanbanCards(kanbanProjectId),
+      cargarTodasLasTareas(),
+    ])
+
+    alert(`Tarea creada en "${destino.nombre}".`)
+  }
+
   useEffect(() => {
     if (
       session &&
@@ -5424,6 +5994,20 @@ function colorEstadoTarea(tarea) {
     }
   }, [session, vistaPrincipal])
 
+
+  useEffect(() => {
+    if (session && vistaPrincipal === 'kanban') {
+      cargarKanbanProjects()
+    }
+  }, [session, vistaPrincipal])
+
+  useEffect(() => {
+    if (session && vistaPrincipal === 'kanban') {
+      cargarKanbanCards(kanbanProjectId)
+      cargarKanbanArchivedCards(kanbanProjectId)
+    }
+  }, [session, vistaPrincipal, kanbanProjectId])
+
   useEffect(() => {
     if (session && vistaPrincipal === 'process') {
       cargarProcessCanvas(processSeleccionadoId)
@@ -5444,6 +6028,14 @@ function colorEstadoTarea(tarea) {
 
   const boardCanvasBgActual =
     boardSeleccionado?.canvas_bg || '#5d6670'
+
+
+  const kanbanProject = kanbanProjects.find(
+    (item) => item.id === kanbanProjectId
+  )
+
+  const kanbanCanvasBgActual =
+    kanbanProject?.canvas_bg || '#0b1220'
 
   if (loading) {
     return (
@@ -5569,6 +6161,24 @@ function colorEstadoTarea(tarea) {
         <button
           type="button"
           className={
+            vistaPrincipal === 'kanban'
+              ? 'visual-sidebar-icon-button active'
+              : 'visual-sidebar-icon-button'
+          }
+          onClick={() => setVistaPrincipal('kanban')}
+          title="Kanban"
+          aria-label="Kanban"
+        >
+          <img
+            src={kanbanIcon}
+            alt=""
+            className="visual-sidebar-user-icon"
+          />
+        </button>
+
+        <button
+          type="button"
+          className={
             vistaPrincipal === 'process'
               ? 'visual-sidebar-icon-button active'
               : 'visual-sidebar-icon-button'
@@ -5594,17 +6204,21 @@ function colorEstadoTarea(tarea) {
             <h1>
               {vistaPrincipal === 'cards'
                 ? 'Boards'
-                : vistaPrincipal === 'process'
-                  ? 'Process'
-                  : 'Gestión de proyectos'}
+                : vistaPrincipal === 'kanban'
+                  ? 'Kanban'
+                  : vistaPrincipal === 'process'
+                    ? 'Process'
+                    : 'Gestión de proyectos'}
             </h1>
 
             <p>
               {vistaPrincipal === 'cards'
                 ? 'Canvas colaborativo'
-                : vistaPrincipal === 'process'
-                  ? 'Mapeo simple de procesos'
-                  : `Proyecto: ${
+                : vistaPrincipal === 'kanban'
+                  ? 'Seguimiento visual de tareas'
+                  : vistaPrincipal === 'process'
+                    ? 'Mapeo simple de procesos'
+                    : `Proyecto: ${
                     proyectoSeleccionadoId === '__all__'
                       ? 'Todos los proyectos'
                       : proyecto?.nombre || 'Sin proyecto'
@@ -7539,6 +8153,22 @@ function colorEstadoTarea(tarea) {
                     </div>
                   </div>
 
+                  <div className="process-canvas-bg-picker">
+                    {[
+                      { key: '#ffffff', label: 'Blanco', className: 'white' },
+                      { key: '#0b1220', label: 'Negro', className: 'black' },
+                      { key: '#5d6670', label: 'Board', className: 'board' },
+                    ].map((bg) => (
+                      <button
+                        key={bg.key}
+                        type="button"
+                        className={`process-bg-dot ${bg.className} ${processCanvasBgActual === bg.key ? 'active' : ''}`}
+                        onClick={() => actualizarProcessCanvasBg(bg.key)}
+                        title={bg.label}
+                      />
+                    ))}
+                  </div>
+
                   <div
                     className="process-canvas"
                     style={{ '--process-canvas-bg': processCanvasBgActual }}
@@ -7561,22 +8191,6 @@ function colorEstadoTarea(tarea) {
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={soltarNodoProceso}
                   >
-                    <div className="process-canvas-bg-picker">
-                      {[
-                        { key: '#ffffff', label: 'Blanco', className: 'white' },
-                        { key: '#0b1220', label: 'Negro', className: 'black' },
-                        { key: '#5d6670', label: 'Board', className: 'board' },
-                      ].map((bg) => (
-                        <button
-                          key={bg.key}
-                          type="button"
-                          className={`process-bg-dot ${bg.className} ${processCanvasBgActual === bg.key ? 'active' : ''}`}
-                          onClick={() => actualizarProcessCanvasBg(bg.key)}
-                          title={bg.label}
-                        />
-                      ))}
-                    </div>
-
                     <div ref={processCanvasPrintRef} className="process-world">
                       <svg className="process-links-layer" viewBox="0 0 2400 1500">
                         <defs>
@@ -7752,6 +8366,280 @@ function colorEstadoTarea(tarea) {
                         </div>
                       )}
                     </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {vistaPrincipal === 'kanban' && (
+        <section className="kanban-page">
+          <div className="kanban-toolbar">
+            <div>
+              <span className="kanban-eyebrow">
+                Tablero operativo
+              </span>
+              <h2>Kanban</h2>
+              <p>
+                Mové tarjetas entre estados y llevá el seguimiento visual del trabajo.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className="cards-secondary-button"
+              onClick={abrirNuevoKanbanProject}
+            >
+              + Proyecto Kanban
+            </button>
+          </div>
+
+          <div className="kanban-layout">
+            <aside className="kanban-project-panel">
+              <div className="kanban-project-header">
+                <div>
+                  <span>Proyectos</span>
+                  <strong>{kanbanProjects.length}</strong>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={abrirNuevoKanbanProject}
+                >
+                  +
+                </button>
+              </div>
+
+              <div className="kanban-project-list">
+                {kanbanProjects.map((project) => (
+                  <div
+                    key={project.id}
+                    className={`kanban-project-item ${
+                      project.id === kanbanProjectId
+                        ? 'active'
+                        : ''
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      className="kanban-project-main"
+                      onClick={() =>
+                        setKanbanProjectId(project.id)
+                      }
+                    >
+                      <strong>{project.nombre}</strong>
+                      <span>
+                        {project.descripcion ||
+                          'Sin descripción'}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="kanban-project-delete"
+                      onClick={() =>
+                        eliminarKanbanProject(project)
+                      }
+                      title="Eliminar proyecto"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+
+                {kanbanProjects.length === 0 && (
+                  <div className="kanban-project-empty">
+                    Todavía no hay proyectos Kanban.
+                  </div>
+                )}
+              </div>
+            </aside>
+
+            <div
+              className="kanban-workspace"
+              style={{
+                '--kanban-bg': kanbanCanvasBgActual,
+              }}
+            >
+              {!kanbanProjectId ? (
+                <div className="kanban-no-project">
+                  <strong>Creá tu primer Kanban</strong>
+                  <span>
+                    Después vas a poder agregar tarjetas y moverlas entre estados.
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div className="kanban-board-header">
+                    <div>
+                      <strong>
+                        {kanbanProject?.nombre || 'Kanban'}
+                      </strong>
+                      <span>
+                        {kanbanProject?.descripcion ||
+                          'Tablero de seguimiento'}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="cards-primary-button compact"
+                      onClick={() =>
+                        abrirNuevaKanbanCard('Por hacer')
+                      }
+                    >
+                      + Tarjeta
+                    </button>
+                  </div>
+
+                  <div className="kanban-bg-picker">
+                    {[
+                      {
+                        key: '#ffffff',
+                        label: 'Blanco',
+                        className: 'white',
+                      },
+                      {
+                        key: '#0b1220',
+                        label: 'Negro',
+                        className: 'black',
+                      },
+                      {
+                        key: '#5d6670',
+                        label: 'Board',
+                        className: 'board',
+                      },
+                    ].map((bg) => (
+                      <button
+                        key={bg.key}
+                        type="button"
+                        className={`kanban-bg-dot ${bg.className} ${
+                          kanbanCanvasBgActual === bg.key
+                            ? 'active'
+                            : ''
+                        }`}
+                        onClick={() =>
+                          actualizarKanbanBg(bg.key)
+                        }
+                        title={bg.label}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="kanban-archive-button"
+                    onClick={() =>
+                      setKanbanArchiveOpen(true)
+                    }
+                    title="Tarjetas archivadas"
+                  >
+                    <img src={archiveIcon} alt="" />
+                    {kanbanArchivedCards.length > 0 && (
+                      <span>
+                        {kanbanArchivedCards.length}
+                      </span>
+                    )}
+                  </button>
+
+                  <div className="kanban-columns">
+                    {KANBAN_ESTADOS.map((estado) => {
+                      const tarjetas = kanbanCards.filter(
+                        (card) => card.estado === estado
+                      )
+
+                      return (
+                        <section
+                          key={estado}
+                          className="kanban-column"
+                          onDragOver={(event) =>
+                            event.preventDefault()
+                          }
+                          onDrop={() => {
+                            if (kanbanDragId) {
+                              moverKanbanCard(
+                                kanbanDragId,
+                                estado
+                              )
+                              setKanbanDragId(null)
+                            }
+                          }}
+                        >
+                          <div className="kanban-column-header">
+                            <strong>{estado}</strong>
+                            <span>{tarjetas.length}</span>
+                          </div>
+
+                          <div className="kanban-column-body">
+                            {tarjetas.map((card) => {
+                              const fechaFin = card.fecha_inicio
+                                ? calcularFin(
+                                    card.fecha_inicio,
+                                    card.duracion_dias || 1
+                                  )
+                                : 'Sin fecha'
+
+                              return (
+                                <article
+                                  key={card.id}
+                                  className="kanban-card"
+                                  style={{
+                                    backgroundColor:
+                                      card.color || '#f5f0df',
+                                  }}
+                                  draggable
+                                  onDragStart={() =>
+                                    setKanbanDragId(card.id)
+                                  }
+                                  onDragEnd={() =>
+                                    setKanbanDragId(null)
+                                  }
+                                  onDoubleClick={() =>
+                                    abrirEditarKanbanCard(card)
+                                  }
+                                >
+                                  <div className="kanban-card-priority">
+                                    {card.prioridad || 'Media'}
+                                  </div>
+
+                                  <strong className="kanban-card-title">
+                                    {card.titulo}
+                                  </strong>
+
+                                  <div className="kanban-card-meta">
+                                    <span>Responsable</span>
+                                    <b>
+                                      {card.responsable_analista ||
+                                        card.responsable_desarrollador ||
+                                        'Sin asignar'}
+                                    </b>
+                                  </div>
+
+                                  <div className="kanban-card-meta">
+                                    <span>Fecha fin</span>
+                                    <b>{fechaFin}</b>
+                                  </div>
+
+                                  {card.gantt_task_id && (
+                                    <div className="kanban-gantt-badge">
+                                      Gantt ✓
+                                    </div>
+                                  )}
+                                </article>
+                              )
+                            })}
+
+                            {tarjetas.length === 0 && (
+                              <div className="kanban-column-empty">
+                                Soltá una tarjeta acá
+                              </div>
+                            )}
+                          </div>
+                        </section>
+                      )
+                    })}
                   </div>
                 </>
               )}
@@ -8714,6 +9602,483 @@ function colorEstadoTarea(tarea) {
       )}
 
 
+
+      {kanbanProjectDrawerOpen && (
+        <div className="card-drawer-overlay">
+          <aside className="card-editor-drawer">
+            <form onSubmit={guardarKanbanProject}>
+              <div className="card-modal-heading">
+                <div>
+                  <span>Kanban</span>
+                  <h3>Nuevo proyecto</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setKanbanProjectDrawerOpen(false)
+                  }
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="form-group">
+                <label>Nombre</label>
+                <input
+                  value={nuevoKanbanProject.nombre}
+                  onChange={(event) =>
+                    setNuevoKanbanProject((actual) => ({
+                      ...actual,
+                      nombre: event.target.value,
+                    }))
+                  }
+                  placeholder="Ej: Backlog Automatización"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Descripción</label>
+                <textarea
+                  rows="4"
+                  value={nuevoKanbanProject.descripcion}
+                  onChange={(event) =>
+                    setNuevoKanbanProject((actual) => ({
+                      ...actual,
+                      descripcion: event.target.value,
+                    }))
+                  }
+                  placeholder="Descripción opcional"
+                />
+              </div>
+
+              <div className="connection-drawer-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() =>
+                    setKanbanProjectDrawerOpen(false)
+                  }
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary">
+                  Crear proyecto
+                </button>
+              </div>
+            </form>
+          </aside>
+        </div>
+      )}
+
+      {kanbanCardDrawerOpen && (
+        <div
+          className="card-drawer-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              cerrarKanbanCardDrawer()
+            }
+          }}
+        >
+          <aside className="card-editor-drawer kanban-card-drawer">
+            <form onSubmit={guardarKanbanCard}>
+              <div className="card-modal-heading">
+                <div>
+                  <span>Kanban</span>
+                  <h3>
+                    {kanbanCardEditando
+                      ? 'Editar tarjeta'
+                      : 'Nueva tarjeta'}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={cerrarKanbanCardDrawer}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="form-group">
+                <label>Título</label>
+                <input
+                  value={formKanbanCard.titulo}
+                  onChange={(event) =>
+                    setFormKanbanCard((actual) => ({
+                      ...actual,
+                      titulo: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Responsable Analista</label>
+                  <select
+                    value={formKanbanCard.responsableAnalista}
+                    onChange={(event) =>
+                      setFormKanbanCard((actual) => ({
+                        ...actual,
+                        responsableAnalista:
+                          event.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Sin asignar</option>
+                    {perfiles.map((perfil) => (
+                      <option
+                        key={perfil.id}
+                        value={perfil.nombre}
+                      >
+                        {perfil.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Responsable Desarrollador</label>
+                  <select
+                    value={formKanbanCard.responsableDesarrollador}
+                    onChange={(event) =>
+                      setFormKanbanCard((actual) => ({
+                        ...actual,
+                        responsableDesarrollador:
+                          event.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Sin asignar</option>
+                    {perfiles.map((perfil) => (
+                      <option
+                        key={perfil.id}
+                        value={perfil.nombre}
+                      >
+                        {perfil.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Fecha inicio</label>
+                  <input
+                    type="date"
+                    value={formKanbanCard.fechaInicio}
+                    onChange={(event) =>
+                      setFormKanbanCard((actual) => ({
+                        ...actual,
+                        fechaInicio: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Duración en días</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formKanbanCard.duracionDias}
+                    onChange={(event) =>
+                      setFormKanbanCard((actual) => ({
+                        ...actual,
+                        duracionDias: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Horas estimadas</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={formKanbanCard.horasEstimadas}
+                    onChange={(event) =>
+                      setFormKanbanCard((actual) => ({
+                        ...actual,
+                        horasEstimadas: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Estado</label>
+                  <select
+                    value={formKanbanCard.estado}
+                    onChange={(event) =>
+                      setFormKanbanCard((actual) => ({
+                        ...actual,
+                        estado: event.target.value,
+                      }))
+                    }
+                  >
+                    {KANBAN_ESTADOS.map((estado) => (
+                      <option key={estado}>{estado}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Prioridad</label>
+                  <select
+                    value={formKanbanCard.prioridad}
+                    onChange={(event) =>
+                      setFormKanbanCard((actual) => ({
+                        ...actual,
+                        prioridad: event.target.value,
+                      }))
+                    }
+                  >
+                    <option>Alta</option>
+                    <option>Media</option>
+                    <option>Baja</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Comentario</label>
+                <textarea
+                  rows="3"
+                  value={formKanbanCard.comentario}
+                  onChange={(event) =>
+                    setFormKanbanCard((actual) => ({
+                      ...actual,
+                      comentario: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Color de tarjeta</label>
+                <div className="kanban-card-color-options">
+                  {KANBAN_COLORES.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={
+                        formKanbanCard.color === color
+                          ? 'active'
+                          : ''
+                      }
+                      style={{ backgroundColor: color }}
+                      onClick={() =>
+                        setFormKanbanCard((actual) => ({
+                          ...actual,
+                          color,
+                        }))
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {kanbanCardEditando && (
+                <div className="kanban-actions-section">
+                  <span>Acciones</span>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setKanbanGanttOpen((actual) => !actual)
+                      }
+                    >
+                      {kanbanCardEditando.gantt_task_id
+                        ? 'Gantt ✓'
+                        : 'Gantt'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        archivarKanbanCard(
+                          kanbanCardEditando
+                        )
+                      }
+                    >
+                      Archivar
+                    </button>
+                    <button
+                      type="button"
+                      className="danger"
+                      onClick={() =>
+                        eliminarKanbanCard(
+                          kanbanCardEditando
+                        )
+                      }
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {kanbanGanttOpen && kanbanCardEditando && (
+                <div className="card-gantt-converter">
+                  <label>Proyecto Gantt destino</label>
+                  <select
+                    value={kanbanGanttProjectId}
+                    onChange={(event) =>
+                      setKanbanGanttProjectId(
+                        event.target.value
+                      )
+                    }
+                  >
+                    <option value="">
+                      Seleccionar proyecto...
+                    </option>
+                    {proyectos
+                      .filter((item) => item.id !== '__all__')
+                      .map((item) => (
+                        <option
+                          key={item.id}
+                          value={item.id}
+                        >
+                          {item.nombre}
+                        </option>
+                      ))}
+                  </select>
+                  <div className="card-gantt-converter-actions">
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() =>
+                        setKanbanGanttOpen(false)
+                      }
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() =>
+                        convertirKanbanEnGantt(
+                          kanbanCardEditando
+                        )
+                      }
+                    >
+                      Crear tarea
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {kanbanCardEditando && (
+                <div className="kanban-history-section">
+                  <div className="kanban-history-title">
+                    Historial
+                  </div>
+                  {kanbanHistory.map((item) => (
+                    <div
+                      key={item.id}
+                      className="kanban-history-item"
+                    >
+                      <strong>{item.autor}</strong>
+                      <span>{item.comentario}</span>
+                      <small>
+                        {new Date(
+                          item.created_at
+                        ).toLocaleString('es-AR')}
+                      </small>
+                    </div>
+                  ))}
+                  {kanbanHistory.length === 0 && (
+                    <div className="kanban-history-empty">
+                      Sin movimientos registrados.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="connection-drawer-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={cerrarKanbanCardDrawer}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary">
+                  {kanbanCardEditando
+                    ? 'Guardar cambios'
+                    : 'Crear tarjeta'}
+                </button>
+              </div>
+            </form>
+          </aside>
+        </div>
+      )}
+
+      {kanbanArchiveOpen && (
+        <div
+          className="card-drawer-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setKanbanArchiveOpen(false)
+            }
+          }}
+        >
+          <aside className="card-editor-drawer archive-drawer">
+            <div className="card-modal-heading">
+              <div>
+                <span>Kanban</span>
+                <h3>Tarjetas archivadas</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setKanbanArchiveOpen(false)
+                }
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="archive-list">
+              {kanbanArchivedCards.map((card) => (
+                <div
+                  key={card.id}
+                  className="archive-list-item"
+                >
+                  <div>
+                    <strong>{card.titulo}</strong>
+                    <span>{card.estado}</span>
+                  </div>
+                  <div className="archive-list-actions">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        restaurarKanbanCard(card)
+                      }
+                    >
+                      Restaurar
+                    </button>
+                    <button
+                      type="button"
+                      className="danger"
+                      onClick={() =>
+                        eliminarKanbanCard(card)
+                      }
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {kanbanArchivedCards.length === 0 && (
+                <div className="archive-empty">
+                  No hay tarjetas archivadas.
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
 
       {processArchiveOpen && (
         <div
@@ -9863,11 +11228,18 @@ function colorEstadoTarea(tarea) {
 
       {modalOpen && (
 
-        <div className="modal-overlay">
+        <div
+          className="card-drawer-overlay gantt-task-drawer-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              cerrarModal()
+            }
+          }}
+        >
 
-          <div className="modal">
+          <aside className="card-editor-drawer gantt-task-drawer">
 
-            <div className="modal-header">
+            <div className="modal-header gantt-task-drawer-header">
 
               <div>
                 <h2>
@@ -10266,7 +11638,7 @@ function colorEstadoTarea(tarea) {
 
             </form>
 
-          </div>
+          </aside>
 
         </div>
 
