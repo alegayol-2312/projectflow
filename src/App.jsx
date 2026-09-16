@@ -43,14 +43,14 @@ const formularioVacio = {
 const PROCESO_COMPONENTES = [
   {
     tipo: 'InicioFin',
-    label: 'Texto',
+    label: 'Proceso',
     tituloDefault: 'Inicio / Fin',
     color: '#cfe3cd',
     icon: processTerminatorIcon,
   },
   {
     tipo: 'Actividad',
-    label: 'Proceso',
+    label: 'Texto',
     tituloDefault: 'Actividad',
     color: '#cfe3cd',
     icon: processActivityIcon,
