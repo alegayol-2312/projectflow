@@ -3403,6 +3403,67 @@ function cancelarConexionProcess() {
   setProcessLinkDraft(null)
 }
 
+
+function ladoMasCercanoProcessNode(event, node) {
+  const rect =
+    event.currentTarget.getBoundingClientRect()
+
+  const localX =
+    event.clientX - rect.left
+
+  const localY =
+    event.clientY - rect.top
+
+  const distancias = [
+    {
+      lado: 'left',
+      valor: Math.abs(localX),
+    },
+    {
+      lado: 'right',
+      valor: Math.abs(rect.width - localX),
+    },
+    {
+      lado: 'top',
+      valor: Math.abs(localY),
+    },
+    {
+      lado: 'bottom',
+      valor: Math.abs(rect.height - localY),
+    },
+  ]
+
+  distancias.sort(
+    (a, b) => a.valor - b.valor
+  )
+
+  return distancias[0].lado
+}
+
+function finalizarConexionSobreNodo(event, node) {
+  if (!processLinkDraft) return
+
+  if (
+    event.target.closest(
+      '.process-node-connector'
+    )
+  ) {
+    return
+  }
+
+  const targetSide =
+    ladoMasCercanoProcessNode(
+      event,
+      node
+    )
+
+  finalizarConexionProcess(
+    event,
+    node,
+    targetSide
+  )
+}
+
 async function finalizarConexionProcess(event, targetNode, targetSide) {
   if (!processLinkDraft) return
 
@@ -3504,38 +3565,8 @@ function processLine(link) {
 
   if (!source || !target) return null
 
-  const sourceCx =
-    Number(source.pos_x) +
-    Number(source.ancho) / 2
-
-  const sourceCy =
-    Number(source.pos_y) +
-    Number(source.alto) / 2
-
-  const targetCx =
-    Number(target.pos_x) +
-    Number(target.ancho) / 2
-
-  const targetCy =
-    Number(target.pos_y) +
-    Number(target.alto) / 2
-
-  const dx = targetCx - sourceCx
-  const dy = targetCy - sourceCy
-
-  // El lado de conexión se recalcula según la posición REAL actual.
-  // Así la flecha siempre vuelve al punto verde más lógico aunque
-  // el componente se mueva, se duplique o cambie de tamaño.
-  let sourceSide
-  let targetSide
-
-  if (Math.abs(dx) >= Math.abs(dy)) {
-    sourceSide = dx >= 0 ? 'right' : 'left'
-    targetSide = dx >= 0 ? 'left' : 'right'
-  } else {
-    sourceSide = dy >= 0 ? 'bottom' : 'top'
-    targetSide = dy >= 0 ? 'top' : 'bottom'
-  }
+  const sourceSide = link.source_side || 'right'
+  const targetSide = link.target_side || 'left'
 
   const p1 = puntoConectorProcess(
     source,
@@ -3548,7 +3579,7 @@ function processLine(link) {
   )
 
   if (processArrowMode === 'curved') {
-    const horizontal =
+    const sourceHorizontal =
       sourceSide === 'left' ||
       sourceSide === 'right'
 
@@ -3558,10 +3589,10 @@ function processLine(link) {
 
     let d
 
-    if (horizontal && targetHorizontal) {
+    if (sourceHorizontal && targetHorizontal) {
       const control = Math.max(
-        70,
-        Math.abs(p2.x - p1.x) * 0.45
+        55,
+        Math.abs(p2.x - p1.x) * 0.38
       )
 
       const dir1 =
@@ -3581,8 +3612,8 @@ function processLine(link) {
         `${p2.x} ${p2.y}`
     } else {
       const control = Math.max(
-        70,
-        Math.abs(p2.y - p1.y) * 0.45
+        55,
+        Math.abs(p2.y - p1.y) * 0.38
       )
 
       const dir1 =
@@ -3609,34 +3640,22 @@ function processLine(link) {
     }
   }
 
-  const OFFSET = 18
+  const OFFSET = 12
 
   function salida(point, side) {
     if (side === 'left') {
-      return {
-        x: point.x - OFFSET,
-        y: point.y,
-      }
+      return { x: point.x - OFFSET, y: point.y }
     }
 
     if (side === 'right') {
-      return {
-        x: point.x + OFFSET,
-        y: point.y,
-      }
+      return { x: point.x + OFFSET, y: point.y }
     }
 
     if (side === 'top') {
-      return {
-        x: point.x,
-        y: point.y - OFFSET,
-      }
+      return { x: point.x, y: point.y - OFFSET }
     }
 
-    return {
-      x: point.x,
-      y: point.y + OFFSET,
-    }
+    return { x: point.x, y: point.y + OFFSET }
   }
 
   const s = salida(p1, sourceSide)
@@ -3652,12 +3671,8 @@ function processLine(link) {
 
   let d = `M ${p1.x} ${p1.y} L ${s.x} ${s.y}`
 
-  if (
-    sourceHorizontal &&
-    targetHorizontal
-  ) {
-    const midX =
-      (s.x + t.x) / 2
+  if (sourceHorizontal && targetHorizontal) {
+    const midX = (s.x + t.x) / 2
 
     d +=
       ` L ${midX} ${s.y}` +
@@ -3667,8 +3682,7 @@ function processLine(link) {
     !sourceHorizontal &&
     !targetHorizontal
   ) {
-    const midY =
-      (s.y + t.y) / 2
+    const midY = (s.y + t.y) / 2
 
     d +=
       ` L ${s.x} ${midY}` +
@@ -9965,14 +9979,14 @@ function colorEstadoTarea(tarea) {
                         <defs>
                           <marker
                             id="process-arrow"
-                            markerWidth="10"
-                            markerHeight="10"
-                            refX="8"
-                            refY="3"
+                            markerWidth="6"
+                            markerHeight="6"
+                            refX="5.1"
+                            refY="2"
                             orient="auto"
                             markerUnits="strokeWidth"
                           >
-                            <path d="M0,0 L0,6 L9,3 z" />
+                            <path d="M0,0 L0,4 L5.6,2 z" />
                           </marker>
                         </defs>
 
@@ -10073,6 +10087,12 @@ function colorEstadoTarea(tarea) {
                           }
                           onDoubleClick={() =>
                             abrirEditarProcessNode(node)
+                          }
+                          onMouseUp={(event) =>
+                            finalizarConexionSobreNodo(
+                              event,
+                              node
+                            )
                           }
                         >
                           <div className="process-node-visual">

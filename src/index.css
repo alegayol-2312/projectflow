@@ -11558,3 +11558,136 @@ strong {
   stroke-linejoin:
     round !important;
 }
+
+
+/* =========================================================
+   V7.4.7 - CONECTORES PROCESS REHECHOS
+   Área clickeable grande / punto visual chico / flecha chica
+========================================================= */
+
+/*
+  El botón real es grande (26x26) para que sea fácil soltar una
+  conexión. Lo que se VE es sólo el pseudo-elemento central de 7px.
+*/
+.process-node .process-node-connector {
+  width: 26px !important;
+  height: 26px !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border: 0 !important;
+  border-radius: 50% !important;
+
+  background: transparent !important;
+
+  box-shadow: none !important;
+
+  z-index: 40 !important;
+
+  cursor: crosshair !important;
+}
+
+.process-node .process-node-connector::after {
+  content: '';
+
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  width: 7px;
+  height: 7px;
+
+  transform:
+    translate(-50%, -50%);
+
+  border:
+    1.5px solid #245b60;
+
+  border-radius: 50%;
+
+  background: #22d3c5;
+
+  box-shadow:
+    0 1px 3px rgba(0,0,0,.28);
+
+  pointer-events: none;
+}
+
+/* El centro visual queda exactamente SOBRE el borde del nodo. */
+.process-node .process-node-connector.left {
+  left: -13px !important;
+  right: auto !important;
+
+  top: 50% !important;
+  bottom: auto !important;
+
+  transform:
+    translateY(-50%) !important;
+}
+
+.process-node .process-node-connector.right {
+  right: -13px !important;
+  left: auto !important;
+
+  top: 50% !important;
+  bottom: auto !important;
+
+  transform:
+    translateY(-50%) !important;
+}
+
+.process-node .process-node-connector.top {
+  top: -13px !important;
+  bottom: auto !important;
+
+  left: 50% !important;
+  right: auto !important;
+
+  transform:
+    translateX(-50%) !important;
+}
+
+.process-node .process-node-connector.bottom {
+  bottom: -13px !important;
+  top: auto !important;
+
+  left: 50% !important;
+  right: auto !important;
+
+  transform:
+    translateX(-50%) !important;
+}
+
+/* Hover: sólo agranda un poquito el punto, no el área clickeable. */
+.process-node .process-node-connector:hover::after {
+  width: 9px;
+  height: 9px;
+
+  background: #67f3e6;
+}
+
+/* Líneas un poco más finas y limpias */
+.process-link-path {
+  stroke-width: 2.1 !important;
+}
+
+.process-link-path:hover {
+  stroke-width: 2.8 !important;
+}
+
+.process-link-draft {
+  stroke-width: 1.8 !important;
+  opacity: .72 !important;
+}
+
+/*
+  El SVG debe cubrir TODO el world expandible.
+  Evita que una conexión larga quede recortada.
+*/
+.process-links-layer {
+  width: 100% !important;
+  height: 100% !important;
+
+  overflow: visible !important;
+}
