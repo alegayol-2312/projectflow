@@ -7256,6 +7256,73 @@ function colorEstadoTarea(tarea) {
   const processCanvasBgActual =
     processSeleccionado?.canvas_bg || '#0b1220'
 
+  const processWorldSize = useMemo(() => {
+    const MIN_WIDTH = 2400
+    const MIN_HEIGHT = 1500
+    const PADDING = 420
+
+    const maxNodeX =
+      processNodes.length > 0
+        ? Math.max(
+            ...processNodes.map(
+              (node) =>
+                Number(node.pos_x || 0) +
+                Number(node.ancho || 0)
+            )
+          )
+        : 0
+
+    const maxNodeY =
+      processNodes.length > 0
+        ? Math.max(
+            ...processNodes.map(
+              (node) =>
+                Number(node.pos_y || 0) +
+                Number(node.alto || 0)
+            )
+          )
+        : 0
+
+    const maxBoxX =
+      processBoxes.length > 0
+        ? Math.max(
+            ...processBoxes.map(
+              (box) =>
+                Number(box.pos_x || 0) +
+                Number(box.ancho || 0)
+            )
+          )
+        : 0
+
+    const maxBoxY =
+      processBoxes.length > 0
+        ? Math.max(
+            ...processBoxes.map(
+              (box) =>
+                Number(box.pos_y || 0) +
+                Number(box.alto || 0)
+            )
+          )
+        : 0
+
+    return {
+      width: Math.max(
+        MIN_WIDTH,
+        Math.ceil(
+          Math.max(maxNodeX, maxBoxX) +
+            PADDING
+        )
+      ),
+      height: Math.max(
+        MIN_HEIGHT,
+        Math.ceil(
+          Math.max(maxNodeY, maxBoxY) +
+            PADDING
+        )
+      ),
+    }
+  }, [processNodes, processBoxes])
+
   useEffect(() => {
     if (!processSeleccionado) return
 
@@ -9700,6 +9767,12 @@ function colorEstadoTarea(tarea) {
                           ? 'grid-visible'
                           : ''
                       }`}
+                      style={{
+                        width: `${processWorldSize.width}px`,
+                        height: `${processWorldSize.height}px`,
+                        minWidth: `${processWorldSize.width}px`,
+                        minHeight: `${processWorldSize.height}px`,
+                      }}
                     >
                       {processSelectionRect && (
                         <div
@@ -9796,7 +9869,12 @@ function colorEstadoTarea(tarea) {
                         </section>
                       ))}
 
-                      <svg className="process-links-layer" viewBox="0 0 2400 1500">
+                      <svg
+                        className="process-links-layer"
+                        viewBox={`0 0 ${processWorldSize.width} ${processWorldSize.height}`}
+                        width={processWorldSize.width}
+                        height={processWorldSize.height}
+                      >
                         <defs>
                           <marker
                             id="process-arrow"

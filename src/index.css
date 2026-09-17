@@ -11378,3 +11378,24 @@ strong {
     flex-wrap: wrap;
   }
 }
+
+
+/* =========================================================
+   V7.4.4 - PROCESS CANVAS AUTOEXPANDIBLE
+========================================================= */
+
+.process-canvas {
+  overflow: auto !important;
+}
+
+.process-world {
+  position: relative !important;
+  flex: 0 0 auto !important;
+}
+
+/* Las capas SVG acompañan siempre el tamaño total del canvas */
+.process-links-layer {
+  position: absolute !important;
+  inset: 0 !important;
+  overflow: visible !important;
+}
