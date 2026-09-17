@@ -11691,3 +11691,90 @@ strong {
 
   overflow: visible !important;
 }
+
+
+/* =========================================================
+   V7.4.8 - CAJA DE PROCESOS + IMPRESIÓN LIMPIA
+========================================================= */
+
+/* Encabezado completo pintado con el color elegido */
+.process-box-title {
+  left: 0 !important;
+  right: 0 !important;
+
+  height: 42px !important;
+
+  padding:
+    0 44px !important;
+
+  box-sizing:
+    border-box !important;
+
+  border-radius:
+    11px 11px 0 0 !important;
+
+  background:
+    var(--process-box-color) !important;
+
+  color:
+    var(
+      --process-box-text-color,
+      #ffffff
+    ) !important;
+
+  font-weight:
+    900 !important;
+
+  letter-spacing:
+    .01em !important;
+}
+
+/* Línea divisoria nítida debajo del encabezado */
+.process-box-separator {
+  top: 42px !important;
+
+  height: 2px !important;
+
+  background:
+    var(--process-box-color) !important;
+
+  opacity:
+    1 !important;
+
+  filter:
+    brightness(.72);
+}
+
+/*
+  El botón de edición queda legible sin importar
+  el color del encabezado.
+*/
+.process-box-edit {
+  z-index: 4 !important;
+
+  background:
+    rgba(8, 14, 20, .72) !important;
+
+  color:
+    #ffffff !important;
+}
+
+/* Al imprimir, estas clases también quedan preparadas
+   por si el navegador demora en aplicar el onclone. */
+.process-print-clean
+.process-node-connector,
+.process-print-clean
+.process-node-resize,
+.process-print-clean
+.process-box-edit,
+.process-print-clean
+.process-box-resize,
+.process-print-clean
+.process-guide,
+.process-print-clean
+.process-selection-rect,
+.process-print-clean
+.process-selection-toolbar {
+  display:
+    none !important;
+}

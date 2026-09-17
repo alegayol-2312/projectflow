@@ -146,6 +146,31 @@ function etiquetaTipoProceso(tipo) {
   return plantillaProceso(tipo)?.label || 'Proceso'
 }
 
+function colorTextoContraste(hexColor) {
+  const fallback = '#ffffff'
+
+  if (!hexColor || typeof hexColor !== 'string') {
+    return fallback
+  }
+
+  const hex = hexColor.replace('#', '').trim()
+
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
+    return fallback
+  }
+
+  const r = parseInt(hex.slice(0, 2), 16)
+  const g = parseInt(hex.slice(2, 4), 16)
+  const b = parseInt(hex.slice(4, 6), 16)
+
+  const luminancia =
+    (0.299 * r + 0.587 * g + 0.114 * b)
+
+  return luminancia > 165
+    ? '#111111'
+    : '#ffffff'
+}
+
 
 const KANBAN_ESTADOS = [
   'Por hacer',
@@ -2059,6 +2084,45 @@ async function imprimirProcessFlow() {
         height: captureHeight,
         scrollX: 0,
         scrollY: 0,
+
+        onclone: (clonedDocument) => {
+          const clonedWorld =
+            clonedDocument.querySelector(
+              '.process-world'
+            )
+
+          if (clonedWorld) {
+            clonedWorld.classList.remove(
+              'grid-visible'
+            )
+
+            clonedWorld.style.backgroundImage =
+              'none'
+
+            clonedWorld.style.backgroundColor =
+              processCanvasBgActual
+          }
+
+          const ocultarAlImprimir = [
+            '.process-node-connector',
+            '.process-node-resize',
+            '.process-box-edit',
+            '.process-box-resize',
+            '.process-guide',
+            '.process-selection-rect',
+            '.process-selection-toolbar',
+          ]
+
+          ocultarAlImprimir.forEach(
+            (selector) => {
+              clonedDocument
+                .querySelectorAll(selector)
+                .forEach((elemento) => {
+                  elemento.style.display = 'none'
+                })
+            }
+          )
+        },
       }
     )
 
@@ -9926,6 +9990,10 @@ function colorEstadoTarea(tarea) {
                             height: `${Number(box.alto)}px`,
                             '--process-box-color':
                               box.color || '#4ea1ff',
+                            '--process-box-text-color':
+                              colorTextoContraste(
+                                box.color || '#4ea1ff'
+                              ),
                           }}
                           onMouseDown={(event) =>
                             iniciarDragProcessBox(event, box)
