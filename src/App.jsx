@@ -44,14 +44,14 @@ const formularioVacio = {
 const PROCESO_COMPONENTES = [
   {
     tipo: 'InicioFin',
-    label: 'Terminador',
+    label: 'Proceso',
     tituloDefault: 'Inicio / Fin',
     color: '#cfe3cd',
     icon: processTerminatorIcon,
   },
   {
     tipo: 'Actividad',
-    label: 'Proceso',
+    label: 'Texto',
     tituloDefault: 'Actividad',
     color: '#cfe3cd',
     icon: processActivityIcon,
@@ -86,7 +86,7 @@ const PROCESO_COMPONENTES = [
   },
   {
     tipo: 'Referencia',
-    label: 'Referencia',
+    label: 'Inicio-Fin',
     tituloDefault: 'Referencia',
     color: '#cfe3cd',
     icon: processReferenceIcon,
@@ -240,12 +240,15 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   // =========================
 
   const [vistaPrincipal, setVistaPrincipal] = useState('gantt')
+  const [meetingMode, setMeetingMode] = useState(false)
+  const [mostrarBaseline, setMostrarBaseline] = useState(false)
 
   const [boards, setBoards] = useState([])
   const [boardSeleccionadoId, setBoardSeleccionadoId] = useState('')
   const [cards, setCards] = useState([])
   const [cardsArchivadas, setCardsArchivadas] = useState([])
   const [archivoOpen, setArchivoOpen] = useState(false)
+  const [selectedCardIds, setSelectedCardIds] = useState([])
 
   const [cardLinks, setCardLinks] = useState([])
   const [boardZones, setBoardZones] = useState([])
@@ -272,6 +275,11 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processLinks, setProcessLinks] = useState([])
   const [processBoxes, setProcessBoxes] = useState([])
   const [processGridVisible, setProcessGridVisible] = useState(false)
+  const [processSnapEnabled, setProcessSnapEnabled] = useState(true)
+  const [processGuides, setProcessGuides] = useState({
+    x: null,
+    y: null,
+  })
   const [processBoxDrawerOpen, setProcessBoxDrawerOpen] = useState(false)
   const [processBoxEditando, setProcessBoxEditando] = useState(null)
   const [processBoxDragInfo, setProcessBoxDragInfo] = useState(null)
@@ -2637,17 +2645,94 @@ function moverProcessNode(event) {
   const canvas = event.currentTarget
   const rect = canvas.getBoundingClientRect()
 
-  const x =
+  let x =
     event.clientX -
     rect.left +
     canvas.scrollLeft -
     processDragInfo.offsetX
 
-  const y =
+  let y =
     event.clientY -
     rect.top +
     canvas.scrollTop -
     processDragInfo.offsetY
+
+  const nodeActual = processNodes.find(
+    (item) => item.id === processDragInfo.id
+  )
+
+  if (!nodeActual) return
+
+  const ancho = Number(nodeActual.ancho) || 120
+  const alto = Number(nodeActual.alto) || 90
+
+  let guideX = null
+  let guideY = null
+
+  if (processSnapEnabled) {
+    const GRID = 38
+
+    x = Math.round(x / GRID) * GRID
+    y = Math.round(y / GRID) * GRID
+
+    const centroX = x + ancho / 2
+    const centroY = y + alto / 2
+
+    const otros = processNodes.filter(
+      (item) => item.id !== processDragInfo.id
+    )
+
+    const tolerancia = 9
+
+    for (const otro of otros) {
+      const ox = Number(otro.pos_x)
+      const oy = Number(otro.pos_y)
+      const ow = Number(otro.ancho)
+      const oh = Number(otro.alto)
+
+      const otroCentroX = ox + ow / 2
+      const otroCentroY = oy + oh / 2
+
+      if (
+        guideX === null &&
+        Math.abs(centroX - otroCentroX) <=
+          tolerancia
+      ) {
+        x = otroCentroX - ancho / 2
+        guideX = otroCentroX
+      }
+
+      if (
+        guideY === null &&
+        Math.abs(centroY - otroCentroY) <=
+          tolerancia
+      ) {
+        y = otroCentroY - alto / 2
+        guideY = otroCentroY
+      }
+
+      if (
+        guideX === null &&
+        Math.abs(x - ox) <= tolerancia
+      ) {
+        x = ox
+        guideX = ox
+      }
+
+      if (
+        guideY === null &&
+        Math.abs(y - oy) <= tolerancia
+      ) {
+        y = oy
+        guideY = oy
+      }
+    }
+  }
+
+  setProcessGuides({
+    x: guideX,
+    y: guideY,
+  })
 
   setProcessNodes((actual) =>
     actual.map((node) =>
@@ -2670,6 +2755,10 @@ async function terminarDragProcessNode() {
   )
 
   setProcessDragInfo(null)
+  setProcessGuides({
+    x: null,
+    y: null,
+  })
 
   if (!node) return
 
@@ -2956,10 +3045,50 @@ function processLine(link) {
   const sourceSide = link.source_side || 'right'
   const targetSide = link.target_side || 'left'
 
-  const p1 = puntoConectorProcess(source, sourceSide)
-  const p2 = puntoConectorProcess(target, targetSide)
+  const p1 = puntoConectorProcess(
+    source,
+    sourceSide
+  )
 
-  const horizontal =
+  const p2 = puntoConectorProcess(
+    target,
+    targetSide
+  )
+
+  const OFFSET = 24
+
+  function salida(point, side) {
+    if (side === 'left') {
+      return {
+        x: point.x - OFFSET,
+        y: point.y,
+      }
+    }
+
+    if (side === 'right') {
+      return {
+        x: point.x + OFFSET,
+        y: point.y,
+      }
+    }
+
+    if (side === 'top') {
+      return {
+        x: point.x,
+        y: point.y - OFFSET,
+      }
+    }
+
+    return {
+      x: point.x,
+      y: point.y + OFFSET,
+    }
+  }
+
+  const s = salida(p1, sourceSide)
+  const t = salida(p2, targetSide)
+
+  const sourceHorizontal =
     sourceSide === 'left' ||
     sourceSide === 'right'
 
@@ -2967,29 +3096,37 @@ function processLine(link) {
     targetSide === 'left' ||
     targetSide === 'right'
 
-  let d
+  let d = `M ${p1.x} ${p1.y} L ${s.x} ${s.y}`
 
-  if (horizontal && targetHorizontal) {
-    const control = Math.max(70, Math.abs(p2.x - p1.x) * 0.45)
-    const dir1 = sourceSide === 'left' ? -1 : 1
-    const dir2 = targetSide === 'left' ? -1 : 1
+  if (
+    sourceHorizontal &&
+    targetHorizontal
+  ) {
+    const midX =
+      (s.x + t.x) / 2
 
-    d =
-      `M ${p1.x} ${p1.y} ` +
-      `C ${p1.x + control * dir1} ${p1.y}, ` +
-      `${p2.x + control * dir2} ${p2.y}, ` +
-      `${p2.x} ${p2.y}`
+    d +=
+      ` L ${midX} ${s.y}` +
+      ` L ${midX} ${t.y}` +
+      ` L ${t.x} ${t.y}`
+  } else if (
+    !sourceHorizontal &&
+    !targetHorizontal
+  ) {
+    const midY =
+      (s.y + t.y) / 2
+
+    d +=
+      ` L ${s.x} ${midY}` +
+      ` L ${t.x} ${midY}` +
+      ` L ${t.x} ${t.y}`
   } else {
-    const control = Math.max(70, Math.abs(p2.y - p1.y) * 0.45)
-    const dir1 = sourceSide === 'top' ? -1 : 1
-    const dir2 = targetSide === 'top' ? -1 : 1
-
-    d =
-      `M ${p1.x} ${p1.y} ` +
-      `C ${p1.x} ${p1.y + control * dir1}, ` +
-      `${p2.x} ${p2.y + control * dir2}, ` +
-      `${p2.x} ${p2.y}`
+    d +=
+      ` L ${t.x} ${s.y}` +
+      ` L ${t.x} ${t.y}`
   }
+
+  d += ` L ${p2.x} ${p2.y}`
 
   return {
     d,
@@ -4038,13 +4175,56 @@ async function eliminarCard() {
 function iniciarDragCard(event, card) {
   if (event.button !== 0) return
 
+  if (
+    event.target.closest('.card-thread-pin') ||
+    event.target.closest('.postit-menu') ||
+    event.target.closest('.postit-resize-handle')
+  ) {
+    return
+  }
+
+  if (event.ctrlKey || event.metaKey) {
+    event.stopPropagation()
+    event.preventDefault()
+
+    setSelectedCardIds((actual) =>
+      actual.includes(card.id)
+        ? actual.filter((id) => id !== card.id)
+        : [...actual, card.id]
+    )
+    return
+  }
+
   const rect =
     event.currentTarget.getBoundingClientRect()
+
+  const seleccionActual =
+    selectedCardIds.includes(card.id)
+      ? selectedCardIds
+      : [card.id]
+
+  if (!selectedCardIds.includes(card.id)) {
+    setSelectedCardIds([])
+  }
+
+  const posicionesGrupo = cards
+    .filter((item) =>
+      seleccionActual.includes(item.id)
+    )
+    .map((item) => ({
+      id: item.id,
+      pos_x: Number(item.pos_x) || 80,
+      pos_y: Number(item.pos_y) || 80,
+    }))
 
   setDragInfo({
     id: card.id,
     offsetX: event.clientX - rect.left,
     offsetY: event.clientY - rect.top,
+    anchorX: Number(card.pos_x) || 80,
+    anchorY: Number(card.pos_y) || 80,
+    selectedIds: seleccionActual,
+    posicionesGrupo,
   })
 
   event.preventDefault()
@@ -4083,39 +4263,73 @@ function moverCardEnCanvas(event) {
     ) / boardZoom -
     dragInfo.offsetY / boardZoom
 
+  const deltaX =
+    nuevoX - dragInfo.anchorX
+
+  const deltaY =
+    nuevoY - dragInfo.anchorY
+
+  const selectedIds =
+    dragInfo.selectedIds || [dragInfo.id]
+
   setCards((actual) =>
-    actual.map((card) =>
-      card.id === dragInfo.id
-        ? {
-            ...card,
-            pos_x: Math.max(12, nuevoX),
-            pos_y: Math.max(12, nuevoY),
-          }
-        : card
-    )
+    actual.map((card) => {
+      if (!selectedIds.includes(card.id)) {
+        return card
+      }
+
+      const origen =
+        dragInfo.posicionesGrupo?.find(
+          (item) => item.id === card.id
+        )
+
+      if (!origen) return card
+
+      return {
+        ...card,
+        pos_x: Math.max(
+          12,
+          origen.pos_x + deltaX
+        ),
+        pos_y: Math.max(
+          12,
+          origen.pos_y + deltaY
+        ),
+      }
+    })
   )
 }
 
 async function terminarDragCard() {
   if (!dragInfo) return
 
-  const cardActual =
-    cards.find(
-      (card) => card.id === dragInfo.id
+  const selectedIds =
+    dragInfo.selectedIds || [dragInfo.id]
+
+  const cardsMovidas =
+    cards.filter((card) =>
+      selectedIds.includes(card.id)
     )
 
   setDragInfo(null)
 
-  if (!cardActual) return
+  if (cardsMovidas.length === 0) return
 
-  const { error } = await supabase
-    .from('cards')
-    .update({
-      pos_x: Number(cardActual.pos_x),
-      pos_y: Number(cardActual.pos_y),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', cardActual.id)
+  const resultados = await Promise.all(
+    cardsMovidas.map((card) =>
+      supabase
+        .from('cards')
+        .update({
+          pos_x: Number(card.pos_x),
+          pos_y: Number(card.pos_y),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', card.id)
+    )
+  )
+
+  const error =
+    resultados.find((item) => item.error)?.error
 
   if (error) {
     console.error(
@@ -4123,6 +4337,45 @@ async function terminarDragCard() {
       error
     )
   }
+}
+
+async function archivarCardsSeleccionadas() {
+  if (selectedCardIds.length === 0) return
+
+  const confirmar = window.confirm(
+    `¿Archivar ${selectedCardIds.length} cards seleccionadas?`
+  )
+
+  if (!confirmar) return
+
+  const resultados = await Promise.all(
+    selectedCardIds.map((id) =>
+      supabase
+        .from('cards')
+        .update({
+          archivada: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+    )
+  )
+
+  const error =
+    resultados.find((item) => item.error)?.error
+
+  if (error) {
+    alert(
+      `No se pudieron archivar todas las cards: ${error.message}`
+    )
+    return
+  }
+
+  setSelectedCardIds([])
+
+  await Promise.all([
+    cargarCards(boardSeleccionadoId),
+    cargarCardsArchivadas(boardSeleccionadoId),
+  ])
 }
 
 // =========================
@@ -4219,6 +4472,117 @@ function posicionBarra(tarea) {
       ANCHO_DIA_GANTT
     }px`,
   }
+}
+
+
+function posicionBaseline(tarea) {
+  if (
+    !tarea.baseline_fecha_inicio ||
+    !tarea.baseline_duracion_dias
+  ) {
+    return null
+  }
+
+  const inicioTarea =
+    parseDate(tarea.baseline_fecha_inicio)
+
+  const finTarea =
+    calcularFechaFinDate(
+      tarea.baseline_fecha_inicio,
+      tarea.baseline_duracion_dias
+    )
+
+  if (
+    !inicioTarea ||
+    !finTarea ||
+    diasHabilesAnio.length === 0
+  ) {
+    return null
+  }
+
+  const diasVisibles =
+    diasHabilesAnio.filter(
+      (fecha) =>
+        fecha >= inicioTarea &&
+        fecha <= finTarea
+    )
+
+  if (diasVisibles.length === 0) {
+    return null
+  }
+
+  const primerDiaVisible =
+    diasVisibles[0]
+
+  const indiceInicio =
+    diasHabilesAnio.findIndex(
+      (fecha) =>
+        mismaFecha(
+          fecha,
+          primerDiaVisible
+        )
+    )
+
+  return {
+    left:
+      `${indiceInicio * ANCHO_DIA_GANTT}px`,
+    width:
+      `${Math.max(
+        diasVisibles.length *
+          ANCHO_DIA_GANTT,
+        8
+      )}px`,
+  }
+}
+
+async function guardarBaselineProyecto() {
+  if (
+    !proyectoSeleccionadoId ||
+    proyectoSeleccionadoId === '__all__'
+  ) {
+    return
+  }
+
+  const confirmar = window.confirm(
+    '¿Guardar la planificación actual como baseline del proyecto? Si ya existe una baseline, será reemplazada.'
+  )
+
+  if (!confirmar) return
+
+  const resultados =
+    await Promise.all(
+      tareas.map((tarea) =>
+        supabase
+          .from('tasks')
+          .update({
+            baseline_fecha_inicio:
+              tarea.fecha_inicio || null,
+            baseline_duracion_dias:
+              Number(
+                tarea.duracion_dias
+              ) || 1,
+          })
+          .eq('id', tarea.id)
+      )
+    )
+
+  const error =
+    resultados.find(
+      (item) => item.error
+    )?.error
+
+  if (error) {
+    alert(
+      `No se pudo guardar la baseline: ${error.message}`
+    )
+    return
+  }
+
+  setMostrarBaseline(true)
+
+  await cargarTareas(
+    proyectoSeleccionadoId
+  )
 }
 
 function posicionHoy() {
@@ -6473,7 +6837,22 @@ function colorEstadoTarea(tarea) {
   const hoyPos = posicionHoy()
 
   return (
-    <div className="app-shell">
+    <div
+      className={`app-shell ${
+        meetingMode
+          ? `meeting-mode meeting-${vistaPrincipal}`
+          : ''
+      }`}
+    >
+      {meetingMode && (
+        <button
+          type="button"
+          className="meeting-exit-button"
+          onClick={() => setMeetingMode(false)}
+        >
+          Salir de modo reunión
+        </button>
+      )}
       <aside className="visual-sidebar">
         <a
           href="https://www.grupopetersen.com.ar/inicio"
@@ -6671,6 +7050,51 @@ function colorEstadoTarea(tarea) {
   </button>
 
 </div>
+
+        <div className="gantt-special-actions">
+          {!meetingMode && (
+            <button
+              type="button"
+              className="meeting-mode-button"
+              onClick={() =>
+                setMeetingMode(true)
+              }
+            >
+              ▶ Modo reunión
+            </button>
+          )}
+
+          {proyectoSeleccionadoId !== '__all__' &&
+            vista === 'gantt' && (
+              <>
+                <button
+                  type="button"
+                  className="baseline-button"
+                  onClick={guardarBaselineProyecto}
+                >
+                  Guardar baseline
+                </button>
+
+                <button
+                  type="button"
+                  className={`baseline-button ${
+                    mostrarBaseline
+                      ? 'active'
+                      : ''
+                  }`}
+                  onClick={() =>
+                    setMostrarBaseline(
+                      (actual) => !actual
+                    )
+                  }
+                >
+                  {mostrarBaseline
+                    ? 'Ocultar baseline'
+                    : 'Mostrar baseline'}
+                </button>
+              </>
+            )}
+        </div>
 
         {proyectoSeleccionadoId !== '__all__' && (
           <>
@@ -7413,6 +7837,11 @@ function colorEstadoTarea(tarea) {
                       const posicion =
                         posicionBarra(tarea)
 
+                      const baselinePos =
+                        mostrarBaseline
+                          ? posicionBaseline(tarea)
+                          : null
+
                       return (
                         <div
                           className={`dynamic-gantt-row ${
@@ -7451,6 +7880,14 @@ function colorEstadoTarea(tarea) {
                               )
                             })}
                           </div>
+
+                          {baselinePos && (
+                            <div
+                              className="baseline-bar"
+                              style={baselinePos}
+                              title={`Baseline · ${tarea.nombre}`}
+                            />
+                          )}
 
                           {posicion && (
                             tarea.es_hito
@@ -8350,6 +8787,16 @@ function colorEstadoTarea(tarea) {
             <div className="process-toolbar-actions">
               <button
                 type="button"
+                className="meeting-mode-button"
+                onClick={() =>
+                  setMeetingMode(true)
+                }
+              >
+                ▶ Modo reunión
+              </button>
+
+              <button
+                type="button"
                 className="process-secondary-button"
                 onClick={abrirNuevoProcessMap}
               >
@@ -8629,6 +9076,28 @@ function colorEstadoTarea(tarea) {
                           <i />
                         </span>
                       </button>
+
+                      <button
+                        type="button"
+                        className={`process-snap-tool ${
+                          processSnapEnabled
+                            ? 'active'
+                            : ''
+                        }`}
+                        onClick={() =>
+                          setProcessSnapEnabled(
+                            (actual) => !actual
+                          )
+                        }
+                        title={
+                          processSnapEnabled
+                            ? 'Desactivar ajuste inteligente'
+                            : 'Activar ajuste inteligente'
+                        }
+                        aria-label="Ajuste inteligente"
+                      >
+                        SNAP
+                      </button>
                     </div>
                     <div
                       ref={processCanvasPrintRef}
@@ -8638,6 +9107,26 @@ function colorEstadoTarea(tarea) {
                           : ''
                       }`}
                     >
+                      {processGuides.x !== null && (
+                        <div
+                          className="process-guide vertical"
+                          style={{
+                            left:
+                              `${processGuides.x}px`,
+                          }}
+                        />
+                      )}
+
+                      {processGuides.y !== null && (
+                        <div
+                          className="process-guide horizontal"
+                          style={{
+                            top:
+                              `${processGuides.y}px`,
+                          }}
+                        />
+                      )}
+
                       {processBoxes.map((box) => (
                         <section
                           key={box.id}
@@ -9174,6 +9663,16 @@ function colorEstadoTarea(tarea) {
             <div className="cards-toolbar-actions">
               <button
                 type="button"
+                className="meeting-mode-button"
+                onClick={() =>
+                  setMeetingMode(true)
+                }
+              >
+                ▶ Modo reunión
+              </button>
+
+              <button
+                type="button"
                 className="cards-secondary-button"
                 onClick={abrirNuevoBoard}
               >
@@ -9356,6 +9855,37 @@ function colorEstadoTarea(tarea) {
                       </div>
                     </div>
                   </div>
+
+                  {selectedCardIds.length > 0 && (
+                    <div className="cards-selection-toolbar">
+                      <strong>
+                        {selectedCardIds.length}
+                        {' '}seleccionadas
+                      </strong>
+
+                      <span>
+                        Arrastrá una seleccionada para moverlas juntas
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={
+                          archivarCardsSeleccionadas
+                        }
+                      >
+                        Archivar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedCardIds([])
+                        }
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  )}
 
                   <div
                     className="cards-canvas-shell"
@@ -9697,6 +10227,10 @@ function colorEstadoTarea(tarea) {
                         className={`postit-card ${card.color} ${
                           dragInfo?.id === card.id
                             ? 'dragging'
+                            : ''
+                        } ${
+                          selectedCardIds.includes(card.id)
+                            ? 'multi-selected'
                             : ''
                         }`}
                         style={{

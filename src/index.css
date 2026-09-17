@@ -10832,3 +10832,285 @@ strong {
 .process-canvas-actions img {
   display: none !important;
 }
+
+
+/* =========================================================
+   V7.3 - SNAP / SMART ARROWS / BASELINE / MULTISELECT / MEETING
+========================================================= */
+
+/* ---------- Meeting Mode ---------- */
+
+.meeting-exit-button {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  z-index: 10000;
+
+  min-height: 34px;
+  padding: 0 13px;
+
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px;
+
+  background: rgba(10,16,22,.82);
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+
+  backdrop-filter: blur(10px);
+
+  cursor: pointer;
+}
+
+.meeting-mode-button,
+.baseline-button {
+  min-height: 34px;
+
+  padding: 0 11px;
+
+  border: 1px solid #344653;
+  border-radius: 8px;
+
+  background: #14202a;
+  color: #eaf2f7;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.baseline-button.active {
+  border-color: #f0b44d;
+  color: #ffd98d;
+}
+
+.gantt-special-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.app-shell.meeting-mode {
+  grid-template-columns: 1fr !important;
+}
+
+.meeting-mode .visual-sidebar,
+.meeting-mode .topbar,
+.meeting-mode .app-header {
+  display: none !important;
+}
+
+/* Gantt reunión */
+.meeting-gantt .filters {
+  display: none !important;
+}
+
+.meeting-gantt .workspace {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.meeting-gantt .task-row button,
+.meeting-gantt .task-row .task-comment-icon,
+.meeting-gantt .task-grid > div:last-child {
+  pointer-events: none;
+}
+
+.meeting-gantt .kpis {
+  margin-top: 16px !important;
+}
+
+.meeting-gantt .task-panel,
+.meeting-gantt .gantt-panel {
+  font-size: 108%;
+}
+
+/* Cards reunión */
+.meeting-cards .cards-toolbar,
+.meeting-cards .boards-panel {
+  display: none !important;
+}
+
+.meeting-cards .cards-layout {
+  grid-template-columns: 1fr !important;
+  height: calc(100vh - 18px) !important;
+}
+
+.meeting-cards .cards-board-meta-actions,
+.meeting-cards .postit-menu,
+.meeting-cards .postit-resize-handle,
+.meeting-cards .card-thread-pin,
+.meeting-cards .cards-selection-toolbar,
+.meeting-cards .board-archive-button,
+.meeting-cards .cards-canvas-bg-picker {
+  display: none !important;
+}
+
+.meeting-cards .postit-card {
+  font-size: 108%;
+}
+
+/* Process reunión */
+.meeting-process .process-toolbar,
+.meeting-process .process-left-panel,
+.meeting-process .process-canvas-actions {
+  display: none !important;
+}
+
+.meeting-process .process-layout {
+  grid-template-columns: 1fr !important;
+  height: calc(100vh - 18px) !important;
+}
+
+.meeting-process .process-canvas-tools,
+.meeting-process .process-node-connector,
+.meeting-process .process-node-resize,
+.meeting-process .process-box-edit,
+.meeting-process .process-box-resize {
+  display: none !important;
+}
+
+.meeting-process .process-workspace {
+  height: 100% !important;
+}
+
+/* ---------- Baseline ---------- */
+
+.dynamic-gantt-row {
+  position: relative;
+}
+
+.baseline-bar {
+  position: absolute;
+
+  top: 31px;
+  height: 6px;
+
+  border: 1px dashed rgba(235,190,94,.95);
+  border-radius: 999px;
+
+  background: rgba(235,190,94,.18);
+
+  z-index: 3;
+
+  pointer-events: none;
+}
+
+.dynamic-bar {
+  z-index: 5;
+}
+
+/* ---------- Cards multi-select ---------- */
+
+.postit-card.multi-selected {
+  box-shadow:
+    0 0 0 4px rgba(60,181,255,.70),
+    0 14px 30px rgba(0,0,0,.25)
+    !important;
+}
+
+.cards-selection-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin: 0 0 8px;
+  padding: 8px 11px;
+
+  border: 1px solid #2e4351;
+  border-radius: 10px;
+
+  background: #0e1820;
+  color: #ffffff;
+}
+
+.cards-selection-toolbar strong {
+  font-size: 10px;
+}
+
+.cards-selection-toolbar span {
+  flex: 1;
+
+  color: #94a7b6;
+
+  font-size: 8.5px;
+}
+
+.cards-selection-toolbar button {
+  min-height: 29px;
+
+  padding: 0 9px;
+
+  border: 1px solid #38505f;
+  border-radius: 7px;
+
+  background: #17242e;
+  color: #ffffff;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+/* ---------- Process Snap ---------- */
+
+.process-snap-tool {
+  min-width: 42px;
+  height: 27px;
+
+  padding: 0 7px;
+
+  border: 1px solid rgba(255,255,255,.27);
+  border-radius: 7px;
+
+  background: rgba(255,255,255,.07);
+  color: #dce5eb;
+
+  font-size: 7.5px;
+  font-weight: 900;
+  letter-spacing: .05em;
+
+  cursor: pointer;
+}
+
+.process-snap-tool.active {
+  border-color: #22d3c5;
+  background: rgba(34,211,197,.14);
+  color: #7cf4e9;
+}
+
+.process-guide {
+  position: absolute;
+  z-index: 80;
+
+  pointer-events: none;
+
+  background: rgba(34,211,197,.78);
+}
+
+.process-guide.vertical {
+  top: 0;
+  bottom: 0;
+
+  width: 1px;
+}
+
+.process-guide.horizontal {
+  left: 0;
+  right: 0;
+
+  height: 1px;
+}
+
+/* ---------- Smart arrows ---------- */
+
+.process-link-path {
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
