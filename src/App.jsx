@@ -280,6 +280,10 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
     x: null,
     y: null,
   })
+  const [processArrowMode, setProcessArrowMode] = useState('orthogonal')
+  const [selectedProcessNodeIds, setSelectedProcessNodeIds] = useState([])
+  const [processSelectionRect, setProcessSelectionRect] = useState(null)
+  const [processGroupDragInfo, setProcessGroupDragInfo] = useState(null)
   const [processBoxDrawerOpen, setProcessBoxDrawerOpen] = useState(false)
   const [processBoxEditando, setProcessBoxEditando] = useState(null)
   const [processBoxDragInfo, setProcessBoxDragInfo] = useState(null)
@@ -1856,10 +1860,6 @@ async function guardarProcessMap(event) {
 }
 
 async function eliminarProcessMap(process) {
-  const confirmar = window.confirm(
-    `¿Eliminar el proceso "${process.nombre}" y todo su contenido?`
-  )
-  if (!confirmar) return
 
   const { error } = await supabase
     .from('process_maps')
@@ -1877,10 +1877,6 @@ async function eliminarProcessMap(process) {
 }
 
 async function archivarProcessMap(process) {
-  const confirmar = window.confirm(
-    `¿Archivar el proceso "${process.nombre}"?`
-  )
-  if (!confirmar) return
 
   const { error } = await supabase
     .from('process_maps')
@@ -1926,6 +1922,40 @@ async function restaurarProcessMap(process) {
     cargarProcessMapsArchivados(),
   ])
   setProcessSeleccionadoId(process.id)
+}
+
+
+async function actualizarProcessArrowMode(mode) {
+  setProcessArrowMode(mode)
+
+  if (!processSeleccionadoId) return
+
+  const { error } = await supabase
+    .from('process_maps')
+    .update({
+      arrow_mode: mode,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', processSeleccionadoId)
+
+  if (error) {
+    console.error(
+      'No se pudo guardar el tipo de flecha:',
+      error
+    )
+    return
+  }
+
+  setProcessMaps((actual) =>
+    actual.map((item) =>
+      item.id === processSeleccionadoId
+        ? {
+            ...item,
+            arrow_mode: mode,
+          }
+        : item
+    )
+  )
 }
 
 async function actualizarProcessCanvasBg(color) {
@@ -2197,10 +2227,6 @@ async function guardarProcessBox(event) {
 }
 
 async function eliminarProcessBox(box) {
-  const confirmar = window.confirm(
-    `¿Eliminar la caja "${box.titulo}"?`
-  )
-  if (!confirmar) return
 
   const { error } = await supabase
     .from('process_boxes')
@@ -2603,8 +2629,6 @@ async function cambiarCapaProcessNode(node, direccion) {
 }
 
 async function eliminarProcessNode(node) {
-  const confirmar = window.confirm(`¿Eliminar "${node.titulo}"?`)
-  if (!confirmar) return
 
   const { error } = await supabase
     .from('process_nodes')
@@ -2620,8 +2644,309 @@ async function eliminarProcessNode(node) {
   await cargarProcessCanvas(processSeleccionadoId)
 }
 
+
+function puntoCanvasProcessDesdeEvento(event) {
+  const canvas =
+    event.currentTarget.closest('.process-canvas') ||
+    event.currentTarget
+
+  const rect = canvas.getBoundingClientRect()
+
+  return {
+    x:
+      event.clientX -
+      rect.left +
+      canvas.scrollLeft,
+    y:
+      event.clientY -
+      rect.top +
+      canvas.scrollTop,
+  }
+}
+
+function iniciarSeleccionProcess(event) {
+  if (event.button !== 0) return
+
+  const target = event.target
+
+  const esFondo =
+    target.classList.contains('process-canvas') ||
+    target.classList.contains('process-world')
+
+  if (!esFondo) return
+
+  const canvas = event.currentTarget
+  const rect = canvas.getBoundingClientRect()
+
+  const x =
+    event.clientX -
+    rect.left +
+    canvas.scrollLeft
+
+  const y =
+    event.clientY -
+    rect.top +
+    canvas.scrollTop
+
+  setSelectedProcessNodeIds([])
+
+  setProcessSelectionRect({
+    startX: x,
+    startY: y,
+    x,
+    y,
+    width: 0,
+    height: 0,
+  })
+}
+
+function moverSeleccionProcess(event) {
+  if (!processSelectionRect) return
+
+  const canvas = event.currentTarget
+  const rect = canvas.getBoundingClientRect()
+
+  const currentX =
+    event.clientX -
+    rect.left +
+    canvas.scrollLeft
+
+  const currentY =
+    event.clientY -
+    rect.top +
+    canvas.scrollTop
+
+  const left = Math.min(
+    processSelectionRect.startX,
+    currentX
+  )
+
+  const top = Math.min(
+    processSelectionRect.startY,
+    currentY
+  )
+
+  const right = Math.max(
+    processSelectionRect.startX,
+    currentX
+  )
+
+  const bottom = Math.max(
+    processSelectionRect.startY,
+    currentY
+  )
+
+  setProcessSelectionRect((actual) => ({
+    ...actual,
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  }))
+
+  const ids = processNodes
+    .filter((node) => {
+      const nx = Number(node.pos_x)
+      const ny = Number(node.pos_y)
+      const nw = Number(node.ancho)
+      const nh = Number(node.alto)
+
+      return (
+        nx < right &&
+        nx + nw > left &&
+        ny < bottom &&
+        ny + nh > top
+      )
+    })
+    .map((node) => node.id)
+
+  setSelectedProcessNodeIds(ids)
+}
+
+function terminarSeleccionProcess() {
+  if (!processSelectionRect) return
+  setProcessSelectionRect(null)
+}
+
+async function guardarPosicionesProcessNodes(nodes) {
+  if (!nodes || nodes.length === 0) return
+
+  const resultados = await Promise.all(
+    nodes.map((node) =>
+      supabase
+        .from('process_nodes')
+        .update({
+          pos_x: Number(node.pos_x),
+          pos_y: Number(node.pos_y),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', node.id)
+    )
+  )
+
+  const error =
+    resultados.find(
+      (item) => item.error
+    )?.error
+
+  if (error) {
+    console.error(
+      'No se pudieron guardar las posiciones:',
+      error
+    )
+  }
+}
+
+async function aplicarSnapSeleccionProcess() {
+  if (selectedProcessNodeIds.length === 0) return
+
+  const GRID = 38
+
+  const actualizados =
+    processNodes.map((node) =>
+      selectedProcessNodeIds.includes(node.id)
+        ? {
+            ...node,
+            pos_x:
+              Math.round(
+                Number(node.pos_x) / GRID
+              ) * GRID,
+            pos_y:
+              Math.round(
+                Number(node.pos_y) / GRID
+              ) * GRID,
+          }
+        : node
+    )
+
+  setProcessNodes(actualizados)
+
+  await guardarPosicionesProcessNodes(
+    actualizados.filter((node) =>
+      selectedProcessNodeIds.includes(node.id)
+    )
+  )
+}
+
+async function cambiarCapaSeleccionProcess(direccion) {
+  if (selectedProcessNodeIds.length === 0) return
+
+  const zActuales =
+    processNodes.map(
+      (node) =>
+        Number(node.z_index) || 10
+    )
+
+  const baseZ =
+    direccion === 'frente'
+      ? Math.max(10, ...zActuales) + 1
+      : Math.min(10, ...zActuales) - 1
+
+  const seleccionados =
+    processNodes.filter((node) =>
+      selectedProcessNodeIds.includes(node.id)
+    )
+
+  const resultados =
+    await Promise.all(
+      seleccionados.map((node, index) =>
+        supabase
+          .from('process_nodes')
+          .update({
+            z_index:
+              direccion === 'frente'
+                ? baseZ + index
+                : baseZ - index,
+            updated_at:
+              new Date().toISOString(),
+          })
+          .eq('id', node.id)
+      )
+    )
+
+  const error =
+    resultados.find(
+      (item) => item.error
+    )?.error
+
+  if (error) {
+    alert(
+      `No se pudo cambiar la capa: ${error.message}`
+    )
+    return
+  }
+
+  await cargarProcessCanvas(
+    processSeleccionadoId
+  )
+}
+
+async function duplicarSeleccionProcess() {
+  if (selectedProcessNodeIds.length === 0) return
+
+  const maxZ = Math.max(
+    10,
+    ...processNodes.map(
+      (node) =>
+        Number(node.z_index) || 10
+    )
+  )
+
+  const seleccionados =
+    processNodes.filter((node) =>
+      selectedProcessNodeIds.includes(node.id)
+    )
+
+  const payload =
+    seleccionados.map((node, index) => ({
+      process_id: processSeleccionadoId,
+      tipo: node.tipo,
+      titulo: node.titulo || '',
+      color:
+        node.color ||
+        plantillaProceso(node.tipo)?.color ||
+        '#cfe3cd',
+      rotacion:
+        Number(node.rotacion) || 0,
+      pos_x:
+        Number(node.pos_x) + 28,
+      pos_y:
+        Number(node.pos_y) + 28,
+      ancho:
+        Number(node.ancho),
+      alto:
+        Number(node.alto),
+      z_index:
+        maxZ + index + 1,
+      updated_at:
+        new Date().toISOString(),
+    }))
+
+  const { data, error } =
+    await supabase
+      .from('process_nodes')
+      .insert(payload)
+      .select()
+
+  if (error) {
+    alert(
+      `No se pudieron duplicar los componentes: ${error.message}`
+    )
+    return
+  }
+
+  setSelectedProcessNodeIds(
+    (data || []).map((node) => node.id)
+  )
+
+  await cargarProcessCanvas(
+    processSeleccionadoId
+  )
+}
+
 function iniciarDragProcessNode(event, node) {
   if (event.button !== 0) return
+
   if (
     event.target.closest('.process-node-connector') ||
     event.target.closest('.process-node-resize')
@@ -2631,11 +2956,59 @@ function iniciarDragProcessNode(event, node) {
 
   event.stopPropagation()
 
-  const rect = event.currentTarget.getBoundingClientRect()
+  if (event.ctrlKey || event.metaKey) {
+    event.preventDefault()
+
+    setSelectedProcessNodeIds((actual) =>
+      actual.includes(node.id)
+        ? actual.filter((id) => id !== node.id)
+        : [...actual, node.id]
+    )
+
+    return
+  }
+
+  const rect =
+    event.currentTarget.getBoundingClientRect()
+
+  const ids =
+    selectedProcessNodeIds.includes(node.id)
+      ? selectedProcessNodeIds
+      : [node.id]
+
+  if (!selectedProcessNodeIds.includes(node.id)) {
+    setSelectedProcessNodeIds([])
+  }
+
+  const posiciones =
+    processNodes
+      .filter((item) =>
+        ids.includes(item.id)
+      )
+      .map((item) => ({
+        id: item.id,
+        pos_x:
+          Number(item.pos_x),
+        pos_y:
+          Number(item.pos_y),
+      }))
+
+  setProcessGroupDragInfo({
+    anchorId: node.id,
+    anchorX:
+      Number(node.pos_x),
+    anchorY:
+      Number(node.pos_y),
+    selectedIds: ids,
+    posiciones,
+  })
+
   setProcessDragInfo({
     id: node.id,
-    offsetX: event.clientX - rect.left,
-    offsetY: event.clientY - rect.top,
+    offsetX:
+      event.clientX - rect.left,
+    offsetY:
+      event.clientY - rect.top,
   })
 }
 
@@ -2657,14 +3030,19 @@ function moverProcessNode(event) {
     canvas.scrollTop -
     processDragInfo.offsetY
 
-  const nodeActual = processNodes.find(
-    (item) => item.id === processDragInfo.id
-  )
+  const nodeActual =
+    processNodes.find(
+      (item) =>
+        item.id === processDragInfo.id
+    )
 
   if (!nodeActual) return
 
-  const ancho = Number(nodeActual.ancho) || 120
-  const alto = Number(nodeActual.alto) || 90
+  const ancho =
+    Number(nodeActual.ancho) || 120
+
+  const alto =
+    Number(nodeActual.alto) || 90
 
   let guideX = null
   let guideY = null
@@ -2672,59 +3050,73 @@ function moverProcessNode(event) {
   if (processSnapEnabled) {
     const GRID = 38
 
-    x = Math.round(x / GRID) * GRID
-    y = Math.round(y / GRID) * GRID
+    x =
+      Math.round(x / GRID) * GRID
 
-    const centroX = x + ancho / 2
-    const centroY = y + alto / 2
+    y =
+      Math.round(y / GRID) * GRID
 
-    const otros = processNodes.filter(
-      (item) => item.id !== processDragInfo.id
-    )
+    const centroX =
+      x + ancho / 2
+
+    const centroY =
+      y + alto / 2
+
+    const idsGrupo =
+      processGroupDragInfo?.selectedIds ||
+      [processDragInfo.id]
+
+    const otros =
+      processNodes.filter(
+        (item) =>
+          !idsGrupo.includes(item.id)
+      )
 
     const tolerancia = 9
 
     for (const otro of otros) {
-      const ox = Number(otro.pos_x)
-      const oy = Number(otro.pos_y)
-      const ow = Number(otro.ancho)
-      const oh = Number(otro.alto)
+      const ox =
+        Number(otro.pos_x)
 
-      const otroCentroX = ox + ow / 2
-      const otroCentroY = oy + oh / 2
+      const oy =
+        Number(otro.pos_y)
+
+      const ow =
+        Number(otro.ancho)
+
+      const oh =
+        Number(otro.alto)
+
+      const otroCentroX =
+        ox + ow / 2
+
+      const otroCentroY =
+        oy + oh / 2
 
       if (
         guideX === null &&
-        Math.abs(centroX - otroCentroX) <=
-          tolerancia
+        Math.abs(
+          centroX - otroCentroX
+        ) <= tolerancia
       ) {
-        x = otroCentroX - ancho / 2
-        guideX = otroCentroX
+        x =
+          otroCentroX - ancho / 2
+
+        guideX =
+          otroCentroX
       }
 
       if (
         guideY === null &&
-        Math.abs(centroY - otroCentroY) <=
-          tolerancia
+        Math.abs(
+          centroY - otroCentroY
+        ) <= tolerancia
       ) {
-        y = otroCentroY - alto / 2
-        guideY = otroCentroY
-      }
+        y =
+          otroCentroY - alto / 2
 
-      if (
-        guideX === null &&
-        Math.abs(x - ox) <= tolerancia
-      ) {
-        x = ox
-        guideX = ox
-      }
-
-      if (
-        guideY === null &&
-        Math.abs(y - oy) <= tolerancia
-      ) {
-        y = oy
-        guideY = oy
+        guideY =
+          otroCentroY
       }
     }
   }
@@ -2734,13 +3126,64 @@ function moverProcessNode(event) {
     y: guideY,
   })
 
+  if (
+    processGroupDragInfo &&
+    processGroupDragInfo.selectedIds.length > 1
+  ) {
+    const deltaX =
+      x -
+      processGroupDragInfo.anchorX
+
+    const deltaY =
+      y -
+      processGroupDragInfo.anchorY
+
+    setProcessNodes((actual) =>
+      actual.map((node) => {
+        if (
+          !processGroupDragInfo.selectedIds.includes(
+            node.id
+          )
+        ) {
+          return node
+        }
+
+        const origen =
+          processGroupDragInfo.posiciones.find(
+            (item) =>
+              item.id === node.id
+          )
+
+        if (!origen) return node
+
+        return {
+          ...node,
+          pos_x:
+            Math.max(
+              20,
+              origen.pos_x + deltaX
+            ),
+          pos_y:
+            Math.max(
+              20,
+              origen.pos_y + deltaY
+            ),
+        }
+      })
+    )
+
+    return
+  }
+
   setProcessNodes((actual) =>
     actual.map((node) =>
       node.id === processDragInfo.id
         ? {
             ...node,
-            pos_x: Math.max(20, x),
-            pos_y: Math.max(20, y),
+            pos_x:
+              Math.max(20, x),
+            pos_y:
+              Math.max(20, y),
           }
         : node
     )
@@ -2750,26 +3193,24 @@ function moverProcessNode(event) {
 async function terminarDragProcessNode() {
   if (!processDragInfo) return
 
-  const node = processNodes.find(
-    (item) => item.id === processDragInfo.id
-  )
+  const ids =
+    processGroupDragInfo?.selectedIds ||
+    [processDragInfo.id]
+
+  const nodes =
+    processNodes.filter((node) =>
+      ids.includes(node.id)
+    )
 
   setProcessDragInfo(null)
+  setProcessGroupDragInfo(null)
+
   setProcessGuides({
     x: null,
     y: null,
   })
 
-  if (!node) return
-
-  await supabase
-    .from('process_nodes')
-    .update({
-      pos_x: Number(node.pos_x),
-      pos_y: Number(node.pos_y),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', node.id)
+  await guardarPosicionesProcessNodes(nodes)
 }
 
 function iniciarResizeProcessNode(event, node) {
@@ -3015,8 +3456,6 @@ async function guardarProcessLink(event) {
 }
 
 async function eliminarProcessLink(link) {
-  const confirmar = window.confirm('¿Eliminar esta conexión?')
-  if (!confirmar) return
 
   const { error } = await supabase
     .from('process_links')
@@ -3054,6 +3493,68 @@ function processLine(link) {
     target,
     targetSide
   )
+
+  if (processArrowMode === 'curved') {
+    const horizontal =
+      sourceSide === 'left' ||
+      sourceSide === 'right'
+
+    const targetHorizontal =
+      targetSide === 'left' ||
+      targetSide === 'right'
+
+    let d
+
+    if (horizontal && targetHorizontal) {
+      const control = Math.max(
+        70,
+        Math.abs(p2.x - p1.x) * 0.45
+      )
+
+      const dir1 =
+        sourceSide === 'left'
+          ? -1
+          : 1
+
+      const dir2 =
+        targetSide === 'left'
+          ? -1
+          : 1
+
+      d =
+        `M ${p1.x} ${p1.y} ` +
+        `C ${p1.x + control * dir1} ${p1.y}, ` +
+        `${p2.x + control * dir2} ${p2.y}, ` +
+        `${p2.x} ${p2.y}`
+    } else {
+      const control = Math.max(
+        70,
+        Math.abs(p2.y - p1.y) * 0.45
+      )
+
+      const dir1 =
+        sourceSide === 'top'
+          ? -1
+          : 1
+
+      const dir2 =
+        targetSide === 'top'
+          ? -1
+          : 1
+
+      d =
+        `M ${p1.x} ${p1.y} ` +
+        `C ${p1.x} ${p1.y + control * dir1}, ` +
+        `${p2.x} ${p2.y + control * dir2}, ` +
+        `${p2.x} ${p2.y}`
+    }
+
+    return {
+      d,
+      midX: (p1.x + p2.x) / 2,
+      midY: (p1.y + p2.y) / 2,
+    }
+  }
 
   const OFFSET = 24
 
@@ -6755,6 +7256,14 @@ function colorEstadoTarea(tarea) {
   const processCanvasBgActual =
     processSeleccionado?.canvas_bg || '#0b1220'
 
+  useEffect(() => {
+    if (!processSeleccionado) return
+
+    setProcessArrowMode(
+      processSeleccionado.arrow_mode || 'orthogonal'
+    )
+  }, [processSeleccionadoId, processSeleccionado?.arrow_mode])
+
   const boardSeleccionado = boards.find(
     (item) => item.id === boardSeleccionadoId
   )
@@ -8905,21 +9414,27 @@ function colorEstadoTarea(tarea) {
                       onClick={() => abrirNuevoProcessNode(component.tipo)}
                       title="Arrastrar al canvas"
                     >
-                      <div
-                        className={`process-component-icon process-component-icon-${component.tipo.toLowerCase()}`}
-                        style={{
-                          '--process-icon':
-                            `url(${component.icon})`,
-                          '--process-color':
-                            component.color,
-                        }}
-                      >
-                        <div className="process-icon-fill" />
-                        <img
-                          src={component.icon}
-                          alt=""
-                        />
-                      </div>
+                      {component.tipo === 'Decision' ? (
+                        <div className="process-component-icon process-component-icon-decision">
+                          <span className="decision-palette-diamond" />
+                        </div>
+                      ) : (
+                        <div
+                          className={`process-component-icon process-component-icon-${component.tipo.toLowerCase()}`}
+                          style={{
+                            '--process-icon':
+                              `url(${component.icon})`,
+                            '--process-color':
+                              component.color,
+                          }}
+                        >
+                          <div className="process-icon-fill" />
+                          <img
+                            src={component.icon}
+                            alt=""
+                          />
+                        </div>
+                      )}
 
                       <span>{component.label}</span>
                     </button>
@@ -8976,7 +9491,9 @@ function colorEstadoTarea(tarea) {
                           ? 'rgba(92, 102, 112, .22)'
                           : 'rgba(225, 232, 238, .18)',
                     }}
+                    onMouseDown={iniciarSeleccionProcess}
                     onMouseMove={(event) => {
+                      moverSeleccionProcess(event)
                       moverProcessNode(event)
                       moverResizeProcessNode(event)
                       moverProcessBox(event)
@@ -8984,6 +9501,7 @@ function colorEstadoTarea(tarea) {
                       moverConexionProcess(event)
                     }}
                     onMouseUp={() => {
+                      terminarSeleccionProcess()
                       terminarDragProcessNode()
                       terminarResizeProcessNode()
                       terminarDragProcessBox()
@@ -9098,7 +9616,88 @@ function colorEstadoTarea(tarea) {
                       >
                         SNAP
                       </button>
+
+                      <button
+                        type="button"
+                        className={`process-arrow-mode-tool ${
+                          processArrowMode === 'curved'
+                            ? 'active'
+                            : ''
+                        }`}
+                        onClick={() =>
+                          actualizarProcessArrowMode(
+                            processArrowMode === 'curved'
+                              ? 'orthogonal'
+                              : 'curved'
+                          )
+                        }
+                        title={
+                          processArrowMode === 'curved'
+                            ? 'Usar flechas rectas'
+                            : 'Usar flechas curvas'
+                        }
+                        aria-label="Alternar flechas rectas o curvas"
+                      >
+                        <span className="curve-arrow-icon">
+                          <i />
+                          <b />
+                        </span>
+                      </button>
                     </div>
+                    {selectedProcessNodeIds.length > 0 && (
+                      <div className="process-selection-toolbar">
+                        <strong>
+                          {selectedProcessNodeIds.length}
+                          {' '}seleccionados
+                        </strong>
+
+                        <button
+                          type="button"
+                          onClick={duplicarSeleccionProcess}
+                        >
+                          Duplicar
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            cambiarCapaSeleccionProcess(
+                              'frente'
+                            )
+                          }
+                        >
+                          Frente
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            cambiarCapaSeleccionProcess(
+                              'fondo'
+                            )
+                          }
+                        >
+                          Atrás
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={aplicarSnapSeleccionProcess}
+                        >
+                          Snap
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedProcessNodeIds([])
+                          }
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    )}
+
                     <div
                       ref={processCanvasPrintRef}
                       className={`process-world ${
@@ -9107,6 +9706,22 @@ function colorEstadoTarea(tarea) {
                           : ''
                       }`}
                     >
+                      {processSelectionRect && (
+                        <div
+                          className="process-selection-rect"
+                          style={{
+                            left:
+                              `${processSelectionRect.x}px`,
+                            top:
+                              `${processSelectionRect.y}px`,
+                            width:
+                              `${processSelectionRect.width}px`,
+                            height:
+                              `${processSelectionRect.height}px`,
+                          }}
+                        />
+                      )}
+
                       {processGuides.x !== null && (
                         <div
                           className="process-guide vertical"
@@ -9271,6 +9886,10 @@ function colorEstadoTarea(tarea) {
                           className={`process-node ${
                             processConnectSource?.id === node.id
                               ? 'connecting'
+                              : ''
+                          } ${
+                            selectedProcessNodeIds.includes(node.id)
+                              ? 'multi-selected'
                               : ''
                           }`}
                           style={{

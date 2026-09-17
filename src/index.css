@@ -11114,3 +11114,192 @@ strong {
   stroke-linecap: round !important;
   stroke-linejoin: round !important;
 }
+
+
+/* =========================================================
+   PROCESS V7.4 - FLECHAS / MULTISELECT / DECISION
+========================================================= */
+
+/* Toggle de flecha curva */
+.process-arrow-mode-tool {
+  width: 31px;
+  height: 27px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid rgba(255,255,255,.27);
+  border-radius: 7px;
+
+  background: rgba(255,255,255,.07);
+
+  cursor: pointer;
+}
+
+.process-arrow-mode-tool.active {
+  border-color: #22d3c5;
+  background: rgba(34,211,197,.14);
+}
+
+.curve-arrow-icon {
+  position: relative;
+
+  width: 18px;
+  height: 14px;
+
+  display: block;
+}
+
+.curve-arrow-icon i {
+  position: absolute;
+
+  left: 1px;
+  bottom: 1px;
+
+  width: 13px;
+  height: 10px;
+
+  border-top: 2px solid #dce5eb;
+  border-right: 2px solid #dce5eb;
+  border-radius: 0 10px 0 0;
+
+  transform: rotate(-12deg);
+}
+
+.curve-arrow-icon b {
+  position: absolute;
+
+  right: 0;
+  top: 0;
+
+  width: 0;
+  height: 0;
+
+  border-left: 5px solid #dce5eb;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+
+  transform: rotate(-20deg);
+}
+
+/* Rectángulo de selección */
+.process-selection-rect {
+  position: absolute;
+
+  z-index: 120;
+
+  border: 1px solid rgba(70,174,255,.95);
+
+  background: rgba(70,174,255,.12);
+
+  pointer-events: none;
+}
+
+.process-node.multi-selected {
+  filter:
+    drop-shadow(
+      0 0 7px rgba(44,190,255,.95)
+    );
+}
+
+.process-selection-toolbar {
+  position: sticky;
+
+  top: 54px;
+  left: 50%;
+
+  z-index: 120;
+
+  width: max-content;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  margin:
+    6px
+    auto
+    -42px;
+
+  padding: 7px 9px;
+
+  border: 1px solid #315061;
+  border-radius: 10px;
+
+  background: rgba(9,16,22,.90);
+  color: #ffffff;
+
+  box-shadow:
+    0 8px 20px rgba(0,0,0,.26);
+
+  backdrop-filter: blur(10px);
+}
+
+.process-selection-toolbar strong {
+  margin-right: 4px;
+
+  font-size: 9px;
+}
+
+.process-selection-toolbar button {
+  min-height: 28px;
+
+  padding: 0 8px;
+
+  border: 1px solid #385161;
+  border-radius: 6px;
+
+  background: #16242e;
+  color: #ffffff;
+
+  font-size: 7.5px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+/* Decisión en biblioteca: rombo limpio y estable */
+.process-component-chip.process-node-decision {
+  transform: none !important;
+}
+
+.process-component-chip.process-node-decision:hover {
+  transform: none !important;
+}
+
+.process-component-icon-decision {
+  width: 62px !important;
+  height: 56px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  transform: none !important;
+}
+
+.decision-palette-diamond {
+  width: 38px;
+  height: 38px;
+
+  display: block;
+
+  background: #cfe3cd;
+
+  border: 2px solid #26323a;
+
+  transform: rotate(45deg) !important;
+
+  box-sizing: border-box;
+}
+
+/* Nunca mover miniaturas al hover */
+.process-component-chip,
+.process-component-chip:hover,
+.process-component-icon,
+.process-component-icon:hover {
+  transform: none !important;
+}
