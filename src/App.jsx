@@ -7560,51 +7560,6 @@ function colorEstadoTarea(tarea) {
 
 </div>
 
-        <div className="gantt-special-actions">
-          {!meetingMode && (
-            <button
-              type="button"
-              className="meeting-mode-button"
-              onClick={() =>
-                setMeetingMode(true)
-              }
-            >
-              ▶ Modo reunión
-            </button>
-          )}
-
-          {proyectoSeleccionadoId !== '__all__' &&
-            vista === 'gantt' && (
-              <>
-                <button
-                  type="button"
-                  className="baseline-button"
-                  onClick={guardarBaselineProyecto}
-                >
-                  Guardar baseline
-                </button>
-
-                <button
-                  type="button"
-                  className={`baseline-button ${
-                    mostrarBaseline
-                      ? 'active'
-                      : ''
-                  }`}
-                  onClick={() =>
-                    setMostrarBaseline(
-                      (actual) => !actual
-                    )
-                  }
-                >
-                  {mostrarBaseline
-                    ? 'Ocultar baseline'
-                    : 'Mostrar baseline'}
-                </button>
-              </>
-            )}
-        </div>
-
         {proyectoSeleccionadoId !== '__all__' && (
           <>
         <select
@@ -8012,6 +7967,46 @@ function colorEstadoTarea(tarea) {
               >
                 →
               </button>
+
+              <div className="gantt-period-actions">
+                {!meetingMode && (
+                  <button
+                    type="button"
+                    className="meeting-mode-button"
+                    onClick={() =>
+                      setMeetingMode(true)
+                    }
+                  >
+                    ▶ Modo reunión
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="baseline-button"
+                  onClick={guardarBaselineProyecto}
+                >
+                  Guardar baseline
+                </button>
+
+                <button
+                  type="button"
+                  className={`baseline-button ${
+                    mostrarBaseline
+                      ? 'active'
+                      : ''
+                  }`}
+                  onClick={() =>
+                    setMostrarBaseline(
+                      (actual) => !actual
+                    )
+                  }
+                >
+                  {mostrarBaseline
+                    ? 'Ocultar baseline'
+                    : 'Mostrar baseline'}
+                </button>
+              </div>
             </div>
           </section>
 

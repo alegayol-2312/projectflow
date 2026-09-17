@@ -11303,3 +11303,78 @@ strong {
 .process-component-icon:hover {
   transform: none !important;
 }
+
+
+/* =========================================================
+   V7.4.3 - BOTONES GANTT EN PERÍODO + MODO REUNIÓN DESTACADO
+========================================================= */
+
+/* Acciones nuevas dentro de la barra Año / Hoy */
+.gantt-period-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  margin-left: 3px;
+}
+
+/* Modo reunión destacado en TODAS las secciones */
+.meeting-mode-button {
+  min-height: 34px !important;
+
+  padding: 0 12px !important;
+
+  border:
+    1px solid #00d8ea !important;
+
+  border-radius: 8px !important;
+
+  background:
+    #00d8ea !important;
+
+  color:
+    #071014 !important;
+
+  font-size: 9px !important;
+  font-weight: 900 !important;
+
+  box-shadow:
+    0 0 0 1px
+    rgba(0,216,234,.08) !important;
+
+  cursor: pointer !important;
+}
+
+.meeting-mode-button:hover {
+  background:
+    #27e4f2 !important;
+
+  border-color:
+    #27e4f2 !important;
+
+  color:
+    #050b0e !important;
+}
+
+/* Baseline queda más discreto al lado del control temporal */
+.gantt-period-actions .baseline-button {
+  min-height: 34px;
+
+  padding: 0 10px;
+
+  white-space: nowrap;
+}
+
+/* Evita que el bloque derecho pierda alineación */
+.gantt-nav-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+
+/* En pantallas más chicas permitimos envolver sin romper */
+@media (max-width: 1200px) {
+  .gantt-period-actions {
+    flex-wrap: wrap;
+  }
+}
