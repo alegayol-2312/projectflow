@@ -10485,3 +10485,350 @@ strong {
   right: auto !important;
   transform: translate(-50%, 50%) !important;
 }
+
+
+/* =========================================================
+   PROCESS V7.2 - GRID / TOOLBAR / PDF / MINIATURAS
+========================================================= */
+
+/* Toolbar superpuesta, compacta y perfectamente alineada */
+.process-canvas {
+  position: relative !important;
+}
+
+.process-canvas-tools {
+  position: sticky !important;
+
+  top: 10px !important;
+  left: 12px !important;
+
+  z-index: 100 !important;
+
+  width: max-content;
+  height: 36px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  margin:
+    10px
+    0
+    -46px
+    12px;
+
+  padding: 5px 7px;
+
+  border:
+    1px solid
+    rgba(255,255,255,.15);
+
+  border-radius: 12px;
+
+  background:
+    rgba(10,16,24,.82);
+
+  box-shadow:
+    0 8px 22px
+    rgba(0,0,0,.24);
+
+  backdrop-filter: blur(10px);
+}
+
+/* El viejo contenedor ya no participa visualmente */
+.process-canvas-bg-picker {
+  display: none !important;
+}
+
+.process-bg-dots {
+  height: 26px;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.process-bg-dot {
+  flex: 0 0 auto;
+
+  width: 15px !important;
+  height: 15px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.process-overlay-divider {
+  flex: 0 0 auto;
+
+  width: 1px;
+  height: 20px;
+}
+
+/* Caja y regla comparten exactamente la misma caja */
+.process-box-tool,
+.process-ruler-tool {
+  flex: 0 0 auto;
+
+  width: 27px !important;
+  height: 27px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border:
+    1px solid
+    rgba(255,255,255,.27) !important;
+
+  border-radius: 7px !important;
+
+  background:
+    rgba(255,255,255,.07) !important;
+
+  cursor: pointer;
+}
+
+.process-box-tool:hover,
+.process-ruler-tool:hover,
+.process-ruler-tool.active {
+  background:
+    rgba(255,255,255,.16) !important;
+
+  border-color:
+    rgba(255,255,255,.50) !important;
+}
+
+/* Icono de caja */
+.process-box-tool > span {
+  width: 14px !important;
+  height: 11px !important;
+
+  border:
+    2px solid
+    #dce5eb !important;
+
+  border-radius: 2px !important;
+}
+
+/* Regla inspirada en el icono enviado */
+.ruler-shape {
+  position: relative;
+
+  width: 17px;
+  height: 10px;
+
+  display: block;
+
+  border:
+    2px solid
+    #dce5eb;
+
+  border-radius: 1px;
+}
+
+.ruler-shape i {
+  position: absolute;
+  top: -1px;
+
+  width: 2px;
+
+  background: #dce5eb;
+}
+
+.ruler-shape i:nth-child(1) {
+  left: 2px;
+  height: 5px;
+}
+
+.ruler-shape i:nth-child(2) {
+  left: 5px;
+  height: 7px;
+}
+
+.ruler-shape i:nth-child(3) {
+  left: 8px;
+  height: 5px;
+}
+
+.ruler-shape i:nth-child(4) {
+  left: 11px;
+  height: 7px;
+}
+
+.ruler-shape i:nth-child(5) {
+  left: 14px;
+  height: 5px;
+}
+
+/* Cuadrícula de aproximadamente 1cm x 1cm en pantalla (38px @ 96dpi) */
+.process-world.grid-visible {
+  background-color:
+    var(
+      --process-canvas-bg,
+      #0b1220
+    ) !important;
+
+  background-image:
+    linear-gradient(
+      to right,
+      var(
+        --process-grid-color,
+        rgba(220,228,235,.18)
+      )
+      1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      var(
+        --process-grid-color,
+        rgba(220,228,235,.18)
+      )
+      1px,
+      transparent 1px
+    ) !important;
+
+  background-size:
+    38px 38px !important;
+
+  background-position:
+    0 0 !important;
+}
+
+/* Cuando no hay cuadrícula se mantiene el color limpio */
+.process-world:not(.grid-visible) {
+  background-image:
+    none !important;
+
+  background-color:
+    var(
+      --process-canvas-bg,
+      #0b1220
+    ) !important;
+}
+
+/* ---------------------------------------------------------
+   MINIATURAS DE COMPONENTES
+   No deformamos la máscara ni la imagen.
+--------------------------------------------------------- */
+
+.process-component-chip {
+  min-height: 90px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  gap: 6px !important;
+
+  overflow: hidden !important;
+}
+
+.process-component-icon {
+  width: 86px !important;
+  height: 58px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  flex: 0 0 58px !important;
+
+  transform: none !important;
+}
+
+.process-component-icon img {
+  position: absolute !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: contain !important;
+
+  transform: none !important;
+}
+
+.process-component-icon .process-icon-fill {
+  -webkit-mask-size:
+    contain !important;
+
+  mask-size:
+    contain !important;
+
+  -webkit-mask-repeat:
+    no-repeat !important;
+
+  mask-repeat:
+    no-repeat !important;
+
+  -webkit-mask-position:
+    center !important;
+
+  mask-position:
+    center !important;
+}
+
+/* Referencia y Decisión son casi cuadradas:
+   las dejamos más chicas para que no parezcan otra figura. */
+.process-component-icon-decision,
+.process-component-icon-referencia {
+  width: 58px !important;
+}
+
+/* Base de datos es vertical */
+.process-component-icon-basededatos {
+  width: 54px !important;
+}
+
+/* Nota / conector vertical */
+.process-component-icon-notaproceso,
+.process-component-icon-conectorvertical {
+  width: 52px !important;
+}
+
+/* Etiqueta siempre perfectamente debajo */
+.process-component-chip > span {
+  width: 100%;
+
+  display: block;
+
+  overflow: hidden;
+
+  color: #e5edf2 !important;
+
+  font-size: 8.5px !important;
+  font-weight: 750 !important;
+  line-height: 1.1 !important;
+
+  text-align: center !important;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* No permitir que estilos del canvas deformen la miniatura */
+.process-components-grid
+.process-icon-fill {
+  -webkit-mask-size:
+    contain !important;
+
+  mask-size:
+    contain !important;
+}
+
+/* Toolbar superior de Process algo más limpia */
+.process-canvas-actions {
+  align-items: center !important;
+}
+
+/* Ya no hay botón de icono archive en el header */
+.process-canvas-actions img {
+  display: none !important;
+}

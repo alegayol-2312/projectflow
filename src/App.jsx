@@ -44,14 +44,14 @@ const formularioVacio = {
 const PROCESO_COMPONENTES = [
   {
     tipo: 'InicioFin',
-    label: 'Proceso',
+    label: 'Terminador',
     tituloDefault: 'Inicio / Fin',
     color: '#cfe3cd',
     icon: processTerminatorIcon,
   },
   {
     tipo: 'Actividad',
-    label: 'Texto',
+    label: 'Proceso',
     tituloDefault: 'Actividad',
     color: '#cfe3cd',
     icon: processActivityIcon,
@@ -271,6 +271,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processNodes, setProcessNodes] = useState([])
   const [processLinks, setProcessLinks] = useState([])
   const [processBoxes, setProcessBoxes] = useState([])
+  const [processGridVisible, setProcessGridVisible] = useState(false)
   const [processBoxDrawerOpen, setProcessBoxDrawerOpen] = useState(false)
   const [processBoxEditando, setProcessBoxEditando] = useState(null)
   const [processBoxDragInfo, setProcessBoxDragInfo] = useState(null)
@@ -1949,50 +1950,70 @@ async function imprimirProcessFlow() {
     return
   }
 
-  if (processNodes.length === 0) {
-    alert('El proceso no tiene componentes para imprimir.')
+  if (processNodes.length === 0 && processBoxes.length === 0) {
+    alert('El proceso no tiene contenido para imprimir.')
     return
   }
 
   try {
-    const padding = 80
+    const elementosX = [
+      ...processNodes.map((node) => ({
+        x: Number(node.pos_x),
+        width: Number(node.ancho),
+      })),
+      ...processBoxes.map((box) => ({
+        x: Number(box.pos_x),
+        width: Number(box.ancho),
+      })),
+    ]
+
+    const elementosY = [
+      ...processNodes.map((node) => ({
+        y: Number(node.pos_y),
+        height: Number(node.alto),
+      })),
+      ...processBoxes.map((box) => ({
+        y: Number(box.pos_y),
+        height: Number(box.alto),
+      })),
+    ]
+
+    const padding = 36
 
     const minX = Math.max(
       0,
-      Math.min(...processNodes.map((node) => Number(node.pos_x))) -
+      Math.min(...elementosX.map((item) => item.x)) -
         padding
     )
 
     const minY = Math.max(
       0,
-      Math.min(...processNodes.map((node) => Number(node.pos_y))) -
+      Math.min(...elementosY.map((item) => item.y)) -
         padding
     )
 
     const maxX =
       Math.max(
-        ...processNodes.map(
-          (node) =>
-            Number(node.pos_x) + Number(node.ancho)
+        ...elementosX.map(
+          (item) => item.x + item.width
         )
       ) + padding
 
     const maxY =
       Math.max(
-        ...processNodes.map(
-          (node) =>
-            Number(node.pos_y) + Number(node.alto)
+        ...elementosY.map(
+          (item) => item.y + item.height
         )
       ) + padding
 
-    const captureWidth = Math.max(400, maxX - minX)
-    const captureHeight = Math.max(280, maxY - minY)
+    const captureWidth = Math.max(320, maxX - minX)
+    const captureHeight = Math.max(220, maxY - minY)
 
     const canvas = await html2canvas(
       processCanvasPrintRef.current,
       {
         backgroundColor: processCanvasBgActual,
-        scale: 1.2,
+        scale: 1.35,
         useCORS: true,
         x: minX,
         y: minY,
@@ -2014,48 +2035,62 @@ async function imprimirProcessFlow() {
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
 
-    const margin = 8
-    const titleSpace = 11
+    // Márgenes chicos para aprovechar casi toda la hoja.
+    const margin = 3.5
+    const titleHeight = 7
+
+    const contentTop = margin + titleHeight
+    const contentBottom = margin
+
     const usableWidth = pageWidth - margin * 2
     const usableHeight =
-      pageHeight - margin * 2 - titleSpace
+      pageHeight - contentTop - contentBottom
 
-    const ratio = Math.min(
-      usableWidth / canvas.width,
-      usableHeight / canvas.height
-    )
-
-    const renderWidth = canvas.width * ratio
+    // Escalamos SIEMPRE por ancho.
+    // Si supera la altura, continúa en páginas siguientes.
+    const ratio = usableWidth / canvas.width
+    const renderWidth = usableWidth
     const renderHeight = canvas.height * ratio
 
-    const x = (pageWidth - renderWidth) / 2
-    const y =
-      titleSpace +
-      (usableHeight - renderHeight) / 2 +
-      margin
+    const pageCount = Math.max(
+      1,
+      Math.ceil(renderHeight / usableHeight)
+    )
 
     const nombre =
       processMaps.find(
         (item) => item.id === processSeleccionadoId
       )?.nombre || 'proceso'
 
-    doc.setFontSize(10)
-    doc.setTextColor(45, 55, 65)
-    doc.text(
-      nombre,
-      pageWidth - margin,
-      8,
-      { align: 'right' }
-    )
+    for (let pageIndex = 0; pageIndex < pageCount; pageIndex += 1) {
+      if (pageIndex > 0) {
+        doc.addPage('a4', 'landscape')
+      }
 
-    doc.addImage(
-      imgData,
-      'PNG',
-      x,
-      y,
-      renderWidth,
-      renderHeight
-    )
+      doc.setFontSize(9)
+      doc.setTextColor(45, 55, 65)
+      doc.text(
+        nombre,
+        pageWidth - margin,
+        margin + 3.5,
+        { align: 'right' }
+      )
+
+      // En cada página movemos la misma imagen hacia arriba.
+      // jsPDF recorta automáticamente lo que queda fuera de la hoja.
+      const y =
+        contentTop -
+        pageIndex * usableHeight
+
+      doc.addImage(
+        imgData,
+        'PNG',
+        margin,
+        y,
+        renderWidth,
+        renderHeight
+      )
+    }
 
     doc.save(`${nombre}.pdf`)
   } catch (error) {
@@ -8424,7 +8459,7 @@ function colorEstadoTarea(tarea) {
                       title="Arrastrar al canvas"
                     >
                       <div
-                        className="process-component-icon"
+                        className={`process-component-icon process-component-icon-${component.tipo.toLowerCase()}`}
                         style={{
                           '--process-icon':
                             `url(${component.icon})`,
@@ -8475,9 +8510,6 @@ function colorEstadoTarea(tarea) {
                       <button type="button" className="btn-secondary" onClick={imprimirProcessFlow}>
                         Imprimir flujo
                       </button>
-                      <button type="button" className="btn-secondary" onClick={() => setProcessArchiveOpen(true)} title="Procesos archivados">
-                        <img src={archiveIcon} alt="" />
-                      </button>
                       <button type="button" className="btn-secondary" onClick={() => archivarProcessMap(processSeleccionado)}>
                         Archivar
                       </button>
@@ -8487,37 +8519,16 @@ function colorEstadoTarea(tarea) {
                     </div>
                   </div>
 
-                  <div className="process-canvas-bg-picker">
-                    {[
-                      { key: '#ffffff', label: 'Blanco', className: 'white' },
-                      { key: '#0b1220', label: 'Negro', className: 'black' },
-                      { key: '#5d6670', label: 'Board', className: 'board' },
-                    ].map((bg) => (
-                      <button
-                        key={bg.key}
-                        type="button"
-                        className={`process-bg-dot ${bg.className} ${processCanvasBgActual === bg.key ? 'active' : ''}`}
-                        onClick={() => actualizarProcessCanvasBg(bg.key)}
-                        title={bg.label}
-                      />
-                    ))}
-
-                    <span className="process-overlay-divider" />
-
-                    <button
-                      type="button"
-                      className="process-box-tool"
-                      onClick={abrirNuevaProcessBox}
-                      title="Caja de procesos"
-                      aria-label="Caja de procesos"
-                    >
-                      <span />
-                    </button>
-                  </div>
-
                   <div
                     className="process-canvas"
-                    style={{ '--process-canvas-bg': processCanvasBgActual }}
+                    style={{
+                      '--process-canvas-bg':
+                        processCanvasBgActual,
+                      '--process-grid-color':
+                        processCanvasBgActual === '#ffffff'
+                          ? 'rgba(92, 102, 112, .22)'
+                          : 'rgba(225, 232, 238, .18)',
+                    }}
                     onMouseMove={(event) => {
                       moverProcessNode(event)
                       moverResizeProcessNode(event)
@@ -8530,6 +8541,7 @@ function colorEstadoTarea(tarea) {
                       terminarResizeProcessNode()
                       terminarDragProcessBox()
                       terminarResizeProcessBox()
+
                       if (processLinkDraft) {
                         cancelarConexionProcess()
                       }
@@ -8540,10 +8552,92 @@ function colorEstadoTarea(tarea) {
                       terminarDragProcessBox()
                       terminarResizeProcessBox()
                     }}
-                    onDragOver={(event) => event.preventDefault()}
+                    onDragOver={(event) =>
+                      event.preventDefault()
+                    }
                     onDrop={soltarNodoProceso}
                   >
-                    <div ref={processCanvasPrintRef} className="process-world">
+                    <div className="process-canvas-tools">
+                      <div className="process-bg-dots">
+                        {[
+                          {
+                            key: '#ffffff',
+                            label: 'Blanco',
+                            className: 'white',
+                          },
+                          {
+                            key: '#0b1220',
+                            label: 'Negro',
+                            className: 'black',
+                          },
+                          {
+                            key: '#5d6670',
+                            label: 'Board',
+                            className: 'board',
+                          },
+                        ].map((bg) => (
+                          <button
+                            key={bg.key}
+                            type="button"
+                            className={`process-bg-dot ${bg.className} ${
+                              processCanvasBgActual === bg.key
+                                ? 'active'
+                                : ''
+                            }`}
+                            onClick={() =>
+                              actualizarProcessCanvasBg(bg.key)
+                            }
+                            title={bg.label}
+                          />
+                        ))}
+                      </div>
+
+                      <span className="process-overlay-divider" />
+
+                      <button
+                        type="button"
+                        className="process-box-tool"
+                        onClick={abrirNuevaProcessBox}
+                        title="Caja de procesos"
+                        aria-label="Caja de procesos"
+                      >
+                        <span />
+                      </button>
+
+                      <button
+                        type="button"
+                        className={`process-ruler-tool ${
+                          processGridVisible ? 'active' : ''
+                        }`}
+                        onClick={() =>
+                          setProcessGridVisible(
+                            (actual) => !actual
+                          )
+                        }
+                        title={
+                          processGridVisible
+                            ? 'Ocultar cuadrícula'
+                            : 'Mostrar cuadrícula'
+                        }
+                        aria-label="Mostrar u ocultar cuadrícula"
+                      >
+                        <span className="ruler-shape">
+                          <i />
+                          <i />
+                          <i />
+                          <i />
+                          <i />
+                        </span>
+                      </button>
+                    </div>
+                    <div
+                      ref={processCanvasPrintRef}
+                      className={`process-world ${
+                        processGridVisible
+                          ? 'grid-visible'
+                          : ''
+                      }`}
+                    >
                       {processBoxes.map((box) => (
                         <section
                           key={box.id}
