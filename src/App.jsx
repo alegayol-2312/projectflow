@@ -2881,6 +2881,29 @@ async function cambiarCapaSeleccionProcess(direccion) {
   )
 }
 
+
+async function eliminarSeleccionProcess() {
+  if (selectedProcessNodeIds.length === 0) return
+
+  const ids = [...selectedProcessNodeIds]
+
+  const { error } = await supabase
+    .from('process_nodes')
+    .delete()
+    .in('id', ids)
+
+  if (error) {
+    alert(
+      `No se pudieron eliminar los componentes seleccionados: ${error.message}`
+    )
+    return
+  }
+
+  setSelectedProcessNodeIds([])
+
+  await cargarProcessCanvas(processSeleccionadoId)
+}
+
 async function duplicarSeleccionProcess() {
   if (selectedProcessNodeIds.length === 0) return
 
@@ -4838,6 +4861,32 @@ async function terminarDragCard() {
       error
     )
   }
+}
+
+
+async function eliminarCardsSeleccionadas() {
+  if (selectedCardIds.length === 0) return
+
+  const ids = [...selectedCardIds]
+
+  const { error } = await supabase
+    .from('cards')
+    .delete()
+    .in('id', ids)
+
+  if (error) {
+    alert(
+      `No se pudieron eliminar las cards seleccionadas: ${error.message}`
+    )
+    return
+  }
+
+  setSelectedCardIds([])
+
+  await Promise.all([
+    cargarCards(boardSeleccionadoId),
+    cargarCardLinks(boardSeleccionadoId),
+  ])
 }
 
 async function archivarCardsSeleccionadas() {
@@ -9751,6 +9800,14 @@ function colorEstadoTarea(tarea) {
 
                         <button
                           type="button"
+                          className="selection-delete-all"
+                          onClick={eliminarSeleccionProcess}
+                        >
+                          Delete all
+                        </button>
+
+                        <button
+                          type="button"
                           onClick={() =>
                             setSelectedProcessNodeIds([])
                           }
@@ -10566,6 +10623,16 @@ function colorEstadoTarea(tarea) {
                         }
                       >
                         Archivar
+                      </button>
+
+                      <button
+                        type="button"
+                        className="selection-delete-all"
+                        onClick={
+                          eliminarCardsSeleccionadas
+                        }
+                      >
+                        Delete all
                       </button>
 
                       <button

@@ -11399,3 +11399,30 @@ strong {
   inset: 0 !important;
   overflow: visible !important;
 }
+
+
+/* =========================================================
+   V7.4.5 - DELETE ALL EN MULTISELECCIÓN
+========================================================= */
+
+.selection-delete-all {
+  border-color:
+    rgba(255, 91, 110, .42) !important;
+
+  background:
+    rgba(118, 25, 39, .34) !important;
+
+  color:
+    #ffb5c0 !important;
+}
+
+.selection-delete-all:hover {
+  border-color:
+    rgba(255, 91, 110, .68) !important;
+
+  background:
+    rgba(150, 30, 48, .50) !important;
+
+  color:
+    #ffffff !important;
+}
