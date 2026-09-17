@@ -10272,3 +10272,216 @@ strong {
     grid-template-columns: repeat(3, 280px);
   }
 }
+
+
+/* =========================================================
+   PROCESS V7.1 - ACCIONES + CAJA DE PROCESOS + CONECTORES
+========================================================= */
+
+.process-overlay-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,.20);
+}
+
+.process-box-tool {
+  width: 25px;
+  height: 25px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 7px;
+  background: rgba(255,255,255,.08);
+  cursor: pointer;
+}
+
+.process-box-tool span {
+  width: 14px;
+  height: 10px;
+  display: block;
+  border: 2px solid #d7e2ea;
+  border-radius: 2px;
+}
+
+.process-box-tool:hover {
+  background: rgba(255,255,255,.16);
+}
+
+.process-box {
+  position: absolute;
+  z-index: 2;
+  box-sizing: border-box;
+  border: 2px solid var(--process-box-color);
+  border-radius: 14px;
+  background: rgba(255,255,255,.025);
+  cursor: grab;
+  user-select: none;
+}
+
+.process-box.dragging {
+  cursor: grabbing;
+}
+
+.process-box-title {
+  position: absolute;
+  top: 0;
+  left: 48px;
+  right: 48px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--process-box-color);
+  font-size: 13px;
+  font-weight: 850;
+  text-align: center;
+  pointer-events: none;
+}
+
+.process-box-separator {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--process-box-color);
+  opacity: .55;
+  pointer-events: none;
+}
+
+.process-box-edit {
+  position: absolute;
+  top: 7px;
+  right: 9px;
+  width: 28px;
+  height: 27px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 7px;
+  background: rgba(9,15,21,.62);
+  color: #fff;
+  cursor: pointer;
+}
+
+.process-box-resize {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  width: 17px;
+  height: 17px;
+  border: 2px solid #dce7ee;
+  border-radius: 4px;
+  background: #101a22;
+  cursor: nwse-resize;
+}
+
+.process-links-layer {
+  z-index: 10 !important;
+}
+
+.process-node-actions {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid #293945;
+  border-radius: 10px;
+  background: #0d151c;
+}
+
+.process-node-actions > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #9eb0bd;
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.process-node-actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.process-node-actions button {
+  min-height: 33px;
+  padding: 0 10px;
+  border: 1px solid #344754;
+  border-radius: 7px;
+  background: #15212a;
+  color: #fff;
+  font-size: 8.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.process-box-color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 6px;
+}
+
+.process-box-color-options button {
+  width: 31px;
+  height: 31px;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.process-box-color-options button.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.16);
+}
+
+/* Mejor alineación visual entre PNG y handles */
+.process-node-visual img {
+  object-fit: fill !important;
+}
+
+.process-node-visual .process-icon-fill,
+.process-icon-fill {
+  -webkit-mask-size: 100% 100% !important;
+  mask-size: 100% 100% !important;
+}
+
+.process-node .process-node-connector {
+  margin: 0 !important;
+  width: 11px !important;
+  height: 11px !important;
+}
+
+.process-node .process-node-connector.left {
+  left: 0 !important;
+  right: auto !important;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.process-node .process-node-connector.right {
+  right: 0 !important;
+  left: auto !important;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translate(50%, -50%) !important;
+}
+
+.process-node .process-node-connector.top {
+  top: 0 !important;
+  bottom: auto !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.process-node .process-node-connector.bottom {
+  bottom: 0 !important;
+  top: auto !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translate(-50%, 50%) !important;
+}

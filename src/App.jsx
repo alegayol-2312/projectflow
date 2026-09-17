@@ -44,14 +44,14 @@ const formularioVacio = {
 const PROCESO_COMPONENTES = [
   {
     tipo: 'InicioFin',
-    label: 'Terminador',
+    label: 'Proceso',
     tituloDefault: 'Inicio / Fin',
     color: '#cfe3cd',
     icon: processTerminatorIcon,
   },
   {
     tipo: 'Actividad',
-    label: 'Proceso',
+    label: 'Texto',
     tituloDefault: 'Actividad',
     color: '#cfe3cd',
     icon: processActivityIcon,
@@ -270,6 +270,19 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processSeleccionadoId, setProcessSeleccionadoId] = useState(null)
   const [processNodes, setProcessNodes] = useState([])
   const [processLinks, setProcessLinks] = useState([])
+  const [processBoxes, setProcessBoxes] = useState([])
+  const [processBoxDrawerOpen, setProcessBoxDrawerOpen] = useState(false)
+  const [processBoxEditando, setProcessBoxEditando] = useState(null)
+  const [processBoxDragInfo, setProcessBoxDragInfo] = useState(null)
+  const [processBoxResizeInfo, setProcessBoxResizeInfo] = useState(null)
+  const [formProcessBox, setFormProcessBox] = useState({
+    titulo: '',
+    color: '#4ea1ff',
+    pos_x: 120,
+    pos_y: 120,
+    ancho: 640,
+    alto: 340,
+  })
   const [processMapDrawerOpen, setProcessMapDrawerOpen] = useState(false)
   const [processNodeDrawerOpen, setProcessNodeDrawerOpen] = useState(false)
   const [processNodeEditando, setProcessNodeEditando] = useState(null)
@@ -1762,28 +1775,40 @@ async function cargarProcessCanvas(processId) {
   if (!processId) {
     setProcessNodes([])
     setProcessLinks([])
+    setProcessBoxes([])
     return
   }
 
-  const [{ data: nodes, error: nodesError }, { data: links, error: linksError }] =
-    await Promise.all([
-      supabase
-        .from('process_nodes')
-        .select('*')
-        .eq('process_id', processId)
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('process_links')
-        .select('*')
-        .eq('process_id', processId)
-        .order('created_at', { ascending: true }),
-    ])
+  const [
+    { data: nodes, error: nodesError },
+    { data: links, error: linksError },
+    { data: boxes, error: boxesError },
+  ] = await Promise.all([
+    supabase
+      .from('process_nodes')
+      .select('*')
+      .eq('process_id', processId)
+      .order('z_index', { ascending: true })
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('process_links')
+      .select('*')
+      .eq('process_id', processId)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('process_boxes')
+      .select('*')
+      .eq('process_id', processId)
+      .order('created_at', { ascending: true }),
+  ])
 
   if (nodesError) console.error('Error cargando nodos:', nodesError)
   if (linksError) console.error('Error cargando enlaces:', linksError)
+  if (boxesError) console.error('Error cargando cajas:', boxesError)
 
   setProcessNodes(nodes || [])
   setProcessLinks(links || [])
+  setProcessBoxes(boxes || [])
 }
 
 function abrirNuevoProcessMap() {
@@ -2039,6 +2064,247 @@ async function imprimirProcessFlow() {
   }
 }
 
+
+function abrirNuevaProcessBox() {
+  if (!processSeleccionadoId) {
+    alert('Primero seleccioná un proceso.')
+    return
+  }
+
+  setProcessBoxEditando(null)
+  setFormProcessBox({
+    titulo: '',
+    color: '#4ea1ff',
+    pos_x: 120 + Math.min(processBoxes.length, 4) * 35,
+    pos_y: 120 + Math.min(processBoxes.length, 4) * 30,
+    ancho: 640,
+    alto: 340,
+  })
+  setProcessBoxDrawerOpen(true)
+}
+
+function abrirEditarProcessBox(box) {
+  setProcessBoxEditando(box)
+  setFormProcessBox({
+    titulo: box.titulo || '',
+    color: box.color || '#4ea1ff',
+    pos_x: Number(box.pos_x) || 120,
+    pos_y: Number(box.pos_y) || 120,
+    ancho: Number(box.ancho) || 640,
+    alto: Number(box.alto) || 340,
+  })
+  setProcessBoxDrawerOpen(true)
+}
+
+function cerrarProcessBoxDrawer() {
+  setProcessBoxDrawerOpen(false)
+  setProcessBoxEditando(null)
+  setFormProcessBox({
+    titulo: '',
+    color: '#4ea1ff',
+    pos_x: 120,
+    pos_y: 120,
+    ancho: 640,
+    alto: 340,
+  })
+}
+
+async function guardarProcessBox(event) {
+  event.preventDefault()
+
+  if (!formProcessBox.titulo.trim()) {
+    alert('Ingresá un nombre para la caja.')
+    return
+  }
+
+  const payload = {
+    process_id: processSeleccionadoId,
+    titulo: formProcessBox.titulo.trim(),
+    color: formProcessBox.color,
+    pos_x: Number(formProcessBox.pos_x),
+    pos_y: Number(formProcessBox.pos_y),
+    ancho: Number(formProcessBox.ancho),
+    alto: Number(formProcessBox.alto),
+    updated_at: new Date().toISOString(),
+  }
+
+  if (processBoxEditando) {
+    const { error } = await supabase
+      .from('process_boxes')
+      .update(payload)
+      .eq('id', processBoxEditando.id)
+
+    if (error) {
+      alert(`No se pudo guardar la caja: ${error.message}`)
+      return
+    }
+  } else {
+    const { error } = await supabase
+      .from('process_boxes')
+      .insert(payload)
+
+    if (error) {
+      alert(`No se pudo crear la caja: ${error.message}`)
+      return
+    }
+  }
+
+  cerrarProcessBoxDrawer()
+  await cargarProcessCanvas(processSeleccionadoId)
+}
+
+async function eliminarProcessBox(box) {
+  const confirmar = window.confirm(
+    `¿Eliminar la caja "${box.titulo}"?`
+  )
+  if (!confirmar) return
+
+  const { error } = await supabase
+    .from('process_boxes')
+    .delete()
+    .eq('id', box.id)
+
+  if (error) {
+    alert(`No se pudo eliminar la caja: ${error.message}`)
+    return
+  }
+
+  cerrarProcessBoxDrawer()
+  await cargarProcessCanvas(processSeleccionadoId)
+}
+
+function iniciarDragProcessBox(event, box) {
+  if (event.button !== 0) return
+
+  if (
+    event.target.closest('.process-box-resize') ||
+    event.target.closest('.process-box-edit')
+  ) {
+    return
+  }
+
+  event.stopPropagation()
+
+  const rect = event.currentTarget.getBoundingClientRect()
+
+  setProcessBoxDragInfo({
+    id: box.id,
+    offsetX: event.clientX - rect.left,
+    offsetY: event.clientY - rect.top,
+  })
+}
+
+function moverProcessBox(event) {
+  if (!processBoxDragInfo) return
+
+  const canvas = event.currentTarget
+  const rect = canvas.getBoundingClientRect()
+
+  const x =
+    event.clientX -
+    rect.left +
+    canvas.scrollLeft -
+    processBoxDragInfo.offsetX
+
+  const y =
+    event.clientY -
+    rect.top +
+    canvas.scrollTop -
+    processBoxDragInfo.offsetY
+
+  setProcessBoxes((actual) =>
+    actual.map((box) =>
+      box.id === processBoxDragInfo.id
+        ? {
+            ...box,
+            pos_x: Math.max(10, x),
+            pos_y: Math.max(10, y),
+          }
+        : box
+    )
+  )
+}
+
+async function terminarDragProcessBox() {
+  if (!processBoxDragInfo) return
+
+  const box = processBoxes.find(
+    (item) => item.id === processBoxDragInfo.id
+  )
+
+  setProcessBoxDragInfo(null)
+
+  if (!box) return
+
+  await supabase
+    .from('process_boxes')
+    .update({
+      pos_x: Number(box.pos_x),
+      pos_y: Number(box.pos_y),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', box.id)
+}
+
+function iniciarResizeProcessBox(event, box) {
+  event.preventDefault()
+  event.stopPropagation()
+
+  setProcessBoxResizeInfo({
+    id: box.id,
+    startX: event.clientX,
+    startY: event.clientY,
+    startWidth: Number(box.ancho) || 640,
+    startHeight: Number(box.alto) || 340,
+  })
+}
+
+function moverResizeProcessBox(event) {
+  if (!processBoxResizeInfo) return
+
+  const dx = event.clientX - processBoxResizeInfo.startX
+  const dy = event.clientY - processBoxResizeInfo.startY
+
+  setProcessBoxes((actual) =>
+    actual.map((box) =>
+      box.id === processBoxResizeInfo.id
+        ? {
+            ...box,
+            ancho: Math.max(
+              260,
+              processBoxResizeInfo.startWidth + dx
+            ),
+            alto: Math.max(
+              150,
+              processBoxResizeInfo.startHeight + dy
+            ),
+          }
+        : box
+    )
+  )
+}
+
+async function terminarResizeProcessBox() {
+  if (!processBoxResizeInfo) return
+
+  const box = processBoxes.find(
+    (item) => item.id === processBoxResizeInfo.id
+  )
+
+  setProcessBoxResizeInfo(null)
+
+  if (!box) return
+
+  await supabase
+    .from('process_boxes')
+    .update({
+      ancho: Number(box.ancho),
+      alto: Number(box.alto),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', box.id)
+}
+
 function abrirNuevoProcessNode(tipo) {
   if (!processSeleccionadoId) {
     alert('Primero creá o seleccioná un proceso.')
@@ -2135,6 +2401,7 @@ async function crearNodoProcesoEnCanvas(tipo, x, y) {
       pos_y: Math.max(24, Math.round(y)),
       ancho: dims.ancho,
       alto: dims.alto,
+      z_index: 10,
       updated_at: new Date().toISOString(),
     })
 
@@ -2212,6 +2479,7 @@ async function guardarProcessNode(event) {
         pos_y: 150 + offset,
         ancho: dims.ancho,
         alto: dims.alto,
+        z_index: 10,
         updated_at: new Date().toISOString(),
       })
 
@@ -2222,6 +2490,72 @@ async function guardarProcessNode(event) {
   }
 
   cerrarProcessNodeDrawer()
+  await cargarProcessCanvas(processSeleccionadoId)
+}
+
+
+async function duplicarProcessNode(node) {
+  const maxZ = Math.max(
+    10,
+    ...processNodes.map((item) => Number(item.z_index) || 10)
+  )
+
+  const { data, error } = await supabase
+    .from('process_nodes')
+    .insert({
+      process_id: processSeleccionadoId,
+      tipo: node.tipo,
+      titulo: node.titulo || '',
+      color:
+        node.color ||
+        plantillaProceso(node.tipo)?.color ||
+        '#cfe3cd',
+      rotacion: Number(node.rotacion) || 0,
+      pos_x: Number(node.pos_x) + 28,
+      pos_y: Number(node.pos_y) + 28,
+      ancho: Number(node.ancho),
+      alto: Number(node.alto),
+      z_index: maxZ + 1,
+      updated_at: new Date().toISOString(),
+    })
+    .select()
+    .single()
+
+  if (error) {
+    alert(`No se pudo duplicar el componente: ${error.message}`)
+    return
+  }
+
+  await cargarProcessCanvas(processSeleccionadoId)
+
+  if (data) {
+    abrirEditarProcessNode(data)
+  }
+}
+
+async function cambiarCapaProcessNode(node, direccion) {
+  const valores = processNodes.map(
+    (item) => Number(item.z_index) || 10
+  )
+
+  const nuevoZ =
+    direccion === 'frente'
+      ? Math.max(10, ...valores) + 1
+      : Math.min(10, ...valores) - 1
+
+  const { error } = await supabase
+    .from('process_nodes')
+    .update({
+      z_index: nuevoZ,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', node.id)
+
+  if (error) {
+    alert(`No se pudo cambiar la capa: ${error.message}`)
+    return
+  }
+
   await cargarProcessCanvas(processSeleccionadoId)
 }
 
@@ -8167,6 +8501,18 @@ function colorEstadoTarea(tarea) {
                         title={bg.label}
                       />
                     ))}
+
+                    <span className="process-overlay-divider" />
+
+                    <button
+                      type="button"
+                      className="process-box-tool"
+                      onClick={abrirNuevaProcessBox}
+                      title="Caja de procesos"
+                      aria-label="Caja de procesos"
+                    >
+                      <span />
+                    </button>
                   </div>
 
                   <div
@@ -8175,11 +8521,15 @@ function colorEstadoTarea(tarea) {
                     onMouseMove={(event) => {
                       moverProcessNode(event)
                       moverResizeProcessNode(event)
+                      moverProcessBox(event)
+                      moverResizeProcessBox(event)
                       moverConexionProcess(event)
                     }}
                     onMouseUp={() => {
                       terminarDragProcessNode()
                       terminarResizeProcessNode()
+                      terminarDragProcessBox()
+                      terminarResizeProcessBox()
                       if (processLinkDraft) {
                         cancelarConexionProcess()
                       }
@@ -8187,11 +8537,72 @@ function colorEstadoTarea(tarea) {
                     onMouseLeave={() => {
                       terminarDragProcessNode()
                       terminarResizeProcessNode()
+                      terminarDragProcessBox()
+                      terminarResizeProcessBox()
                     }}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={soltarNodoProceso}
                   >
                     <div ref={processCanvasPrintRef} className="process-world">
+                      {processBoxes.map((box) => (
+                        <section
+                          key={box.id}
+                          className={`process-box ${
+                            processBoxDragInfo?.id === box.id
+                              ? 'dragging'
+                              : ''
+                          }`}
+                          style={{
+                            left: `${Number(box.pos_x)}px`,
+                            top: `${Number(box.pos_y)}px`,
+                            width: `${Number(box.ancho)}px`,
+                            height: `${Number(box.alto)}px`,
+                            '--process-box-color':
+                              box.color || '#4ea1ff',
+                          }}
+                          onMouseDown={(event) =>
+                            iniciarDragProcessBox(event, box)
+                          }
+                          onDoubleClick={(event) => {
+                            event.stopPropagation()
+                            abrirEditarProcessBox(box)
+                          }}
+                        >
+                          <div className="process-box-title">
+                            {box.titulo}
+                          </div>
+
+                          <div className="process-box-separator" />
+
+                          <button
+                            type="button"
+                            className="process-box-edit"
+                            onMouseDown={(event) =>
+                              event.stopPropagation()
+                            }
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              abrirEditarProcessBox(box)
+                            }}
+                            title="Editar caja"
+                          >
+                            •••
+                          </button>
+
+                          <button
+                            type="button"
+                            className="process-box-resize"
+                            onMouseDown={(event) =>
+                              iniciarResizeProcessBox(
+                                event,
+                                box
+                              )
+                            }
+                            title="Cambiar tamaño"
+                          />
+                        </section>
+                      ))}
+
                       <svg className="process-links-layer" viewBox="0 0 2400 1500">
                         <defs>
                           <marker
@@ -8291,6 +8702,9 @@ function colorEstadoTarea(tarea) {
                               node.color ||
                               plantillaProceso(node.tipo)?.color ||
                               '#cfe3cd',
+                            zIndex:
+                              20 +
+                              (Number(node.z_index) || 10),
                           }}
                           onMouseDown={(event) =>
                             iniciarDragProcessNode(event, node)
@@ -10258,6 +10672,49 @@ function colorEstadoTarea(tarea) {
                 </div>
               </div>
 
+              {processNodeEditando && (
+                <div className="process-node-actions">
+                  <span>Acciones</span>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        duplicarProcessNode(
+                          processNodeEditando
+                        )
+                      }
+                    >
+                      Duplicar
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        cambiarCapaProcessNode(
+                          processNodeEditando,
+                          'frente'
+                        )
+                      }
+                    >
+                      Traer al frente
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        cambiarCapaProcessNode(
+                          processNodeEditando,
+                          'fondo'
+                        )
+                      }
+                    >
+                      Mandar atrás
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="connection-drawer-actions">
                 {processNodeEditando && (
                   <button
@@ -10272,6 +10729,119 @@ function colorEstadoTarea(tarea) {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-primary">Guardar</button>
+              </div>
+            </form>
+          </aside>
+        </div>
+      )}
+
+      {processBoxDrawerOpen && (
+        <div
+          className="card-drawer-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              cerrarProcessBoxDrawer()
+            }
+          }}
+        >
+          <aside className="card-editor-drawer process-drawer">
+            <form onSubmit={guardarProcessBox}>
+              <div className="card-modal-heading">
+                <div>
+                  <span>Organización visual</span>
+                  <h3>
+                    {processBoxEditando
+                      ? 'Editar caja de procesos'
+                      : 'Nueva caja de procesos'}
+                  </h3>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={cerrarProcessBoxDrawer}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="form-group">
+                <label>Nombre de la caja</label>
+                <input
+                  type="text"
+                  value={formProcessBox.titulo}
+                  onChange={(event) =>
+                    setFormProcessBox((actual) => ({
+                      ...actual,
+                      titulo: event.target.value,
+                    }))
+                  }
+                  placeholder="Ej: Riesgos / Sistemas / Operaciones"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Color</label>
+
+                <div className="process-box-color-options">
+                  {[
+                    '#4ea1ff',
+                    '#22d3c5',
+                    '#f7c948',
+                    '#ff6b6b',
+                    '#a78bfa',
+                    '#f29ac2',
+                    '#94a3b8',
+                    '#ffffff',
+                  ].map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={
+                        formProcessBox.color === color
+                          ? 'active'
+                          : ''
+                      }
+                      style={{
+                        backgroundColor: color,
+                      }}
+                      onClick={() =>
+                        setFormProcessBox((actual) => ({
+                          ...actual,
+                          color,
+                        }))
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="connection-drawer-actions">
+                {processBoxEditando && (
+                  <button
+                    type="button"
+                    className="btn-delete-task"
+                    onClick={() =>
+                      eliminarProcessBox(processBoxEditando)
+                    }
+                  >
+                    Eliminar
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={cerrarProcessBoxDrawer}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn-primary"
+                >
+                  Guardar
+                </button>
               </div>
             </form>
           </aside>
