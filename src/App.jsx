@@ -3504,8 +3504,38 @@ function processLine(link) {
 
   if (!source || !target) return null
 
-  const sourceSide = link.source_side || 'right'
-  const targetSide = link.target_side || 'left'
+  const sourceCx =
+    Number(source.pos_x) +
+    Number(source.ancho) / 2
+
+  const sourceCy =
+    Number(source.pos_y) +
+    Number(source.alto) / 2
+
+  const targetCx =
+    Number(target.pos_x) +
+    Number(target.ancho) / 2
+
+  const targetCy =
+    Number(target.pos_y) +
+    Number(target.alto) / 2
+
+  const dx = targetCx - sourceCx
+  const dy = targetCy - sourceCy
+
+  // El lado de conexión se recalcula según la posición REAL actual.
+  // Así la flecha siempre vuelve al punto verde más lógico aunque
+  // el componente se mueva, se duplique o cambie de tamaño.
+  let sourceSide
+  let targetSide
+
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    sourceSide = dx >= 0 ? 'right' : 'left'
+    targetSide = dx >= 0 ? 'left' : 'right'
+  } else {
+    sourceSide = dy >= 0 ? 'bottom' : 'top'
+    targetSide = dy >= 0 ? 'top' : 'bottom'
+  }
 
   const p1 = puntoConectorProcess(
     source,
@@ -3579,7 +3609,7 @@ function processLine(link) {
     }
   }
 
-  const OFFSET = 24
+  const OFFSET = 18
 
   function salida(point, side) {
     if (side === 'left') {
@@ -12019,23 +12049,39 @@ function colorEstadoTarea(tarea) {
 
               <div className="form-group">
                 <label>Color</label>
-                <select
-                  value={formProcessNode.color}
-                  onChange={(e) =>
-                    setFormProcessNode((actual) => ({
-                      ...actual,
-                      color: e.target.value,
-                    }))
-                  }
-                >
-                  <option value="#cfe3cd">Verde suave</option>
-                  <option value="#fde68a">Amarillo</option>
-                  <option value="#fecaca">Rosa claro</option>
-                  <option value="#bfdbfe">Celeste</option>
-                  <option value="#ddd6fe">Lila</option>
-                  <option value="#fdba74">Naranja</option>
-                  <option value="#e5e7eb">Gris claro</option>
-                </select>
+
+                <div className="unified-color-options process-node-color-options">
+                  {[
+                    { value: '#cfe3cd', label: 'Verde suave' },
+                    { value: '#fde68a', label: 'Amarillo' },
+                    { value: '#fecaca', label: 'Rosa claro' },
+                    { value: '#bfdbfe', label: 'Celeste' },
+                    { value: '#ddd6fe', label: 'Lila' },
+                    { value: '#fdba74', label: 'Naranja' },
+                    { value: '#e5e7eb', label: 'Gris claro' },
+                  ].map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      className={
+                        formProcessNode.color === color.value
+                          ? 'active'
+                          : ''
+                      }
+                      style={{
+                        backgroundColor: color.value,
+                      }}
+                      title={color.label}
+                      aria-label={color.label}
+                      onClick={() =>
+                        setFormProcessNode((actual) => ({
+                          ...actual,
+                          color: color.value,
+                        }))
+                      }
+                    />
+                  ))}
+                </div>
               </div>
 
               <div className="form-group">
@@ -12699,52 +12745,43 @@ function colorEstadoTarea(tarea) {
                 <div className="form-group">
                   <label>Color</label>
 
-                  <select
-                    value={formCard.color}
-                    onChange={(e) =>
-                      setFormCard((actual) => ({
-                        ...actual,
-                        color: e.target.value,
-                      }))
-                    }
-                  >
-                    <option value="yellow">
-                      Amarillo
-                    </option>
-                    <option value="pink">
-                      Rosa
-                    </option>
-                    <option value="blue">
-                      Celeste
-                    </option>
-                    <option value="green">
-                      Verde
-                    </option>
-                    <option value="peach">
-                      Durazno
-                    </option>
-                    <option value="purple">
-                      Violeta
-                    </option>
-                    <option value="orange">
-                      Naranja
-                    </option>
-                    <option value="red">
-                      Rojo suave
-                    </option>
-                    <option value="teal">
-                      Turquesa
-                    </option>
-                    <option value="gray">
-                      Gris
-                    </option>
-                    <option value="cream">
-                      Crema
-                    </option>
-                    <option value="lavender">
-                      Lavanda
-                    </option>
-                  </select>
+                  <div className="unified-color-options card-color-options">
+                    {[
+                      { value: 'yellow', label: 'Amarillo', hex: '#ffe15b' },
+                      { value: 'pink', label: 'Rosa', hex: '#f79ac9' },
+                      { value: 'blue', label: 'Celeste', hex: '#8acdf8' },
+                      { value: 'green', label: 'Verde', hex: '#92e4ae' },
+                      { value: 'peach', label: 'Durazno', hex: '#f8a985' },
+                      { value: 'purple', label: 'Violeta', hex: '#bca0f0' },
+                      { value: 'orange', label: 'Naranja', hex: '#f2a65b' },
+                      { value: 'red', label: 'Rojo suave', hex: '#f38c98' },
+                      { value: 'teal', label: 'Turquesa', hex: '#75c9c7' },
+                      { value: 'gray', label: 'Gris', hex: '#b8c0c9' },
+                      { value: 'cream', label: 'Crema', hex: '#f5dfab' },
+                      { value: 'lavender', label: 'Lavanda', hex: '#cbb3f2' },
+                    ].map((color) => (
+                      <button
+                        key={color.value}
+                        type="button"
+                        className={
+                          formCard.color === color.value
+                            ? 'active'
+                            : ''
+                        }
+                        style={{
+                          backgroundColor: color.hex,
+                        }}
+                        title={color.label}
+                        aria-label={color.label}
+                        onClick={() =>
+                          setFormCard((actual) => ({
+                            ...actual,
+                            color: color.value,
+                          }))
+                        }
+                      />
+                    ))}
+                  </div>
                 </div>
 
                 {formCard.tipo !== 'Nota' && (

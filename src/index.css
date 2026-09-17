@@ -11426,3 +11426,135 @@ strong {
   color:
     #ffffff !important;
 }
+
+
+/* =========================================================
+   V7.4.6 - FLECHAS FIJAS / MULTISELECT GRANDE / COLORES CÍRCULO
+========================================================= */
+
+/* Barra contextual de multiselección Process más legible */
+.process-selection-toolbar {
+  min-height: 46px !important;
+
+  gap: 9px !important;
+
+  padding:
+    9px 12px !important;
+
+  border-radius:
+    12px !important;
+}
+
+.process-selection-toolbar strong {
+  margin-right:
+    7px !important;
+
+  font-size:
+    11px !important;
+
+  font-weight:
+    850 !important;
+}
+
+.process-selection-toolbar button {
+  min-height:
+    34px !important;
+
+  padding:
+    0 11px !important;
+
+  border-radius:
+    8px !important;
+
+  font-size:
+    9.5px !important;
+
+  font-weight:
+    850 !important;
+}
+
+/* Sistema único de selección de colores */
+.unified-color-options,
+.process-box-color-options,
+.process-link-color-options,
+.zone-color-options,
+.kanban-card-color-options {
+  display: flex !important;
+
+  align-items: center !important;
+
+  flex-wrap: wrap !important;
+
+  gap: 10px !important;
+
+  margin-top: 7px !important;
+}
+
+.unified-color-options button,
+.process-box-color-options button,
+.process-link-color-options button,
+.zone-color-options button,
+.kanban-card-color-options button {
+  width: 32px !important;
+  height: 32px !important;
+
+  min-width: 32px !important;
+
+  padding: 0 !important;
+
+  border:
+    3px solid
+    transparent !important;
+
+  border-radius:
+    50% !important;
+
+  box-shadow:
+    0 0 0 1px
+    rgba(255,255,255,.13) !important;
+
+  cursor:
+    pointer !important;
+
+  transition:
+    transform .12s ease,
+    box-shadow .12s ease,
+    border-color .12s ease !important;
+}
+
+.unified-color-options button:hover,
+.process-box-color-options button:hover,
+.process-link-color-options button:hover,
+.zone-color-options button:hover,
+.kanban-card-color-options button:hover {
+  transform:
+    scale(1.10) !important;
+}
+
+.unified-color-options button.active,
+.process-box-color-options button.active,
+.process-link-color-options button.active,
+.zone-color-options button.active,
+.kanban-card-color-options button.active {
+  border-color:
+    #ffffff !important;
+
+  box-shadow:
+    0 0 0 2px
+    #00d8ea !important;
+
+  transform:
+    scale(1.08) !important;
+}
+
+/* Flechas siempre pegadas al nodo */
+.process-link-path {
+  vector-effect:
+    non-scaling-stroke;
+
+  stroke-linecap:
+    round !important;
+
+  stroke-linejoin:
+    round !important;
+}
