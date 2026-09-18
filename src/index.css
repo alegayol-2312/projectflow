@@ -12403,3 +12403,50 @@ strong {
     translate(-50%, -50%)
     !important;
 }
+
+
+/* =========================================================
+   V8.3 - FIX POSICIÓN PUNTOS VERDES
+========================================================= */
+
+/*
+  En V8.2 las coordenadas calculadas eran correctas, pero algunas
+  reglas antiguas de .left/.right/.top/.bottom tenían !important
+  y podían ganar sobre el style inline. Ahora usamos variables CSS
+  y una única regla final con !important para que TODOS los puntos
+  queden exactamente en la misma coordenada que usa la flecha.
+*/
+.process-node .process-node-connector.left,
+.process-node .process-node-connector.right,
+.process-node .process-node-connector.top,
+.process-node .process-node-connector.bottom {
+  left:
+    var(--process-connector-x)
+    !important;
+
+  top:
+    var(--process-connector-y)
+    !important;
+
+  right:
+    auto !important;
+
+  bottom:
+    auto !important;
+
+  margin:
+    0 !important;
+
+  transform:
+    translate(-50%, -50%)
+    !important;
+}
+
+/* El punto visible sigue pequeño; el área de captura queda amplia */
+.process-node .process-node-connector::after {
+  width:
+    6px !important;
+
+  height:
+    6px !important;
+}

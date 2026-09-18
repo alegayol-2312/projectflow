@@ -3930,8 +3930,8 @@ function estiloConectorProcess(node, lado) {
     )
 
   return {
-    left: `${punto.x}px`,
-    top: `${punto.y}px`,
+    '--process-connector-x': `${punto.x}px`,
+    '--process-connector-y': `${punto.y}px`,
   }
 }
 
