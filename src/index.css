@@ -12633,3 +12633,808 @@ strong {
   stroke-linecap: round !important;
   stroke-linejoin: round !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V8.6
+   Edición visual + archivos + reunión + actividad
+========================================================= */
+
+/* ---------- Process: capas de interacción ---------- */
+.process-box {
+  z-index: 2 !important;
+}
+
+.process-links-layer {
+  z-index: 20 !important;
+}
+
+.process-node {
+  z-index: 30;
+}
+
+/* Las flechas reciben doble click antes que la caja de fondo */
+.process-link-path {
+  pointer-events: stroke !important;
+}
+
+/* Nota: texto centrado en la parte útil del globo */
+.process-node-notaproceso .process-node-copy {
+  inset:
+    12% 13% 25% 13%
+    !important;
+
+  align-items:
+    center !important;
+
+  justify-content:
+    center !important;
+
+  text-align:
+    center !important;
+}
+
+/* Resize negro: sólo al seleccionar */
+.process-node-resize {
+  display: none !important;
+}
+
+.process-node.multi-selected
+.process-node-resize {
+  display: block !important;
+}
+
+/* Caja de procesos: controles sólo al seleccionarla */
+.process-box-edit,
+.process-box-resize {
+  display: none !important;
+}
+
+.process-box.selected
+.process-box-edit,
+.process-box.selected
+.process-box-resize {
+  display: block !important;
+}
+
+/* Zona Cards: controles sólo al seleccionarla */
+.board-zone-edit,
+.board-zone-resize {
+  display: none !important;
+}
+
+.board-zone.selected
+.board-zone-edit,
+.board-zone.selected
+.board-zone-resize {
+  display: block !important;
+}
+
+/* Deshacer */
+.process-undo-tool {
+  flex: 0 0 auto;
+
+  width: 29px !important;
+  height: 29px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border:
+    1px solid
+    rgba(255,255,255,.27) !important;
+
+  border-radius:
+    7px !important;
+
+  background:
+    rgba(255,255,255,.07) !important;
+
+  color:
+    #ffffff !important;
+
+  font-size:
+    19px !important;
+
+  font-weight:
+    900 !important;
+
+  cursor: pointer;
+}
+
+.process-undo-tool:hover {
+  border-color:
+    #00d8ea !important;
+
+  color:
+    #00d8ea !important;
+}
+
+/* ---------- Shapes Cards basados en PNG ---------- */
+.board-shape {
+  position: absolute;
+
+  background:
+    transparent !important;
+
+  border: 0 !important;
+
+  overflow:
+    visible !important;
+
+  cursor: grab;
+}
+
+.board-shape.selected {
+  filter:
+    drop-shadow(
+      0 0 5px
+      rgba(0,216,234,.75)
+    );
+}
+
+.board-shape-visual {
+  position: absolute;
+  inset: 0;
+}
+
+.board-shape-visual img {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  mix-blend-mode:
+    multiply;
+
+  user-select: none;
+  pointer-events: none;
+}
+
+.board-shape-fill {
+  position: absolute;
+  inset: 0;
+
+  background:
+    var(--shape-color);
+
+  -webkit-mask-image:
+    var(--shape-icon);
+  mask-image:
+    var(--shape-icon);
+
+  -webkit-mask-repeat:
+    no-repeat;
+  mask-repeat:
+    no-repeat;
+
+  -webkit-mask-position:
+    center;
+  mask-position:
+    center;
+
+  -webkit-mask-size:
+    contain;
+  mask-size:
+    contain;
+}
+
+.board-shape-text {
+  position: absolute;
+
+  inset:
+    15% 15% 15% 15%;
+
+  z-index: 3;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color:
+    #111820 !important;
+
+  font-size:
+    11px;
+
+  font-weight:
+    850;
+
+  line-height:
+    1.2;
+
+  text-align:
+    center;
+
+  pointer-events:
+    none;
+}
+
+.board-shape-callout
+.board-shape-text {
+  inset:
+    12% 14% 27% 14%;
+}
+
+.board-shape-resize {
+  position: absolute;
+
+  right: -6px;
+  bottom: -6px;
+
+  width: 17px;
+  height: 17px;
+
+  z-index: 9;
+
+  border:
+    2px solid #ffffff;
+
+  border-radius:
+    4px;
+
+  background:
+    #14212b;
+
+  cursor:
+    nwse-resize;
+}
+
+.shape-type-options button {
+  width: 86px;
+  min-height: 72px;
+
+  padding: 6px !important;
+}
+
+.shape-type-options button img {
+  width: 64px;
+  height: 50px;
+
+  object-fit: contain;
+
+  pointer-events: none;
+}
+
+/* ---------- Board editor lateral ---------- */
+.board-editor-drawer {
+  width:
+    min(430px, 94vw)
+    !important;
+}
+
+/* ---------- Listas / archivos ---------- */
+.list-header-actions-v86 {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.list-header-actions-v86 button img,
+.board-list-actions button img,
+.kanban-project-item-actions button img,
+.process-list-header-actions button img {
+  width: 14px;
+  height: 14px;
+
+  object-fit: contain;
+}
+
+.kanban-project-item-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.kanban-project-item-actions button {
+  width: 28px;
+  height: 28px;
+}
+
+/* ---------- Kanban filtros y comandos ---------- */
+.kanban-bg-picker {
+  top: 8px !important;
+  margin-top: 4px !important;
+}
+
+.kanban-filters-v86 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin:
+    2px 0 7px;
+
+  flex-wrap: wrap;
+}
+
+.kanban-filters-v86 select {
+  min-height: 31px;
+
+  padding:
+    0 9px;
+
+  border:
+    1px solid #3b4c59;
+
+  border-radius:
+    8px;
+
+  background:
+    #101a22;
+
+  color:
+    #ffffff !important;
+
+  font-size:
+    9px;
+
+  font-weight:
+    750;
+}
+
+/* Carriles siguen creciendo con tarjetas */
+.kanban-columns {
+  min-height:
+    calc(100vh - 280px);
+}
+
+.kanban-column {
+  min-height:
+    calc(100vh - 300px)
+    !important;
+
+  height:
+    auto !important;
+
+  align-self:
+    stretch;
+}
+
+.kanban-column-body {
+  min-height:
+    360px !important;
+
+  height:
+    auto !important;
+
+  overflow:
+    visible !important;
+}
+
+/* Kanban: contraste blanco en UI oscura */
+.kanban-page,
+.kanban-page span,
+.kanban-page p,
+.kanban-page small,
+.kanban-project-item span,
+.kanban-project-empty,
+.kanban-column-empty,
+.kanban-board-header span,
+.kanban-eyebrow {
+  color:
+    #ffffff !important;
+}
+
+.kanban-column-empty {
+  min-height: 62px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border:
+    2px dashed
+    rgba(255,255,255,.36);
+
+  border-radius:
+    9px;
+
+  color:
+    #ffffff !important;
+
+  font-size:
+    11px !important;
+
+  font-weight:
+    850 !important;
+}
+
+/* Process fuera del canvas: gris -> blanco */
+.process-page
+:not(.process-world)
+:not(.process-node)
+:not(.process-box)
+span,
+.process-page
+.process-toolbar p,
+.process-page
+.process-list span,
+.process-page
+.process-components-header span,
+.process-page
+.process-canvas-header span {
+  color:
+    #ffffff !important;
+}
+
+/* ---------- Modo reunión Kanban ---------- */
+.meeting-kanban
+.kanban-toolbar,
+.meeting-kanban
+.kanban-project-panel {
+  display:
+    none !important;
+}
+
+.meeting-kanban
+.kanban-layout {
+  grid-template-columns:
+    1fr !important;
+
+  height:
+    calc(100vh - 18px)
+    !important;
+}
+
+.meeting-kanban
+.kanban-board-header {
+  position: fixed !important;
+
+  top: 14px !important;
+  left: 16px !important;
+  right: 150px !important;
+
+  z-index:
+    9000 !important;
+
+  padding:
+    7px 9px !important;
+
+  border:
+    1px solid
+    rgba(255,255,255,.16);
+
+  border-radius:
+    10px;
+
+  background:
+    rgba(9,16,22,.92);
+}
+
+.meeting-kanban
+.kanban-bg-picker {
+  position: fixed !important;
+
+  top: 67px !important;
+  left: 16px !important;
+
+  z-index:
+    9000 !important;
+}
+
+.meeting-kanban
+.kanban-filters-v86 {
+  position: fixed;
+
+  top: 112px;
+  left: 16px;
+
+  z-index: 8999;
+
+  padding:
+    7px 9px;
+
+  border-radius:
+    10px;
+
+  background:
+    rgba(9,16,22,.92);
+}
+
+/* ---------- Activity center ---------- */
+.activity-bell-button {
+  position: relative;
+
+  width: 35px;
+  height: 35px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border:
+    1px solid #2b3a46;
+
+  border-radius:
+    9px;
+
+  background:
+    #101820;
+
+  cursor: pointer;
+}
+
+.activity-bell-button img {
+  width: 23px;
+  height: 23px;
+
+  object-fit: contain;
+}
+
+.activity-drawer {
+  width:
+    min(480px, 96vw)
+    !important;
+
+  overflow-y:
+    auto;
+}
+
+.activity-section {
+  padding:
+    13px 0;
+
+  border-bottom:
+    1px solid #263540;
+}
+
+.activity-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom:
+    9px;
+}
+
+.activity-section-title strong {
+  color:
+    #ffffff;
+
+  font-size:
+    12px;
+}
+
+.activity-section-title span {
+  color:
+    #9cb0bf;
+
+  font-size:
+    9px;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.activity-item {
+  display: grid;
+
+  grid-template-columns:
+    10px 1fr;
+
+  gap: 8px;
+
+  padding:
+    8px 9px;
+
+  border:
+    1px solid #273945;
+
+  border-radius:
+    9px;
+
+  background:
+    #0d161d;
+}
+
+.activity-dot {
+  width: 7px;
+  height: 7px;
+
+  margin-top:
+    5px;
+
+  border-radius:
+    50%;
+
+  background:
+    #00d8ea;
+}
+
+.activity-item strong {
+  color:
+    #ffffff;
+
+  font-size:
+    9.5px;
+}
+
+.activity-item p {
+  margin:
+    3px 0 4px;
+
+  color:
+    #ffffff;
+
+  font-size:
+    10px;
+
+  line-height:
+    1.35;
+}
+
+.activity-item small,
+.activity-empty {
+  color:
+    #9fb1bf;
+
+  font-size:
+    8.5px;
+}
+
+/* Cards: ya no mostrar contador arriba */
+.cards-counter {
+  display:
+    none !important;
+}
+
+/* Evita que los controles ocultos reaparezcan siempre en reunión */
+.meeting-process
+.process-node-resize,
+.meeting-process
+.process-box-edit,
+.meeting-process
+.process-box-resize {
+  display:
+    none !important;
+}
+
+.meeting-process
+.process-node.multi-selected
+.process-node-resize,
+.meeting-process
+.process-box.selected
+.process-box-edit,
+.meeting-process
+.process-box.selected
+.process-box-resize {
+  display:
+    block !important;
+}
+
+
+/* ---------- V8.6 ajuste: trío de controles sólo al seleccionar ---------- */
+
+.process-box-delete,
+.board-zone-delete {
+  display: none !important;
+}
+
+.process-box.selected
+.process-box-delete,
+.board-zone.selected
+.board-zone-delete {
+  display: inline-flex !important;
+}
+
+/* Caja Process: tres controles arriba a la derecha */
+.process-box.selected
+.process-box-edit,
+.process-box.selected
+.process-box-delete,
+.process-box.selected
+.process-box-resize {
+  position: absolute !important;
+
+  top: 7px !important;
+  bottom: auto !important;
+
+  width: 26px !important;
+  height: 25px !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  border:
+    1px solid
+    rgba(255,255,255,.24)
+    !important;
+
+  border-radius:
+    6px !important;
+
+  background:
+    rgba(10,18,24,.82)
+    !important;
+
+  color:
+    #ffffff !important;
+
+  cursor: pointer !important;
+}
+
+.process-box.selected
+.process-box-edit {
+  right: 65px !important;
+}
+
+.process-box.selected
+.process-box-delete {
+  right: 36px !important;
+}
+
+.process-box.selected
+.process-box-resize {
+  right: 7px !important;
+
+  cursor:
+    nwse-resize !important;
+}
+
+/* Zona Cards: mismos tres controles */
+.board-zone.selected
+.board-zone-edit,
+.board-zone.selected
+.board-zone-delete,
+.board-zone.selected
+.board-zone-resize {
+  position: absolute !important;
+
+  top: 7px !important;
+  bottom: auto !important;
+
+  width: 26px !important;
+  height: 25px !important;
+
+  display:
+    inline-flex !important;
+
+  align-items:
+    center !important;
+
+  justify-content:
+    center !important;
+
+  border:
+    1px solid
+    rgba(255,255,255,.24)
+    !important;
+
+  border-radius:
+    6px !important;
+
+  background:
+    rgba(10,18,24,.82)
+    !important;
+
+  color:
+    #ffffff !important;
+}
+
+.board-zone.selected
+.board-zone-edit {
+  right: 65px !important;
+}
+
+.board-zone.selected
+.board-zone-delete {
+  right: 36px !important;
+}
+
+.board-zone.selected
+.board-zone-resize {
+  right: 7px !important;
+
+  cursor:
+    nwse-resize !important;
+}

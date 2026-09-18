@@ -7,6 +7,8 @@ import cardsIcon from './assets/icon-cards.png'
 import archiveIcon from './assets/icon-archive.png'
 import processIcon from './assets/icon-process.png'
 import kanbanIcon from './assets/icon-kanban.png'
+import bellIcon from './assets/bell-icon.png'
+import bellNotifIcon from './assets/bell-icon-notif.png'
 
 import processTerminatorIcon from './assets/process/process-terminador.png'
 import processReferenceIcon from './assets/process/process-referencia.png'
@@ -139,6 +141,17 @@ function plantillaProceso(tipo) {
     PROCESO_COMPONENTES.find((item) => item.tipo === tipo) ||
     PROCESO_COMPONENTES.find((item) => item.tipo === 'Actividad')
   )
+}
+
+function iconoCardShape(tipo) {
+  const mapa = {
+    circle: processReferenceIcon,
+    rectangle: processActivityIcon,
+    square: processTerminatorIcon,
+    callout: processNoteIcon,
+  }
+
+  return mapa[tipo] || processActivityIcon
 }
 
 function etiquetaTipoProceso(tipo) {
@@ -499,6 +512,9 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [cardsArchivadas, setCardsArchivadas] = useState([])
   const [archivoOpen, setArchivoOpen] = useState(false)
   const [selectedCardIds, setSelectedCardIds] = useState([])
+  const [boardArchiveOpen, setBoardArchiveOpen] = useState(false)
+  const [boardsArchivados, setBoardsArchivados] = useState([])
+  const [selectedZoneId, setSelectedZoneId] = useState(null)
 
   const [cardLinks, setCardLinks] = useState([])
   const [boardZones, setBoardZones] = useState([])
@@ -562,6 +578,9 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processLinkColor, setProcessLinkColor] = useState('#b9c5cf')
   const [processArchiveOpen, setProcessArchiveOpen] = useState(false)
   const [processMapsArchivados, setProcessMapsArchivados] = useState([])
+  const [selectedProcessBoxId, setSelectedProcessBoxId] = useState(null)
+  const processUndoRef = useRef([])
+  const processClipboardRef = useRef([])
   const [nuevoProcessMap, setNuevoProcessMap] = useState({
     nombre: '',
     descripcion: '',
@@ -587,6 +606,11 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [kanbanProjectDrawerOpen, setKanbanProjectDrawerOpen] = useState(false)
   const [kanbanCardDrawerOpen, setKanbanCardDrawerOpen] = useState(false)
   const [kanbanArchiveOpen, setKanbanArchiveOpen] = useState(false)
+  const [kanbanProjectArchiveOpen, setKanbanProjectArchiveOpen] = useState(false)
+  const [kanbanProjectsArchivados, setKanbanProjectsArchivados] = useState([])
+  const [kanbanFiltroPrioridad, setKanbanFiltroPrioridad] = useState('Todas')
+  const [kanbanFiltroTipo, setKanbanFiltroTipo] = useState('Todos')
+  const [kanbanFiltroFecha, setKanbanFiltroFecha] = useState('Todas')
   const [kanbanCardEditando, setKanbanCardEditando] = useState(null)
   const [kanbanDragId, setKanbanDragId] = useState(null)
   const [kanbanGanttOpen, setKanbanGanttOpen] = useState(false)
@@ -647,6 +671,8 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [shapeDrawerOpen, setShapeDrawerOpen] = useState(false)
   const [shapeEditando, setShapeEditando] = useState(null)
   const [shapeDragInfo, setShapeDragInfo] = useState(null)
+  const [shapeResizeInfo, setShapeResizeInfo] = useState(null)
+  const [selectedShapeId, setSelectedShapeId] = useState(null)
   const [formShape, setFormShape] = useState({
     tipo: 'circle',
     texto: '',
@@ -676,6 +702,12 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   }
 
   const [formCard, setFormCard] = useState(cardVacia)
+
+  const [activityOpen, setActivityOpen] = useState(false)
+  const [activityItems, setActivityItems] = useState([])
+  const [activitySeenAt, setActivitySeenAt] = useState(() =>
+    window.localStorage.getItem('projectflow_activity_seen_at') || ''
+  )
 
     useEffect(() => {
     let cancelled = false
@@ -745,6 +777,7 @@ useEffect(() => {
     cargarPerfiles()
     cargarHistorial()
     cargarTodasLasTareas()
+    cargarActividadReciente()
   }
 }, [session])
 
@@ -776,6 +809,75 @@ useEffect(() => {
   cargarTareas(proyectoSeleccionadoId)
 
 }, [proyectoSeleccionadoId, proyectos])
+
+
+  async function cargarActividadReciente() {
+    const { data, error } = await supabase
+      .from('activity_log')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    if (error) {
+      console.error('Error cargando actividad:', error)
+      return
+    }
+
+    setActivityItems(data || [])
+  }
+
+  async function registrarActividad({
+    modulo,
+    accion,
+    detalle,
+    recursoTipo = null,
+    recursoId = null,
+    recursoNombre = null,
+  }) {
+    if (!session?.user) return
+
+    const { error } = await supabase
+      .from('activity_log')
+      .insert({
+        module: modulo,
+        actor_id: session.user.id,
+        actor_name:
+          perfiles.find(
+            (perfil) =>
+              perfil.id === session.user.id
+          )?.nombre || null,
+        actor_email: session.user.email,
+        action: accion,
+        detail: detalle,
+        resource_type: recursoTipo,
+        resource_id: recursoId ? String(recursoId) : null,
+        resource_name: recursoNombre,
+      })
+
+    if (error) {
+      console.error('No se pudo registrar actividad:', error)
+      return
+    }
+
+    cargarActividadReciente()
+  }
+
+  function abrirActividad() {
+    const ahora = new Date().toISOString()
+    setActivitySeenAt(ahora)
+    window.localStorage.setItem(
+      'projectflow_activity_seen_at',
+      ahora
+    )
+    setActivityOpen(true)
+  }
+
+  const actividadTieneNovedades = activityItems.some(
+    (item) =>
+      !activitySeenAt ||
+      new Date(item.created_at) >
+        new Date(activitySeenAt)
+  )
 
   async function iniciarApp() {
     const {
@@ -1388,6 +1490,15 @@ useEffect(() => {
         })
     }
 
+    await registrarActividad({
+      modulo: 'Gantt',
+      accion: tareaEditando ? 'editó' : 'creó',
+      detalle: `${tareaEditando ? 'Editó' : 'Creó'} "${form.nombre}"`,
+      recursoTipo: form.tipo === 'Hito' ? 'gantt_hito' : 'gantt_task',
+      recursoId: tareaEditando?.id || null,
+      recursoNombre: form.nombre,
+    })
+
     cerrarModal()
 
     await Promise.all([
@@ -1491,6 +1602,15 @@ async function crearProyecto(event) {
         accion: 'Tarea finalizada',
         detalle: `Se finalizó "${tarea.nombre}"`,
       })
+
+    await registrarActividad({
+      modulo: 'Gantt',
+      accion: 'finalizó',
+      detalle: `Finalizó "${tarea.nombre}"`,
+      recursoTipo: 'gantt_task',
+      recursoId: tarea.id,
+      recursoNombre: tarea.nombre,
+    })
 
     await Promise.all([
       cargarTareas(proyecto.id),
@@ -1622,6 +1742,7 @@ async function cargarBoards() {
   const { data, error } = await supabase
     .from('card_boards')
     .select('*')
+    .eq('archivado', false)
     .order('created_at', { ascending: true })
 
   if (error) {
@@ -1646,6 +1767,81 @@ async function cargarBoards() {
   ) {
     setBoardSeleccionadoId(lista[0].id)
   }
+}
+
+
+async function cargarBoardsArchivados() {
+  const { data, error } = await supabase
+    .from('card_boards')
+    .select('*')
+    .eq('archivado', true)
+    .order('updated_at', { ascending: false })
+
+  if (error) {
+    console.error('Error cargando boards archivados:', error)
+    return
+  }
+
+  setBoardsArchivados(data || [])
+}
+
+async function archivarBoard(board) {
+  if (!board) return
+
+  const { error } = await supabase
+    .from('card_boards')
+    .update({
+      archivado: true,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', board.id)
+
+  if (error) {
+    alert(`No se pudo archivar el board: ${error.message}`)
+    return
+  }
+
+  await registrarActividad({
+    modulo: 'Cards',
+    accion: 'archivó',
+    detalle: `Archivó el board "${board.nombre}"`,
+    recursoTipo: 'card_board',
+    recursoId: board.id,
+    recursoNombre: board.nombre,
+  })
+
+  if (boardSeleccionadoId === board.id) {
+    setBoardSeleccionadoId('')
+    setCards([])
+  }
+
+  await Promise.all([
+    cargarBoards(),
+    cargarBoardsArchivados(),
+  ])
+}
+
+async function restaurarBoard(board) {
+  const { error } = await supabase
+    .from('card_boards')
+    .update({
+      archivado: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', board.id)
+
+  if (error) {
+    alert(`No se pudo restaurar el board: ${error.message}`)
+    return
+  }
+
+  await Promise.all([
+    cargarBoards(),
+    cargarBoardsArchivados(),
+  ])
+
+  setBoardSeleccionadoId(board.id)
+  setBoardArchiveOpen(false)
 }
 
 async function cargarCards(boardId) {
@@ -1827,6 +2023,7 @@ async function eliminarShape(shape) {
 function iniciarDragShape(event, shape) {
   if (event.button !== 0) return
   event.stopPropagation()
+  setSelectedShapeId(shape.id)
   const rect = event.currentTarget.getBoundingClientRect()
   setShapeDragInfo({
     id: shape.id,
@@ -1866,6 +2063,76 @@ async function terminarDragShape() {
     .update({
       pos_x: Number(shape.pos_x),
       pos_y: Number(shape.pos_y),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', shape.id)
+}
+
+
+function iniciarResizeShape(event, shape) {
+  event.preventDefault()
+  event.stopPropagation()
+
+  setSelectedShapeId(shape.id)
+
+  setShapeResizeInfo({
+    id: shape.id,
+    startX: event.clientX,
+    startY: event.clientY,
+    startWidth: Number(shape.ancho) || 150,
+    startHeight: Number(shape.alto) || 110,
+  })
+}
+
+function moverResizeShape(event) {
+  if (!shapeResizeInfo) return
+
+  const dx =
+    (event.clientX -
+      shapeResizeInfo.startX) /
+    boardZoom
+
+  const dy =
+    (event.clientY -
+      shapeResizeInfo.startY) /
+    boardZoom
+
+  setBoardShapes((actual) =>
+    actual.map((shape) =>
+      shape.id === shapeResizeInfo.id
+        ? {
+            ...shape,
+            ancho: Math.max(
+              70,
+              shapeResizeInfo.startWidth + dx
+            ),
+            alto: Math.max(
+              55,
+              shapeResizeInfo.startHeight + dy
+            ),
+          }
+        : shape
+    )
+  )
+}
+
+async function terminarResizeShape() {
+  if (!shapeResizeInfo) return
+
+  const shape = boardShapes.find(
+    (item) =>
+      item.id === shapeResizeInfo.id
+  )
+
+  setShapeResizeInfo(null)
+
+  if (!shape) return
+
+  await supabase
+    .from('card_shapes')
+    .update({
+      ancho: Number(shape.ancho),
+      alto: Number(shape.alto),
       updated_at: new Date().toISOString(),
     })
     .eq('id', shape.id)
@@ -2138,6 +2405,15 @@ async function archivarCard(card) {
     return
   }
 
+  await registrarActividad({
+    modulo: 'Cards',
+    accion: 'archivó',
+    detalle: `Archivó "${card.titulo}"`,
+    recursoTipo: 'card',
+    recursoId: card.id,
+    recursoNombre: card.titulo,
+  })
+
   cerrarModalCard()
   await cargarCards(boardSeleccionadoId)
   await cargarCardsArchivadas(boardSeleccionadoId)
@@ -2157,8 +2433,11 @@ async function restaurarCard(card) {
     return
   }
 
-  await cargarCards(boardSeleccionadoId)
-  await cargarCardsArchivadas(boardSeleccionadoId)
+  setBoardSeleccionadoId(card.board_id)
+  await cargarBoards()
+  await cargarCards(card.board_id)
+  await cargarCardsArchivadas(card.board_id)
+  setArchivoOpen(false)
 }
 
 async function eliminarCardArchivada(card) {
@@ -2336,6 +2615,15 @@ async function guardarProcessMap(event) {
     return
   }
 
+  await registrarActividad({
+    modulo: 'Process',
+    accion: 'creó',
+    detalle: `Creó el proceso "${data.nombre}"`,
+    recursoTipo: 'process_map',
+    recursoId: data.id,
+    recursoNombre: data.nombre,
+  })
+
   setProcessMapDrawerOpen(false)
   await cargarProcessMaps()
   setProcessSeleccionadoId(data.id)
@@ -2372,6 +2660,15 @@ async function archivarProcessMap(process) {
     alert(`No se pudo archivar el proceso: ${error.message}`)
     return
   }
+
+  await registrarActividad({
+    modulo: 'Process',
+    accion: 'archivó',
+    detalle: `Archivó el proceso "${process.nombre}"`,
+    recursoTipo: 'process_map',
+    recursoId: process.id,
+    recursoNombre: process.nombre,
+  })
 
   if (processSeleccionadoId === process.id) {
     setProcessSeleccionadoId(null)
@@ -2657,6 +2954,8 @@ function cerrarProcessBoxDrawer() {
 async function guardarProcessBox(event) {
   event.preventDefault()
 
+  pushProcessUndo()
+
   if (!formProcessBox.titulo.trim()) {
     alert('Ingresá un nombre para la caja.')
     return
@@ -2699,6 +2998,7 @@ async function guardarProcessBox(event) {
 }
 
 async function eliminarProcessBox(box) {
+  pushProcessUndo()
 
   const { error } = await supabase
     .from('process_boxes')
@@ -2716,6 +3016,8 @@ async function eliminarProcessBox(box) {
 
 function iniciarDragProcessBox(event, box) {
   if (event.button !== 0) return
+
+  pushProcessUndo()
 
   if (
     event.target.closest('.process-box-resize') ||
@@ -2786,6 +3088,7 @@ async function terminarDragProcessBox() {
 }
 
 function iniciarResizeProcessBox(event, box) {
+  pushProcessUndo()
   event.preventDefault()
   event.stopPropagation()
 
@@ -2851,6 +3154,8 @@ function abrirNuevoProcessNode(tipo) {
     alert('Primero creá o seleccioná un proceso.')
     return
   }
+
+  pushProcessUndo()
 
   const base = plantillaProceso(tipo)
 
@@ -2973,8 +3278,164 @@ async function soltarNodoProceso(event) {
   await crearNodoProcesoEnCanvas(tipo, x, y)
 }
 
+
+function snapshotProcessActual() {
+  return {
+    processId: processSeleccionadoId,
+    nodes: JSON.parse(JSON.stringify(processNodes)),
+    links: JSON.parse(JSON.stringify(processLinks)),
+    boxes: JSON.parse(JSON.stringify(processBoxes)),
+  }
+}
+
+function pushProcessUndo() {
+  if (!processSeleccionadoId) return
+
+  const stack = processUndoRef.current || []
+  stack.push(snapshotProcessActual())
+
+  processUndoRef.current =
+    stack.slice(-3)
+}
+
+async function deshacerProcess() {
+  const stack = processUndoRef.current || []
+
+  if (stack.length === 0) return
+
+  const snapshot = stack.pop()
+  processUndoRef.current = stack
+
+  if (!snapshot?.processId) return
+
+  const processId = snapshot.processId
+
+  const { error: linksDeleteError } =
+    await supabase
+      .from('process_links')
+      .delete()
+      .eq('process_id', processId)
+
+  if (linksDeleteError) {
+    alert(`No se pudo deshacer: ${linksDeleteError.message}`)
+    return
+  }
+
+  await supabase
+    .from('process_boxes')
+    .delete()
+    .eq('process_id', processId)
+
+  await supabase
+    .from('process_nodes')
+    .delete()
+    .eq('process_id', processId)
+
+  if (snapshot.nodes.length > 0) {
+    const { error } = await supabase
+      .from('process_nodes')
+      .insert(snapshot.nodes)
+
+    if (error) {
+      alert(`No se pudo restaurar componentes: ${error.message}`)
+      return
+    }
+  }
+
+  if (snapshot.boxes.length > 0) {
+    const { error } = await supabase
+      .from('process_boxes')
+      .insert(snapshot.boxes)
+
+    if (error) {
+      alert(`No se pudo restaurar cajas: ${error.message}`)
+      return
+    }
+  }
+
+  if (snapshot.links.length > 0) {
+    const { error } = await supabase
+      .from('process_links')
+      .insert(snapshot.links)
+
+    if (error) {
+      alert(`No se pudo restaurar conexiones: ${error.message}`)
+      return
+    }
+  }
+
+  await cargarProcessCanvas(processId)
+}
+
+async function copiarSeleccionProcess() {
+  const seleccionados =
+    processNodes.filter((node) =>
+      selectedProcessNodeIds.includes(node.id)
+    )
+
+  processClipboardRef.current =
+    JSON.parse(JSON.stringify(seleccionados))
+}
+
+async function pegarSeleccionProcess() {
+  const copiar =
+    processClipboardRef.current || []
+
+  if (
+    copiar.length === 0 ||
+    !processSeleccionadoId
+  ) {
+    return
+  }
+
+  pushProcessUndo()
+
+  const maxZ = Math.max(
+    10,
+    ...processNodes.map(
+      (node) => Number(node.z_index) || 10
+    )
+  )
+
+  const payload = copiar.map(
+    (node, index) => ({
+      process_id: processSeleccionadoId,
+      tipo: node.tipo,
+      titulo: node.titulo || '',
+      color:
+        node.color ||
+        plantillaProceso(node.tipo)?.color ||
+        '#cfe3cd',
+      rotacion: Number(node.rotacion) || 0,
+      pos_x: Number(node.pos_x) + 34,
+      pos_y: Number(node.pos_y) + 34,
+      ancho: Number(node.ancho),
+      alto: Number(node.alto),
+      z_index: maxZ + index + 1,
+      updated_at: new Date().toISOString(),
+    })
+  )
+
+  const { data, error } = await supabase
+    .from('process_nodes')
+    .insert(payload)
+    .select()
+
+  if (error) {
+    alert(`No se pudo pegar: ${error.message}`)
+    return
+  }
+
+  setSelectedProcessNodeIds(
+    (data || []).map((node) => node.id)
+  )
+  await cargarProcessCanvas(processSeleccionadoId)
+}
+
 async function guardarProcessNode(event) {
   event.preventDefault()
+
+  pushProcessUndo()
 
   if (!formProcessNode.titulo.trim()) {
     alert('Ingresá un texto para el bloque.')
@@ -3034,6 +3495,7 @@ async function guardarProcessNode(event) {
 
 
 async function duplicarProcessNode(node) {
+  pushProcessUndo()
   const maxZ = Math.max(
     10,
     ...processNodes.map((item) => Number(item.z_index) || 10)
@@ -3099,6 +3561,7 @@ async function cambiarCapaProcessNode(node, direccion) {
 }
 
 async function eliminarProcessNode(node) {
+  pushProcessUndo()
 
   const { error } = await supabase
     .from('process_nodes')
@@ -3292,6 +3755,7 @@ async function aplicarSnapSeleccionProcess() {
 
 
 async function cambiarColorSeleccionProcess(color) {
+  pushProcessUndo()
   if (selectedProcessNodeIds.length === 0) return
 
   const ids = [...selectedProcessNodeIds]
@@ -3378,6 +3842,7 @@ async function cambiarCapaSeleccionProcess(direccion) {
 
 
 async function eliminarSeleccionProcess() {
+  pushProcessUndo()
   if (selectedProcessNodeIds.length === 0) return
 
   const ids = [...selectedProcessNodeIds]
@@ -3400,6 +3865,7 @@ async function eliminarSeleccionProcess() {
 }
 
 async function duplicarSeleccionProcess() {
+  pushProcessUndo()
   if (selectedProcessNodeIds.length === 0) return
 
   const maxZ = Math.max(
@@ -3465,6 +3931,8 @@ async function duplicarSeleccionProcess() {
 function iniciarDragProcessNode(event, node) {
   if (event.button !== 0) return
 
+  pushProcessUndo()
+
   if (
     event.target.closest('.process-node-connector') ||
     event.target.closest('.process-node-resize')
@@ -3495,7 +3963,7 @@ function iniciarDragProcessNode(event, node) {
       : [node.id]
 
   if (!selectedProcessNodeIds.includes(node.id)) {
-    setSelectedProcessNodeIds([])
+    setSelectedProcessNodeIds([node.id])
   }
 
   const posiciones =
@@ -3728,6 +4196,7 @@ async function terminarDragProcessNode() {
 }
 
 function iniciarResizeProcessNode(event, node) {
+  pushProcessUndo()
   event.preventDefault()
   event.stopPropagation()
 
@@ -3993,6 +4462,8 @@ function puntoConectorProcess(node, lado) {
 
 function iniciarConexionProcess(event, node, lado) {
   if (event.button !== 0) return
+
+  pushProcessUndo()
 
   event.preventDefault()
   event.stopPropagation()
@@ -5035,6 +5506,7 @@ async function guardarBoard(event) {
       .insert({
         nombre: nuevoBoard.nombre.trim(),
         descripcion: nuevoBoard.descripcion.trim(),
+        archivado: false,
       })
       .select()
       .single()
@@ -5046,6 +5518,15 @@ async function guardarBoard(event) {
 
     setBoardSeleccionadoId(data.id)
   }
+
+  await registrarActividad({
+    modulo: 'Cards',
+    accion: boardEditando ? 'editó' : 'creó',
+    detalle: `${boardEditando ? 'Editó' : 'Creó'} el board "${nuevoBoard.nombre.trim()}"`,
+    recursoTipo: 'card_board',
+    recursoId: boardEditando?.id || boardSeleccionadoId,
+    recursoNombre: nuevoBoard.nombre.trim(),
+  })
 
   setNuevoBoard({
     nombre: '',
@@ -7472,6 +7953,7 @@ function colorEstadoTarea(tarea) {
     const { data, error } = await supabase
       .from('kanban_projects')
       .select('*')
+      .eq('archivado', false)
       .order('updated_at', { ascending: false })
 
     if (error) {
@@ -7490,6 +7972,81 @@ function colorEstadoTarea(tarea) {
     ) {
       setKanbanProjectId(lista[0]?.id || '')
     }
+  }
+
+
+  async function cargarKanbanProjectsArchivados() {
+    const { data, error } = await supabase
+      .from('kanban_projects')
+      .select('*')
+      .eq('archivado', true)
+      .order('updated_at', { ascending: false })
+
+    if (error) {
+      console.error('Error cargando Kanban archivados:', error)
+      return
+    }
+
+    setKanbanProjectsArchivados(data || [])
+  }
+
+  async function archivarKanbanProject(project) {
+    if (!project) return
+
+    const { error } = await supabase
+      .from('kanban_projects')
+      .update({
+        archivado: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', project.id)
+
+    if (error) {
+      alert(`No se pudo archivar el tablero: ${error.message}`)
+      return
+    }
+
+    await registrarActividad({
+      modulo: 'Kanban',
+      accion: 'archivó',
+      detalle: `Archivó el tablero "${project.nombre}"`,
+      recursoTipo: 'kanban_project',
+      recursoId: project.id,
+      recursoNombre: project.nombre,
+    })
+
+    if (kanbanProjectId === project.id) {
+      setKanbanProjectId('')
+      setKanbanCards([])
+    }
+
+    await Promise.all([
+      cargarKanbanProjects(),
+      cargarKanbanProjectsArchivados(),
+    ])
+  }
+
+  async function restaurarKanbanProject(project) {
+    const { error } = await supabase
+      .from('kanban_projects')
+      .update({
+        archivado: false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', project.id)
+
+    if (error) {
+      alert(`No se pudo restaurar el tablero: ${error.message}`)
+      return
+    }
+
+    await Promise.all([
+      cargarKanbanProjects(),
+      cargarKanbanProjectsArchivados(),
+    ])
+
+    setKanbanProjectId(project.id)
+    setKanbanProjectArchiveOpen(false)
   }
 
   async function cargarKanbanCards(projectId) {
@@ -7578,6 +8135,7 @@ function colorEstadoTarea(tarea) {
           nuevoKanbanProject.descripcion.trim() || null,
         canvas_bg: '#0b1220',
         columnas: KANBAN_ESTADOS,
+        archivado: false,
         created_by: session.user.id,
       })
       .select()
@@ -7587,6 +8145,15 @@ function colorEstadoTarea(tarea) {
       alert(`No se pudo crear el proyecto Kanban: ${error.message}`)
       return
     }
+
+    await registrarActividad({
+      modulo: 'Kanban',
+      accion: 'creó',
+      detalle: `Creó el tablero "${data.nombre}"`,
+      recursoTipo: 'kanban_project',
+      recursoId: data.id,
+      recursoNombre: data.nombre,
+    })
 
     setKanbanProjectDrawerOpen(false)
     await cargarKanbanProjects()
@@ -7986,6 +8553,15 @@ function colorEstadoTarea(tarea) {
         autor: session.user.email,
         comentario: `Movió la tarjeta de "${estadoAnterior}" a "${nuevoEstado}"`,
       })
+
+    await registrarActividad({
+      modulo: 'Kanban',
+      accion: 'movió',
+      detalle: `Movió "${card.titulo}" de "${estadoAnterior}" a "${nuevoEstado}"`,
+      recursoTipo: 'kanban_card',
+      recursoId: card.id,
+      recursoNombre: card.titulo,
+    })
   }
 
   async function archivarKanbanCard(card) {
@@ -8015,6 +8591,15 @@ function colorEstadoTarea(tarea) {
         autor: session.user.email,
         comentario: 'Archivó la tarjeta',
       })
+
+    await registrarActividad({
+      modulo: 'Kanban',
+      accion: 'archivó',
+      detalle: `Archivó "${card.titulo}"`,
+      recursoTipo: 'kanban_card',
+      recursoId: card.id,
+      recursoNombre: card.titulo,
+    })
 
     cerrarKanbanCardDrawer()
     await Promise.all([
@@ -8163,6 +8748,7 @@ function colorEstadoTarea(tarea) {
       vistaPrincipal === 'cards'
     ) {
       cargarBoards()
+      cargarBoardsArchivados()
     }
   }, [session, vistaPrincipal])
 
@@ -8194,6 +8780,7 @@ function colorEstadoTarea(tarea) {
   useEffect(() => {
     if (session && vistaPrincipal === 'kanban') {
       cargarKanbanProjects()
+      cargarKanbanProjectsArchivados()
     }
   }, [session, vistaPrincipal])
 
@@ -8210,6 +8797,95 @@ function colorEstadoTarea(tarea) {
       setProcessConnectSource(null)
     }
   }, [session, vistaPrincipal, processSeleccionadoId])
+
+
+  useEffect(() => {
+    function onProcessKeyDown(event) {
+      if (
+        vistaPrincipal !== 'process' ||
+        processNodeDrawerOpen ||
+        processBoxDrawerOpen ||
+        processLinkDrawerOpen ||
+        processMapDrawerOpen
+      ) {
+        return
+      }
+
+      const target = event.target
+      const tag = target?.tagName?.toLowerCase()
+
+      if (
+        tag === 'input' ||
+        tag === 'textarea' ||
+        tag === 'select' ||
+        target?.isContentEditable
+      ) {
+        return
+      }
+
+      const ctrl =
+        event.ctrlKey || event.metaKey
+
+      if (
+        (event.key === 'Delete' ||
+          event.key === 'Backspace') &&
+        selectedProcessNodeIds.length > 0
+      ) {
+        event.preventDefault()
+        eliminarSeleccionProcess()
+        return
+      }
+
+      if (
+        ctrl &&
+        event.key.toLowerCase() === 'c' &&
+        selectedProcessNodeIds.length > 0
+      ) {
+        event.preventDefault()
+        copiarSeleccionProcess()
+        return
+      }
+
+      if (
+        ctrl &&
+        event.key.toLowerCase() === 'x' &&
+        selectedProcessNodeIds.length > 0
+      ) {
+        event.preventDefault()
+        copiarSeleccionProcess()
+        eliminarSeleccionProcess()
+        return
+      }
+
+      if (
+        ctrl &&
+        event.key.toLowerCase() === 'v'
+      ) {
+        event.preventDefault()
+        pegarSeleccionProcess()
+      }
+    }
+
+    window.addEventListener(
+      'keydown',
+      onProcessKeyDown
+    )
+
+    return () =>
+      window.removeEventListener(
+        'keydown',
+        onProcessKeyDown
+      )
+  }, [
+    vistaPrincipal,
+    selectedProcessNodeIds,
+    processNodeDrawerOpen,
+    processBoxDrawerOpen,
+    processLinkDrawerOpen,
+    processMapDrawerOpen,
+    processNodes,
+    processSeleccionadoId,
+  ])
 
   const processSeleccionado = processMaps.find(
     (item) => item.id === processSeleccionadoId
@@ -8304,6 +8980,73 @@ function colorEstadoTarea(tarea) {
   const kanbanProject = kanbanProjects.find(
     (item) => item.id === kanbanProjectId
   )
+
+
+  const kanbanCardsFiltradas = useMemo(() => {
+    const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0)
+
+    function cumpleFecha(card) {
+      if (kanbanFiltroFecha === 'Todas') {
+        return true
+      }
+
+      const fin =
+        card.fecha_inicio
+          ? calcularFechaFinDate(
+              card.fecha_inicio,
+              card.duracion_dias || 1
+            )
+          : null
+
+      if (!fin) return false
+
+      fin.setHours(0, 0, 0, 0)
+
+      const dias =
+        kanbanFiltroFecha === 'Hoy'
+          ? 0
+          : kanbanFiltroFecha === 'Mañana'
+            ? 1
+            : 2
+
+      const objetivo = new Date(hoy)
+      objetivo.setDate(
+        objetivo.getDate() + dias
+      )
+
+      return (
+        fin.getFullYear() ===
+          objetivo.getFullYear() &&
+        fin.getMonth() ===
+          objetivo.getMonth() &&
+        fin.getDate() ===
+          objetivo.getDate()
+      )
+    }
+
+    return kanbanCards.filter(
+      (card) =>
+        (
+          kanbanFiltroPrioridad ===
+            'Todas' ||
+          card.prioridad ===
+            kanbanFiltroPrioridad
+        ) &&
+        (
+          kanbanFiltroTipo ===
+            'Todos' ||
+          card.tipo ===
+            kanbanFiltroTipo
+        ) &&
+        cumpleFecha(card)
+    )
+  }, [
+    kanbanCards,
+    kanbanFiltroPrioridad,
+    kanbanFiltroTipo,
+    kanbanFiltroFecha,
+  ])
 
   const kanbanCanvasBgActual =
     kanbanProject?.canvas_bg || '#0b1220'
@@ -8539,6 +9282,23 @@ function colorEstadoTarea(tarea) {
         </div>
 
         <div className="top-actions">
+
+          <button
+            type="button"
+            className="activity-bell-button"
+            onClick={abrirActividad}
+            title="Actividad reciente"
+            aria-label="Actividad reciente"
+          >
+            <img
+              src={
+                actividadTieneNovedades
+                  ? bellNotifIcon
+                  : bellIcon
+              }
+              alt=""
+            />
+          </button>
 
           <span className="user-email">
             {session.user.email}
@@ -10375,6 +11135,17 @@ function colorEstadoTarea(tarea) {
                   <div className="process-list-header-actions">
                     <button
                       type="button"
+                      onClick={() => {
+                        setProcessArchiveOpen(true)
+                        cargarProcessMapsArchivados()
+                      }}
+                      title="Procesos archivados"
+                    >
+                      <img src={archiveIcon} alt="" />
+                    </button>
+
+                    <button
+                      type="button"
                       className="process-list-scroll-button"
                       onClick={() => scrollProcessList('up')}
                       title="Subir"
@@ -10691,6 +11462,18 @@ function colorEstadoTarea(tarea) {
                           <b />
                         </span>
                       </button>
+
+                      <span className="process-overlay-divider" />
+
+                      <button
+                        type="button"
+                        className="process-undo-tool"
+                        onClick={deshacerProcess}
+                        title="Deshacer (hasta 3 cambios)"
+                        aria-label="Deshacer"
+                      >
+                        ↶
+                      </button>
                     </div>
 
                     <div className="process-zoom-overlay">
@@ -10864,6 +11647,10 @@ function colorEstadoTarea(tarea) {
                             processBoxDragInfo?.id === box.id
                               ? 'dragging'
                               : ''
+                          } ${
+                            selectedProcessBoxId === box.id
+                              ? 'selected'
+                              : ''
                           }`}
                           style={{
                             left: `${Number(box.pos_x)}px`,
@@ -10877,9 +11664,10 @@ function colorEstadoTarea(tarea) {
                                 box.color || '#4ea1ff'
                               ),
                           }}
-                          onMouseDown={(event) =>
+                          onMouseDown={(event) => {
+                            setSelectedProcessBoxId(box.id)
                             iniciarDragProcessBox(event, box)
-                          }
+                          }}
                           onDoubleClick={(event) => {
                             event.stopPropagation()
                             abrirEditarProcessBox(box)
@@ -10891,6 +11679,8 @@ function colorEstadoTarea(tarea) {
 
                           <div className="process-box-separator" />
 
+                          {selectedProcessBoxId === box.id && (
+                            <>
                           <button
                             type="button"
                             className="process-box-edit"
@@ -10908,6 +11698,21 @@ function colorEstadoTarea(tarea) {
 
                           <button
                             type="button"
+                            className="process-box-delete"
+                            onMouseDown={(event) =>
+                              event.stopPropagation()
+                            }
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              eliminarProcessBox(box)
+                            }}
+                            title="Eliminar caja"
+                          >
+                            ×
+                          </button>
+
+                          <button
+                            type="button"
                             className="process-box-resize"
                             onMouseDown={(event) =>
                               iniciarResizeProcessBox(
@@ -10917,6 +11722,9 @@ function colorEstadoTarea(tarea) {
                             }
                             title="Cambiar tamaño"
                           />
+
+                            </>
+                          )}
                         </section>
                       ))}
 
@@ -11096,17 +11904,21 @@ function colorEstadoTarea(tarea) {
                             )
                           )}
 
-                          <button
-                            type="button"
-                            className="process-node-resize"
-                            onMouseDown={(event) =>
-                              iniciarResizeProcessNode(
-                                event,
-                                node
-                              )
-                            }
-                            title="Agrandar o achicar"
-                          />
+                          {selectedProcessNodeIds.includes(
+                            node.id
+                          ) && (
+                            <button
+                              type="button"
+                              className="process-node-resize"
+                              onMouseDown={(event) =>
+                                iniciarResizeProcessNode(
+                                  event,
+                                  node
+                                )
+                              }
+                              title="Agrandar o achicar"
+                            />
+                          )}
                         </div>
                       ))}
 
@@ -11138,13 +11950,25 @@ function colorEstadoTarea(tarea) {
               </p>
             </div>
 
-            <button
-              type="button"
-              className="cards-secondary-button"
-              onClick={abrirNuevoKanbanProject}
-            >
-              + Proyecto Kanban
-            </button>
+            <div className="kanban-toolbar-actions">
+              <button
+                type="button"
+                className="meeting-mode-button"
+                onClick={() =>
+                  setMeetingMode(true)
+                }
+              >
+                ▶ Modo reunión
+              </button>
+
+              <button
+                type="button"
+                className="cards-secondary-button"
+                onClick={abrirNuevoKanbanProject}
+              >
+                + Proyecto Kanban
+              </button>
+            </div>
           </div>
 
           <div className="kanban-layout">
@@ -11155,12 +11979,25 @@ function colorEstadoTarea(tarea) {
                   <strong>{kanbanProjects.length}</strong>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={abrirNuevoKanbanProject}
-                >
-                  +
-                </button>
+                <div className="list-header-actions-v86">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setKanbanProjectArchiveOpen(true)
+                      cargarKanbanProjectsArchivados()
+                    }}
+                    title="Tableros archivados"
+                  >
+                    <img src={archiveIcon} alt="" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={abrirNuevoKanbanProject}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
 
               <div className="kanban-project-list">
@@ -11187,16 +12024,28 @@ function colorEstadoTarea(tarea) {
                       </span>
                     </button>
 
-                    <button
-                      type="button"
-                      className="kanban-project-delete"
-                      onClick={() =>
-                        eliminarKanbanProject(project)
-                      }
-                      title="Eliminar proyecto"
-                    >
-                      ×
-                    </button>
+                    <div className="kanban-project-item-actions">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          archivarKanbanProject(project)
+                        }
+                        title="Archivar tablero"
+                      >
+                        <img src={archiveIcon} alt="" />
+                      </button>
+
+                      <button
+                        type="button"
+                        className="kanban-project-delete"
+                        onClick={() =>
+                          eliminarKanbanProject(project)
+                        }
+                        title="Eliminar proyecto"
+                      >
+                        ×
+                      </button>
+                    </div>
                   </div>
                 ))}
 
@@ -11243,6 +12092,67 @@ function colorEstadoTarea(tarea) {
                     >
                       + Tarjeta
                     </button>
+                  </div>
+
+                  <div className="kanban-filters-v86">
+                    <select
+                      value={kanbanFiltroPrioridad}
+                      onChange={(event) =>
+                        setKanbanFiltroPrioridad(
+                          event.target.value
+                        )
+                      }
+                    >
+                      <option value="Todas">
+                        Todas las prioridades
+                      </option>
+                      <option value="Alta">Alta</option>
+                      <option value="Media">Media</option>
+                      <option value="Baja">Baja</option>
+                    </select>
+
+                    <select
+                      value={kanbanFiltroTipo}
+                      onChange={(event) =>
+                        setKanbanFiltroTipo(
+                          event.target.value
+                        )
+                      }
+                    >
+                      <option value="Todos">
+                        Todos los tipos
+                      </option>
+                      <option value="Error">Error</option>
+                      <option value="GAP">GAP</option>
+                      <option value="Evolutivo">
+                        Evolutivo
+                      </option>
+                      <option value="Mejora">
+                        Mejora
+                      </option>
+                    </select>
+
+                    <select
+                      value={kanbanFiltroFecha}
+                      onChange={(event) =>
+                        setKanbanFiltroFecha(
+                          event.target.value
+                        )
+                      }
+                    >
+                      <option value="Todas">
+                        Todas las fechas
+                      </option>
+                      <option value="Hoy">
+                        Vence hoy
+                      </option>
+                      <option value="Mañana">
+                        Vence mañana
+                      </option>
+                      <option value="2 días">
+                        Vence en 2 días
+                      </option>
+                    </select>
                   </div>
 
                   <div className="kanban-bg-picker">
@@ -11331,7 +12241,7 @@ function colorEstadoTarea(tarea) {
                     }}
                   >
                     {kanbanColumnas.map((estado) => {
-                      const tarjetas = kanbanCards.filter(
+                      const tarjetas = kanbanCardsFiltradas.filter(
                         (card) => card.estado === estado
                       )
 
@@ -11493,13 +12403,26 @@ function colorEstadoTarea(tarea) {
                   </strong>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={abrirNuevoBoard}
-                  title="Crear board"
-                >
-                  +
-                </button>
+                <div className="list-header-actions-v86">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBoardArchiveOpen(true)
+                      cargarBoardsArchivados()
+                    }}
+                    title="Boards archivados"
+                  >
+                    <img src={archiveIcon} alt="" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={abrirNuevoBoard}
+                    title="Crear board"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
 
               <div className="boards-list">
@@ -11547,6 +12470,16 @@ function colorEstadoTarea(tarea) {
                         title="Editar board"
                       >
                         ✎
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          archivarBoard(board)
+                        }
+                        title="Archivar board"
+                      >
+                        <img src={archiveIcon} alt="" />
                       </button>
 
                       <button
@@ -11619,12 +12552,7 @@ function colorEstadoTarea(tarea) {
                     </div>
 
                     <div className="cards-board-meta-actions">
-                      <span className="cards-counter">
-                        {cards.length} card
-                        {cards.length === 1 ? '' : 's'}
-                      </span>
-
-                      <div className="card-create-actions">
+<div className="card-create-actions">
                         <button
                           type="button"
                           className="cards-primary-button compact"
@@ -11821,6 +12749,7 @@ function colorEstadoTarea(tarea) {
                       moverZona(event)
                       moverResizeZona(event)
                       moverShape(event)
+                      moverResizeShape(event)
                       moverPanCanvas(event)
                     }}
                     onMouseUp={() => {
@@ -11829,6 +12758,7 @@ function colorEstadoTarea(tarea) {
                       terminarDragZona()
                       terminarResizeZona()
                       terminarDragShape()
+                      terminarResizeShape()
                       terminarPanCanvas()
                     }}
                     onMouseLeave={() => {
@@ -11837,6 +12767,7 @@ function colorEstadoTarea(tarea) {
                       terminarDragZona()
                       terminarResizeZona()
                       terminarDragShape()
+                      terminarResizeShape()
                       terminarPanCanvas()
                       setLinkDraft(null)
                     }}
@@ -11865,6 +12796,10 @@ function colorEstadoTarea(tarea) {
                           zoneDragInfo?.id === zona.id
                             ? 'dragging'
                             : ''
+                        } ${
+                          selectedZoneId === zona.id
+                            ? 'selected'
+                            : ''
                         }`}
                         style={{
                           left: `${Number(zona.pos_x) || 120}px`,
@@ -11876,9 +12811,10 @@ function colorEstadoTarea(tarea) {
                           borderColor:
                             `${zona.color || '#5b8def'}99`,
                         }}
-                        onMouseDown={(event) =>
+                        onMouseDown={(event) => {
+                          setSelectedZoneId(zona.id)
                           iniciarDragZona(event, zona)
-                        }
+                        }}
                         onDoubleClick={(event) => {
                           event.stopPropagation()
                           abrirEditarZona(zona)
@@ -11895,6 +12831,8 @@ function colorEstadoTarea(tarea) {
                           {zona.titulo}
                         </div>
 
+                        {selectedZoneId === zona.id && (
+                          <>
                         <button
                           type="button"
                           className="board-zone-edit"
@@ -11912,6 +12850,21 @@ function colorEstadoTarea(tarea) {
 
                         <button
                           type="button"
+                          className="board-zone-delete"
+                          onMouseDown={(event) =>
+                            event.stopPropagation()
+                          }
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            eliminarZona(zona)
+                          }}
+                          title="Eliminar zona"
+                        >
+                          ×
+                        </button>
+
+                        <button
+                          type="button"
                           className="board-zone-resize"
                           onMouseDown={(event) =>
                             iniciarResizeZona(
@@ -11921,27 +12874,69 @@ function colorEstadoTarea(tarea) {
                           }
                           title="Cambiar tamaño de zona"
                         />
+
+                          </>
+                        )}
                       </section>
                     ))}
 
                     {boardShapes.map((shape) => (
                       <div
                         key={shape.id}
-                        className={`board-shape board-shape-${shape.tipo}`}
+                        className={`board-shape board-shape-${shape.tipo} ${
+                          selectedShapeId === shape.id
+                            ? 'selected'
+                            : ''
+                        }`}
                         style={{
                           left: `${Number(shape.pos_x) || 180}px`,
                           top: `${Number(shape.pos_y) || 180}px`,
                           width: `${Number(shape.ancho) || 150}px`,
                           height: `${Number(shape.alto) || 110}px`,
-                          backgroundColor: shape.color || '#00c2ff',
-                          color: colorTextoContraste(shape.color || '#00c2ff'),
-                          zIndex: shapeDragInfo?.id === shape.id ? 998 : Number(shape.z_index) || 12,
+                          color: '#111820',
+                          zIndex:
+                            shapeDragInfo?.id === shape.id
+                              ? 998
+                              : Number(shape.z_index) || 12,
+                          '--shape-color':
+                            shape.color || '#00c2ff',
+                          '--shape-icon':
+                            `url(${iconoCardShape(shape.tipo)})`,
                         }}
-                        onMouseDown={(event) => iniciarDragShape(event, shape)}
-                        onDoubleClick={() => abrirEditarShape(shape)}
+                        onMouseDown={(event) =>
+                          iniciarDragShape(event, shape)
+                        }
+                        onDoubleClick={() =>
+                          abrirEditarShape(shape)
+                        }
                         title="Arrastrá para mover · Doble click para editar"
                       >
-                        <span>{shape.texto}</span>
+                        <div className="board-shape-visual">
+                          <div className="board-shape-fill" />
+                          <img
+                            src={iconoCardShape(shape.tipo)}
+                            alt=""
+                            draggable="false"
+                          />
+                        </div>
+
+                        <span className="board-shape-text">
+                          {shape.texto}
+                        </span>
+
+                        {selectedShapeId === shape.id && (
+                          <button
+                            type="button"
+                            className="board-shape-resize"
+                            onMouseDown={(event) =>
+                              iniciarResizeShape(
+                                event,
+                                shape
+                              )
+                            }
+                            title="Cambiar tamaño"
+                          />
+                        )}
                       </div>
                     ))}
 
@@ -12391,8 +13386,8 @@ function colorEstadoTarea(tarea) {
       )}
 
       {modalBoardOpen && (
-        <div className="modal-overlay">
-          <div className="modal-card card-modal-small">
+        <div className="card-drawer-overlay">
+          <aside className="card-editor-drawer board-editor-drawer">
             <form onSubmit={guardarBoard}>
               <div className="card-modal-heading">
                 <div>
@@ -12481,11 +13476,220 @@ function colorEstadoTarea(tarea) {
                 </button>
               </div>
             </form>
-          </div>
+          </aside>
         </div>
       )}
 
 
+
+      {activityOpen && (
+        <div
+          className="card-drawer-overlay activity-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setActivityOpen(false)
+            }
+          }}
+        >
+          <aside className="card-editor-drawer activity-drawer">
+            <div className="card-modal-heading">
+              <div>
+                <span>Centro de actividad</span>
+                <h3>Actividad reciente</h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setActivityOpen(false)
+                }
+              >
+                ×
+              </button>
+            </div>
+
+            {[
+              'Gantt',
+              'Cards',
+              'Process',
+              'Kanban',
+            ].map((modulo) => {
+              const items = activityItems
+                .filter(
+                  (item) =>
+                    item.module === modulo
+                )
+                .slice(0, 5)
+
+              return (
+                <section
+                  key={modulo}
+                  className="activity-section"
+                >
+                  <div className="activity-section-title">
+                    <strong>{modulo}</strong>
+                    <span>
+                      Últimos {items.length}
+                    </span>
+                  </div>
+
+                  <div className="activity-list">
+                    {items.map((item) => (
+                      <article
+                        key={item.id}
+                        className="activity-item"
+                      >
+                        <div className="activity-dot" />
+
+                        <div>
+                          <strong>
+                            {item.actor_name ||
+                              item.actor_email ||
+                              'Usuario'}
+                          </strong>
+
+                          <p>
+                            {item.detail ||
+                              item.action}
+                          </p>
+
+                          <small>
+                            {new Date(
+                              item.created_at
+                            ).toLocaleString(
+                              'es-AR',
+                              {
+                                dateStyle: 'short',
+                                timeStyle: 'short',
+                              }
+                            )}
+                          </small>
+                        </div>
+                      </article>
+                    ))}
+
+                    {items.length === 0 && (
+                      <div className="activity-empty">
+                        Sin novedades recientes.
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )
+            })}
+          </aside>
+        </div>
+      )}
+
+      {boardArchiveOpen && (
+        <div className="card-drawer-overlay">
+          <aside className="card-editor-drawer archive-drawer">
+            <div className="card-modal-heading">
+              <div>
+                <span>Cards</span>
+                <h3>Boards archivados</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setBoardArchiveOpen(false)
+                }
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="archive-list">
+              {boardsArchivados.map((board) => (
+                <div
+                  key={board.id}
+                  className="archive-list-item"
+                >
+                  <div>
+                    <strong>{board.nombre}</strong>
+                    <span>
+                      {board.descripcion ||
+                        'Sin descripción'}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() =>
+                      restaurarBoard(board)
+                    }
+                  >
+                    Restaurar y abrir
+                  </button>
+                </div>
+              ))}
+
+              {boardsArchivados.length === 0 && (
+                <div className="archive-empty">
+                  No hay boards archivados.
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {kanbanProjectArchiveOpen && (
+        <div className="card-drawer-overlay">
+          <aside className="card-editor-drawer archive-drawer">
+            <div className="card-modal-heading">
+              <div>
+                <span>Kanban</span>
+                <h3>Tableros archivados</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setKanbanProjectArchiveOpen(false)
+                }
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="archive-list">
+              {kanbanProjectsArchivados.map(
+                (project) => (
+                  <div
+                    key={project.id}
+                    className="archive-list-item"
+                  >
+                    <div>
+                      <strong>{project.nombre}</strong>
+                      <span>
+                        {project.descripcion ||
+                          'Sin descripción'}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() =>
+                        restaurarKanbanProject(project)
+                      }
+                    >
+                      Restaurar y abrir
+                    </button>
+                  </div>
+                )
+              )}
+
+              {kanbanProjectsArchivados.length === 0 && (
+                <div className="archive-empty">
+                  No hay tableros archivados.
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
 
       {kanbanProjectDrawerOpen && (
         <div className="card-drawer-overlay">
@@ -13852,23 +15056,34 @@ function colorEstadoTarea(tarea) {
                     <button
                       key={item.value}
                       type="button"
-                      className={formShape.tipo === item.value ? 'active' : ''}
-                      onClick={() => setFormShape((actual) => ({
-                        ...actual,
-                        tipo: item.value,
-                        ancho:
-                          item.value === 'rectangle' || item.value === 'callout'
-                            ? 180
-                            : 120,
-                        alto:
-                          item.value === 'rectangle'
-                            ? 90
-                            : item.value === 'callout'
-                              ? 110
+                      className={
+                        formShape.tipo === item.value
+                          ? 'active'
+                          : ''
+                      }
+                      onClick={() =>
+                        setFormShape((actual) => ({
+                          ...actual,
+                          tipo: item.value,
+                          ancho:
+                            item.value === 'rectangle' ||
+                            item.value === 'callout'
+                              ? 180
                               : 120,
-                      }))}
+                          alto:
+                            item.value === 'rectangle'
+                              ? 90
+                              : item.value === 'callout'
+                                ? 110
+                                : 120,
+                        }))
+                      }
+                      title={item.label}
                     >
-                      {item.label}
+                      <img
+                        src={iconoCardShape(item.value)}
+                        alt={item.label}
+                      />
                     </button>
                   ))}
                 </div>
