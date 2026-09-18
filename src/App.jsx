@@ -4241,10 +4241,16 @@ function processLine(link) {
 
   // La punta queda apenas afuera del componente para que no
   // se esconda debajo de la capa del nodo.
+  const distanciaPunta =
+    targetSide === 'left' ||
+    targetSide === 'right'
+      ? 7
+      : 1.5
+
   const p2 = desplazarPuntaFlechaProcess(
     p2Borde,
     targetSide,
-    9
+    distanciaPunta
   )
 
   if (processArrowMode === 'curved') {

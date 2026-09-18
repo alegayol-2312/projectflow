@@ -12618,3 +12618,18 @@ strong {
 
   z-index: 10040 !important;
 }
+
+
+/* =========================================================
+   V8.5.3 - FIX CONEXIÓN VERTICAL
+========================================================= */
+
+/*
+  En conexiones verticales la punta queda prácticamente sobre
+  el borde del componente. El pequeño margen de 1.5px alcanza
+  para que siga visible sin parecer desconectada.
+*/
+.process-link-path {
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
