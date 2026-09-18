@@ -179,12 +179,14 @@ const KANBAN_ESTADOS = [
 ]
 
 const KANBAN_COLORES = [
-  '#f5f0df',
-  '#d9eaf7',
-  '#dff1e7',
-  '#f8dfdf',
-  '#eee3fa',
-  '#f8e8c8',
+  '#FFD60A',
+  '#00C2FF',
+  '#2DD36F',
+  '#FF4D5E',
+  '#9B5DE5',
+  '#FF8A00',
+  '#FF4FB3',
+  '#A7F432',
 ]
 
 
@@ -362,6 +364,11 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [kanbanDragId, setKanbanDragId] = useState(null)
   const [kanbanGanttOpen, setKanbanGanttOpen] = useState(false)
   const [kanbanGanttProjectId, setKanbanGanttProjectId] = useState('')
+  const [kanbanColumnDrawerOpen, setKanbanColumnDrawerOpen] = useState(false)
+  const [nuevaKanbanColumna, setNuevaKanbanColumna] = useState({
+    nombre: '',
+    despuesDe: 'Por hacer',
+  })
   const [nuevoKanbanProject, setNuevoKanbanProject] = useState({
     nombre: '',
     descripcion: '',
@@ -376,7 +383,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
     estado: 'Por hacer',
     prioridad: 'Media',
     comentario: '',
-    color: '#f5f0df',
+    color: '#FFD60A',
   }
   const [formKanbanCard, setFormKanbanCard] = useState(kanbanCardVacia)
 
@@ -2888,6 +2895,39 @@ async function aplicarSnapSeleccionProcess() {
   await guardarPosicionesProcessNodes(
     actualizados.filter((node) =>
       selectedProcessNodeIds.includes(node.id)
+    )
+  )
+}
+
+
+async function cambiarColorSeleccionProcess(color) {
+  if (selectedProcessNodeIds.length === 0) return
+
+  const ids = [...selectedProcessNodeIds]
+
+  const { error } = await supabase
+    .from('process_nodes')
+    .update({
+      color,
+      updated_at: new Date().toISOString(),
+    })
+    .in('id', ids)
+
+  if (error) {
+    alert(
+      `No se pudo cambiar el color de los componentes seleccionados: ${error.message}`
+    )
+    return
+  }
+
+  setProcessNodes((actual) =>
+    actual.map((node) =>
+      ids.includes(node.id)
+        ? {
+            ...node,
+            color,
+          }
+        : node
     )
   )
 }
@@ -6954,6 +6994,7 @@ function colorEstadoTarea(tarea) {
         descripcion:
           nuevoKanbanProject.descripcion.trim() || null,
         canvas_bg: '#0b1220',
+        columnas: KANBAN_ESTADOS,
         created_by: session.user.id,
       })
       .select()
@@ -6991,6 +7032,132 @@ function colorEstadoTarea(tarea) {
     }
 
     await cargarKanbanProjects()
+  }
+
+
+  function abrirNuevaKanbanColumna() {
+    if (!kanbanProjectId) {
+      alert('Primero seleccioná un proyecto Kanban.')
+      return
+    }
+
+    if (kanbanColumnas.length >= 5) {
+      alert('El tablero admite hasta 5 columnas.')
+      return
+    }
+
+    const columnasIntermedias =
+      kanbanColumnas.slice(0, -1)
+
+    setNuevaKanbanColumna({
+      nombre: '',
+      despuesDe:
+        columnasIntermedias.includes('En curso')
+          ? 'En curso'
+          : columnasIntermedias[
+              columnasIntermedias.length - 1
+            ] || 'Por hacer',
+    })
+
+    setKanbanColumnDrawerOpen(true)
+  }
+
+  function cerrarKanbanColumnDrawer() {
+    setKanbanColumnDrawerOpen(false)
+    setNuevaKanbanColumna({
+      nombre: '',
+      despuesDe: 'Por hacer',
+    })
+  }
+
+  async function guardarKanbanColumna(event) {
+    event.preventDefault()
+
+    const nombre =
+      nuevaKanbanColumna.nombre.trim()
+
+    if (!nombre) {
+      alert('Ingresá un nombre para la columna.')
+      return
+    }
+
+    if (kanbanColumnas.length >= 5) {
+      alert('El tablero admite hasta 5 columnas.')
+      return
+    }
+
+    const nombreNormalizado =
+      nombre.toLocaleLowerCase('es')
+
+    if (
+      kanbanColumnas.some(
+        (columna) =>
+          columna.toLocaleLowerCase('es') ===
+          nombreNormalizado
+      )
+    ) {
+      alert('Ya existe una columna con ese nombre.')
+      return
+    }
+
+    const columnasActuales = [
+      ...kanbanColumnas,
+    ]
+
+    const indiceBase =
+      columnasActuales.indexOf(
+        nuevaKanbanColumna.despuesDe
+      )
+
+    const indiceInsertar =
+      indiceBase >= 0
+        ? indiceBase + 1
+        : Math.max(
+            1,
+            columnasActuales.length - 1
+          )
+
+    // Listo siempre queda última.
+    const columnasNuevas = [
+      ...columnasActuales,
+    ]
+
+    columnasNuevas.splice(
+      Math.min(
+        indiceInsertar,
+        columnasNuevas.length - 1
+      ),
+      0,
+      nombre
+    )
+
+    const { error } = await supabase
+      .from('kanban_projects')
+      .update({
+        columnas: columnasNuevas,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', kanbanProjectId)
+
+    if (error) {
+      alert(
+        `No se pudo crear la columna: ${error.message}`
+      )
+      return
+    }
+
+    setKanbanProjects((actual) =>
+      actual.map((project) =>
+        project.id === kanbanProjectId
+          ? {
+              ...project,
+              columnas: columnasNuevas,
+            }
+          : project
+      )
+    )
+
+    cerrarKanbanColumnDrawer()
   }
 
   async function actualizarKanbanBg(color) {
@@ -7048,7 +7215,7 @@ function colorEstadoTarea(tarea) {
       estado: card.estado || 'Por hacer',
       prioridad: card.prioridad || 'Media',
       comentario: card.comentario || '',
-      color: card.color || '#f5f0df',
+      color: card.color || '#FFD60A',
     })
     setKanbanGanttOpen(false)
     setKanbanGanttProjectId('')
@@ -7502,6 +7669,28 @@ function colorEstadoTarea(tarea) {
 
   const kanbanCanvasBgActual =
     kanbanProject?.canvas_bg || '#0b1220'
+
+  const kanbanColumnas = useMemo(() => {
+    const columnas = Array.isArray(kanbanProject?.columnas)
+      ? kanbanProject.columnas
+      : KANBAN_ESTADOS
+
+    const limpias = columnas
+      .map((item) => String(item || '').trim())
+      .filter(Boolean)
+
+    const sinExtremos = limpias.filter(
+      (item) =>
+        item !== 'Por hacer' &&
+        item !== 'Listo'
+    )
+
+    return [
+      'Por hacer',
+      ...sinExtremos.slice(0, 3),
+      'Listo',
+    ]
+  }, [kanbanProject?.columnas])
 
   if (loading) {
     return (
@@ -9865,63 +10054,108 @@ function colorEstadoTarea(tarea) {
                     </div>
                     {selectedProcessNodeIds.length > 0 && (
                       <div className="process-selection-toolbar">
-                        <strong>
-                          {selectedProcessNodeIds.length}
-                          {' '}seleccionados
-                        </strong>
+                        <div className="process-selection-summary">
+                          <strong>
+                            {selectedProcessNodeIds.length}
+                            {' '}seleccionados
+                          </strong>
 
-                        <button
-                          type="button"
-                          onClick={duplicarSeleccionProcess}
-                        >
-                          Duplicar
-                        </button>
+                          <span>
+                            Acciones masivas
+                          </span>
+                        </div>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            cambiarCapaSeleccionProcess(
-                              'frente'
-                            )
-                          }
-                        >
-                          Frente
-                        </button>
+                        <div className="process-selection-actions">
+                          <button
+                            type="button"
+                            onClick={duplicarSeleccionProcess}
+                          >
+                            Duplicar
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            cambiarCapaSeleccionProcess(
-                              'fondo'
-                            )
-                          }
-                        >
-                          Atrás
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              cambiarCapaSeleccionProcess(
+                                'frente'
+                              )
+                            }
+                          >
+                            Frente
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={aplicarSnapSeleccionProcess}
-                        >
-                          Snap
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              cambiarCapaSeleccionProcess(
+                                'fondo'
+                              )
+                            }
+                          >
+                            Atrás
+                          </button>
 
-                        <button
-                          type="button"
-                          className="selection-delete-all"
-                          onClick={eliminarSeleccionProcess}
-                        >
-                          Delete all
-                        </button>
+                          <button
+                            type="button"
+                            onClick={aplicarSnapSeleccionProcess}
+                          >
+                            Snap
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelectedProcessNodeIds([])
-                          }
-                        >
-                          Cancelar
-                        </button>
+                          <button
+                            type="button"
+                            className="selection-delete-all"
+                            onClick={eliminarSeleccionProcess}
+                          >
+                            Delete all
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedProcessNodeIds([])
+                            }
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+
+                        <div className="process-selection-colors">
+                          <span>Color</span>
+
+                          <div>
+                            {[
+                              { value: '#cfe3cd', label: 'Verde suave' },
+                              { value: '#fde68a', label: 'Amarillo' },
+                              { value: '#fecaca', label: 'Rosa claro' },
+                              { value: '#bfdbfe', label: 'Celeste' },
+                              { value: '#ddd6fe', label: 'Lila' },
+                              { value: '#fdba74', label: 'Naranja' },
+                              { value: '#e5e7eb', label: 'Gris claro' },
+                            ].map((color) => (
+                              <button
+                                key={color.value}
+                                type="button"
+                                className="process-selection-color-dot"
+                                style={{
+                                  backgroundColor:
+                                    color.value,
+                                }}
+                                title={
+                                  `Aplicar ${color.label} a todos`
+                                }
+                                aria-label={
+                                  `Aplicar ${color.label} a todos`
+                                }
+                                onClick={() =>
+                                  cambiarColorSeleccionProcess(
+                                    color.value
+                                  )
+                                }
+                              />
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     )}
 
@@ -10390,6 +10624,22 @@ function colorEstadoTarea(tarea) {
                         title={bg.label}
                       />
                     ))}
+
+                    <span className="kanban-bg-divider" />
+
+                    <button
+                      type="button"
+                      className="kanban-add-column-button"
+                      onClick={abrirNuevaKanbanColumna}
+                      disabled={kanbanColumnas.length >= 5}
+                      title={
+                        kanbanColumnas.length >= 5
+                          ? 'Máximo 5 columnas'
+                          : 'Agregar columna'
+                      }
+                    >
+                      + Columnas
+                    </button>
                   </div>
 
                   <button
@@ -10408,8 +10658,14 @@ function colorEstadoTarea(tarea) {
                     )}
                   </button>
 
-                  <div className="kanban-columns">
-                    {KANBAN_ESTADOS.map((estado) => {
+                  <div
+                    className="kanban-columns"
+                    style={{
+                      '--kanban-column-count':
+                        kanbanColumnas.length,
+                    }}
+                  >
+                    {kanbanColumnas.map((estado) => {
                       const tarjetas = kanbanCards.filter(
                         (card) => card.estado === estado
                       )
@@ -10451,7 +10707,15 @@ function colorEstadoTarea(tarea) {
                                   className="kanban-card"
                                   style={{
                                     backgroundColor:
-                                      card.color || '#f5f0df',
+                                      card.color || '#FFD60A',
+                                    color:
+                                      colorTextoContraste(
+                                        card.color || '#FFD60A'
+                                      ),
+                                    '--kanban-card-text':
+                                      colorTextoContraste(
+                                        card.color || '#FFD60A'
+                                      ),
                                   }}
                                   draggable
                                   onDragStart={() =>
@@ -11589,6 +11853,111 @@ function colorEstadoTarea(tarea) {
         </div>
       )}
 
+      {kanbanColumnDrawerOpen && (
+        <div
+          className="card-drawer-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              cerrarKanbanColumnDrawer()
+            }
+          }}
+        >
+          <aside className="card-editor-drawer kanban-drawer">
+            <form onSubmit={guardarKanbanColumna}>
+              <div className="card-modal-heading">
+                <div>
+                  <span>Kanban</span>
+                  <h3>Nueva columna</h3>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={cerrarKanbanColumnDrawer}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="kanban-column-rule">
+                <strong>
+                  {kanbanColumnas.length}/5 columnas
+                </strong>
+
+                <span>
+                  Por hacer siempre queda primera y Listo siempre queda última.
+                </span>
+              </div>
+
+              <div className="form-group">
+                <label>Nombre</label>
+
+                <input
+                  type="text"
+                  value={nuevaKanbanColumna.nombre}
+                  onChange={(event) =>
+                    setNuevaKanbanColumna(
+                      (actual) => ({
+                        ...actual,
+                        nombre: event.target.value,
+                      })
+                    )
+                  }
+                  placeholder="Ej: Validación"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Ubicación</label>
+
+                <select
+                  value={nuevaKanbanColumna.despuesDe}
+                  onChange={(event) =>
+                    setNuevaKanbanColumna(
+                      (actual) => ({
+                        ...actual,
+                        despuesDe: event.target.value,
+                      })
+                    )
+                  }
+                >
+                  {kanbanColumnas
+                    .slice(0, -1)
+                    .map((columna) => (
+                      <option
+                        key={columna}
+                        value={columna}
+                      >
+                        Después de {columna}
+                      </option>
+                    ))}
+                </select>
+
+                <small className="kanban-column-help">
+                  La nueva columna se agrega únicamente entre Por hacer y Listo.
+                </small>
+              </div>
+
+              <div className="connection-drawer-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={cerrarKanbanColumnDrawer}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn-primary"
+                >
+                  Crear columna
+                </button>
+              </div>
+            </form>
+          </aside>
+        </div>
+      )}
+
       {kanbanCardDrawerOpen && (
         <div
           className="card-drawer-overlay"
@@ -11735,7 +12104,7 @@ function colorEstadoTarea(tarea) {
                       }))
                     }
                   >
-                    {KANBAN_ESTADOS.map((estado) => (
+                    {kanbanColumnas.map((estado) => (
                       <option key={estado}>{estado}</option>
                     ))}
                   </select>
