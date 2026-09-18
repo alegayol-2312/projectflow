@@ -12557,3 +12557,18 @@ strong {
   right: 18px !important;
   bottom: 18px !important;
 }
+
+
+/* =========================================================
+   V8.5.1 - PUNTA DE FLECHA SIEMPRE VISIBLE
+========================================================= */
+
+/*
+  La línea sigue anclada al borde visual, pero el extremo que
+  contiene la punta se desplaza unos píxeles hacia afuera del
+  componente. Así la punta no queda debajo de la capa del nodo.
+*/
+.process-links-layer marker path {
+  fill: #b9c5cf;
+  stroke: none;
+}

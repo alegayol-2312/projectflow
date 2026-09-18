@@ -4191,6 +4191,35 @@ function processNodeById(id) {
   return processNodes.find((item) => item.id === id)
 }
 
+
+function desplazarPuntaFlechaProcess(point, side, distancia = 9) {
+  if (side === 'left') {
+    return {
+      x: point.x - distancia,
+      y: point.y,
+    }
+  }
+
+  if (side === 'right') {
+    return {
+      x: point.x + distancia,
+      y: point.y,
+    }
+  }
+
+  if (side === 'top') {
+    return {
+      x: point.x,
+      y: point.y - distancia,
+    }
+  }
+
+  return {
+    x: point.x,
+    y: point.y + distancia,
+  }
+}
+
 function processLine(link) {
   const source = processNodeById(link.source_node_id)
   const target = processNodeById(link.target_node_id)
@@ -4205,9 +4234,17 @@ function processLine(link) {
     sourceSide
   )
 
-  const p2 = puntoConectorProcess(
+  const p2Borde = puntoConectorProcess(
     target,
     targetSide
+  )
+
+  // La punta queda apenas afuera del componente para que no
+  // se esconda debajo de la capa del nodo.
+  const p2 = desplazarPuntaFlechaProcess(
+    p2Borde,
+    targetSide,
+    9
   )
 
   if (processArrowMode === 'curved') {
@@ -10886,14 +10923,14 @@ function colorEstadoTarea(tarea) {
                         <defs>
                           <marker
                             id="process-arrow"
-                            markerWidth="8"
-                            markerHeight="8"
-                            refX="7.2"
-                            refY="2.5"
+                            markerWidth="7"
+                            markerHeight="7"
+                            refX="6.4"
+                            refY="2.25"
                             orient="auto"
                             markerUnits="userSpaceOnUse"
                           >
-                            <path d="M0,0 L0,5 L7.2,2.5 z" />
+                            <path d="M0,0 L0,4.5 L6.4,2.25 z" />
                           </marker>
                         </defs>
 
