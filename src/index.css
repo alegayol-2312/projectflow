@@ -14011,3 +14011,131 @@ select:nth-child(3) {
   text-align:
     center !important;
 }
+
+
+/* =========================================================
+   V9.1 - BARRA PROCESS COMPACTA + SHARE VISIBLE
+========================================================= */
+
+/*
+  Layout en grilla: primera fila = resumen + acciones.
+  Segunda fila = colores.
+  La caja mide sólo lo que necesita y deja de ocupar
+  el ancho disponible del canvas.
+*/
+.process-selection-toolbar {
+  width: fit-content !important;
+  min-width: 0 !important;
+  max-width: calc(100% - 28px) !important;
+
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  grid-template-rows: auto auto !important;
+
+  align-items: center !important;
+  justify-content: start !important;
+
+  column-gap: 10px !important;
+  row-gap: 8px !important;
+
+  margin:
+    6px 0 -42px 14px
+    !important;
+
+  padding:
+    10px 11px !important;
+}
+
+.process-selection-summary {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+
+  min-width: 108px !important;
+}
+
+.process-selection-actions {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+
+  width: fit-content !important;
+  flex: none !important;
+
+  display: flex !important;
+  flex-wrap: wrap !important;
+
+  gap: 7px !important;
+}
+
+.process-selection-colors {
+  grid-column: 1 / span 2 !important;
+  grid-row: 2 !important;
+
+  width: fit-content !important;
+  max-width: 100% !important;
+
+  flex: none !important;
+
+  display: flex !important;
+  align-items: center !important;
+
+  justify-self: start !important;
+
+  margin: 0 !important;
+  padding: 8px 0 0 !important;
+
+  border-top:
+    1px solid rgba(255,255,255,.14)
+    !important;
+
+  border-left: 0 !important;
+}
+
+.process-selection-colors > div {
+  width: fit-content !important;
+  flex: none !important;
+}
+
+/* Share queda arriba y bien visible en los drawers */
+.share-with-field {
+  margin:
+    10px 0 14px !important;
+
+  border-color:
+    rgba(0,216,234,.42) !important;
+
+  background:
+    rgba(0,216,234,.055) !important;
+}
+
+.share-with-field > label {
+  color:
+    #ffffff !important;
+
+  font-size:
+    11px !important;
+
+  font-weight:
+    900 !important;
+}
+
+.share-with-help {
+  display: block;
+
+  margin:
+    3px 0 8px;
+
+  color:
+    #b7c7d2 !important;
+
+  font-size:
+    8.5px;
+
+  line-height:
+    1.35;
+}
+
+/* Priorizamos claridad de estado de campana */
+.activity-bell-button img {
+  width: 25px !important;
+  height: 25px !important;
+}

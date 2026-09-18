@@ -816,6 +816,42 @@ useEffect(() => {
     }
   }, [session?.user?.id])
 
+
+  useEffect(() => {
+    if (!session?.user?.id) return
+
+    const channel = supabase
+      .channel(`activity-log-${session.user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'activity_log',
+        },
+        (payload) => {
+          /*
+            Las modificaciones propias no encienden la campana.
+            Igual recargamos el centro para mantenerlo actualizado.
+          */
+          cargarActividadReciente()
+
+          if (
+            payload?.new?.actor_id &&
+            payload.new.actor_id ===
+              session.user.id
+          ) {
+            return
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [session?.user?.id])
+
 useEffect(() => {
   if (!proyectoSeleccionadoId) {
     return
@@ -1078,9 +1114,13 @@ useEffect(() => {
 
   const actividadTieneNovedades = activityItems.some(
     (item) =>
-      !activitySeenAt ||
-      new Date(item.created_at) >
-        new Date(activitySeenAt)
+      item.actor_id &&
+      item.actor_id !== session?.user?.id &&
+      (
+        !activitySeenAt ||
+        new Date(item.created_at) >
+          new Date(activitySeenAt)
+      )
   )
 
   const compartidosSinLeer =
@@ -14768,6 +14808,52 @@ function colorEstadoTarea(tarea) {
                 />
               </div>
 
+              {kanbanCardEditando && (
+                <div className="form-group share-with-field">
+                  <label>Compartir con (@)</label>
+                  <small className="share-with-help">Seleccioná un compañero activo de ProjectFlow.</small>
+
+                  <div className="share-with-row">
+                    <select
+                      value={shareKanbanUserId}
+                      onChange={(event) =>
+                        setShareKanbanUserId(event.target.value)
+                      }
+                    >
+                      <option value="">
+                        Seleccionar compañero...
+                      </option>
+
+                      {perfiles
+                        .filter(
+                          (perfil) =>
+                            perfil.id !== session.user.id &&
+                            perfil.activo !== false
+                        )
+                        .map((perfil) => (
+                          <option
+                            key={perfil.id}
+                            value={perfil.id}
+                          >
+                            {perfil.nombre ||
+                              perfil.email ||
+                              'Usuario'}
+                          </option>
+                        ))}
+                    </select>
+
+                    <button
+                      type="button"
+                      className="share-resource-button"
+                      disabled={!shareKanbanUserId}
+                      onClick={compartirKanbanCardActual}
+                    >
+                      Compartir
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="form-grid">
                 <div className="form-group">
                   <label>Responsable Analista</label>
@@ -14977,50 +15063,6 @@ function colorEstadoTarea(tarea) {
                 ))}
               </div>
 
-              {kanbanCardEditando && (
-                <div className="form-group share-with-field">
-                  <label>Compartir con</label>
-
-                  <div className="share-with-row">
-                    <select
-                      value={shareKanbanUserId}
-                      onChange={(event) =>
-                        setShareKanbanUserId(event.target.value)
-                      }
-                    >
-                      <option value="">
-                        Seleccionar compañero...
-                      </option>
-
-                      {perfiles
-                        .filter(
-                          (perfil) =>
-                            perfil.id !== session.user.id &&
-                            perfil.activo !== false
-                        )
-                        .map((perfil) => (
-                          <option
-                            key={perfil.id}
-                            value={perfil.id}
-                          >
-                            {perfil.nombre ||
-                              perfil.email ||
-                              'Usuario'}
-                          </option>
-                        ))}
-                    </select>
-
-                    <button
-                      type="button"
-                      className="share-resource-button"
-                      disabled={!shareKanbanUserId}
-                      onClick={compartirKanbanCardActual}
-                    >
-                      Compartir
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {kanbanCardEditando && (
                 <div className="kanban-actions-section">
@@ -15367,6 +15409,52 @@ function colorEstadoTarea(tarea) {
                 />
               </div>
 
+              {processNodeEditando && (
+                <div className="form-group share-with-field">
+                  <label>Compartir con (@)</label>
+                  <small className="share-with-help">Seleccioná un compañero activo de ProjectFlow.</small>
+
+                  <div className="share-with-row">
+                    <select
+                      value={shareProcessUserId}
+                      onChange={(event) =>
+                        setShareProcessUserId(event.target.value)
+                      }
+                    >
+                      <option value="">
+                        Seleccionar compañero...
+                      </option>
+
+                      {perfiles
+                        .filter(
+                          (perfil) =>
+                            perfil.id !== session.user.id &&
+                            perfil.activo !== false
+                        )
+                        .map((perfil) => (
+                          <option
+                            key={perfil.id}
+                            value={perfil.id}
+                          >
+                            {perfil.nombre ||
+                              perfil.email ||
+                              'Usuario'}
+                          </option>
+                        ))}
+                    </select>
+
+                    <button
+                      type="button"
+                      className="share-resource-button"
+                      disabled={!shareProcessUserId}
+                      onClick={compartirProcessNodeActual}
+                    >
+                      Compartir
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="form-group">
                 <label>Color</label>
 
@@ -15425,50 +15513,6 @@ function colorEstadoTarea(tarea) {
                 </div>
               </div>
 
-              {processNodeEditando && (
-                <div className="form-group share-with-field">
-                  <label>Compartir con</label>
-
-                  <div className="share-with-row">
-                    <select
-                      value={shareProcessUserId}
-                      onChange={(event) =>
-                        setShareProcessUserId(event.target.value)
-                      }
-                    >
-                      <option value="">
-                        Seleccionar compañero...
-                      </option>
-
-                      {perfiles
-                        .filter(
-                          (perfil) =>
-                            perfil.id !== session.user.id &&
-                            perfil.activo !== false
-                        )
-                        .map((perfil) => (
-                          <option
-                            key={perfil.id}
-                            value={perfil.id}
-                          >
-                            {perfil.nombre ||
-                              perfil.email ||
-                              'Usuario'}
-                          </option>
-                        ))}
-                    </select>
-
-                    <button
-                      type="button"
-                      className="share-resource-button"
-                      disabled={!shareProcessUserId}
-                      onClick={compartirProcessNodeActual}
-                    >
-                      Compartir
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {processNodeEditando && (
                 <div className="process-node-actions">
@@ -16164,6 +16208,54 @@ function colorEstadoTarea(tarea) {
                   />
                 </div>
 
+                {cardEditando && (
+                  <>
+                <div className="form-group share-with-field">
+                  <label>Compartir con (@)</label>
+                  <small className="share-with-help">Seleccioná un compañero activo de ProjectFlow.</small>
+
+                  <div className="share-with-row">
+                    <select
+                      value={shareCardUserId}
+                      onChange={(event) =>
+                        setShareCardUserId(event.target.value)
+                      }
+                    >
+                      <option value="">
+                        Seleccionar compañero...
+                      </option>
+
+                      {perfiles
+                        .filter(
+                          (perfil) =>
+                            perfil.id !== session.user.id &&
+                            perfil.activo !== false
+                        )
+                        .map((perfil) => (
+                          <option
+                            key={perfil.id}
+                            value={perfil.id}
+                          >
+                            {perfil.nombre ||
+                              perfil.email ||
+                              'Usuario'}
+                          </option>
+                        ))}
+                    </select>
+
+                    <button
+                      type="button"
+                      className="share-resource-button"
+                      disabled={!shareCardUserId}
+                      onClick={compartirCardActual}
+                    >
+                      Compartir
+                    </button>
+                  </div>
+                </div>
+                  </>
+                )}
+
                 <div className="form-group full">
                   <label>Descripción</label>
 
@@ -16361,48 +16453,6 @@ function colorEstadoTarea(tarea) {
 
               {cardEditando && (
                 <>
-                <div className="form-group share-with-field">
-                  <label>Compartir con</label>
-
-                  <div className="share-with-row">
-                    <select
-                      value={shareCardUserId}
-                      onChange={(event) =>
-                        setShareCardUserId(event.target.value)
-                      }
-                    >
-                      <option value="">
-                        Seleccionar compañero...
-                      </option>
-
-                      {perfiles
-                        .filter(
-                          (perfil) =>
-                            perfil.id !== session.user.id &&
-                            perfil.activo !== false
-                        )
-                        .map((perfil) => (
-                          <option
-                            key={perfil.id}
-                            value={perfil.id}
-                          >
-                            {perfil.nombre ||
-                              perfil.email ||
-                              'Usuario'}
-                          </option>
-                        ))}
-                    </select>
-
-                    <button
-                      type="button"
-                      className="share-resource-button"
-                      disabled={!shareCardUserId}
-                      onClick={compartirCardActual}
-                    >
-                      Compartir
-                    </button>
-                  </div>
-                </div>
                   <div className="card-layer-tools">
                     <span>Acciones</span>
 
