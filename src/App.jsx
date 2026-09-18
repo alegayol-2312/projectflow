@@ -3931,9 +3931,9 @@ function estiloConectorProcess(node, lado) {
 
   const offsetX =
     lado === 'left'
-      ? -4
+      ? -8
       : lado === 'right'
-        ? 4
+        ? 8
         : 0
 
   const offsetY =
@@ -10886,14 +10886,14 @@ function colorEstadoTarea(tarea) {
                         <defs>
                           <marker
                             id="process-arrow"
-                            markerWidth="6"
-                            markerHeight="6"
-                            refX="5.1"
-                            refY="2"
+                            markerWidth="8"
+                            markerHeight="8"
+                            refX="7.2"
+                            refY="2.5"
                             orient="auto"
-                            markerUnits="strokeWidth"
+                            markerUnits="userSpaceOnUse"
                           >
-                            <path d="M0,0 L0,4 L5.6,2 z" />
+                            <path d="M0,0 L0,5 L7.2,2.5 z" />
                           </marker>
                         </defs>
 

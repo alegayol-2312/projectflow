@@ -12477,3 +12477,83 @@ strong {
   width: 6px !important;
   height: 6px !important;
 }
+
+
+/* =========================================================
+   V8.5 - CONECTORES + CONTROLES DE ZOOM FIJOS
+========================================================= */
+
+/* Puntos laterales: centro apenas más afuera para coincidir con el borde visual */
+.process-node .process-node-connector.left::after,
+.process-node .process-node-connector.right::after {
+  width: 5px !important;
+  height: 5px !important;
+}
+
+/*
+  Zoom Process: queda fijo en pantalla.
+  No acompaña scroll, paneo ni zoom del canvas.
+*/
+.process-zoom-overlay {
+  position: fixed !important;
+
+  right: 18px !important;
+  bottom: 18px !important;
+
+  top: auto !important;
+  left: auto !important;
+
+  margin: 0 !important;
+
+  z-index: 10050 !important;
+}
+
+/*
+  Barra superior Process (colores / caja / regla / snap / flechas):
+  fija respecto de la pantalla.
+*/
+.process-canvas-tools {
+  position: fixed !important;
+
+  top: 84px !important;
+  right: 18px !important;
+
+  left: auto !important;
+  bottom: auto !important;
+
+  margin: 0 !important;
+
+  z-index: 10040 !important;
+}
+
+/*
+  Zoom Cards: mismo criterio.
+  Siempre queda abajo a la derecha de la pantalla.
+*/
+.board-zoom-overlay {
+  position: fixed !important;
+
+  right: 18px !important;
+  bottom: 18px !important;
+
+  top: auto !important;
+  left: auto !important;
+
+  margin: 0 !important;
+
+  z-index: 10050 !important;
+}
+
+/* En modo reunión mantenemos el panel superior en el ángulo superior izquierdo */
+.meeting-process .process-canvas-tools {
+  top: 14px !important;
+  left: 14px !important;
+  right: auto !important;
+}
+
+/* El zoom en reunión sigue fijo abajo a la derecha */
+.meeting-process .process-zoom-overlay,
+.meeting-cards .board-zoom-overlay {
+  right: 18px !important;
+  bottom: 18px !important;
+}
