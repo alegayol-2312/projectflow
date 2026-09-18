@@ -171,6 +171,230 @@ function colorTextoContraste(hexColor) {
 }
 
 
+async function medirGeometriaVisualProcess(srcImagen) {
+  return new Promise((resolve) => {
+    const imagen = new Image()
+
+    imagen.onload = () => {
+      try {
+        const width = imagen.naturalWidth || imagen.width
+        const height = imagen.naturalHeight || imagen.height
+
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d', {
+          willReadFrequently: true,
+        })
+
+        ctx.clearRect(0, 0, width, height)
+        ctx.drawImage(imagen, 0, 0, width, height)
+
+        const { data } = ctx.getImageData(
+          0,
+          0,
+          width,
+          height
+        )
+
+        let minX = width
+        let minY = height
+        let maxX = -1
+        let maxY = -1
+
+        for (let y = 0; y < height; y += 1) {
+          for (let x = 0; x < width; x += 1) {
+            const i = (y * width + x) * 4
+
+            const alpha = data[i + 3]
+            if (alpha < 30) continue
+
+            const r = data[i]
+            const g = data[i + 1]
+            const b = data[i + 2]
+
+            const claridad = (r + g + b) / 3
+
+            // Detecta el contorno oscuro e ignora márgenes blancos del PNG.
+            if (claridad <= 175) {
+              minX = Math.min(minX, x)
+              minY = Math.min(minY, y)
+              maxX = Math.max(maxX, x)
+              maxY = Math.max(maxY, y)
+            }
+          }
+        }
+
+        if (maxX < minX || maxY < minY) {
+          resolve({
+            imageWidth: width,
+            imageHeight: height,
+            left: 0,
+            top: 0,
+            right: 1,
+            bottom: 1,
+          })
+          return
+        }
+
+        const pad = 1
+
+        minX = Math.max(0, minX - pad)
+        minY = Math.max(0, minY - pad)
+        maxX = Math.min(width - 1, maxX + pad)
+        maxY = Math.min(height - 1, maxY + pad)
+
+        resolve({
+          imageWidth: width,
+          imageHeight: height,
+          left: minX / width,
+          top: minY / height,
+          right: (maxX + 1) / width,
+          bottom: (maxY + 1) / height,
+        })
+      } catch (error) {
+        console.error(
+          'No se pudo medir el borde visual del componente:',
+          error
+        )
+
+        resolve({
+          imageWidth: 1,
+          imageHeight: 1,
+          left: 0,
+          top: 0,
+          right: 1,
+          bottom: 1,
+        })
+      }
+    }
+
+    imagen.onerror = () =>
+      resolve({
+        imageWidth: 1,
+        imageHeight: 1,
+        left: 0,
+        top: 0,
+        right: 1,
+        bottom: 1,
+      })
+
+    imagen.src = srcImagen
+  })
+}
+
+async function crearIconoProcessColoreado(srcImagen, colorHex) {
+  return new Promise((resolve) => {
+    const imagen = new Image()
+
+    imagen.onload = () => {
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = imagen.naturalWidth || imagen.width
+        canvas.height = imagen.naturalHeight || imagen.height
+
+        const ctx = canvas.getContext('2d', {
+          willReadFrequently: true,
+        })
+
+        ctx.clearRect(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        )
+
+        ctx.drawImage(
+          imagen,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        )
+
+        const imageData = ctx.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        )
+
+        const hex = String(
+          colorHex || '#cfe3cd'
+        )
+          .replace('#', '')
+          .trim()
+
+        const rColor = parseInt(
+          hex.slice(0, 2),
+          16
+        )
+
+        const gColor = parseInt(
+          hex.slice(2, 4),
+          16
+        )
+
+        const bColor = parseInt(
+          hex.slice(4, 6),
+          16
+        )
+
+        const data = imageData.data
+
+        for (let i = 0; i < data.length; i += 4) {
+          const alpha = data[i + 3]
+
+          if (alpha === 0) continue
+
+          const r = data[i]
+          const g = data[i + 1]
+          const b = data[i + 2]
+
+          /*
+            Los PNG de Process tienen el interior blanco
+            y el borde oscuro. Para la exportación pintamos
+            únicamente los píxeles claros, preservando
+            borde, detalles y transparencia.
+          */
+          const claridad =
+            (r + g + b) / 3
+
+          if (claridad >= 205) {
+            data[i] = rColor
+            data[i + 1] = gColor
+            data[i + 2] = bColor
+          }
+        }
+
+        ctx.putImageData(
+          imageData,
+          0,
+          0
+        )
+
+        resolve(
+          canvas.toDataURL('image/png')
+        )
+      } catch (error) {
+        console.error(
+          'No se pudo colorear el componente para exportar:',
+          error
+        )
+        resolve(srcImagen)
+      }
+    }
+
+    imagen.onerror = () =>
+      resolve(srcImagen)
+
+    imagen.src = srcImagen
+  })
+}
+
+
+
 const KANBAN_ESTADOS = [
   'Por hacer',
   'En curso',
@@ -303,6 +527,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processGridVisible, setProcessGridVisible] = useState(false)
   const [processSnapEnabled, setProcessSnapEnabled] = useState(true)
   const [processZoom, setProcessZoom] = useState(1)
+  const [processIconGeometry, setProcessIconGeometry] = useState({})
   const [processGuides, setProcessGuides] = useState({
     x: null,
     y: null,
@@ -452,7 +677,36 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
 
   const [formCard, setFormCard] = useState(cardVacia)
 
-  useEffect(() => {
+    useEffect(() => {
+    let cancelled = false
+
+    async function cargarGeometriasProcess() {
+      const entries = await Promise.all(
+        PROCESO_COMPONENTES.map(
+          async (componente) => [
+            componente.tipo,
+            await medirGeometriaVisualProcess(
+              componente.icon
+            ),
+          ]
+        )
+      )
+
+      if (!cancelled) {
+        setProcessIconGeometry(
+          Object.fromEntries(entries)
+        )
+      }
+    }
+
+    cargarGeometriasProcess()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+useEffect(() => {
     if (!modalCardOpen) return
     const timer = window.setTimeout(() => {
       cardTitleRef.current?.focus()
@@ -2248,6 +2502,25 @@ async function imprimirProcessFlow() {
     const maxX = Math.max(...elementosX.map((i) => i.x + i.width)) + padding
     const maxY = Math.max(...elementosY.map((i) => i.y + i.height)) + padding
 
+    const processIconosExport = {}
+
+    await Promise.all(
+      processNodes.map(async (node) => {
+        const icono =
+          plantillaProceso(node.tipo)?.icon
+
+        if (!icono) return
+
+        processIconosExport[node.id] =
+          await crearIconoProcessColoreado(
+            icono,
+            node.color ||
+              plantillaProceso(node.tipo)?.color ||
+              '#cfe3cd'
+          )
+      })
+    )
+
     const canvas = await html2canvas(processCanvasPrintRef.current, {
       backgroundColor: processCanvasBgActual,
       scale: 1.5,
@@ -2280,6 +2553,45 @@ async function imprimirProcessFlow() {
             el.style.display = 'none'
           })
         })
+
+        /*
+          html2canvas no interpreta de forma consistente
+          CSS mask / -webkit-mask. En el canvas normal usamos
+          mask para colorear los componentes, pero en la copia
+          de exportación reemplazamos esa capa por un PNG ya
+          rasterizado y coloreado.
+        */
+        clonedDocument
+          .querySelectorAll('.process-node')
+          .forEach((nodeElement) => {
+            const nodeId =
+              nodeElement.getAttribute(
+                'data-process-node-id'
+              )
+
+            const fill =
+              nodeElement.querySelector(
+                '.process-icon-fill'
+              )
+
+            if (fill) {
+              fill.style.display = 'none'
+            }
+
+            const img =
+              nodeElement.querySelector(
+                '.process-node-visual img'
+              )
+
+            const exportSrc =
+              processIconosExport[nodeId]
+
+            if (img && exportSrc) {
+              img.src = exportSrc
+              img.style.mixBlendMode = 'normal'
+              img.style.opacity = '1'
+            }
+          })
       },
     })
 
@@ -3500,35 +3812,164 @@ async function terminarResizeProcessNode() {
     .eq('id', node.id)
 }
 
+
+function limitesVisualesProcessNode(node) {
+  const ancho = Math.max(
+    1,
+    Number(node.ancho) || 1
+  )
+
+  const alto = Math.max(
+    1,
+    Number(node.alto) || 1
+  )
+
+  const geometria =
+    processIconGeometry[node.tipo] || {
+      imageWidth: ancho,
+      imageHeight: alto,
+      left: 0,
+      top: 0,
+      right: 1,
+      bottom: 1,
+    }
+
+  const imageWidth = Math.max(
+    1,
+    Number(geometria.imageWidth) || ancho
+  )
+
+  const imageHeight = Math.max(
+    1,
+    Number(geometria.imageHeight) || alto
+  )
+
+  // object-fit: contain
+  const escala = Math.min(
+    ancho / imageWidth,
+    alto / imageHeight
+  )
+
+  const renderedWidth =
+    imageWidth * escala
+
+  const renderedHeight =
+    imageHeight * escala
+
+  const offsetX =
+    (ancho - renderedWidth) / 2
+
+  const offsetY =
+    (alto - renderedHeight) / 2
+
+  return {
+    left:
+      offsetX +
+      renderedWidth *
+        Number(geometria.left ?? 0),
+
+    right:
+      offsetX +
+      renderedWidth *
+        Number(geometria.right ?? 1),
+
+    top:
+      offsetY +
+      renderedHeight *
+        Number(geometria.top ?? 0),
+
+    bottom:
+      offsetY +
+      renderedHeight *
+        Number(geometria.bottom ?? 1),
+  }
+}
+
+function posicionLocalConectorProcess(node, lado) {
+  const limites =
+    limitesVisualesProcessNode(node)
+
+  const centerX =
+    (limites.left + limites.right) / 2
+
+  const centerY =
+    (limites.top + limites.bottom) / 2
+
+  if (lado === 'left') {
+    return {
+      x: limites.left,
+      y: centerY,
+    }
+  }
+
+  if (lado === 'right') {
+    return {
+      x: limites.right,
+      y: centerY,
+    }
+  }
+
+  if (lado === 'top') {
+    return {
+      x: centerX,
+      y: limites.top,
+    }
+  }
+
+  return {
+    x: centerX,
+    y: limites.bottom,
+  }
+}
+
+function estiloConectorProcess(node, lado) {
+  const punto =
+    posicionLocalConectorProcess(
+      node,
+      lado
+    )
+
+  return {
+    left: `${punto.x}px`,
+    top: `${punto.y}px`,
+  }
+}
+
 function puntoConectorProcess(node, lado) {
   const x = Number(node.pos_x)
   const y = Number(node.pos_y)
   const ancho = Number(node.ancho)
   const alto = Number(node.alto)
+
   const rotacion =
-    ((Number(node.rotacion) || 0) * Math.PI) / 180
+    ((Number(node.rotacion) || 0) *
+      Math.PI) /
+    180
 
-  const cx = x + ancho / 2
-  const cy = y + alto / 2
+  const cx =
+    x + ancho / 2
 
-  let dx = 0
-  let dy = 0
+  const cy =
+    y + alto / 2
 
-  if (lado === 'top') {
-    dy = -alto / 2
-  } else if (lado === 'bottom') {
-    dy = alto / 2
-  } else if (lado === 'left') {
-    dx = -ancho / 2
-  } else {
-    dx = ancho / 2
-  }
+  const local =
+    posicionLocalConectorProcess(
+      node,
+      lado
+    )
+
+  const dx =
+    local.x - ancho / 2
+
+  const dy =
+    local.y - alto / 2
 
   return {
     x:
       cx +
       dx * Math.cos(rotacion) -
       dy * Math.sin(rotacion),
+
     y:
       cy +
       dx * Math.sin(rotacion) +
@@ -10509,6 +10950,7 @@ function colorEstadoTarea(tarea) {
                       {processNodes.map((node) => (
                         <div
                           key={node.id}
+                          data-process-node-id={node.id}
                           className={`process-node ${
                             processConnectSource?.id === node.id
                               ? 'connecting'
@@ -10574,6 +11016,10 @@ function colorEstadoTarea(tarea) {
                                 key={lado}
                                 type="button"
                                 className={`process-node-connector ${lado}`}
+                                style={estiloConectorProcess(
+                                  node,
+                                  lado
+                                )}
                                 onMouseDown={(event) =>
                                   iniciarConexionProcess(
                                     event,

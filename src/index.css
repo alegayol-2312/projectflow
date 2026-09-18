@@ -12331,3 +12331,75 @@ strong {
 .kanban-column-header span {
   color: inherit !important;
 }
+
+
+/* =========================================================
+   V8.1 - EXPORT PROCESS PNG CON COLOR REAL
+========================================================= */
+
+/*
+  La exportación rasteriza cada componente antes de html2canvas.
+  Esta clase queda como defensa para evitar que una máscara CSS
+  se transforme en un rectángulo al generar el PNG.
+*/
+.process-export-raster .process-icon-fill {
+  display: none !important;
+}
+
+.process-export-raster .process-node-visual img {
+  mix-blend-mode: normal !important;
+}
+
+
+/* =========================================================
+   V8.2 - PROCESS: CONECTOR SOBRE BORDE VISUAL REAL
+========================================================= */
+
+/*
+  left/top llegan calculados desde el contorno negro real del PNG.
+  El centro del handle y el extremo de la flecha usan exactamente
+  la misma coordenada.
+*/
+.process-node .process-node-connector.left,
+.process-node .process-node-connector.right,
+.process-node .process-node-connector.top,
+.process-node .process-node-connector.bottom {
+  right: auto !important;
+  bottom: auto !important;
+
+  margin: 0 !important;
+
+  transform:
+    translate(-50%, -50%)
+    !important;
+}
+
+/* área clickeable cómoda, punto visual muy chico */
+.process-node .process-node-connector {
+  width: 24px !important;
+  height: 24px !important;
+
+  border: 0 !important;
+  background: transparent !important;
+
+  box-shadow: none !important;
+}
+
+.process-node .process-node-connector::after {
+  width: 6px !important;
+  height: 6px !important;
+
+  border:
+    1.2px solid #245b60 !important;
+
+  background:
+    #22d3c5 !important;
+}
+
+/* No aplicar el viejo giro extra de Decision */
+.process-node-decision
+.process-node-connector {
+  transform:
+    translate(-50%, -50%)
+    !important;
+}
