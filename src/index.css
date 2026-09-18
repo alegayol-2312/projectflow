@@ -12119,3 +12119,215 @@ strong {
       !important;
   }
 }
+
+
+/* =========================================================
+   V8 - EDICIÓN PRODUCTIVA / ZOOM / SHAPES / KANBAN
+========================================================= */
+
+/* PROCESS: puntos verdes sólo cuando hacen falta */
+.process-node .process-node-connector {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity .10s ease !important;
+}
+
+.process-node:hover .process-node-connector,
+.process-world.connecting-mode .process-node-connector {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* PROCESS zoom flotante */
+.process-zoom-overlay {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 160;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 10px;
+  background: rgba(9,16,22,.88);
+  box-shadow: 0 8px 24px rgba(0,0,0,.28);
+  color: #fff;
+}
+.process-zoom-overlay button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #354956;
+  border-radius: 7px;
+  background: #17242d;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+}
+.process-zoom-overlay span { min-width: 46px; text-align:center; font-size:10px; font-weight:850; }
+
+/* Cards zoom siempre abajo a la derecha */
+.board-zoom-overlay {
+  top: auto !important;
+  right: 16px !important;
+  bottom: 16px !important;
+  z-index: 160 !important;
+}
+
+/* Biblioteca Process limpia */
+.process-components-header > div strong { display:none !important; }
+.process-component-chip.process-node-decision,
+.process-component-chip.process-node-decision:hover,
+.process-component-chip.process-node-decision > span {
+  transform: none !important;
+  rotate: 0deg !important;
+  writing-mode: horizontal-tb !important;
+}
+.process-component-chip.process-node-decision { clip-path:none !important; }
+
+/* Meeting Process: canvas amplio PERO sigue editable */
+.meeting-process .process-left-panel {
+  display: block !important;
+  position: fixed !important;
+  left: 14px !important;
+  bottom: 14px !important;
+  z-index: 9000 !important;
+  width: 270px !important;
+  height: 260px !important;
+  max-height: 260px !important;
+  background: rgba(9,16,22,.91) !important;
+  border: 1px solid #314653 !important;
+  border-radius: 13px !important;
+  overflow: hidden !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,.34) !important;
+}
+.meeting-process .process-left-top,
+.meeting-process .process-left-divider { display:none !important; }
+.meeting-process .process-components-panel { display:flex !important; height:100% !important; }
+.meeting-process .process-canvas-tools {
+  display: inline-flex !important;
+  position: fixed !important;
+  left: 14px !important;
+  top: 14px !important;
+  z-index: 9000 !important;
+}
+.meeting-process .process-zoom-overlay { position:fixed !important; right:16px !important; bottom:16px !important; z-index:9000 !important; }
+.meeting-process .process-node-resize,
+.meeting-process .process-box-edit,
+.meeting-process .process-box-resize { display:block !important; }
+
+/* Meeting Cards: mantener creación + zoom */
+.meeting-cards .cards-board-meta-actions {
+  display:flex !important;
+  position: fixed !important;
+  left: 16px !important;
+  top: 14px !important;
+  z-index: 9000 !important;
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: rgba(9,16,22,.88);
+  box-shadow: 0 8px 22px rgba(0,0,0,.28);
+}
+.meeting-cards .board-zoom-overlay { display:flex !important; position:fixed !important; right:16px !important; bottom:16px !important; z-index:9000 !important; }
+
+/* Shapes Cards */
+.cards-shape-button {
+  min-width: 78px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #5a7890;
+  border-radius: 8px;
+  background: #1a2b37;
+  color: #dff5ff;
+  font-size: 10px;
+  font-weight: 850;
+  cursor: pointer;
+}
+.board-shape {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  box-sizing: border-box;
+  border: 2px solid rgba(0,0,0,.45);
+  color: #111;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 8px 16px rgba(0,0,0,.18);
+}
+.board-shape-circle { border-radius: 50%; }
+.board-shape-rectangle { border-radius: 12px; }
+.board-shape-square { border-radius: 3px; }
+.board-shape-callout { border-radius: 14px; }
+.board-shape-callout::after {
+  content:'';
+  position:absolute;
+  left:22px;
+  bottom:-18px;
+  border-top:20px solid currentColor;
+  border-right:18px solid transparent;
+  opacity:.35;
+}
+.shape-type-options { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.shape-type-options button {
+  min-height:38px;
+  border:1px solid #334956;
+  border-radius:8px;
+  background:#15232c;
+  color:#fff;
+  cursor:pointer;
+}
+.shape-type-options button.active { border-color:#00d8ea; color:#6ff4ff; }
+
+/* Kanban: selector cuadrado de color de columnas */
+.kanban-column-color-picker { display:flex; align-items:center; gap:6px; margin-left:2px; }
+.kanban-column-color-picker button {
+  width:22px;
+  height:22px;
+  padding:0;
+  border:2px solid rgba(255,255,255,.32);
+  border-radius:4px;
+  cursor:pointer;
+}
+.kanban-column-color-picker button.active { border-color:#00d8ea; box-shadow:0 0 0 1px #00d8ea; }
+
+.kanban-column {
+  min-height: 680px !important;
+  height: auto !important;
+  border-left: 2px solid rgba(124,153,173,.60) !important;
+  border-right: 2px solid rgba(124,153,173,.60) !important;
+}
+.kanban-column-body {
+  min-height: 620px !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+.kanban-columns { align-items: stretch !important; min-height:680px !important; }
+.kanban-column-empty {
+  color: rgba(225,235,242,.88) !important;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  border-color: rgba(155,181,198,.48) !important;
+}
+
+.kanban-checklist-editor { margin-top:14px; padding:12px; border:1px solid #2a3c48; border-radius:10px; background:#0d161d; }
+
+/* Inputs con lectura cómoda en drawers */
+.card-editor-drawer input[type='text'],
+.card-editor-drawer textarea {
+  font-size: 12px;
+}
+
+/* V8 FIX - reunión y contraste Kanban */
+.meeting-process .process-node:hover .process-node-connector,
+.meeting-process .process-world.connecting-mode .process-node-connector {
+  display: block !important;
+}
+.kanban-column-header strong,
+.kanban-column-header span {
+  color: inherit !important;
+}

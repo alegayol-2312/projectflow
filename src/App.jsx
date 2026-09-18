@@ -21,7 +21,6 @@ import processDataIcon from './assets/process/process-datos.png'
 import processManualInputIcon from './assets/process/process-entradamanual.png'
 import processManualOperationIcon from './assets/process/process-operacionmanual.png'
 import processVerticalConnectorIcon from './assets/process/process-conectorvertical.png'
-import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 
 
@@ -303,6 +302,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processBoxes, setProcessBoxes] = useState([])
   const [processGridVisible, setProcessGridVisible] = useState(false)
   const [processSnapEnabled, setProcessSnapEnabled] = useState(true)
+  const [processZoom, setProcessZoom] = useState(1)
   const [processGuides, setProcessGuides] = useState({
     x: null,
     y: null,
@@ -350,6 +350,8 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
 
   const processListRef = useRef(null)
   const processCanvasPrintRef = useRef(null)
+  const processNodeTextRef = useRef(null)
+  const cardTitleRef = useRef(null)
 
 
   const [kanbanProjects, setKanbanProjects] = useState([])
@@ -383,9 +385,12 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
     estado: 'Por hacer',
     prioridad: 'Media',
     comentario: '',
+    tipo: 'Mejora',
+    checklist: [],
     color: '#FFD60A',
   }
   const [formKanbanCard, setFormKanbanCard] = useState(kanbanCardVacia)
+
 
 
   const [boardEditando, setBoardEditando] = useState(null)
@@ -413,6 +418,20 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [cardEditando, setCardEditando] = useState(null)
   const [cardGanttOpen, setCardGanttOpen] = useState(false)
   const [cardGanttProjectId, setCardGanttProjectId] = useState('')
+  const [boardShapes, setBoardShapes] = useState([])
+  const [shapeDrawerOpen, setShapeDrawerOpen] = useState(false)
+  const [shapeEditando, setShapeEditando] = useState(null)
+  const [shapeDragInfo, setShapeDragInfo] = useState(null)
+  const [formShape, setFormShape] = useState({
+    tipo: 'circle',
+    texto: '',
+    color: '#00c2ff',
+    pos_x: 180,
+    pos_y: 180,
+    ancho: 150,
+    alto: 110,
+    z_index: 12,
+  })
 
   const cardVacia = {
     titulo: '',
@@ -432,6 +451,24 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   }
 
   const [formCard, setFormCard] = useState(cardVacia)
+
+  useEffect(() => {
+    if (!modalCardOpen) return
+    const timer = window.setTimeout(() => {
+      cardTitleRef.current?.focus()
+      cardTitleRef.current?.select?.()
+    }, 50)
+    return () => window.clearTimeout(timer)
+  }, [modalCardOpen, cardEditando?.id])
+
+  useEffect(() => {
+    if (!processNodeDrawerOpen) return
+    const timer = window.setTimeout(() => {
+      processNodeTextRef.current?.focus()
+      processNodeTextRef.current?.select?.()
+    }, 50)
+    return () => window.clearTimeout(timer)
+  }, [processNodeDrawerOpen, processNodeEditando?.id])
 
   const [dragInfo, setDragInfo] = useState(null)
   const boardCanvasRef = useRef(null)
@@ -1421,6 +1458,165 @@ async function cargarBoardZones(boardId) {
   setBoardZones(data || [])
 }
 
+async function cargarBoardShapes(boardId) {
+  if (!boardId) {
+    setBoardShapes([])
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('card_shapes')
+    .select('*')
+    .eq('board_id', boardId)
+    .order('z_index', { ascending: true })
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    console.error('Error cargando shapes:', error)
+    return
+  }
+
+  setBoardShapes(data || [])
+}
+
+function abrirNuevaShape() {
+  if (!boardSeleccionadoId) {
+    alert('Primero creá o seleccioná un board.')
+    return
+  }
+
+  const maxZ = Math.max(
+    12,
+    ...boardShapes.map((item) => Number(item.z_index) || 12)
+  ) + 1
+
+  setShapeEditando(null)
+  setFormShape({
+    tipo: 'circle',
+    texto: '',
+    color: '#00c2ff',
+    pos_x: 180 + Math.min(boardShapes.length, 6) * 28,
+    pos_y: 180 + Math.min(boardShapes.length, 6) * 24,
+    ancho: 150,
+    alto: 110,
+    z_index: maxZ,
+  })
+  setShapeDrawerOpen(true)
+}
+
+function abrirEditarShape(shape) {
+  setShapeEditando(shape)
+  setFormShape({
+    tipo: shape.tipo || 'circle',
+    texto: shape.texto || '',
+    color: shape.color || '#00c2ff',
+    pos_x: Number(shape.pos_x) || 180,
+    pos_y: Number(shape.pos_y) || 180,
+    ancho: Number(shape.ancho) || 150,
+    alto: Number(shape.alto) || 110,
+    z_index: Number(shape.z_index) || 12,
+  })
+  setShapeDrawerOpen(true)
+}
+
+function cerrarShapeDrawer() {
+  setShapeDrawerOpen(false)
+  setShapeEditando(null)
+}
+
+async function guardarShape(event) {
+  event.preventDefault()
+
+  const payload = {
+    board_id: boardSeleccionadoId,
+    tipo: formShape.tipo,
+    texto: formShape.texto.trim(),
+    color: formShape.color,
+    pos_x: Number(formShape.pos_x),
+    pos_y: Number(formShape.pos_y),
+    ancho: Number(formShape.ancho),
+    alto: Number(formShape.alto),
+    z_index: Number(formShape.z_index) || 12,
+    updated_at: new Date().toISOString(),
+  }
+
+  const query = shapeEditando
+    ? supabase.from('card_shapes').update(payload).eq('id', shapeEditando.id)
+    : supabase.from('card_shapes').insert(payload)
+
+  const { error } = await query
+
+  if (error) {
+    alert(`No se pudo guardar el Shape: ${error.message}`)
+    return
+  }
+
+  cerrarShapeDrawer()
+  await cargarBoardShapes(boardSeleccionadoId)
+}
+
+async function eliminarShape(shape) {
+  const { error } = await supabase
+    .from('card_shapes')
+    .delete()
+    .eq('id', shape.id)
+
+  if (error) {
+    alert(`No se pudo eliminar el Shape: ${error.message}`)
+    return
+  }
+
+  cerrarShapeDrawer()
+  await cargarBoardShapes(boardSeleccionadoId)
+}
+
+function iniciarDragShape(event, shape) {
+  if (event.button !== 0) return
+  event.stopPropagation()
+  const rect = event.currentTarget.getBoundingClientRect()
+  setShapeDragInfo({
+    id: shape.id,
+    offsetX: (event.clientX - rect.left) / boardZoom,
+    offsetY: (event.clientY - rect.top) / boardZoom,
+  })
+}
+
+function moverShape(event) {
+  if (!shapeDragInfo || !boardCanvasRef.current) return
+
+  const rect = boardCanvasRef.current.getBoundingClientRect()
+  const x = (
+    event.clientX - rect.left + boardCanvasRef.current.scrollLeft
+  ) / boardZoom - shapeDragInfo.offsetX
+  const y = (
+    event.clientY - rect.top + boardCanvasRef.current.scrollTop
+  ) / boardZoom - shapeDragInfo.offsetY
+
+  setBoardShapes((actual) =>
+    actual.map((shape) =>
+      shape.id === shapeDragInfo.id
+        ? { ...shape, pos_x: Math.max(10, x), pos_y: Math.max(10, y) }
+        : shape
+    )
+  )
+}
+
+async function terminarDragShape() {
+  if (!shapeDragInfo) return
+  const shape = boardShapes.find((item) => item.id === shapeDragInfo.id)
+  setShapeDragInfo(null)
+  if (!shape) return
+
+  await supabase
+    .from('card_shapes')
+    .update({
+      pos_x: Number(shape.pos_x),
+      pos_y: Number(shape.pos_y),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', shape.id)
+}
+
 function abrirNuevaZona() {
   if (!boardSeleccionadoId) {
     alert('Primero seleccioná un board.')
@@ -2016,12 +2212,10 @@ async function actualizarProcessCanvasBg(color) {
 }
 
 async function imprimirProcessFlow() {
-  if (!processCanvasPrintRef.current || !processSeleccionadoId) {
-    return
-  }
+  if (!processCanvasPrintRef.current || !processSeleccionadoId) return
 
   if (processNodes.length === 0 && processBoxes.length === 0) {
-    alert('El proceso no tiene contenido para imprimir.')
+    alert('El proceso no tiene contenido para guardar.')
     return
   }
 
@@ -2048,163 +2242,58 @@ async function imprimirProcessFlow() {
       })),
     ]
 
-    const padding = 36
+    const padding = 18
+    const minX = Math.max(0, Math.min(...elementosX.map((i) => i.x)) - padding)
+    const minY = Math.max(0, Math.min(...elementosY.map((i) => i.y)) - padding)
+    const maxX = Math.max(...elementosX.map((i) => i.x + i.width)) + padding
+    const maxY = Math.max(...elementosY.map((i) => i.y + i.height)) + padding
 
-    const minX = Math.max(
-      0,
-      Math.min(...elementosX.map((item) => item.x)) -
-        padding
-    )
+    const canvas = await html2canvas(processCanvasPrintRef.current, {
+      backgroundColor: processCanvasBgActual,
+      scale: 1.5,
+      useCORS: true,
+      x: minX,
+      y: minY,
+      width: Math.max(220, maxX - minX),
+      height: Math.max(160, maxY - minY),
+      scrollX: 0,
+      scrollY: 0,
+      onclone: (clonedDocument) => {
+        const clonedWorld = clonedDocument.querySelector('.process-world')
+        if (clonedWorld) {
+          clonedWorld.classList.remove('grid-visible', 'connecting-mode')
+          clonedWorld.style.backgroundImage = 'none'
+          clonedWorld.style.backgroundColor = processCanvasBgActual
+          clonedWorld.style.zoom = '1'
+        }
 
-    const minY = Math.max(
-      0,
-      Math.min(...elementosY.map((item) => item.y)) -
-        padding
-    )
-
-    const maxX =
-      Math.max(
-        ...elementosX.map(
-          (item) => item.x + item.width
-        )
-      ) + padding
-
-    const maxY =
-      Math.max(
-        ...elementosY.map(
-          (item) => item.y + item.height
-        )
-      ) + padding
-
-    const captureWidth = Math.max(320, maxX - minX)
-    const captureHeight = Math.max(220, maxY - minY)
-
-    const canvas = await html2canvas(
-      processCanvasPrintRef.current,
-      {
-        backgroundColor: processCanvasBgActual,
-        scale: 1.35,
-        useCORS: true,
-        x: minX,
-        y: minY,
-        width: captureWidth,
-        height: captureHeight,
-        scrollX: 0,
-        scrollY: 0,
-
-        onclone: (clonedDocument) => {
-          const clonedWorld =
-            clonedDocument.querySelector(
-              '.process-world'
-            )
-
-          if (clonedWorld) {
-            clonedWorld.classList.remove(
-              'grid-visible'
-            )
-
-            clonedWorld.style.backgroundImage =
-              'none'
-
-            clonedWorld.style.backgroundColor =
-              processCanvasBgActual
-          }
-
-          const ocultarAlImprimir = [
-            '.process-node-connector',
-            '.process-node-resize',
-            '.process-box-edit',
-            '.process-box-resize',
-            '.process-guide',
-            '.process-selection-rect',
-            '.process-selection-toolbar',
-          ]
-
-          ocultarAlImprimir.forEach(
-            (selector) => {
-              clonedDocument
-                .querySelectorAll(selector)
-                .forEach((elemento) => {
-                  elemento.style.display = 'none'
-                })
-            }
-          )
-        },
-      }
-    )
-
-    const imgData = canvas.toDataURL('image/png')
-
-    const doc = new jsPDF({
-      orientation: 'landscape',
-      unit: 'mm',
-      format: 'a4',
+        [
+          '.process-node-connector',
+          '.process-node-resize',
+          '.process-box-edit',
+          '.process-box-resize',
+          '.process-guide',
+          '.process-selection-rect',
+          '.process-selection-toolbar',
+        ].forEach((selector) => {
+          clonedDocument.querySelectorAll(selector).forEach((el) => {
+            el.style.display = 'none'
+          })
+        })
+      },
     })
 
-    const pageWidth = doc.internal.pageSize.getWidth()
-    const pageHeight = doc.internal.pageSize.getHeight()
-
-    // Márgenes chicos para aprovechar casi toda la hoja.
-    const margin = 3.5
-    const titleHeight = 7
-
-    const contentTop = margin + titleHeight
-    const contentBottom = margin
-
-    const usableWidth = pageWidth - margin * 2
-    const usableHeight =
-      pageHeight - contentTop - contentBottom
-
-    // Escalamos SIEMPRE por ancho.
-    // Si supera la altura, continúa en páginas siguientes.
-    const ratio = usableWidth / canvas.width
-    const renderWidth = usableWidth
-    const renderHeight = canvas.height * ratio
-
-    const pageCount = Math.max(
-      1,
-      Math.ceil(renderHeight / usableHeight)
-    )
-
     const nombre =
-      processMaps.find(
-        (item) => item.id === processSeleccionadoId
-      )?.nombre || 'proceso'
+      processMaps.find((item) => item.id === processSeleccionadoId)?.nombre ||
+      'proceso'
 
-    for (let pageIndex = 0; pageIndex < pageCount; pageIndex += 1) {
-      if (pageIndex > 0) {
-        doc.addPage('a4', 'landscape')
-      }
-
-      doc.setFontSize(9)
-      doc.setTextColor(45, 55, 65)
-      doc.text(
-        nombre,
-        pageWidth - margin,
-        margin + 3.5,
-        { align: 'right' }
-      )
-
-      // En cada página movemos la misma imagen hacia arriba.
-      // jsPDF recorta automáticamente lo que queda fuera de la hoja.
-      const y =
-        contentTop -
-        pageIndex * usableHeight
-
-      doc.addImage(
-        imgData,
-        'PNG',
-        margin,
-        y,
-        renderWidth,
-        renderHeight
-      )
-    }
-
-    doc.save(`${nombre}.pdf`)
+    const link = document.createElement('a')
+    link.download = `${nombre}.png`
+    link.href = canvas.toDataURL('image/png')
+    link.click()
   } catch (error) {
     console.error(error)
-    alert('No se pudo generar el PDF del flujo.')
+    alert('No se pudo guardar la imagen del flujo.')
   }
 }
 
@@ -2329,8 +2418,8 @@ function iniciarDragProcessBox(event, box) {
 
   setProcessBoxDragInfo({
     id: box.id,
-    offsetX: event.clientX - rect.left,
-    offsetY: event.clientY - rect.top,
+    offsetX: (event.clientX - rect.left) / processZoom,
+    offsetY: (event.clientY - rect.top) / processZoom,
   })
 }
 
@@ -2341,15 +2430,13 @@ function moverProcessBox(event) {
   const rect = canvas.getBoundingClientRect()
 
   const x =
-    event.clientX -
-    rect.left +
-    canvas.scrollLeft -
+    (event.clientX - rect.left + canvas.scrollLeft) /
+      processZoom -
     processBoxDragInfo.offsetX
 
   const y =
-    event.clientY -
-    rect.top +
-    canvas.scrollTop -
+    (event.clientY - rect.top + canvas.scrollTop) /
+      processZoom -
     processBoxDragInfo.offsetY
 
   setProcessBoxes((actual) =>
@@ -2402,8 +2489,10 @@ function iniciarResizeProcessBox(event, box) {
 function moverResizeProcessBox(event) {
   if (!processBoxResizeInfo) return
 
-  const dx = event.clientX - processBoxResizeInfo.startX
-  const dy = event.clientY - processBoxResizeInfo.startY
+  const dx =
+    (event.clientX - processBoxResizeInfo.startX) / processZoom
+  const dy =
+    (event.clientY - processBoxResizeInfo.startY) / processZoom
 
   setProcessBoxes((actual) =>
     actual.map((box) =>
@@ -2561,14 +2650,12 @@ async function soltarNodoProceso(event) {
   const rect = event.currentTarget.getBoundingClientRect()
   const dims = dimensionesProcessNode(tipo)
   const x =
-    event.clientX -
-    rect.left +
-    event.currentTarget.scrollLeft -
+    (event.clientX - rect.left + event.currentTarget.scrollLeft) /
+      processZoom -
     dims.ancho / 2
   const y =
-    event.clientY -
-    rect.top +
-    event.currentTarget.scrollTop -
+    (event.clientY - rect.top + event.currentTarget.scrollTop) /
+      processZoom -
     dims.alto / 2
 
   await crearNodoProcesoEnCanvas(tipo, x, y)
@@ -2750,14 +2837,10 @@ function iniciarSeleccionProcess(event) {
   const rect = canvas.getBoundingClientRect()
 
   const x =
-    event.clientX -
-    rect.left +
-    canvas.scrollLeft
+    (event.clientX - rect.left + canvas.scrollLeft) / processZoom
 
   const y =
-    event.clientY -
-    rect.top +
-    canvas.scrollTop
+    (event.clientY - rect.top + canvas.scrollTop) / processZoom
 
   setSelectedProcessNodeIds([])
 
@@ -2778,14 +2861,10 @@ function moverSeleccionProcess(event) {
   const rect = canvas.getBoundingClientRect()
 
   const currentX =
-    event.clientX -
-    rect.left +
-    canvas.scrollLeft
+    (event.clientX - rect.left + canvas.scrollLeft) / processZoom
 
   const currentY =
-    event.clientY -
-    rect.top +
-    canvas.scrollTop
+    (event.clientY - rect.top + canvas.scrollTop) / processZoom
 
   const left = Math.min(
     processSelectionRect.startX,
@@ -3133,9 +3212,9 @@ function iniciarDragProcessNode(event, node) {
   setProcessDragInfo({
     id: node.id,
     offsetX:
-      event.clientX - rect.left,
+      (event.clientX - rect.left) / processZoom,
     offsetY:
-      event.clientY - rect.top,
+      (event.clientY - rect.top) / processZoom,
   })
 }
 
@@ -3146,15 +3225,11 @@ function moverProcessNode(event) {
   const rect = canvas.getBoundingClientRect()
 
   let x =
-    event.clientX -
-    rect.left +
-    canvas.scrollLeft -
+    (event.clientX - rect.left + canvas.scrollLeft) / processZoom -
     processDragInfo.offsetX
 
   let y =
-    event.clientY -
-    rect.top +
-    canvas.scrollTop -
+    (event.clientY - rect.top + canvas.scrollTop) / processZoom -
     processDragInfo.offsetY
 
   const nodeActual =
@@ -3363,8 +3438,10 @@ function iniciarResizeProcessNode(event, node) {
 function moverResizeProcessNode(event) {
   if (!processResizeInfo) return
 
-  const dx = event.clientX - processResizeInfo.startX
-  const dy = event.clientY - processResizeInfo.startY
+  const dx =
+    (event.clientX - processResizeInfo.startX) / processZoom
+  const dy =
+    (event.clientY - processResizeInfo.startY) / processZoom
 
   // Usa el eje que más se movió y conserva la proporción original.
   // Esto evita que el PNG quede "flotando" dentro de un rectángulo
@@ -3492,13 +3569,9 @@ function moverConexionProcess(event) {
   setProcessLinkDraft((actual) => ({
     ...actual,
     currentX:
-      event.clientX -
-      rect.left +
-      canvas.scrollLeft,
+      (event.clientX - rect.left + canvas.scrollLeft) / processZoom,
     currentY:
-      event.clientY -
-      rect.top +
-      canvas.scrollTop,
+      (event.clientY - rect.top + canvas.scrollTop) / processZoom,
   }))
 }
 
@@ -3901,10 +3974,22 @@ async function eliminarComentario(comentario) {
   await cargarComentariosCard(cardEditando.id)
 }
 
+function cambiarProcessZoom(delta) {
+  setProcessZoom((actual) =>
+    Math.min(
+      2,
+      Math.max(
+        0.5,
+        Math.round((actual + delta) * 10) / 10
+      )
+    )
+  )
+}
+
 function cambiarZoom(delta) {
   setBoardZoom((actual) =>
     Math.min(
-      1.4,
+      2,
       Math.max(
         0.5,
         Math.round(
@@ -7182,6 +7267,28 @@ function colorEstadoTarea(tarea) {
     )
   }
 
+  async function actualizarKanbanColumnBg(color) {
+    if (!kanbanProjectId) return
+
+    const { error } = await supabase
+      .from('kanban_projects')
+      .update({ column_bg: color })
+      .eq('id', kanbanProjectId)
+
+    if (error) {
+      alert(`No se pudo cambiar el color de las columnas: ${error.message}`)
+      return
+    }
+
+    setKanbanProjects((actual) =>
+      actual.map((item) =>
+        item.id === kanbanProjectId
+          ? { ...item, column_bg: color }
+          : item
+      )
+    )
+  }
+
   function abrirNuevaKanbanCard(estado = 'Por hacer') {
     if (!kanbanProjectId) {
       alert('Primero creá o seleccioná un proyecto Kanban.')
@@ -7215,6 +7322,8 @@ function colorEstadoTarea(tarea) {
       estado: card.estado || 'Por hacer',
       prioridad: card.prioridad || 'Media',
       comentario: card.comentario || '',
+      tipo: card.tipo || 'Mejora',
+      checklist: Array.isArray(card.checklist) ? card.checklist : [],
       color: card.color || '#FFD60A',
     })
     setKanbanGanttOpen(false)
@@ -7230,6 +7339,32 @@ function colorEstadoTarea(tarea) {
     setKanbanHistory([])
     setKanbanGanttOpen(false)
     setKanbanGanttProjectId('')
+  }
+
+  function agregarKanbanChecklistItem() {
+    setFormKanbanCard((actual) => ({
+      ...actual,
+      checklist: [
+        ...(actual.checklist || []),
+        { id: crypto.randomUUID(), texto: '', hecho: false },
+      ],
+    }))
+  }
+
+  function actualizarKanbanChecklistItem(id, cambios) {
+    setFormKanbanCard((actual) => ({
+      ...actual,
+      checklist: (actual.checklist || []).map((item) =>
+        item.id === id ? { ...item, ...cambios } : item
+      ),
+    }))
+  }
+
+  function eliminarKanbanChecklistItem(id) {
+    setFormKanbanCard((actual) => ({
+      ...actual,
+      checklist: (actual.checklist || []).filter((item) => item.id !== id),
+    }))
   }
 
   async function guardarKanbanCard(event) {
@@ -7260,6 +7395,10 @@ function colorEstadoTarea(tarea) {
       estado: formKanbanCard.estado,
       prioridad: formKanbanCard.prioridad,
       comentario: formKanbanCard.comentario.trim(),
+      tipo: formKanbanCard.tipo,
+      checklist: Array.isArray(formKanbanCard.checklist)
+        ? formKanbanCard.checklist.filter((item) => item.texto?.trim())
+        : [],
       color: formKanbanCard.color,
       updated_at: new Date().toISOString(),
     }
@@ -7537,6 +7676,7 @@ function colorEstadoTarea(tarea) {
       cargarCards(boardSeleccionadoId)
       cargarCardsArchivadas(boardSeleccionadoId)
       cargarBoardZones(boardSeleccionadoId)
+      cargarBoardShapes(boardSeleccionadoId)
       cargarCardLinks(boardSeleccionadoId)
     }
   }, [
@@ -7669,6 +7809,9 @@ function colorEstadoTarea(tarea) {
 
   const kanbanCanvasBgActual =
     kanbanProject?.canvas_bg || '#0b1220'
+
+  const kanbanColumnBgActual =
+    kanbanProject?.column_bg || '#16212a'
 
   const kanbanColumnas = useMemo(() => {
     const columnas = Array.isArray(kanbanProject?.columnas)
@@ -9804,7 +9947,6 @@ function colorEstadoTarea(tarea) {
                 <div className="process-components-header">
                   <div>
                     <span>Componentes</span>
-                    <strong>{PROCESO_COMPONENTES.length}</strong>
                   </div>
                   <small>Arrastrá al canvas</small>
                 </div>
@@ -10052,6 +10194,13 @@ function colorEstadoTarea(tarea) {
                         </span>
                       </button>
                     </div>
+
+                    <div className="process-zoom-overlay">
+                      <button type="button" onClick={() => cambiarProcessZoom(-0.1)}>−</button>
+                      <span>{Math.round(processZoom * 100)}%</span>
+                      <button type="button" onClick={() => cambiarProcessZoom(0.1)}>+</button>
+                    </div>
+
                     {selectedProcessNodeIds.length > 0 && (
                       <div className="process-selection-toolbar">
                         <div className="process-selection-summary">
@@ -10165,8 +10314,9 @@ function colorEstadoTarea(tarea) {
                         processGridVisible
                           ? 'grid-visible'
                           : ''
-                      }`}
+                      } ${processLinkDraft ? 'connecting-mode' : ''}`}
                       style={{
+                        zoom: processZoom,
                         width: `${processWorldSize.width}px`,
                         height: `${processWorldSize.height}px`,
                         minWidth: `${processWorldSize.width}px`,
@@ -10640,6 +10790,18 @@ function colorEstadoTarea(tarea) {
                     >
                       + Columnas
                     </button>
+
+                    <div className="kanban-column-color-picker" title="Color de columnas">
+                      {['#ffffff','#0b1220','#5d6670','#16212a','#263746','#0d5f63'].map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          className={kanbanColumnBgActual === color ? 'active' : ''}
+                          style={{ backgroundColor: color }}
+                          onClick={() => actualizarKanbanColumnBg(color)}
+                        />
+                      ))}
+                    </div>
                   </div>
 
                   <button
@@ -10674,6 +10836,10 @@ function colorEstadoTarea(tarea) {
                         <section
                           key={estado}
                           className="kanban-column"
+                          style={{
+                            backgroundColor: kanbanColumnBgActual,
+                            color: colorTextoContraste(kanbanColumnBgActual),
+                          }}
                           onDragOver={(event) =>
                             event.preventDefault()
                           }
@@ -10968,6 +11134,14 @@ function colorEstadoTarea(tarea) {
 
                         <button
                           type="button"
+                          className="cards-shape-button compact"
+                          onClick={abrirNuevaShape}
+                        >
+                          + Shapes
+                        </button>
+
+                        <button
+                          type="button"
                           className="cards-note-button compact"
                           onClick={() =>
                             abrirNuevaCard('Nota')
@@ -11143,6 +11317,7 @@ function colorEstadoTarea(tarea) {
                       moverResizeCard(event)
                       moverZona(event)
                       moverResizeZona(event)
+                      moverShape(event)
                       moverPanCanvas(event)
                     }}
                     onMouseUp={() => {
@@ -11150,6 +11325,7 @@ function colorEstadoTarea(tarea) {
                       terminarResizeCard()
                       terminarDragZona()
                       terminarResizeZona()
+                      terminarDragShape()
                       terminarPanCanvas()
                     }}
                     onMouseLeave={() => {
@@ -11157,6 +11333,7 @@ function colorEstadoTarea(tarea) {
                       terminarResizeCard()
                       terminarDragZona()
                       terminarResizeZona()
+                      terminarDragShape()
                       terminarPanCanvas()
                       setLinkDraft(null)
                     }}
@@ -11242,6 +11419,27 @@ function colorEstadoTarea(tarea) {
                           title="Cambiar tamaño de zona"
                         />
                       </section>
+                    ))}
+
+                    {boardShapes.map((shape) => (
+                      <div
+                        key={shape.id}
+                        className={`board-shape board-shape-${shape.tipo}`}
+                        style={{
+                          left: `${Number(shape.pos_x) || 180}px`,
+                          top: `${Number(shape.pos_y) || 180}px`,
+                          width: `${Number(shape.ancho) || 150}px`,
+                          height: `${Number(shape.alto) || 110}px`,
+                          backgroundColor: shape.color || '#00c2ff',
+                          color: colorTextoContraste(shape.color || '#00c2ff'),
+                          zIndex: shapeDragInfo?.id === shape.id ? 998 : Number(shape.z_index) || 12,
+                        }}
+                        onMouseDown={(event) => iniciarDragShape(event, shape)}
+                        onDoubleClick={() => abrirEditarShape(shape)}
+                        title="Arrastrá para mover · Doble click para editar"
+                      >
+                        <span>{shape.texto}</span>
+                      </div>
                     ))}
 
                     <svg
@@ -12111,6 +12309,24 @@ function colorEstadoTarea(tarea) {
                 </div>
 
                 <div className="form-group">
+                  <label>Tipo</label>
+                  <select
+                    value={formKanbanCard.tipo}
+                    onChange={(event) =>
+                      setFormKanbanCard((actual) => ({
+                        ...actual,
+                        tipo: event.target.value,
+                      }))
+                    }
+                  >
+                    <option>Error</option>
+                    <option>GAP</option>
+                    <option>Evolutivo</option>
+                    <option>Mejora</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
                   <label>Prioridad</label>
                   <select
                     value={formKanbanCard.prioridad}
@@ -12166,6 +12382,30 @@ function colorEstadoTarea(tarea) {
                 </div>
               </div>
 
+              <div className="kanban-checklist-editor">
+                <div className="card-checklist-heading">
+                  <div><span>Opcional</span><strong>Checklist</strong></div>
+                  <button type="button" onClick={agregarKanbanChecklistItem}>+ Ítem</button>
+                </div>
+
+                {(formKanbanCard.checklist || []).map((item) => (
+                  <div className="card-checklist-row" key={item.id}>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(item.hecho)}
+                      onChange={(event) => actualizarKanbanChecklistItem(item.id, { hecho: event.target.checked })}
+                    />
+                    <input
+                      type="text"
+                      value={item.texto}
+                      onChange={(event) => actualizarKanbanChecklistItem(item.id, { texto: event.target.value })}
+                      placeholder="Escribí un ítem..."
+                    />
+                    <button type="button" onClick={() => eliminarKanbanChecklistItem(item.id)}>×</button>
+                  </div>
+                ))}
+              </div>
+
               {kanbanCardEditando && (
                 <div className="kanban-actions-section">
                   <span>Acciones</span>
@@ -12177,8 +12417,8 @@ function colorEstadoTarea(tarea) {
                       }
                     >
                       {kanbanCardEditando.gantt_task_id
-                        ? 'Gantt ✓'
-                        : 'Gantt'}
+                        ? 'Convertir a tarea ✓'
+                        : 'Convertir a tarea'}
                     </button>
                     <button
                       type="button"
@@ -12497,7 +12737,14 @@ function colorEstadoTarea(tarea) {
               <div className="form-group">
                 <label>Texto</label>
                 <textarea
+                  ref={processNodeTextRef}
                   value={formProcessNode.titulo}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault()
+                      event.currentTarget.form?.requestSubmit()
+                    }
+                  }}
                   onChange={(e) => setFormProcessNode((actual) => ({ ...actual, titulo: e.target.value }))}
                   placeholder="Escribí el texto que querés mostrar dentro del componente"
                   rows="4"
@@ -13078,6 +13325,91 @@ function colorEstadoTarea(tarea) {
         </div>
       )}
 
+      {shapeDrawerOpen && (
+        <div className="card-drawer-overlay">
+          <aside className="card-editor-drawer shape-editor-drawer">
+            <form onSubmit={guardarShape}>
+              <div className="card-modal-heading">
+                <div>
+                  <span>Board Shape</span>
+                  <h3>{shapeEditando ? 'Editar Shape' : 'Nuevo Shape'}</h3>
+                </div>
+                <button type="button" onClick={cerrarShapeDrawer}>×</button>
+              </div>
+
+              <div className="form-group">
+                <label>Forma</label>
+                <div className="shape-type-options">
+                  {[
+                    { value: 'circle', label: 'Círculo' },
+                    { value: 'rectangle', label: 'Proceso' },
+                    { value: 'square', label: 'Texto' },
+                    { value: 'callout', label: 'Nota' },
+                  ].map((item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      className={formShape.tipo === item.value ? 'active' : ''}
+                      onClick={() => setFormShape((actual) => ({
+                        ...actual,
+                        tipo: item.value,
+                        ancho:
+                          item.value === 'rectangle' || item.value === 'callout'
+                            ? 180
+                            : 120,
+                        alto:
+                          item.value === 'rectangle'
+                            ? 90
+                            : item.value === 'callout'
+                              ? 110
+                              : 120,
+                      }))}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Texto</label>
+                <input
+                  type="text"
+                  value={formShape.texto}
+                  onChange={(event) => setFormShape((actual) => ({ ...actual, texto: event.target.value }))}
+                  placeholder="Texto dentro del shape"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Color</label>
+                <div className="unified-color-options">
+                  {['#00c2ff','#ffd60a','#2dd36f','#ff4d5e','#9b5de5','#ff8a00','#ffffff','#5d6670'].map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={formShape.color === color ? 'active' : ''}
+                      style={{ backgroundColor: color }}
+                      onClick={() => setFormShape((actual) => ({ ...actual, color }))}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="connection-drawer-actions">
+                {shapeEditando && (
+                  <button type="button" className="btn-delete-task" onClick={() => eliminarShape(shapeEditando)}>
+                    Eliminar
+                  </button>
+                )}
+                <button type="button" className="btn-secondary" onClick={cerrarShapeDrawer}>Cancelar</button>
+                <button type="submit" className="btn-primary">Guardar</button>
+              </div>
+            </form>
+          </aside>
+        </div>
+      )}
+
       {modalCardOpen && (
         <div className="card-drawer-overlay">
           <aside className="card-editor-drawer">
@@ -13141,8 +13473,15 @@ function colorEstadoTarea(tarea) {
                   <label>Título</label>
 
                   <input
+                    ref={cardTitleRef}
                     type="text"
                     value={formCard.titulo}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault()
+                        event.currentTarget.form?.requestSubmit()
+                      }
+                    }}
                     onChange={(e) =>
                       setFormCard((actual) => ({
                         ...actual,
