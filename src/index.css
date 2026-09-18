@@ -12450,3 +12450,30 @@ strong {
   height:
     6px !important;
 }
+
+
+/* =========================================================
+   V8.4 - AJUSTE FINO CONECTORES LATERALES
+========================================================= */
+
+/*
+  Los conectores laterales quedan apenas hacia afuera del borde
+  visual, para que no invadan el texto y para que la punta de la
+  flecha siga siendo visible.
+*/
+.process-node .process-node-connector.left,
+.process-node .process-node-connector.right {
+  z-index: 9 !important;
+}
+
+.process-node .process-node-connector.left::after,
+.process-node .process-node-connector.right::after {
+  width: 5px !important;
+  height: 5px !important;
+}
+
+.process-node .process-node-connector.top::after,
+.process-node .process-node-connector.bottom::after {
+  width: 6px !important;
+  height: 6px !important;
+}

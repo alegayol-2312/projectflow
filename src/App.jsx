@@ -3929,9 +3929,23 @@ function estiloConectorProcess(node, lado) {
       lado
     )
 
+  const offsetX =
+    lado === 'left'
+      ? -4
+      : lado === 'right'
+        ? 4
+        : 0
+
+  const offsetY =
+    lado === 'top'
+      ? -4
+      : lado === 'bottom'
+        ? 4
+        : 0
+
   return {
-    '--process-connector-x': `${punto.x}px`,
-    '--process-connector-y': `${punto.y}px`,
+    '--process-connector-x': `${punto.x + offsetX}px`,
+    '--process-connector-y': `${punto.y + offsetY}px`,
   }
 }
 
