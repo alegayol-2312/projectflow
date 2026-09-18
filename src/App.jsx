@@ -651,6 +651,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [resizeInfo, setResizeInfo] = useState(null)
 
   const [boardZoom, setBoardZoom] = useState(0.8)
+  const cardUndoRef = useRef([])
   const [panInfo, setPanInfo] = useState(null)
 
   const [comentariosCard, setComentariosCard] = useState([])
@@ -1974,8 +1975,189 @@ function cerrarShapeDrawer() {
   setShapeEditando(null)
 }
 
+
+function snapshotCardsActual() {
+  return {
+    boardId: boardSeleccionadoId,
+    cards: JSON.parse(JSON.stringify(cards)),
+    links: JSON.parse(JSON.stringify(cardLinks)),
+    zones: JSON.parse(JSON.stringify(boardZones)),
+    shapes: JSON.parse(JSON.stringify(boardShapes)),
+  }
+}
+
+function pushCardUndo() {
+  if (!boardSeleccionadoId) return
+
+  const stack = cardUndoRef.current || []
+
+  stack.push(snapshotCardsActual())
+
+  cardUndoRef.current =
+    stack.slice(-3)
+}
+
+async function deshacerCards() {
+  const stack = cardUndoRef.current || []
+
+  if (stack.length === 0) return
+
+  const snapshot = stack.pop()
+  cardUndoRef.current = stack
+
+  if (!snapshot?.boardId) return
+
+  const boardId = snapshot.boardId
+
+  try {
+    /*
+      Primero restauramos / recreamos los elementos del snapshot.
+      Se conservan los IDs para no romper conexiones.
+    */
+    if (snapshot.cards.length > 0) {
+      const { error } = await supabase
+        .from('cards')
+        .upsert(snapshot.cards)
+
+      if (error) throw error
+    }
+
+    if (snapshot.zones.length > 0) {
+      const { error } = await supabase
+        .from('board_zones')
+        .upsert(snapshot.zones)
+
+      if (error) throw error
+    }
+
+    if (snapshot.shapes.length > 0) {
+      const { error } = await supabase
+        .from('card_shapes')
+        .upsert(snapshot.shapes)
+
+      if (error) throw error
+    }
+
+    /*
+      Quitamos elementos activos creados después del snapshot.
+      Las Cards archivadas no se tocan.
+    */
+    const [
+      { data: currentCards },
+      { data: currentZones },
+      { data: currentShapes },
+      { data: currentLinks },
+    ] = await Promise.all([
+      supabase
+        .from('cards')
+        .select('id')
+        .eq('board_id', boardId)
+        .eq('archivada', false),
+
+      supabase
+        .from('board_zones')
+        .select('id')
+        .eq('board_id', boardId),
+
+      supabase
+        .from('card_shapes')
+        .select('id')
+        .eq('board_id', boardId),
+
+      supabase
+        .from('card_links')
+        .select('id')
+        .eq('board_id', boardId),
+    ])
+
+    const snapshotCardIds =
+      new Set(snapshot.cards.map((item) => item.id))
+
+    const snapshotZoneIds =
+      new Set(snapshot.zones.map((item) => item.id))
+
+    const snapshotShapeIds =
+      new Set(snapshot.shapes.map((item) => item.id))
+
+    const snapshotLinkIds =
+      new Set(snapshot.links.map((item) => item.id))
+
+    const extraLinkIds =
+      (currentLinks || [])
+        .map((item) => item.id)
+        .filter((id) => !snapshotLinkIds.has(id))
+
+    if (extraLinkIds.length > 0) {
+      await supabase
+        .from('card_links')
+        .delete()
+        .in('id', extraLinkIds)
+    }
+
+    const extraCardIds =
+      (currentCards || [])
+        .map((item) => item.id)
+        .filter((id) => !snapshotCardIds.has(id))
+
+    if (extraCardIds.length > 0) {
+      await supabase
+        .from('cards')
+        .delete()
+        .in('id', extraCardIds)
+    }
+
+    const extraZoneIds =
+      (currentZones || [])
+        .map((item) => item.id)
+        .filter((id) => !snapshotZoneIds.has(id))
+
+    if (extraZoneIds.length > 0) {
+      await supabase
+        .from('board_zones')
+        .delete()
+        .in('id', extraZoneIds)
+    }
+
+    const extraShapeIds =
+      (currentShapes || [])
+        .map((item) => item.id)
+        .filter((id) => !snapshotShapeIds.has(id))
+
+    if (extraShapeIds.length > 0) {
+      await supabase
+        .from('card_shapes')
+        .delete()
+        .in('id', extraShapeIds)
+    }
+
+    if (snapshot.links.length > 0) {
+      const { error } = await supabase
+        .from('card_links')
+        .upsert(snapshot.links)
+
+      if (error) throw error
+    }
+
+    await Promise.all([
+      cargarCards(boardId),
+      cargarCardLinks(boardId),
+      cargarBoardZones(boardId),
+      cargarBoardShapes(boardId),
+    ])
+  } catch (error) {
+    console.error(error)
+    alert(
+      `No se pudo deshacer el último cambio: ${
+        error?.message || 'error inesperado'
+      }`
+    )
+  }
+}
+
 async function guardarShape(event) {
   event.preventDefault()
+
+  pushCardUndo()
 
   const payload = {
     board_id: boardSeleccionadoId,
@@ -2006,6 +2188,7 @@ async function guardarShape(event) {
 }
 
 async function eliminarShape(shape) {
+  pushCardUndo()
   const { error } = await supabase
     .from('card_shapes')
     .delete()
@@ -2022,6 +2205,8 @@ async function eliminarShape(shape) {
 
 function iniciarDragShape(event, shape) {
   if (event.button !== 0) return
+
+  pushCardUndo()
   event.stopPropagation()
   setSelectedShapeId(shape.id)
   const rect = event.currentTarget.getBoundingClientRect()
@@ -2071,6 +2256,8 @@ async function terminarDragShape() {
 
 function iniciarResizeShape(event, shape) {
   event.preventDefault()
+
+  pushCardUndo()
   event.stopPropagation()
 
   setSelectedShapeId(shape.id)
@@ -2175,6 +2362,8 @@ function cerrarZonaDrawer() {
 async function guardarZona(event) {
   event.preventDefault()
 
+  pushCardUndo()
+
   if (!formZone.titulo.trim()) {
     alert('Ingresá un título para la zona.')
     return
@@ -2217,6 +2406,7 @@ async function guardarZona(event) {
 }
 
 async function eliminarZona(zona) {
+  pushCardUndo()
   const confirmar = window.confirm(
     `¿Eliminar la zona "${zona.titulo}"?`
   )
@@ -2239,6 +2429,8 @@ async function eliminarZona(zona) {
 
 function iniciarDragZona(event, zona) {
   if (event.button !== 0) return
+
+  pushCardUndo()
   event.stopPropagation()
 
   const rect =
@@ -2317,6 +2509,8 @@ async function terminarDragZona() {
 
 function iniciarResizeZona(event, zona) {
   event.stopPropagation()
+
+  pushCardUndo()
   event.preventDefault()
 
   setZoneResizeInfo({
@@ -2384,6 +2578,7 @@ async function terminarResizeZona() {
 }
 
 async function archivarCard(card) {
+  pushCardUndo()
   if (!card) return
 
   const confirmar = window.confirm(
@@ -2441,6 +2636,7 @@ async function restaurarCard(card) {
 }
 
 async function eliminarCardArchivada(card) {
+  pushCardUndo()
   const confirmar = window.confirm(
     `¿Eliminar definitivamente "${card.titulo}"?`
   )
@@ -5803,6 +5999,7 @@ function cerrarModalCard() {
 }
 
 async function guardarCard(event) {
+  pushCardUndo()
   event.preventDefault()
 
   if (!formCard.titulo.trim()) {
@@ -5910,6 +6107,8 @@ async function eliminarCard() {
 
 function iniciarDragCard(event, card) {
   if (event.button !== 0) return
+
+  pushCardUndo()
 
   if (
     event.target.closest('.card-thread-pin') ||
@@ -12094,67 +12293,6 @@ function colorEstadoTarea(tarea) {
                     </button>
                   </div>
 
-                  <div className="kanban-filters-v86">
-                    <select
-                      value={kanbanFiltroPrioridad}
-                      onChange={(event) =>
-                        setKanbanFiltroPrioridad(
-                          event.target.value
-                        )
-                      }
-                    >
-                      <option value="Todas">
-                        Todas las prioridades
-                      </option>
-                      <option value="Alta">Alta</option>
-                      <option value="Media">Media</option>
-                      <option value="Baja">Baja</option>
-                    </select>
-
-                    <select
-                      value={kanbanFiltroTipo}
-                      onChange={(event) =>
-                        setKanbanFiltroTipo(
-                          event.target.value
-                        )
-                      }
-                    >
-                      <option value="Todos">
-                        Todos los tipos
-                      </option>
-                      <option value="Error">Error</option>
-                      <option value="GAP">GAP</option>
-                      <option value="Evolutivo">
-                        Evolutivo
-                      </option>
-                      <option value="Mejora">
-                        Mejora
-                      </option>
-                    </select>
-
-                    <select
-                      value={kanbanFiltroFecha}
-                      onChange={(event) =>
-                        setKanbanFiltroFecha(
-                          event.target.value
-                        )
-                      }
-                    >
-                      <option value="Todas">
-                        Todas las fechas
-                      </option>
-                      <option value="Hoy">
-                        Vence hoy
-                      </option>
-                      <option value="Mañana">
-                        Vence mañana
-                      </option>
-                      <option value="2 días">
-                        Vence en 2 días
-                      </option>
-                    </select>
-                  </div>
-
                   <div className="kanban-bg-picker">
                     {[
                       {
@@ -12214,6 +12352,72 @@ function colorEstadoTarea(tarea) {
                           onClick={() => actualizarKanbanColumnBg(color)}
                         />
                       ))}
+                    </div>
+
+                    <span className="kanban-bg-divider" />
+
+                    <div className="kanban-filters-v86">
+                      <select
+                        value={kanbanFiltroPrioridad}
+                        onChange={(event) =>
+                          setKanbanFiltroPrioridad(
+                            event.target.value
+                          )
+                        }
+                        title="Filtrar por prioridad"
+                      >
+                        <option value="Todas">
+                          Todas las prioridades
+                        </option>
+                        <option value="Alta">Alta</option>
+                        <option value="Media">Media</option>
+                        <option value="Baja">Baja</option>
+                      </select>
+
+                      <select
+                        value={kanbanFiltroTipo}
+                        onChange={(event) =>
+                          setKanbanFiltroTipo(
+                            event.target.value
+                          )
+                        }
+                        title="Filtrar por tipo"
+                      >
+                        <option value="Todos">
+                          Todos los tipos
+                        </option>
+                        <option value="Error">Error</option>
+                        <option value="GAP">GAP</option>
+                        <option value="Evolutivo">
+                          Evolutivo
+                        </option>
+                        <option value="Mejora">
+                          Mejora
+                        </option>
+                      </select>
+
+                      <select
+                        value={kanbanFiltroFecha}
+                        onChange={(event) =>
+                          setKanbanFiltroFecha(
+                            event.target.value
+                          )
+                        }
+                        title="Filtrar por vencimiento"
+                      >
+                        <option value="Todas">
+                          Todas las fechas
+                        </option>
+                        <option value="Hoy">
+                          Vence hoy
+                        </option>
+                        <option value="Mañana">
+                          Vence mañana
+                        </option>
+                        <option value="2 días">
+                          Vence en 2 días
+                        </option>
+                      </select>
                     </div>
                   </div>
 
@@ -12672,6 +12876,18 @@ function colorEstadoTarea(tarea) {
                           title={bg.label}
                         />
                       ))}
+
+                      <span className="cards-bg-divider" />
+
+                      <button
+                        type="button"
+                        className="cards-undo-tool"
+                        onClick={deshacerCards}
+                        title="Deshacer (hasta 3 cambios)"
+                        aria-label="Deshacer"
+                      >
+                        ↶
+                      </button>
                     </div>
 
                     <div className="board-zoom-overlay">
