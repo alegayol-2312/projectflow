@@ -13822,3 +13822,192 @@ select:nth-child(3) {
   font-size:
     9px !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V9
+========================================================= */
+
+.process-link-group {
+  pointer-events: all;
+}
+.process-link-move-handle {
+  pointer-events: all !important;
+  cursor: move;
+}
+.process-link-move-handle rect {
+  fill: #101820;
+  stroke: #ffffff;
+  stroke-width: 1.2;
+}
+.process-link-move-handle:hover rect {
+  fill: #00d8ea;
+  stroke: #071014;
+}
+
+/* Nota: centrar texto dentro del cuerpo útil del globo */
+.process-node-notaproceso .process-node-copy {
+  inset: 7% 12% 17% 12% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.process-node-copy[data-text-align="top"] {
+  padding-top: 7% !important;
+  padding-bottom: 0 !important;
+}
+.process-node-copy[data-text-align="center"] {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+.process-node-copy[data-text-align="bottom"] {
+  padding-top: 0 !important;
+  padding-bottom: 7% !important;
+}
+
+/* Acciones seleccionadas: compacto, sin margen muerto */
+.process-selection-toolbar {
+  width: max-content !important;
+  min-width: 0 !important;
+  max-width: calc(100% - 30px) !important;
+  margin: 6px auto -42px !important;
+  padding: 11px 13px !important;
+  gap: 10px 12px !important;
+}
+.process-selection-actions {
+  flex: 0 1 auto !important;
+}
+.process-selection-actions button {
+  min-height: 38px !important;
+  padding: 0 13px !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+}
+.process-selection-summary strong {
+  font-size: 14px !important;
+}
+.process-selection-summary span {
+  font-size: 10px !important;
+}
+.process-selection-colors {
+  flex: 0 0 100% !important;
+  width: auto !important;
+  padding-top: 9px !important;
+}
+
+/* Iconos de alineación */
+.process-text-align-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 4px;
+  border-left: 1px solid rgba(255,255,255,.15);
+  border-right: 1px solid rgba(255,255,255,.15);
+}
+.process-text-align-actions .process-align-icon {
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  display: inline-flex !important;
+  flex-direction: column !important;
+  padding: 7px 8px !important;
+  gap: 3px !important;
+  align-items: stretch !important;
+}
+.process-align-icon i {
+  display: block;
+  height: 1px;
+  background: #ffffff;
+}
+.process-align-icon i:nth-child(2) {
+  width: 70%;
+}
+.process-align-icon.top { justify-content: flex-start !important; }
+.process-align-icon.center { justify-content: center !important; }
+.process-align-icon.bottom { justify-content: flex-end !important; }
+
+/* Compartir */
+.share-with-field {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid #293b48;
+  border-radius: 10px;
+  background: #0d171e;
+}
+.share-with-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+.share-resource-button {
+  min-height: 37px;
+  padding: 0 11px;
+  border: 1px solid #00d8ea;
+  border-radius: 8px;
+  background: rgba(0,216,234,.10);
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 850;
+  cursor: pointer;
+}
+.share-resource-button:disabled {
+  opacity: .40;
+  cursor: default;
+}
+
+/* Sección Compartido */
+.shared-activity-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid #314451;
+  border-radius: 9px;
+  background: #0e1820;
+  color: #ffffff;
+  text-align: left;
+  cursor: pointer;
+}
+.shared-activity-item.unread {
+  border-color: #f3ce26;
+  background: rgba(243,206,38,.08);
+}
+.shared-activity-item:hover {
+  border-color: #00d8ea;
+}
+.shared-activity-item strong,
+.shared-activity-item p,
+.shared-activity-item small {
+  color: #ffffff !important;
+}
+.shared-activity-item p {
+  margin: 3px 0 4px;
+  font-size: 10px;
+  line-height: 1.35;
+}
+.shared-activity-item small {
+  opacity: .68;
+  font-size: 8.5px;
+}
+
+
+/* V9.0.1 - ajuste fino Nota Process */
+.process-node-notaproceso .process-node-copy {
+  inset:
+    3% 11% 31% 11%
+    !important;
+
+  justify-content:
+    center !important;
+
+  align-items:
+    center !important;
+
+  text-align:
+    center !important;
+}

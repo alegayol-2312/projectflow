@@ -9,6 +9,8 @@ import processIcon from './assets/icon-process.png'
 import kanbanIcon from './assets/icon-kanban.png'
 import bellIcon from './assets/bell-icon.png'
 import bellNotifIcon from './assets/bell-icon-notif.png'
+import bellActivityIcon from './assets/bell-icon-activity.png'
+import bellShareIcon from './assets/bell-icon-share.png'
 
 import processTerminatorIcon from './assets/process/process-terminador.png'
 import processReferenceIcon from './assets/process/process-referencia.png'
@@ -576,6 +578,9 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processLinkLabel, setProcessLinkLabel] = useState('')
   const [processLinkStyle, setProcessLinkStyle] = useState('continua')
   const [processLinkColor, setProcessLinkColor] = useState('#b9c5cf')
+  const [selectedProcessLinkId, setSelectedProcessLinkId] = useState(null)
+  const [processLinkMoveInfo, setProcessLinkMoveInfo] = useState(null)
+  const [shareProcessUserId, setShareProcessUserId] = useState('')
   const [processArchiveOpen, setProcessArchiveOpen] = useState(false)
   const [processMapsArchivados, setProcessMapsArchivados] = useState([])
   const [selectedProcessBoxId, setSelectedProcessBoxId] = useState(null)
@@ -590,6 +595,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
     titulo: '',
     color: plantillaProceso('Actividad').color,
     rotacion: 0,
+    text_align: 'center',
   })
 
   const processListRef = useRef(null)
@@ -615,6 +621,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [kanbanDragId, setKanbanDragId] = useState(null)
   const [kanbanGanttOpen, setKanbanGanttOpen] = useState(false)
   const [kanbanGanttProjectId, setKanbanGanttProjectId] = useState('')
+  const [shareKanbanUserId, setShareKanbanUserId] = useState('')
   const [kanbanColumnDrawerOpen, setKanbanColumnDrawerOpen] = useState(false)
   const [nuevaKanbanColumna, setNuevaKanbanColumna] = useState({
     nombre: '',
@@ -668,6 +675,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [cardEditando, setCardEditando] = useState(null)
   const [cardGanttOpen, setCardGanttOpen] = useState(false)
   const [cardGanttProjectId, setCardGanttProjectId] = useState('')
+  const [shareCardUserId, setShareCardUserId] = useState('')
   const [boardShapes, setBoardShapes] = useState([])
   const [shapeDrawerOpen, setShapeDrawerOpen] = useState(false)
   const [shapeEditando, setShapeEditando] = useState(null)
@@ -709,6 +717,8 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [activitySeenAt, setActivitySeenAt] = useState(() =>
     window.localStorage.getItem('projectflow_activity_seen_at') || ''
   )
+  const [sharedNotifications, setSharedNotifications] = useState([])
+  const [pendingSharedOpen, setPendingSharedOpen] = useState(null)
 
     useEffect(() => {
     let cancelled = false
@@ -779,8 +789,32 @@ useEffect(() => {
     cargarHistorial()
     cargarTodasLasTareas()
     cargarActividadReciente()
+    cargarCompartidos()
   }
 }, [session])
+
+
+  useEffect(() => {
+    if (!session?.user?.id) return
+
+    const channel = supabase
+      .channel(`share-notifications-${session.user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'share_notifications',
+          filter: `recipient_id=eq.${session.user.id}`,
+        },
+        () => cargarCompartidos()
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [session?.user?.id])
 
 useEffect(() => {
   if (!proyectoSeleccionadoId) {
@@ -811,6 +845,175 @@ useEffect(() => {
 
 }, [proyectoSeleccionadoId, proyectos])
 
+
+
+  async function cargarCompartidos() {
+    if (!session?.user?.id) {
+      setSharedNotifications([])
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('share_notifications')
+      .select('*')
+      .eq('recipient_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(40)
+
+    if (error) {
+      console.error('Error cargando compartidos:', error)
+      return
+    }
+
+    setSharedNotifications(data || [])
+  }
+
+  async function compartirRecurso({
+    recipientId,
+    module,
+    resourceType,
+    resourceId,
+    resourceName,
+    parentId = null,
+    parentName = null,
+  }) {
+    if (!recipientId || !session?.user?.id) return false
+
+    const actorProfile =
+      perfiles.find((perfil) => perfil.id === session.user.id)
+
+    const actorName =
+      actorProfile?.nombre ||
+      actorProfile?.email ||
+      session.user.email ||
+      'Un compañero'
+
+    const { error } = await supabase
+      .from('share_notifications')
+      .insert({
+        recipient_id: recipientId,
+        sender_id: session.user.id,
+        sender_name: actorName,
+        sender_email: session.user.email,
+        module,
+        resource_type: resourceType,
+        resource_id: String(resourceId),
+        resource_name: resourceName,
+        parent_id: parentId ? String(parentId) : null,
+        parent_name: parentName || null,
+        message:
+          `${actorName} quiere compartir con vos ${resourceName}`,
+      })
+
+    if (error) {
+      alert(`No se pudo compartir: ${error.message}`)
+      return false
+    }
+
+    return true
+  }
+
+  async function marcarCompartidoLeido(item) {
+    if (!item?.id || item.read_at) return
+
+    const ahora = new Date().toISOString()
+
+    setSharedNotifications((actual) =>
+      actual.map((notification) =>
+        notification.id === item.id
+          ? { ...notification, read_at: ahora }
+          : notification
+      )
+    )
+
+    await supabase
+      .from('share_notifications')
+      .update({ read_at: ahora })
+      .eq('id', item.id)
+  }
+
+  async function abrirCompartido(item) {
+    if (!item) return
+
+    await marcarCompartidoLeido(item)
+    setActivityOpen(false)
+
+    setPendingSharedOpen({
+      module: item.module,
+      resourceType: item.resource_type,
+      resourceId: item.resource_id,
+      parentId: item.parent_id,
+    })
+
+    if (item.module === 'Process') {
+      setVistaPrincipal('process')
+      setProcessSeleccionadoId(item.parent_id)
+      return
+    }
+
+    if (item.module === 'Cards') {
+      setVistaPrincipal('cards')
+      setBoardSeleccionadoId(item.parent_id)
+      return
+    }
+
+    if (item.module === 'Kanban') {
+      setVistaPrincipal('kanban')
+      setKanbanProjectId(item.parent_id)
+    }
+  }
+
+
+  useEffect(() => {
+    if (
+      pendingSharedOpen?.module !== 'Process' ||
+      !pendingSharedOpen.resourceId
+    ) return
+
+    const node = processNodes.find(
+      (item) =>
+        String(item.id) === String(pendingSharedOpen.resourceId)
+    )
+
+    if (!node) return
+
+    abrirEditarProcessNode(node)
+    setPendingSharedOpen(null)
+  }, [processNodes, pendingSharedOpen])
+
+  useEffect(() => {
+    if (
+      pendingSharedOpen?.module !== 'Cards' ||
+      !pendingSharedOpen.resourceId
+    ) return
+
+    const card = cards.find(
+      (item) =>
+        String(item.id) === String(pendingSharedOpen.resourceId)
+    )
+
+    if (!card) return
+
+    abrirEditarCard(card)
+    setPendingSharedOpen(null)
+  }, [cards, pendingSharedOpen])
+
+  useEffect(() => {
+    if (
+      pendingSharedOpen?.module !== 'Kanban' ||
+      !pendingSharedOpen.resourceId
+    ) return
+
+    const card = kanbanCards.find(
+      (item) =>
+        String(item.id) === String(pendingSharedOpen.resourceId)
+    )
+
+    if (!card) return
+
+    abrirEditarKanbanCard(card)
+    setPendingSharedOpen(null)
+  }, [kanbanCards, pendingSharedOpen])
 
   async function cargarActividadReciente() {
     const { data, error } = await supabase
@@ -879,6 +1082,14 @@ useEffect(() => {
       new Date(item.created_at) >
         new Date(activitySeenAt)
   )
+
+  const compartidosSinLeer =
+    sharedNotifications.filter(
+      (item) => !item.read_at
+    )
+
+  const tieneCompartidosSinLeer =
+    compartidosSinLeer.length > 0
 
   async function iniciarApp() {
     const {
@@ -3387,11 +3598,13 @@ function abrirNuevoProcessNode(tipo) {
     titulo: '',
     color: base?.color || '#cfe3cd',
     rotacion: 0,
+    text_align: 'center',
   })
   setProcessNodeDrawerOpen(true)
 }
 
 function abrirEditarProcessNode(node) {
+  setShareProcessUserId('')
   setProcessNodeEditando(node)
   setFormProcessNode({
     tipo: node.tipo || 'Actividad',
@@ -3401,6 +3614,7 @@ function abrirEditarProcessNode(node) {
       plantillaProceso(node.tipo || 'Actividad')?.color ||
       '#cfe3cd',
     rotacion: Number(node.rotacion) || 0,
+    text_align: node.text_align || 'center',
   })
   setProcessNodeDrawerOpen(true)
 }
@@ -3413,6 +3627,7 @@ function cerrarProcessNodeDrawer() {
     titulo: '',
     color: plantillaProceso('Actividad').color,
     rotacion: 0,
+    text_align: 'center',
   })
 }
 
@@ -3465,6 +3680,7 @@ async function crearNodoProcesoEnCanvas(tipo, x, y) {
       titulo: '',
       color: base?.color || '#cfe3cd',
       rotacion: 0,
+      text_align: 'center',
       pos_x: Math.max(24, Math.round(x)),
       pos_y: Math.max(24, Math.round(y)),
       ancho: dims.ancho,
@@ -3711,6 +3927,7 @@ async function pegarSeleccionProcess() {
         plantillaProceso(node.tipo)?.color ||
         '#cfe3cd',
       rotacion: Number(node.rotacion) || 0,
+      text_align: node.text_align || 'center',
       pos_x: Number(node.pos_x) + 34,
       pos_y: Number(node.pos_y) + 34,
       ancho: Number(node.ancho),
@@ -3736,6 +3953,71 @@ async function pegarSeleccionProcess() {
   await cargarProcessCanvas(processSeleccionadoId)
 }
 
+
+async function compartirProcessNodeActual() {
+  if (!processNodeEditando || !shareProcessUserId) return
+
+  const processMap =
+    processMaps.find(
+      (item) => item.id === processSeleccionadoId
+    )
+
+  const ok = await compartirRecurso({
+    recipientId: shareProcessUserId,
+    module: 'Process',
+    resourceType: 'process_node',
+    resourceId: processNodeEditando.id,
+    resourceName:
+      `Proceso ${processMap?.nombre || processNodeEditando.titulo}`,
+    parentId: processSeleccionadoId,
+    parentName: processMap?.nombre || null,
+  })
+
+  if (ok) setShareProcessUserId('')
+}
+
+async function compartirCardActual() {
+  if (!cardEditando || !shareCardUserId) return
+
+  const board =
+    boards.find(
+      (item) => item.id === boardSeleccionadoId
+    )
+
+  const ok = await compartirRecurso({
+    recipientId: shareCardUserId,
+    module: 'Cards',
+    resourceType: 'card',
+    resourceId: cardEditando.id,
+    resourceName: `Card ${cardEditando.titulo}`,
+    parentId: boardSeleccionadoId,
+    parentName: board?.nombre || null,
+  })
+
+  if (ok) setShareCardUserId('')
+}
+
+async function compartirKanbanCardActual() {
+  if (!kanbanCardEditando || !shareKanbanUserId) return
+
+  const project =
+    kanbanProjects.find(
+      (item) => item.id === kanbanProjectId
+    )
+
+  const ok = await compartirRecurso({
+    recipientId: shareKanbanUserId,
+    module: 'Kanban',
+    resourceType: 'kanban_card',
+    resourceId: kanbanCardEditando.id,
+    resourceName: `Tarjeta ${kanbanCardEditando.titulo}`,
+    parentId: kanbanProjectId,
+    parentName: project?.nombre || null,
+  })
+
+  if (ok) setShareKanbanUserId('')
+}
+
 async function guardarProcessNode(event) {
   event.preventDefault()
 
@@ -3759,6 +4041,7 @@ async function guardarProcessNode(event) {
         tipo: formProcessNode.tipo,
         color: colorFinal,
         rotacion: Number(formProcessNode.rotacion) || 0,
+        text_align: formProcessNode.text_align || 'center',
         updated_at: new Date().toISOString(),
       })
       .eq('id', processNodeEditando.id)
@@ -3779,6 +4062,7 @@ async function guardarProcessNode(event) {
         titulo: formProcessNode.titulo.trim(),
         color: colorFinal,
         rotacion: Number(formProcessNode.rotacion) || 0,
+        text_align: formProcessNode.text_align || 'center',
         pos_x: 150 + offset,
         pos_y: 150 + offset,
         ancho: dims.ancho,
@@ -3816,6 +4100,7 @@ async function duplicarProcessNode(node) {
         plantillaProceso(node.tipo)?.color ||
         '#cfe3cd',
       rotacion: Number(node.rotacion) || 0,
+      text_align: node.text_align || 'center',
       pos_x: Number(node.pos_x) + 28,
       pos_y: Number(node.pos_y) + 28,
       ancho: Number(node.ancho),
@@ -4058,6 +4343,36 @@ async function aplicarSnapSeleccionProcess() {
 }
 
 
+
+async function alinearTextoSeleccionProcess(alineacion) {
+  if (selectedProcessNodeIds.length === 0) return
+
+  pushProcessUndo()
+
+  const ids = [...selectedProcessNodeIds]
+
+  setProcessNodes((actual) =>
+    actual.map((node) =>
+      ids.includes(node.id)
+        ? { ...node, text_align: alineacion }
+        : node
+    )
+  )
+
+  const { error } = await supabase
+    .from('process_nodes')
+    .update({
+      text_align: alineacion,
+      updated_at: new Date().toISOString(),
+    })
+    .in('id', ids)
+
+  if (error) {
+    alert(`No se pudo alinear el texto: ${error.message}`)
+    cargarProcessCanvas(processSeleccionadoId)
+  }
+}
+
 async function cambiarColorSeleccionProcess(color) {
   pushProcessUndo()
   if (selectedProcessNodeIds.length === 0) return
@@ -4196,6 +4511,8 @@ async function duplicarSeleccionProcess() {
         '#cfe3cd',
       rotacion:
         Number(node.rotacion) || 0,
+      text_align:
+        node.text_align || 'center',
       pos_x:
         Number(node.pos_x) + 28,
       pos_y:
@@ -4893,6 +5210,7 @@ async function finalizarConexionProcess(event, targetNode, targetSide) {
       etiqueta: null,
       estilo: 'continua',
       color: '#b9c5cf',
+      manual_offset: 0,
     })
 
   if (error) {
@@ -5003,6 +5321,7 @@ function processLine(link) {
 
   const sourceSide = link.source_side || 'right'
   const targetSide = link.target_side || 'left'
+  const manualOffset = Number(link.manual_offset) || 0
 
   const p1 = puntoConectorProcess(
     source,
@@ -5058,7 +5377,7 @@ function processLine(link) {
       d =
         `M ${p1.x} ${p1.y} ` +
         `C ${p1.x + control * dir1} ${p1.y}, ` +
-        `${p2.x + control * dir2} ${p2.y}, ` +
+        `${p2.x + control * dir2} ${p2.y + manualOffset}, ` +
         `${p2.x} ${p2.y}`
     } else {
       const control = Math.max(
@@ -5079,14 +5398,24 @@ function processLine(link) {
       d =
         `M ${p1.x} ${p1.y} ` +
         `C ${p1.x} ${p1.y + control * dir1}, ` +
-        `${p2.x} ${p2.y + control * dir2}, ` +
+        `${p2.x + manualOffset} ${p2.y + control * dir2}, ` +
         `${p2.x} ${p2.y}`
     }
 
+    const horizontalDominante =
+      Math.abs(p2.x - p1.x) >=
+      Math.abs(p2.y - p1.y)
+
     return {
       d,
-      midX: (p1.x + p2.x) / 2,
-      midY: (p1.y + p2.y) / 2,
+      midX:
+        (p1.x + p2.x) / 2 +
+        (horizontalDominante ? 0 : manualOffset),
+      midY:
+        (p1.y + p2.y) / 2 +
+        (horizontalDominante ? manualOffset : 0),
+      moveAxis:
+        horizontalDominante ? 'y' : 'x',
     }
   }
 
@@ -5122,7 +5451,7 @@ function processLine(link) {
   let d = `M ${p1.x} ${p1.y} L ${s.x} ${s.y}`
 
   if (sourceHorizontal && targetHorizontal) {
-    const midX = (s.x + t.x) / 2
+    const midX = (s.x + t.x) / 2 + manualOffset
 
     d +=
       ` L ${midX} ${s.y}` +
@@ -5132,24 +5461,105 @@ function processLine(link) {
     !sourceHorizontal &&
     !targetHorizontal
   ) {
-    const midY = (s.y + t.y) / 2
+    const midY = (s.y + t.y) / 2 + manualOffset
 
     d +=
       ` L ${s.x} ${midY}` +
       ` L ${t.x} ${midY}` +
       ` L ${t.x} ${t.y}`
   } else {
-    d +=
-      ` L ${t.x} ${s.y}` +
-      ` L ${t.x} ${t.y}`
+    if (sourceHorizontal) {
+      const movedY = s.y + manualOffset
+      d +=
+        ` L ${s.x} ${movedY}` +
+        ` L ${t.x} ${movedY}` +
+        ` L ${t.x} ${t.y}`
+    } else {
+      const movedX = s.x + manualOffset
+      d +=
+        ` L ${movedX} ${s.y}` +
+        ` L ${movedX} ${t.y}` +
+        ` L ${t.x} ${t.y}`
+    }
   }
 
   d += ` L ${p2.x} ${p2.y}`
 
+  const horizontalDominante =
+    Math.abs(p2.x - p1.x) >=
+    Math.abs(p2.y - p1.y)
+
   return {
     d,
-    midX: (p1.x + p2.x) / 2,
-    midY: (p1.y + p2.y) / 2,
+    midX:
+      (p1.x + p2.x) / 2 +
+      (horizontalDominante ? 0 : manualOffset),
+    midY:
+      (p1.y + p2.y) / 2 +
+      (horizontalDominante ? manualOffset : 0),
+    moveAxis:
+      horizontalDominante ? 'y' : 'x',
+  }
+}
+
+
+function iniciarMoverProcessLink(event, link, line) {
+  event.preventDefault()
+  event.stopPropagation()
+
+  pushProcessUndo()
+  setSelectedProcessLinkId(link.id)
+
+  setProcessLinkMoveInfo({
+    id: link.id,
+    axis: line.moveAxis || 'y',
+    startClientX: event.clientX,
+    startClientY: event.clientY,
+    startOffset: Number(link.manual_offset) || 0,
+  })
+}
+
+function moverProcessLink(event) {
+  if (!processLinkMoveInfo) return
+
+  const delta =
+    processLinkMoveInfo.axis === 'y'
+      ? (event.clientY - processLinkMoveInfo.startClientY) / processZoom
+      : (event.clientX - processLinkMoveInfo.startClientX) / processZoom
+
+  const nuevoOffset =
+    processLinkMoveInfo.startOffset + delta
+
+  setProcessLinks((actual) =>
+    actual.map((link) =>
+      link.id === processLinkMoveInfo.id
+        ? { ...link, manual_offset: nuevoOffset }
+        : link
+    )
+  )
+}
+
+async function terminarMoverProcessLink() {
+  if (!processLinkMoveInfo) return
+
+  const link = processLinks.find(
+    (item) => item.id === processLinkMoveInfo.id
+  )
+
+  setProcessLinkMoveInfo(null)
+
+  if (!link) return
+
+  const { error } = await supabase
+    .from('process_links')
+    .update({
+      manual_offset: Number(link.manual_offset) || 0,
+    })
+    .eq('id', link.id)
+
+  if (error) {
+    console.error('No se pudo mover la conexión:', error)
+    cargarProcessCanvas(processSeleccionadoId)
   }
 }
 
@@ -6069,6 +6479,7 @@ function abrirNuevaCard(tipo = 'Card') {
 }
 
 function abrirEditarCard(card) {
+  setShareCardUserId('')
   setCardEditando(card)
 
   setFormCard({
@@ -8679,6 +9090,7 @@ function colorEstadoTarea(tarea) {
   }
 
   function abrirEditarKanbanCard(card) {
+  setShareKanbanUserId('')
     setKanbanCardEditando(card)
     setFormKanbanCard({
       titulo: card.titulo || '',
@@ -9599,9 +10011,11 @@ function colorEstadoTarea(tarea) {
           >
             <img
               src={
-                actividadTieneNovedades
-                  ? bellNotifIcon
-                  : bellIcon
+                tieneCompartidosSinLeer
+                  ? bellShareIcon
+                  : actividadTieneNovedades
+                    ? bellActivityIcon
+                    : bellIcon
               }
               alt=""
             />
@@ -11625,6 +12039,7 @@ function colorEstadoTarea(tarea) {
                       moverProcessBox(event)
                       moverResizeProcessBox(event)
                       moverConexionProcess(event)
+                      moverProcessLink(event)
                     }}
                     onMouseUp={() => {
                       terminarSeleccionProcess()
@@ -11632,6 +12047,7 @@ function colorEstadoTarea(tarea) {
                       terminarResizeProcessNode()
                       terminarDragProcessBox()
                       terminarResizeProcessBox()
+                      terminarMoverProcessLink()
 
                       if (processLinkDraft) {
                         cancelarConexionProcess()
@@ -11839,12 +12255,47 @@ function colorEstadoTarea(tarea) {
                             Snap
                           </button>
 
+                          <div className="process-text-align-actions">
+                            <button
+                              type="button"
+                              className="process-align-icon top"
+                              onClick={() =>
+                                alinearTextoSeleccionProcess('top')
+                              }
+                              title="Alinear texto arriba"
+                            >
+                              <i /><i /><i />
+                            </button>
+
+                            <button
+                              type="button"
+                              className="process-align-icon center"
+                              onClick={() =>
+                                alinearTextoSeleccionProcess('center')
+                              }
+                              title="Centrar texto"
+                            >
+                              <i /><i /><i />
+                            </button>
+
+                            <button
+                              type="button"
+                              className="process-align-icon bottom"
+                              onClick={() =>
+                                alinearTextoSeleccionProcess('bottom')
+                              }
+                              title="Alinear texto abajo"
+                            >
+                              <i /><i /><i />
+                            </button>
+                          </div>
+
                           <button
                             type="button"
                             className="selection-delete-all"
                             onClick={eliminarSeleccionProcess}
                           >
-                            Delete all
+                            Delete
                           </button>
 
                           <button
@@ -12076,11 +12527,37 @@ function colorEstadoTarea(tarea) {
                                     link.color || '#b9c5cf',
                                 }}
                                 markerEnd="url(#process-arrow)"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  setSelectedProcessLinkId(link.id)
+                                }}
                                 onDoubleClick={(event) => {
                                   event.stopPropagation()
                                   abrirEditarProcessLink(link)
                                 }}
                               />
+
+                              {selectedProcessLinkId === link.id && (
+                                <g
+                                  className="process-link-move-handle"
+                                  transform={`translate(${line.midX} ${line.midY})`}
+                                  onMouseDown={(event) =>
+                                    iniciarMoverProcessLink(
+                                      event,
+                                      link,
+                                      line
+                                    )
+                                  }
+                                >
+                                  <rect
+                                    x="-7"
+                                    y="-7"
+                                    width="14"
+                                    height="14"
+                                    rx="3"
+                                  />
+                                </g>
+                              )}
 
                               {link.etiqueta && (
                                 <g
@@ -12173,10 +12650,17 @@ function colorEstadoTarea(tarea) {
 
                           <div
                             className="process-node-copy"
+                            data-text-align={node.text_align || 'center'}
                             style={{
                               transform: `rotate(${-(
                                 Number(node.rotacion) || 0
                               )}deg)`,
+                              justifyContent:
+                                (node.text_align || 'center') === 'top'
+                                  ? 'flex-start'
+                                  : (node.text_align || 'center') === 'bottom'
+                                    ? 'flex-end'
+                                    : 'center',
                             }}
                           >
                             <strong>{node.titulo}</strong>
@@ -13832,6 +14316,62 @@ function colorEstadoTarea(tarea) {
               </button>
             </div>
 
+            <section className="activity-section shared-activity-section">
+              <div className="activity-section-title">
+                <strong>Compartido</strong>
+                <span>
+                  {compartidosSinLeer.length > 0
+                    ? `${compartidosSinLeer.length} sin leer`
+                    : 'Sin pendientes'}
+                </span>
+              </div>
+
+              <div className="activity-list">
+                {sharedNotifications
+                  .slice(0, 5)
+                  .map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`shared-activity-item ${
+                        !item.read_at ? 'unread' : ''
+                      }`}
+                      onClick={() => abrirCompartido(item)}
+                    >
+                      <div className="activity-dot" />
+
+                      <div>
+                        <strong>
+                          {item.sender_name ||
+                            item.sender_email ||
+                            'Compañero'}
+                        </strong>
+
+                        <p>{item.message}</p>
+
+                        <small>
+                          {new Date(
+                            item.created_at
+                          ).toLocaleString(
+                            'es-AR',
+                            {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            }
+                          )}
+                        </small>
+                      </div>
+                    </button>
+                  ))}
+
+                {sharedNotifications.length === 0 && (
+                  <div className="activity-empty">
+                    No tenés elementos compartidos.
+                  </div>
+                )}
+              </div>
+            </section>
+
             {[
               'Gantt',
               'Cards',
@@ -14438,6 +14978,51 @@ function colorEstadoTarea(tarea) {
               </div>
 
               {kanbanCardEditando && (
+                <div className="form-group share-with-field">
+                  <label>Compartir con</label>
+
+                  <div className="share-with-row">
+                    <select
+                      value={shareKanbanUserId}
+                      onChange={(event) =>
+                        setShareKanbanUserId(event.target.value)
+                      }
+                    >
+                      <option value="">
+                        Seleccionar compañero...
+                      </option>
+
+                      {perfiles
+                        .filter(
+                          (perfil) =>
+                            perfil.id !== session.user.id &&
+                            perfil.activo !== false
+                        )
+                        .map((perfil) => (
+                          <option
+                            key={perfil.id}
+                            value={perfil.id}
+                          >
+                            {perfil.nombre ||
+                              perfil.email ||
+                              'Usuario'}
+                          </option>
+                        ))}
+                    </select>
+
+                    <button
+                      type="button"
+                      className="share-resource-button"
+                      disabled={!shareKanbanUserId}
+                      onClick={compartirKanbanCardActual}
+                    >
+                      Compartir
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {kanbanCardEditando && (
                 <div className="kanban-actions-section">
                   <span>Acciones</span>
                   <div>
@@ -14839,6 +15424,51 @@ function colorEstadoTarea(tarea) {
                   </select>
                 </div>
               </div>
+
+              {processNodeEditando && (
+                <div className="form-group share-with-field">
+                  <label>Compartir con</label>
+
+                  <div className="share-with-row">
+                    <select
+                      value={shareProcessUserId}
+                      onChange={(event) =>
+                        setShareProcessUserId(event.target.value)
+                      }
+                    >
+                      <option value="">
+                        Seleccionar compañero...
+                      </option>
+
+                      {perfiles
+                        .filter(
+                          (perfil) =>
+                            perfil.id !== session.user.id &&
+                            perfil.activo !== false
+                        )
+                        .map((perfil) => (
+                          <option
+                            key={perfil.id}
+                            value={perfil.id}
+                          >
+                            {perfil.nombre ||
+                              perfil.email ||
+                              'Usuario'}
+                          </option>
+                        ))}
+                    </select>
+
+                    <button
+                      type="button"
+                      className="share-resource-button"
+                      disabled={!shareProcessUserId}
+                      onClick={compartirProcessNodeActual}
+                    >
+                      Compartir
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {processNodeEditando && (
                 <div className="process-node-actions">
@@ -15731,6 +16361,48 @@ function colorEstadoTarea(tarea) {
 
               {cardEditando && (
                 <>
+                <div className="form-group share-with-field">
+                  <label>Compartir con</label>
+
+                  <div className="share-with-row">
+                    <select
+                      value={shareCardUserId}
+                      onChange={(event) =>
+                        setShareCardUserId(event.target.value)
+                      }
+                    >
+                      <option value="">
+                        Seleccionar compañero...
+                      </option>
+
+                      {perfiles
+                        .filter(
+                          (perfil) =>
+                            perfil.id !== session.user.id &&
+                            perfil.activo !== false
+                        )
+                        .map((perfil) => (
+                          <option
+                            key={perfil.id}
+                            value={perfil.id}
+                          >
+                            {perfil.nombre ||
+                              perfil.email ||
+                              'Usuario'}
+                          </option>
+                        ))}
+                    </select>
+
+                    <button
+                      type="button"
+                      className="share-resource-button"
+                      disabled={!shareCardUserId}
+                      onClick={compartirCardActual}
+                    >
+                      Compartir
+                    </button>
+                  </div>
+                </div>
                   <div className="card-layer-tools">
                     <span>Acciones</span>
 
