@@ -12572,3 +12572,49 @@ strong {
   fill: #b9c5cf;
   stroke: none;
 }
+
+
+/* =========================================================
+   V8.5.2 - PROCESS TOOLBAR VUELVE ARRIBA A LA IZQUIERDA
+========================================================= */
+
+/*
+  En modo normal, la barra de colores / caja / regla / snap /
+  flechas vuelve a quedar superpuesta arriba a la izquierda
+  del canvas, como estaba antes.
+*/
+.process-canvas-tools {
+  position: sticky !important;
+
+  top: 10px !important;
+  left: 12px !important;
+
+  right: auto !important;
+  bottom: auto !important;
+
+  margin:
+    10px
+    0
+    -46px
+    12px
+    !important;
+
+  z-index: 10040 !important;
+}
+
+/*
+  En modo reunión sigue flotante arriba a la izquierda.
+*/
+.meeting-process .process-canvas-tools {
+  position: fixed !important;
+
+  top: 14px !important;
+  left: 14px !important;
+
+  right: auto !important;
+  bottom: auto !important;
+
+  margin: 0 !important;
+
+  z-index: 10040 !important;
+}
