@@ -2009,149 +2009,175 @@ async function deshacerCards() {
 
   const boardId = snapshot.boardId
 
-  try {
-    /*
-      Primero restauramos / recreamos los elementos del snapshot.
-      Se conservan los IDs para no romper conexiones.
-    */
-    if (snapshot.cards.length > 0) {
-      const { error } = await supabase
-        .from('cards')
-        .upsert(snapshot.cards)
+  /*
+    Igual que Process: el usuario ve el Undo inmediatamente.
+    La base se sincroniza después sin bloquear la interfaz.
+  */
+  setCards(snapshot.cards)
+  setCardLinks(snapshot.links)
+  setBoardZones(snapshot.zones)
+  setBoardShapes(snapshot.shapes)
+  setSelectedCardIds([])
+  setSelectedZoneId(null)
+  setSelectedShapeId(null)
 
-      if (error) throw error
+  void (async () => {
+    try {
+      const [
+        { data: currentCards, error: cardsReadError },
+        { data: currentZones, error: zonesReadError },
+        { data: currentShapes, error: shapesReadError },
+        { data: currentLinks, error: linksReadError },
+      ] = await Promise.all([
+        supabase
+          .from('cards')
+          .select('id')
+          .eq('board_id', boardId)
+          .eq('archivada', false),
+
+        supabase
+          .from('board_zones')
+          .select('id')
+          .eq('board_id', boardId),
+
+        supabase
+          .from('card_shapes')
+          .select('id')
+          .eq('board_id', boardId),
+
+        supabase
+          .from('card_links')
+          .select('id')
+          .eq('board_id', boardId),
+      ])
+
+      if (
+        cardsReadError ||
+        zonesReadError ||
+        shapesReadError ||
+        linksReadError
+      ) {
+        throw (
+          cardsReadError ||
+          zonesReadError ||
+          shapesReadError ||
+          linksReadError
+        )
+      }
+
+      const cardIds =
+        new Set(snapshot.cards.map((item) => item.id))
+
+      const zoneIds =
+        new Set(snapshot.zones.map((item) => item.id))
+
+      const shapeIds =
+        new Set(snapshot.shapes.map((item) => item.id))
+
+      const linkIds =
+        new Set(snapshot.links.map((item) => item.id))
+
+      const extraLinkIds =
+        (currentLinks || [])
+          .map((item) => item.id)
+          .filter((id) => !linkIds.has(id))
+
+      if (extraLinkIds.length > 0) {
+        const { error } = await supabase
+          .from('card_links')
+          .delete()
+          .in('id', extraLinkIds)
+
+        if (error) throw error
+      }
+
+      if (snapshot.cards.length > 0) {
+        const { error } = await supabase
+          .from('cards')
+          .upsert(snapshot.cards)
+
+        if (error) throw error
+      }
+
+      if (snapshot.zones.length > 0) {
+        const { error } = await supabase
+          .from('board_zones')
+          .upsert(snapshot.zones)
+
+        if (error) throw error
+      }
+
+      if (snapshot.shapes.length > 0) {
+        const { error } = await supabase
+          .from('card_shapes')
+          .upsert(snapshot.shapes)
+
+        if (error) throw error
+      }
+
+      const extraCardIds =
+        (currentCards || [])
+          .map((item) => item.id)
+          .filter((id) => !cardIds.has(id))
+
+      const extraZoneIds =
+        (currentZones || [])
+          .map((item) => item.id)
+          .filter((id) => !zoneIds.has(id))
+
+      const extraShapeIds =
+        (currentShapes || [])
+          .map((item) => item.id)
+          .filter((id) => !shapeIds.has(id))
+
+      if (extraCardIds.length > 0) {
+        const { error } = await supabase
+          .from('cards')
+          .delete()
+          .in('id', extraCardIds)
+
+        if (error) throw error
+      }
+
+      if (extraZoneIds.length > 0) {
+        const { error } = await supabase
+          .from('board_zones')
+          .delete()
+          .in('id', extraZoneIds)
+
+        if (error) throw error
+      }
+
+      if (extraShapeIds.length > 0) {
+        const { error } = await supabase
+          .from('card_shapes')
+          .delete()
+          .in('id', extraShapeIds)
+
+        if (error) throw error
+      }
+
+      if (snapshot.links.length > 0) {
+        const { error } = await supabase
+          .from('card_links')
+          .upsert(snapshot.links)
+
+        if (error) throw error
+      }
+    } catch (error) {
+      console.error(
+        'Error sincronizando Undo Cards:',
+        error
+      )
+
+      Promise.all([
+        cargarCards(boardId),
+        cargarCardLinks(boardId),
+        cargarBoardZones(boardId),
+        cargarBoardShapes(boardId),
+      ])
     }
-
-    if (snapshot.zones.length > 0) {
-      const { error } = await supabase
-        .from('board_zones')
-        .upsert(snapshot.zones)
-
-      if (error) throw error
-    }
-
-    if (snapshot.shapes.length > 0) {
-      const { error } = await supabase
-        .from('card_shapes')
-        .upsert(snapshot.shapes)
-
-      if (error) throw error
-    }
-
-    /*
-      Quitamos elementos activos creados después del snapshot.
-      Las Cards archivadas no se tocan.
-    */
-    const [
-      { data: currentCards },
-      { data: currentZones },
-      { data: currentShapes },
-      { data: currentLinks },
-    ] = await Promise.all([
-      supabase
-        .from('cards')
-        .select('id')
-        .eq('board_id', boardId)
-        .eq('archivada', false),
-
-      supabase
-        .from('board_zones')
-        .select('id')
-        .eq('board_id', boardId),
-
-      supabase
-        .from('card_shapes')
-        .select('id')
-        .eq('board_id', boardId),
-
-      supabase
-        .from('card_links')
-        .select('id')
-        .eq('board_id', boardId),
-    ])
-
-    const snapshotCardIds =
-      new Set(snapshot.cards.map((item) => item.id))
-
-    const snapshotZoneIds =
-      new Set(snapshot.zones.map((item) => item.id))
-
-    const snapshotShapeIds =
-      new Set(snapshot.shapes.map((item) => item.id))
-
-    const snapshotLinkIds =
-      new Set(snapshot.links.map((item) => item.id))
-
-    const extraLinkIds =
-      (currentLinks || [])
-        .map((item) => item.id)
-        .filter((id) => !snapshotLinkIds.has(id))
-
-    if (extraLinkIds.length > 0) {
-      await supabase
-        .from('card_links')
-        .delete()
-        .in('id', extraLinkIds)
-    }
-
-    const extraCardIds =
-      (currentCards || [])
-        .map((item) => item.id)
-        .filter((id) => !snapshotCardIds.has(id))
-
-    if (extraCardIds.length > 0) {
-      await supabase
-        .from('cards')
-        .delete()
-        .in('id', extraCardIds)
-    }
-
-    const extraZoneIds =
-      (currentZones || [])
-        .map((item) => item.id)
-        .filter((id) => !snapshotZoneIds.has(id))
-
-    if (extraZoneIds.length > 0) {
-      await supabase
-        .from('board_zones')
-        .delete()
-        .in('id', extraZoneIds)
-    }
-
-    const extraShapeIds =
-      (currentShapes || [])
-        .map((item) => item.id)
-        .filter((id) => !snapshotShapeIds.has(id))
-
-    if (extraShapeIds.length > 0) {
-      await supabase
-        .from('card_shapes')
-        .delete()
-        .in('id', extraShapeIds)
-    }
-
-    if (snapshot.links.length > 0) {
-      const { error } = await supabase
-        .from('card_links')
-        .upsert(snapshot.links)
-
-      if (error) throw error
-    }
-
-    await Promise.all([
-      cargarCards(boardId),
-      cargarCardLinks(boardId),
-      cargarBoardZones(boardId),
-      cargarBoardShapes(boardId),
-    ])
-  } catch (error) {
-    console.error(error)
-    alert(
-      `No se pudo deshacer el último cambio: ${
-        error?.message || 'error inesperado'
-      }`
-    )
-  }
+  })()
 }
 
 async function guardarShape(event) {
@@ -3506,61 +3532,143 @@ async function deshacerProcess() {
 
   const processId = snapshot.processId
 
-  const { error: linksDeleteError } =
-    await supabase
-      .from('process_links')
-      .delete()
-      .eq('process_id', processId)
+  /*
+    UX optimista:
+    primero restauramos el canvas EN MEMORIA para que el Undo
+    se vea instantáneo. La sincronización con Supabase corre
+    inmediatamente después en segundo plano.
+  */
+  setProcessNodes(snapshot.nodes)
+  setProcessLinks(snapshot.links)
+  setProcessBoxes(snapshot.boxes)
+  setSelectedProcessNodeIds([])
+  setSelectedProcessBoxId(null)
 
-  if (linksDeleteError) {
-    alert(`No se pudo deshacer: ${linksDeleteError.message}`)
-    return
-  }
+  void (async () => {
+    try {
+      const [
+        { data: currentNodes, error: nodesReadError },
+        { data: currentBoxes, error: boxesReadError },
+        { data: currentLinks, error: linksReadError },
+      ] = await Promise.all([
+        supabase
+          .from('process_nodes')
+          .select('id')
+          .eq('process_id', processId),
 
-  await supabase
-    .from('process_boxes')
-    .delete()
-    .eq('process_id', processId)
+        supabase
+          .from('process_boxes')
+          .select('id')
+          .eq('process_id', processId),
 
-  await supabase
-    .from('process_nodes')
-    .delete()
-    .eq('process_id', processId)
+        supabase
+          .from('process_links')
+          .select('id')
+          .eq('process_id', processId),
+      ])
 
-  if (snapshot.nodes.length > 0) {
-    const { error } = await supabase
-      .from('process_nodes')
-      .insert(snapshot.nodes)
+      if (
+        nodesReadError ||
+        boxesReadError ||
+        linksReadError
+      ) {
+        throw (
+          nodesReadError ||
+          boxesReadError ||
+          linksReadError
+        )
+      }
 
-    if (error) {
-      alert(`No se pudo restaurar componentes: ${error.message}`)
-      return
+      const nodeIds =
+        new Set(snapshot.nodes.map((item) => item.id))
+
+      const boxIds =
+        new Set(snapshot.boxes.map((item) => item.id))
+
+      const linkIds =
+        new Set(snapshot.links.map((item) => item.id))
+
+      const extraLinkIds =
+        (currentLinks || [])
+          .map((item) => item.id)
+          .filter((id) => !linkIds.has(id))
+
+      /*
+        Links se eliminan primero porque dependen de nodos.
+      */
+      if (extraLinkIds.length > 0) {
+        const { error } = await supabase
+          .from('process_links')
+          .delete()
+          .in('id', extraLinkIds)
+
+        if (error) throw error
+      }
+
+      if (snapshot.nodes.length > 0) {
+        const { error } = await supabase
+          .from('process_nodes')
+          .upsert(snapshot.nodes)
+
+        if (error) throw error
+      }
+
+      if (snapshot.boxes.length > 0) {
+        const { error } = await supabase
+          .from('process_boxes')
+          .upsert(snapshot.boxes)
+
+        if (error) throw error
+      }
+
+      const extraNodeIds =
+        (currentNodes || [])
+          .map((item) => item.id)
+          .filter((id) => !nodeIds.has(id))
+
+      if (extraNodeIds.length > 0) {
+        const { error } = await supabase
+          .from('process_nodes')
+          .delete()
+          .in('id', extraNodeIds)
+
+        if (error) throw error
+      }
+
+      const extraBoxIds =
+        (currentBoxes || [])
+          .map((item) => item.id)
+          .filter((id) => !boxIds.has(id))
+
+      if (extraBoxIds.length > 0) {
+        const { error } = await supabase
+          .from('process_boxes')
+          .delete()
+          .in('id', extraBoxIds)
+
+        if (error) throw error
+      }
+
+      if (snapshot.links.length > 0) {
+        const { error } = await supabase
+          .from('process_links')
+          .upsert(snapshot.links)
+
+        if (error) throw error
+      }
+    } catch (error) {
+      console.error(
+        'Error sincronizando Undo Process:',
+        error
+      )
+
+      /*
+        Si Supabase falla, recargamos sólo en ese caso para
+        volver a un estado consistente.
+      */
+      cargarProcessCanvas(processId)
     }
-  }
-
-  if (snapshot.boxes.length > 0) {
-    const { error } = await supabase
-      .from('process_boxes')
-      .insert(snapshot.boxes)
-
-    if (error) {
-      alert(`No se pudo restaurar cajas: ${error.message}`)
-      return
-    }
-  }
-
-  if (snapshot.links.length > 0) {
-    const { error } = await supabase
-      .from('process_links')
-      .insert(snapshot.links)
-
-    if (error) {
-      alert(`No se pudo restaurar conexiones: ${error.message}`)
-      return
-    }
-  }
-
-  await cargarProcessCanvas(processId)
+  })()
 }
 
 async function copiarSeleccionProcess() {

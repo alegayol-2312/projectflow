@@ -13639,3 +13639,186 @@ select:nth-child(3) {
   gap:
     7px !important;
 }
+
+
+/* =========================================================
+   V8.6.2 - PROCESS RESIZE / TOOLBAR 2 FILAS / UNDO RÁPIDO
+========================================================= */
+
+/* Caja de procesos:
+   editar y borrar arriba a la derecha;
+   resize SIEMPRE abajo a la derecha. */
+.process-box.selected
+.process-box-resize {
+  display: block !important;
+
+  position: absolute !important;
+
+  top: auto !important;
+  left: auto !important;
+
+  right: -8px !important;
+  bottom: -8px !important;
+
+  width: 18px !important;
+  height: 18px !important;
+
+  padding: 0 !important;
+
+  border:
+    2px solid
+    #dce7ee !important;
+
+  border-radius:
+    4px !important;
+
+  background:
+    #101a22 !important;
+
+  cursor:
+    nwse-resize !important;
+
+  z-index:
+    15 !important;
+}
+
+/* Barra de multiselección:
+   acciones arriba, colores abajo.
+   Así nunca se corta en el borde derecho del canvas. */
+.process-selection-toolbar {
+  width:
+    min(
+      820px,
+      calc(100% - 36px)
+    )
+    !important;
+
+  max-width:
+    calc(100% - 36px)
+    !important;
+
+  min-height:
+    unset !important;
+
+  display:
+    flex !important;
+
+  flex-wrap:
+    wrap !important;
+
+  align-items:
+    center !important;
+
+  justify-content:
+    flex-start !important;
+
+  gap:
+    9px 11px !important;
+
+  box-sizing:
+    border-box !important;
+
+  margin:
+    6px auto -42px
+    !important;
+
+  padding:
+    10px 12px !important;
+
+  overflow:
+    visible !important;
+}
+
+.process-selection-summary {
+  flex:
+    0 0 auto !important;
+
+  min-width:
+    108px !important;
+}
+
+.process-selection-actions {
+  flex:
+    1 1 auto !important;
+
+  display:
+    flex !important;
+
+  align-items:
+    center !important;
+
+  gap:
+    7px !important;
+
+  flex-wrap:
+    wrap !important;
+}
+
+/* El bloque de colores ocupa la segunda línea completa */
+.process-selection-colors {
+  flex:
+    1 0 100% !important;
+
+  width:
+    100% !important;
+
+  display:
+    flex !important;
+
+  align-items:
+    center !important;
+
+  gap:
+    10px !important;
+
+  padding:
+    8px 0 0 !important;
+
+  margin:
+    0 !important;
+
+  border-left:
+    0 !important;
+
+  border-top:
+    1px solid
+    rgba(255,255,255,.14)
+    !important;
+}
+
+.process-selection-colors > div {
+  display:
+    flex !important;
+
+  align-items:
+    center !important;
+
+  gap:
+    8px !important;
+
+  flex-wrap:
+    wrap !important;
+}
+
+/* Un poco más legible sin agrandar demasiado */
+.process-selection-summary strong {
+  font-size:
+    13px !important;
+}
+
+.process-selection-summary span,
+.process-selection-colors > span {
+  font-size:
+    9.5px !important;
+}
+
+.process-selection-actions button {
+  min-height:
+    34px !important;
+
+  padding:
+    0 11px !important;
+
+  font-size:
+    9px !important;
+}
