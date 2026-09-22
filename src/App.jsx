@@ -11,6 +11,7 @@ import bellIcon from './assets/bell-icon.png'
 import bellNotifIcon from './assets/bell-icon-notif.png'
 import bellActivityIcon from './assets/bell-icon-activity.png'
 import bellShareIcon from './assets/bell-icon-share.png'
+import superpositionIcon from './assets/icon-superposicion.png'
 
 import processTerminatorIcon from './assets/process/process-terminador.png'
 import processReferenceIcon from './assets/process/process-referencia.png'
@@ -551,6 +552,8 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
     y: null,
   })
   const [processArrowMode, setProcessArrowMode] = useState('orthogonal')
+  const [processSuperpuestosVisible, setProcessSuperpuestosVisible] = useState(true)
+  const [processMagneticTarget, setProcessMagneticTarget] = useState(null)
   const [selectedProcessNodeIds, setSelectedProcessNodeIds] = useState([])
   const [processSelectionRect, setProcessSelectionRect] = useState(null)
   const [processGroupDragInfo, setProcessGroupDragInfo] = useState(null)
@@ -769,6 +772,7 @@ useEffect(() => {
 
   const [dragInfo, setDragInfo] = useState(null)
   const boardCanvasRef = useRef(null)
+  const boardWorldRef = useRef(null)
 
   useEffect(() => {
     iniciarApp()
@@ -3244,8 +3248,13 @@ async function imprimirProcessFlow() {
   }
 
   try {
+    const processNodesExport =
+      processNodes.filter(
+        processNodeVisible
+      )
+
     const elementosX = [
-      ...processNodes.map((node) => ({
+      ...processNodesExport.map((node) => ({
         x: Number(node.pos_x),
         width: Number(node.ancho),
       })),
@@ -3256,7 +3265,7 @@ async function imprimirProcessFlow() {
     ]
 
     const elementosY = [
-      ...processNodes.map((node) => ({
+      ...processNodesExport.map((node) => ({
         y: Number(node.pos_y),
         height: Number(node.alto),
       })),
@@ -3275,7 +3284,7 @@ async function imprimirProcessFlow() {
     const processIconosExport = {}
 
     await Promise.all(
-      processNodes.map(async (node) => {
+      processNodesExport.map(async (node) => {
         const icono =
           plantillaProceso(node.tipo)?.icon
 
@@ -3310,7 +3319,31 @@ async function imprimirProcessFlow() {
           clonedWorld.style.zoom = '1'
         }
 
-        [
+        clonedDocument
+          .querySelectorAll('.process-node')
+          .forEach((nodeElement) => {
+            const nodeId =
+              nodeElement.getAttribute(
+                'data-process-node-id'
+              )
+
+            const sourceNode =
+              processNodes.find(
+                (node) =>
+                  String(node.id) ===
+                  String(nodeId)
+              )
+
+            if (
+              sourceNode &&
+              !processNodeVisible(sourceNode)
+            ) {
+              nodeElement.style.display =
+                'none'
+            }
+          })
+
+        ;[
           '.process-node-connector',
           '.process-node-resize',
           '.process-box-edit',
@@ -3968,6 +4001,7 @@ async function pegarSeleccionProcess() {
         '#cfe3cd',
       rotacion: Number(node.rotacion) || 0,
       text_align: node.text_align || 'center',
+      superpuesto: Boolean(node.superpuesto),
       pos_x: Number(node.pos_x) + 34,
       pos_y: Number(node.pos_y) + 34,
       ancho: Number(node.ancho),
@@ -4141,6 +4175,7 @@ async function duplicarProcessNode(node) {
         '#cfe3cd',
       rotacion: Number(node.rotacion) || 0,
       text_align: node.text_align || 'center',
+      superpuesto: Boolean(node.superpuesto),
       pos_x: Number(node.pos_x) + 28,
       pos_y: Number(node.pos_y) + 28,
       ancho: Number(node.ancho),
@@ -4411,6 +4446,85 @@ async function alinearTextoSeleccionProcess(alineacion) {
     alert(`No se pudo alinear el texto: ${error.message}`)
     cargarProcessCanvas(processSeleccionadoId)
   }
+}
+
+
+async function marcarSuperposicionSeleccionProcess() {
+  if (selectedProcessNodeIds.length === 0) return
+
+  pushProcessUndo()
+
+  const ids = [...selectedProcessNodeIds]
+
+  const seleccionados =
+    processNodes.filter((node) =>
+      ids.includes(node.id)
+    )
+
+  const todosSuperpuestos =
+    seleccionados.length > 0 &&
+    seleccionados.every(
+      (node) => Boolean(node.superpuesto)
+    )
+
+  const nuevoValor =
+    !todosSuperpuestos
+
+  setProcessNodes((actual) =>
+    actual.map((node) =>
+      ids.includes(node.id)
+        ? {
+            ...node,
+            superpuesto: nuevoValor,
+          }
+        : node
+    )
+  )
+
+  const { error } = await supabase
+    .from('process_nodes')
+    .update({
+      superpuesto: nuevoValor,
+      updated_at: new Date().toISOString(),
+    })
+    .in('id', ids)
+
+  if (error) {
+    alert(
+      `No se pudo cambiar la superposición: ${error.message}`
+    )
+    cargarProcessCanvas(processSeleccionadoId)
+  }
+}
+
+function toggleProcessSuperpuestos() {
+  setProcessSuperpuestosVisible(
+    (actual) => !actual
+  )
+}
+
+function processNodeVisible(node) {
+  return (
+    processSuperpuestosVisible ||
+    !node.superpuesto
+  )
+}
+
+function processLinkVisible(link) {
+  const source =
+    processNodeById(link.source_node_id)
+
+  const target =
+    processNodeById(link.target_node_id)
+
+  if (!source || !target) {
+    return false
+  }
+
+  return (
+    processNodeVisible(source) &&
+    processNodeVisible(target)
+  )
 }
 
 async function cambiarColorSeleccionProcess(color) {
@@ -5151,20 +5265,106 @@ function moverConexionProcess(event) {
   if (!processLinkDraft) return
 
   const canvas = event.currentTarget
-  const rect = canvas.getBoundingClientRect()
+  const rect =
+    canvas.getBoundingClientRect()
+
+  const canvasX =
+    (event.clientX -
+      rect.left +
+      canvas.scrollLeft) /
+    processZoom
+
+  const canvasY =
+    (event.clientY -
+      rect.top +
+      canvas.scrollTop) /
+    processZoom
+
+  const candidatos =
+    processNodes
+      .filter(
+        (node) =>
+          node.id !==
+            processLinkDraft.sourceNodeId &&
+          processNodeVisible(node)
+      )
+      .flatMap((node) =>
+        [
+          'left',
+          'right',
+          'top',
+          'bottom',
+        ].map((side) => ({
+          node,
+          side,
+          point:
+            puntoConectorProcess(
+              node,
+              side
+            ),
+        }))
+      )
+
+  let cercano = null
+
+  candidatos.forEach(
+    (candidate) => {
+      const distancia =
+        Math.hypot(
+          candidate.point.x -
+            canvasX,
+          candidate.point.y -
+            canvasY
+        )
+
+      if (
+        distancia <= 44 &&
+        (
+          !cercano ||
+          distancia <
+            cercano.distancia
+        )
+      ) {
+        cercano = {
+          ...candidate,
+          distancia,
+        }
+      }
+    }
+  )
+
+  if (cercano) {
+    setProcessMagneticTarget({
+      nodeId: cercano.node.id,
+      side: cercano.side,
+    })
+
+    setProcessLinkDraft(
+      (actual) => ({
+        ...actual,
+        currentX:
+          cercano.point.x,
+        currentY:
+          cercano.point.y,
+      })
+    )
+
+    return
+  }
+
+  setProcessMagneticTarget(null)
 
   setProcessLinkDraft((actual) => ({
     ...actual,
-    currentX:
-      (event.clientX - rect.left + canvas.scrollLeft) / processZoom,
-    currentY:
-      (event.clientY - rect.top + canvas.scrollTop) / processZoom,
+    currentX: canvasX,
+    currentY: canvasY,
   }))
 }
 
 function cancelarConexionProcess() {
   setProcessConnectSource(null)
   setProcessLinkDraft(null)
+  setProcessMagneticTarget(null)
 }
 
 
@@ -5695,6 +5895,173 @@ async function eliminarComentario(comentario) {
   }
 
   await cargarComentariosCard(cardEditando.id)
+}
+
+
+async function guardarCardsComoImagen() {
+  if (
+    !boardWorldRef.current ||
+    !boardSeleccionadoId
+  ) {
+    return
+  }
+
+  const elementos = [
+    ...cards.map((item) => ({
+      x: Number(item.pos_x) || 0,
+      y: Number(item.pos_y) || 0,
+      width: Number(item.ancho) || 250,
+      height: Number(item.alto) || 190,
+    })),
+    ...boardZones.map((item) => ({
+      x: Number(item.pos_x) || 0,
+      y: Number(item.pos_y) || 0,
+      width: Number(item.ancho) || 520,
+      height: Number(item.alto) || 300,
+    })),
+    ...boardShapes.map((item) => ({
+      x: Number(item.pos_x) || 0,
+      y: Number(item.pos_y) || 0,
+      width: Number(item.ancho) || 150,
+      height: Number(item.alto) || 110,
+    })),
+  ]
+
+  if (elementos.length === 0) {
+    alert(
+      'El board no tiene contenido para guardar.'
+    )
+    return
+  }
+
+  try {
+    const padding = 20
+
+    const minX =
+      Math.max(
+        0,
+        Math.min(
+          ...elementos.map(
+            (item) => item.x
+          )
+        ) - padding
+      )
+
+    const minY =
+      Math.max(
+        0,
+        Math.min(
+          ...elementos.map(
+            (item) => item.y
+          )
+        ) - padding
+      )
+
+    const maxX =
+      Math.max(
+        ...elementos.map(
+          (item) =>
+            item.x + item.width
+        )
+      ) + padding
+
+    const maxY =
+      Math.max(
+        ...elementos.map(
+          (item) =>
+            item.y + item.height
+        )
+      ) + padding
+
+    const canvas =
+      await html2canvas(
+        boardWorldRef.current,
+        {
+          backgroundColor:
+            boardCanvasBgActual,
+          scale: 1.5,
+          useCORS: true,
+          x: minX,
+          y: minY,
+          width:
+            Math.max(
+              220,
+              maxX - minX
+            ),
+          height:
+            Math.max(
+              160,
+              maxY - minY
+            ),
+          scrollX: 0,
+          scrollY: 0,
+          onclone: (
+            clonedDocument
+          ) => {
+            const world =
+              clonedDocument.querySelector(
+                '.board-world'
+              )
+
+            if (world) {
+              world.style.transform =
+                'none'
+
+              world.style.transformOrigin =
+                '0 0'
+            }
+
+            [
+              '.board-zone-edit',
+              '.board-zone-delete',
+              '.board-zone-resize',
+              '.board-shape-resize',
+              '.card-resize-handle',
+              '.card-connector',
+              '.card-link-pin',
+            ].forEach((selector) => {
+              clonedDocument
+                .querySelectorAll(
+                  selector
+                )
+                .forEach((el) => {
+                  el.style.display =
+                    'none'
+                })
+            })
+          },
+        }
+      )
+
+    const board =
+      boards.find(
+        (item) =>
+          item.id ===
+          boardSeleccionadoId
+      )
+
+    const nombre =
+      board?.nombre ||
+      'board'
+
+    const link =
+      document.createElement('a')
+
+    link.download =
+      `${nombre}.png`
+
+    link.href =
+      canvas.toDataURL(
+        'image/png'
+      )
+
+    link.click()
+  } catch (error) {
+    console.error(error)
+    alert(
+      'No se pudo guardar la imagen del board.'
+    )
+  }
 }
 
 function cambiarProcessZoom(delta) {
@@ -9622,6 +9989,15 @@ function colorEstadoTarea(tarea) {
       ) {
         event.preventDefault()
         pegarSeleccionProcess()
+        return
+      }
+
+      if (
+        ctrl &&
+        event.key.toLowerCase() === 's'
+      ) {
+        event.preventDefault()
+        toggleProcessSuperpuestos()
       }
     }
 
@@ -9644,6 +10020,7 @@ function colorEstadoTarea(tarea) {
     processMapDrawerOpen,
     processNodes,
     processSeleccionadoId,
+    processSuperpuestosVisible,
   ])
 
   const processSeleccionado = processMaps.find(
@@ -12089,7 +12466,30 @@ function colorEstadoTarea(tarea) {
                       terminarResizeProcessBox()
                       terminarMoverProcessLink()
 
-                      if (processLinkDraft) {
+                      if (
+                        processLinkDraft &&
+                        processMagneticTarget
+                      ) {
+                        const targetNode =
+                          processNodeById(
+                            processMagneticTarget.nodeId
+                          )
+
+                        if (targetNode) {
+                          finalizarConexionProcess(
+                            {
+                              preventDefault() {},
+                              stopPropagation() {},
+                            },
+                            targetNode,
+                            processMagneticTarget.side
+                          )
+                        } else {
+                          cancelarConexionProcess()
+                        }
+                      } else if (
+                        processLinkDraft
+                      ) {
                         cancelarConexionProcess()
                       }
                     }}
@@ -12201,6 +12601,28 @@ function colorEstadoTarea(tarea) {
 
                       <button
                         type="button"
+                        className={`process-superposition-tool ${
+                          processSuperpuestosVisible
+                            ? 'active'
+                            : ''
+                        }`}
+                        onClick={toggleProcessSuperpuestos}
+                        title={
+                          processSuperpuestosVisible
+                            ? 'Ocultar superposiciones (Ctrl+S)'
+                            : 'Mostrar superposiciones (Ctrl+S)'
+                        }
+                        aria-label="Mostrar u ocultar componentes superpuestos"
+                      >
+                        <img
+                          src={superpositionIcon}
+                          alt=""
+                        />
+                      </button>
+
+
+                      <button
+                        type="button"
                         className={`process-arrow-mode-tool ${
                           processArrowMode === 'curved'
                             ? 'active'
@@ -12293,6 +12715,17 @@ function colorEstadoTarea(tarea) {
                             onClick={aplicarSnapSeleccionProcess}
                           >
                             Snap
+                          </button>
+
+                          <button
+                            type="button"
+                            className="process-superposition-action"
+                            onClick={
+                              marcarSuperposicionSeleccionProcess
+                            }
+                            title="Marcar o desmarcar como superposición"
+                          >
+                            Superposición
                           </button>
 
                           <div className="process-text-align-actions">
@@ -12396,6 +12829,13 @@ function colorEstadoTarea(tarea) {
                       } ${processLinkDraft ? 'connecting-mode' : ''}`}
                       style={{
                         zoom: processZoom,
+                        '--process-grid-step':
+                          `${38 / processZoom}px`,
+                        '--process-grid-line':
+                          `${Math.max(
+                            1.15,
+                            1.15 / processZoom
+                          )}px`,
                         width: `${processWorldSize.width}px`,
                         height: `${processWorldSize.height}px`,
                         minWidth: `${processWorldSize.width}px`,
@@ -12546,7 +12986,9 @@ function colorEstadoTarea(tarea) {
                           </marker>
                         </defs>
 
-                        {processLinks.map((link) => {
+                        {processLinks
+                          .filter(processLinkVisible)
+                          .map((link) => {
                           const line = processLine(link)
                           if (!line) return null
 
@@ -12636,7 +13078,9 @@ function colorEstadoTarea(tarea) {
                         )}
                       </svg>
 
-                      {processNodes.map((node) => (
+                      {processNodes
+                        .filter(processNodeVisible)
+                        .map((node) => (
                         <div
                           key={node.id}
                           data-process-node-id={node.id}
@@ -12647,6 +13091,10 @@ function colorEstadoTarea(tarea) {
                           } ${
                             selectedProcessNodeIds.includes(node.id)
                               ? 'multi-selected'
+                              : ''
+                          } ${
+                            processMagneticTarget?.nodeId === node.id
+                              ? 'magnetic-target'
                               : ''
                           }`}
                           style={{
@@ -13424,6 +13872,14 @@ function colorEstadoTarea(tarea) {
                         >
                           + Zona
                         </button>
+
+                        <button
+                          type="button"
+                          className="cards-export-button compact"
+                          onClick={guardarCardsComoImagen}
+                        >
+                          Guardar imagen
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -13549,14 +14005,6 @@ function colorEstadoTarea(tarea) {
                       +
                     </button>
 
-                    <button
-                      type="button"
-                      className="board-center-button"
-                      onClick={centrarBoard}
-                      title="Centrar board"
-                    >
-                      Centrar
-                    </button>
                   </div>
 
                     
@@ -13628,6 +14076,7 @@ function colorEstadoTarea(tarea) {
                       }}
                     >
                       <div
+                        ref={boardWorldRef}
                         className="board-world"
                         style={{
                           width: '2400px',
@@ -17197,6 +17646,11 @@ function colorEstadoTarea(tarea) {
         </div>
 
       )}
+
+      <footer className="projectflow-footer">
+        <span>V9.2</span>
+        <span>22/09/2026</span>
+      </footer>
 
       </div>
     </div>

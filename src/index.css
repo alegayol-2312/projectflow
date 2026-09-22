@@ -14139,3 +14139,198 @@ select:nth-child(3) {
   width: 25px !important;
   height: 25px !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V9.2
+========================================================= */
+
+/* Footer */
+.projectflow-footer {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 4px 16px 6px;
+  color: #91a5b3;
+  font-size: 8.5px;
+  font-weight: 750;
+  letter-spacing: .02em;
+}
+.projectflow-footer span:first-child {
+  color: #ffffff;
+}
+
+/* Process layering: nunca dibujar flechas arriba de nodos */
+.process-box {
+  z-index: 2 !important;
+}
+.process-links-layer {
+  z-index: 10 !important;
+  pointer-events: none;
+}
+.process-node {
+  z-index: 30 !important;
+}
+.process-link-group,
+.process-link-path,
+.process-link-move-handle,
+.process-link-label {
+  pointer-events: all;
+}
+
+/* Conexión magnética */
+.process-node.magnetic-target .process-node-visual {
+  filter: drop-shadow(0 0 9px rgba(0,216,234,.92)) !important;
+}
+.process-node.magnetic-target .process-node-connector {
+  opacity: 1 !important;
+}
+.process-node .process-node-connector {
+  width: 34px !important;
+  height: 34px !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+/* Superposición */
+.process-superposition-tool {
+  flex: 0 0 auto;
+  width: 29px !important;
+  height: 29px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  border: 1px solid rgba(255,255,255,.27) !important;
+  border-radius: 7px !important;
+  background: rgba(255,255,255,.07) !important;
+  cursor: pointer;
+}
+.process-superposition-tool img {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+  filter: invert(1) brightness(1.4);
+}
+.process-superposition-tool.active {
+  border-color: #00d8ea !important;
+  box-shadow: inset 0 0 0 1px rgba(0,216,234,.34);
+}
+.process-superposition-action {
+  border-color: #7a69ff !important;
+  background: rgba(122,105,255,.14) !important;
+}
+
+/* Grid visible también debajo de 80% */
+.process-world.grid-visible {
+  background-image:
+    linear-gradient(
+      to right,
+      var(--process-grid-color, rgba(220,228,235,.18))
+      var(--process-grid-line, 1.2px),
+      transparent var(--process-grid-line, 1.2px)
+    ),
+    linear-gradient(
+      to bottom,
+      var(--process-grid-color, rgba(220,228,235,.18))
+      var(--process-grid-line, 1.2px),
+      transparent var(--process-grid-line, 1.2px)
+    ) !important;
+
+  background-size:
+    var(--process-grid-step, 38px)
+    var(--process-grid-step, 38px) !important;
+}
+
+/* Panel de procesos no puede quedar debajo del canvas */
+.process-layout {
+  grid-template-columns: 320px minmax(0, 1fr) !important;
+  position: relative;
+  overflow: hidden;
+}
+.process-left-panel {
+  position: relative;
+  z-index: 70;
+  min-width: 320px;
+  overflow: hidden !important;
+}
+.process-left-top {
+  min-width: 0;
+}
+.process-list-header,
+.process-list {
+  position: relative;
+  z-index: 2;
+  background: #0b141b;
+}
+.process-list-main {
+  min-width: 0;
+}
+.process-list-main strong,
+.process-list-main span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.process-canvas {
+  min-width: 0;
+}
+
+/* Cards export */
+.cards-export-button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid #5a7890;
+  border-radius: 8px;
+  background: #16242e;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 850;
+  cursor: pointer;
+}
+.cards-export-button:hover {
+  border-color: #00d8ea;
+  color: #6ff4ff;
+}
+
+/* Zoom Cards idéntico al de Process */
+.board-zoom-overlay {
+  position: fixed !important;
+  right: 18px !important;
+  bottom: 18px !important;
+  z-index: 10050 !important;
+  min-width: 138px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid #2e4555;
+  border-radius: 11px;
+  background: rgba(12,20,27,.94);
+  box-shadow: 0 10px 24px rgba(0,0,0,.30);
+}
+
+.board-zoom-overlay button,
+.process-zoom-overlay button {
+  width: 29px;
+  height: 29px;
+  border: 1px solid #36566a;
+  border-radius: 7px;
+  background: #12212c;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.board-zoom-overlay span,
+.process-zoom-overlay span {
+  min-width: 48px;
+  color: #ffffff !important;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 900;
+}
