@@ -558,6 +558,15 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processAiLoading, setProcessAiLoading] = useState(false)
   const [processAiText, setProcessAiText] = useState('')
   const [processAiError, setProcessAiError] = useState('')
+  const [processCreateModeOpen, setProcessCreateModeOpen] = useState(false)
+  const [processTextCreateOpen, setProcessTextCreateOpen] = useState(false)
+  const [processTextCreateLoading, setProcessTextCreateLoading] = useState(false)
+  const [processTextCreateError, setProcessTextCreateError] = useState('')
+  const [processTextCreateForm, setProcessTextCreateForm] = useState({
+    nombre: '',
+    descripcion: '',
+    texto: '',
+  })
   const [selectedProcessNodeIds, setSelectedProcessNodeIds] = useState([])
   const [processSelectionRect, setProcessSelectionRect] = useState(null)
   const [processGroupDragInfo, setProcessGroupDragInfo] = useState(null)
@@ -3067,8 +3076,495 @@ async function cargarProcessCanvas(processId) {
 }
 
 function abrirNuevoProcessMap() {
-  setNuevoProcessMap({ nombre: '', descripcion: '' })
+  setProcessCreateModeOpen(true)
+}
+
+function abrirNuevoProcessManual() {
+  setProcessCreateModeOpen(false)
+  setNuevoProcessMap({
+    nombre: '',
+    descripcion: '',
+  })
   setProcessMapDrawerOpen(true)
+}
+
+function abrirNuevoProcessDesdeTexto() {
+  setProcessCreateModeOpen(false)
+  setProcessTextCreateError('')
+  setProcessTextCreateForm({
+    nombre: '',
+    descripcion: '',
+    texto: '',
+  })
+  setProcessTextCreateOpen(true)
+}
+
+
+function ladoConexionAuto(
+  source,
+  target
+) {
+  const dx =
+    Number(target.pos_x) -
+    Number(source.pos_x)
+
+  const dy =
+    Number(target.pos_y) -
+    Number(source.pos_y)
+
+  if (
+    Math.abs(dx) >=
+    Math.abs(dy)
+  ) {
+    return dx >= 0
+      ? {
+          sourceSide: 'right',
+          targetSide: 'left',
+        }
+      : {
+          sourceSide: 'left',
+          targetSide: 'right',
+        }
+  }
+
+  return dy >= 0
+    ? {
+        sourceSide: 'bottom',
+        targetSide: 'top',
+      }
+    : {
+        sourceSide: 'top',
+        targetSide: 'bottom',
+      }
+}
+
+function layoutProcesoGeneradoIA(
+  proceso
+) {
+  const nodes =
+    Array.isArray(proceso?.nodos)
+      ? proceso.nodos
+      : []
+
+  const COL_GAP = 290
+  const ROW_GAP = 205
+  const START_X = 160
+  const START_Y = 150
+
+  return nodes.map(
+    (node, index) => {
+      const tipo =
+        PROCESO_COMPONENTES.some(
+          (item) =>
+            item.tipo === node.tipo
+        )
+          ? node.tipo
+          : 'Actividad'
+
+      const dims =
+        dimensionesProcessNode(tipo)
+
+      const columna =
+        Number.isFinite(
+          Number(node.columna)
+        )
+          ? Math.max(
+              0,
+              Number(node.columna)
+            )
+          : index
+
+      const fila =
+        Number.isFinite(
+          Number(node.fila)
+        )
+          ? Math.max(
+              0,
+              Number(node.fila)
+            )
+          : 0
+
+      return {
+        aiId: String(
+          node.id || `n${index + 1}`
+        ),
+        tipo,
+        titulo:
+          String(
+            node.texto || ''
+          ).trim() ||
+          plantillaProceso(tipo)
+            ?.tituloDefault ||
+          'Actividad',
+        color:
+          plantillaProceso(tipo)
+            ?.color ||
+          '#cfe3cd',
+        rotacion: 0,
+        text_align: 'center',
+        superpuesto: false,
+        pos_x:
+          START_X +
+          columna * COL_GAP,
+        pos_y:
+          START_Y +
+          fila * ROW_GAP,
+        ancho: dims.ancho,
+        alto: dims.alto,
+        z_index: 10 + index,
+      }
+    }
+  )
+}
+
+async function crearProcesoDesdeTextoIA(
+  event
+) {
+  event.preventDefault()
+
+  const nombre =
+    processTextCreateForm.nombre.trim()
+
+  const descripcion =
+    processTextCreateForm.descripcion.trim()
+
+  const texto =
+    processTextCreateForm.texto.trim()
+
+  if (!nombre) {
+    alert(
+      'Ingresá un nombre para el proceso.'
+    )
+    return
+  }
+
+  if (!texto) {
+    alert(
+      'Escribí el proceso que querés generar.'
+    )
+    return
+  }
+
+  setProcessTextCreateLoading(true)
+  setProcessTextCreateError('')
+
+  let nuevoProcessId = null
+
+  try {
+    const response =
+      await fetch(
+        '/api/text-to-process',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
+          body:
+            JSON.stringify({
+              nombre,
+              descripcion,
+              texto,
+            }),
+        }
+      )
+
+    const rawResponse =
+      await response.text()
+
+    let data = null
+
+    if (rawResponse.trim()) {
+      try {
+        data =
+          JSON.parse(rawResponse)
+      } catch {
+        data = {
+          error:
+            rawResponse.length > 600
+              ? `${rawResponse.slice(
+                  0,
+                  600
+                )}...`
+              : rawResponse,
+        }
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        data?.error ||
+        `La API respondió ${response.status} ${response.statusText}.`
+      )
+    }
+
+    const generado =
+      data?.proceso
+
+    if (
+      !generado ||
+      !Array.isArray(
+        generado.nodos
+      ) ||
+      generado.nodos.length === 0
+    ) {
+      throw new Error(
+        'La IA no devolvió componentes para dibujar.'
+      )
+    }
+
+    const nodosLayout =
+      layoutProcesoGeneradoIA(
+        generado
+      )
+
+    const { data: mapData, error: mapError } =
+      await supabase
+        .from('process_maps')
+        .insert({
+          nombre,
+          descripcion:
+            descripcion || null,
+          canvas_bg: '#0b1220',
+          archivado: false,
+          arrow_mode: 'orthogonal',
+          updated_at:
+            new Date().toISOString(),
+        })
+        .select()
+        .single()
+
+    if (mapError) {
+      throw mapError
+    }
+
+    nuevoProcessId =
+      mapData.id
+
+    const idMap =
+      new Map()
+
+    const nodePayloads =
+      nodosLayout.map(
+        (node) => {
+          const dbId =
+            globalThis.crypto
+              ?.randomUUID?.()
+
+          if (!dbId) {
+            throw new Error(
+              'El navegador no pudo generar identificadores para los componentes.'
+            )
+          }
+
+          idMap.set(
+            node.aiId,
+            dbId
+          )
+
+          return {
+            id: dbId,
+            process_id:
+              nuevoProcessId,
+            tipo: node.tipo,
+            titulo:
+              node.titulo,
+            color: node.color,
+            rotacion:
+              node.rotacion,
+            text_align:
+              node.text_align,
+            superpuesto: false,
+            pos_x:
+              node.pos_x,
+            pos_y:
+              node.pos_y,
+            ancho:
+              node.ancho,
+            alto:
+              node.alto,
+            z_index:
+              node.z_index,
+            updated_at:
+              new Date().toISOString(),
+          }
+        }
+      )
+
+    const {
+      error: nodesError,
+    } = await supabase
+      .from('process_nodes')
+      .insert(nodePayloads)
+
+    if (nodesError) {
+      throw nodesError
+    }
+
+    const nodeByAiId =
+      new Map(
+        nodosLayout.map(
+          (node) => [
+            node.aiId,
+            node,
+          ]
+        )
+      )
+
+    const conexiones =
+      Array.isArray(
+        generado.conexiones
+      )
+        ? generado.conexiones
+        : []
+
+    const linkPayloads =
+      conexiones
+        .map((link) => {
+          const sourceAiId =
+            String(
+              link.origen || ''
+            )
+
+          const targetAiId =
+            String(
+              link.destino || ''
+            )
+
+          const sourceId =
+            idMap.get(
+              sourceAiId
+            )
+
+          const targetId =
+            idMap.get(
+              targetAiId
+            )
+
+          const sourceNode =
+            nodeByAiId.get(
+              sourceAiId
+            )
+
+          const targetNode =
+            nodeByAiId.get(
+              targetAiId
+            )
+
+          if (
+            !sourceId ||
+            !targetId ||
+            !sourceNode ||
+            !targetNode ||
+            sourceId === targetId
+          ) {
+            return null
+          }
+
+          const lados =
+            ladoConexionAuto(
+              sourceNode,
+              targetNode
+            )
+
+          return {
+            process_id:
+              nuevoProcessId,
+            source_node_id:
+              sourceId,
+            target_node_id:
+              targetId,
+            source_side:
+              lados.sourceSide,
+            target_side:
+              lados.targetSide,
+            etiqueta:
+              String(
+                link.etiqueta ||
+                ''
+              ).trim() ||
+              null,
+            estilo: 'continua',
+            color: '#b9c5cf',
+            manual_offset: 0,
+          }
+        })
+        .filter(Boolean)
+
+    if (
+      linkPayloads.length > 0
+    ) {
+      const {
+        error: linksError,
+      } = await supabase
+        .from('process_links')
+        .insert(linkPayloads)
+
+      if (linksError) {
+        throw linksError
+      }
+    }
+
+    await registrarActividad({
+      modulo: 'Process',
+      accion:
+        'creó con IA',
+      detalle:
+        `Creó el proceso "${nombre}" desde texto`,
+      recursoTipo:
+        'process_map',
+      recursoId:
+        nuevoProcessId,
+      recursoNombre:
+        nombre,
+    })
+
+    setProcessTextCreateOpen(
+      false
+    )
+
+    setProcessTextCreateForm({
+      nombre: '',
+      descripcion: '',
+      texto: '',
+    })
+
+    await cargarProcessMaps()
+
+    setProcessSeleccionadoId(
+      nuevoProcessId
+    )
+
+    await cargarProcessCanvas(
+      nuevoProcessId
+    )
+  } catch (error) {
+    console.error(error)
+
+    /*
+      Si el mapa llegó a crearse pero después falló
+      la inserción de nodos o flechas, lo eliminamos
+      para no dejar un proceso incompleto.
+    */
+    if (nuevoProcessId) {
+      await supabase
+        .from('process_maps')
+        .delete()
+        .eq(
+          'id',
+          nuevoProcessId
+        )
+    }
+
+    setProcessTextCreateError(
+      error?.message ||
+      'No se pudo generar el proceso.'
+    )
+  } finally {
+    setProcessTextCreateLoading(
+      false
+    )
+  }
 }
 
 async function guardarProcessMap(event) {
@@ -15995,6 +16491,253 @@ function colorEstadoTarea(tarea) {
         </div>
       )}
 
+      {processCreateModeOpen && (
+        <div
+          className="process-create-mode-overlay"
+          onMouseDown={(event) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              setProcessCreateModeOpen(
+                false
+              )
+            }
+          }}
+        >
+          <div className="process-create-mode-modal">
+            <div className="process-create-mode-heading">
+              <div>
+                <span>Nuevo Process</span>
+                <h3>
+                  ¿Cómo querés empezar?
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setProcessCreateModeOpen(
+                    false
+                  )
+                }
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="process-create-mode-options">
+              <button
+                type="button"
+                className="process-create-option"
+                onClick={
+                  abrirNuevoProcessManual
+                }
+              >
+                <strong>
+                  Dibujar proceso
+                </strong>
+                <span>
+                  Crear el proceso vacío y armarlo manualmente como hasta ahora.
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="process-create-option ai"
+                onClick={
+                  abrirNuevoProcessDesdeTexto
+                }
+              >
+                <strong>
+                  Generar desde texto
+                </strong>
+                <span>
+                  Escribí el flujo y la IA crea componentes, decisiones y flechas.
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {processTextCreateOpen && (
+        <div
+          className="card-drawer-overlay"
+          onMouseDown={(event) => {
+            if (
+              event.target ===
+              event.currentTarget &&
+              !processTextCreateLoading
+            ) {
+              setProcessTextCreateOpen(
+                false
+              )
+            }
+          }}
+        >
+          <aside className="card-editor-drawer process-text-create-drawer">
+            <form
+              onSubmit={
+                crearProcesoDesdeTextoIA
+              }
+            >
+              <div className="card-modal-heading">
+                <div>
+                  <span>
+                    IA · Texto → Process
+                  </span>
+                  <h3>
+                    Nuevo proceso
+                  </h3>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={
+                    processTextCreateLoading
+                  }
+                  onClick={() =>
+                    setProcessTextCreateOpen(
+                      false
+                    )
+                  }
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  Nombre
+                </label>
+                <input
+                  value={
+                    processTextCreateForm.nombre
+                  }
+                  disabled={
+                    processTextCreateLoading
+                  }
+                  onChange={(event) =>
+                    setProcessTextCreateForm(
+                      (actual) => ({
+                        ...actual,
+                        nombre:
+                          event.target.value,
+                      })
+                    )
+                  }
+                  placeholder="Ej: Alta de cliente"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>
+                  Descripción
+                </label>
+                <textarea
+                  rows="3"
+                  value={
+                    processTextCreateForm.descripcion
+                  }
+                  disabled={
+                    processTextCreateLoading
+                  }
+                  onChange={(event) =>
+                    setProcessTextCreateForm(
+                      (actual) => ({
+                        ...actual,
+                        descripcion:
+                          event.target.value,
+                      })
+                    )
+                  }
+                  placeholder="Descripción opcional"
+                />
+              </div>
+
+              <div className="form-group process-text-prompt-group">
+                <label>
+                  Describí el proceso
+                </label>
+
+                <small>
+                  Escribilo de forma natural. Podés indicar pasos, decisiones, caminos alternativos y sistemas involucrados.
+                </small>
+
+                <textarea
+                  rows="13"
+                  value={
+                    processTextCreateForm.texto
+                  }
+                  disabled={
+                    processTextCreateLoading
+                  }
+                  onChange={(event) =>
+                    setProcessTextCreateForm(
+                      (actual) => ({
+                        ...actual,
+                        texto:
+                          event.target.value,
+                      })
+                    )
+                  }
+                  placeholder="Ej: El cliente inicia una solicitud. El banco valida los datos. Si están correctos, analiza el crédito. Si aprueba, genera el préstamo. Si rechaza, informa al cliente..."
+                />
+              </div>
+
+              {processTextCreateError && (
+                <div className="process-ai-error">
+                  {
+                    processTextCreateError
+                  }
+                </div>
+              )}
+
+              {processTextCreateLoading && (
+                <div className="process-text-create-loading">
+                  <div />
+                  <span>
+                    Interpretando y dibujando el proceso...
+                  </span>
+                </div>
+              )}
+
+              <div className="connection-drawer-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={
+                    processTextCreateLoading
+                  }
+                  onClick={() =>
+                    setProcessTextCreateOpen(
+                      false
+                    )
+                  }
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={
+                    processTextCreateLoading
+                  }
+                >
+                  {
+                    processTextCreateLoading
+                      ? 'Generando...'
+                      : 'Generar Process'
+                  }
+                </button>
+              </div>
+            </form>
+          </aside>
+        </div>
+      )}
+
       {processAiDrawerOpen && (
         <div
           className="card-drawer-overlay"
@@ -17977,7 +18720,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V9.3.1</span>
+        <span>V9.4</span>
         <span>23/09/2026</span>
       </footer>
 
