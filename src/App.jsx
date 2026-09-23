@@ -554,6 +554,10 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processArrowMode, setProcessArrowMode] = useState('orthogonal')
   const [processSuperpuestosVisible, setProcessSuperpuestosVisible] = useState(true)
   const [processMagneticTarget, setProcessMagneticTarget] = useState(null)
+  const [processAiDrawerOpen, setProcessAiDrawerOpen] = useState(false)
+  const [processAiLoading, setProcessAiLoading] = useState(false)
+  const [processAiText, setProcessAiText] = useState('')
+  const [processAiError, setProcessAiError] = useState('')
   const [selectedProcessNodeIds, setSelectedProcessNodeIds] = useState([])
   const [processSelectionRect, setProcessSelectionRect] = useState(null)
   const [processGroupDragInfo, setProcessGroupDragInfo] = useState(null)
@@ -3237,6 +3241,227 @@ async function actualizarProcessCanvasBg(color) {
         : item
     )
   )
+}
+
+
+function construirProcesoParaIA() {
+  const mapa =
+    processMaps.find(
+      (item) =>
+        item.id === processSeleccionadoId
+    )
+
+  const nodosVisibles =
+    processNodes.filter(
+      processNodeVisible
+    )
+
+  function cajaQueContiene(node) {
+    const x =
+      Number(node.pos_x) +
+      Number(node.ancho) / 2
+
+    const y =
+      Number(node.pos_y) +
+      Number(node.alto) / 2
+
+    const caja =
+      processBoxes.find((box) => {
+        const left =
+          Number(box.pos_x)
+
+        const top =
+          Number(box.pos_y)
+
+        const right =
+          left +
+          Number(box.ancho)
+
+        const bottom =
+          top +
+          Number(box.alto)
+
+        return (
+          x >= left &&
+          x <= right &&
+          y >= top &&
+          y <= bottom
+        )
+      })
+
+    return caja?.titulo || null
+  }
+
+  const idsVisibles =
+    new Set(
+      nodosVisibles.map(
+        (node) => node.id
+      )
+    )
+
+  return {
+    nombre:
+      mapa?.nombre || 'Proceso',
+
+    descripcion:
+      mapa?.descripcion || '',
+
+    areas:
+      processBoxes.map((box) => ({
+        id: box.id,
+        nombre: box.titulo || '',
+      })),
+
+    pasos:
+      nodosVisibles.map((node) => ({
+        id: node.id,
+        tipo:
+          etiquetaTipoProceso(
+            node.tipo
+          ),
+        texto:
+          node.titulo || '',
+        area:
+          cajaQueContiene(node),
+        posicion: {
+          x: Number(node.pos_x),
+          y: Number(node.pos_y),
+        },
+      })),
+
+    conexiones:
+      processLinks
+        .filter(
+          (link) =>
+            idsVisibles.has(
+              link.source_node_id
+            ) &&
+            idsVisibles.has(
+              link.target_node_id
+            )
+        )
+        .map((link) => ({
+          origen:
+            link.source_node_id,
+          destino:
+            link.target_node_id,
+          etiqueta:
+            link.etiqueta || null,
+        })),
+  }
+}
+
+async function escribirProcesoConIA() {
+  if (!processSeleccionadoId) {
+    alert(
+      'Primero seleccioná un proceso.'
+    )
+    return
+  }
+
+  const proceso =
+    construirProcesoParaIA()
+
+  if (proceso.pasos.length === 0) {
+    alert(
+      'El proceso no tiene componentes para describir.'
+    )
+    return
+  }
+
+  setProcessAiDrawerOpen(true)
+  setProcessAiLoading(true)
+  setProcessAiError('')
+  setProcessAiText('')
+
+  try {
+    const response =
+      await fetch(
+        '/api/process-to-text',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
+          body:
+            JSON.stringify({
+              proceso,
+            }),
+        }
+      )
+
+    const rawResponse =
+      await response.text()
+
+    let data = null
+
+    if (rawResponse.trim()) {
+      try {
+        data =
+          JSON.parse(rawResponse)
+      } catch {
+        data = {
+          error:
+            rawResponse.length > 500
+              ? `${rawResponse.slice(0, 500)}...`
+              : rawResponse,
+        }
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        data?.error ||
+        `La API respondió ${response.status} ${response.statusText}.`
+      )
+    }
+
+    if (!data?.texto) {
+      throw new Error(
+        'La API respondió sin contenido. Revisá el deployment de /api/process-to-text en Vercel.'
+      )
+    }
+
+    setProcessAiText(
+      data.texto
+    )
+  } catch (error) {
+    console.error(error)
+
+    setProcessAiError(
+      error?.message ||
+      'No se pudo generar el texto del proceso.'
+    )
+  } finally {
+    setProcessAiLoading(false)
+  }
+}
+
+async function copiarTextoProcesoIA() {
+  if (!processAiText) return
+
+  try {
+    await navigator.clipboard.writeText(
+      processAiText
+    )
+  } catch {
+    const textarea =
+      document.createElement(
+        'textarea'
+      )
+
+    textarea.value =
+      processAiText
+
+    document.body.appendChild(
+      textarea
+    )
+
+    textarea.select()
+    document.execCommand('copy')
+    textarea.remove()
+  }
 }
 
 async function imprimirProcessFlow() {
@@ -12426,6 +12651,14 @@ function colorEstadoTarea(tarea) {
                     </div>
 
                     <div className="process-canvas-actions">
+                      <button
+                        type="button"
+                        className="process-ai-button"
+                        onClick={escribirProcesoConIA}
+                      >
+                        ✨ Escribir proceso
+                      </button>
+
                       <button type="button" className="btn-secondary" onClick={imprimirProcessFlow}>
                         Imprimir flujo
                       </button>
@@ -15762,6 +15995,102 @@ function colorEstadoTarea(tarea) {
         </div>
       )}
 
+      {processAiDrawerOpen && (
+        <div
+          className="card-drawer-overlay"
+          onMouseDown={(event) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              setProcessAiDrawerOpen(
+                false
+              )
+            }
+          }}
+        >
+          <aside className="card-editor-drawer process-ai-drawer">
+            <div className="card-modal-heading">
+              <div>
+                <span>IA · Process</span>
+                <h3>
+                  Proceso a texto
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setProcessAiDrawerOpen(
+                    false
+                  )
+                }
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="process-ai-intro">
+              <strong>
+                {processSeleccionado?.nombre ||
+                  'Proceso'}
+              </strong>
+
+              <span>
+                La descripción se genera únicamente con los componentes, áreas y conexiones dibujadas.
+              </span>
+            </div>
+
+            {processAiLoading && (
+              <div className="process-ai-loading">
+                <div />
+                <span>
+                  Escribiendo el proceso...
+                </span>
+              </div>
+            )}
+
+            {!processAiLoading &&
+              processAiError && (
+                <div className="process-ai-error">
+                  {processAiError}
+                </div>
+              )}
+
+            {!processAiLoading &&
+              processAiText && (
+                <>
+                  <div className="process-ai-result">
+                    {processAiText}
+                  </div>
+
+                  <div className="process-ai-actions">
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={
+                        copiarTextoProcesoIA
+                      }
+                    >
+                      Copiar texto
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={
+                        escribirProcesoConIA
+                      }
+                    >
+                      Regenerar
+                    </button>
+                  </div>
+                </>
+              )}
+          </aside>
+        </div>
+      )}
+
       {processMapDrawerOpen && (
         <div className="card-drawer-overlay">
           <aside className="card-editor-drawer process-drawer">
@@ -17648,8 +17977,8 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V9.2</span>
-        <span>22/09/2026</span>
+        <span>V9.3.1</span>
+        <span>23/09/2026</span>
       </footer>
 
       </div>
