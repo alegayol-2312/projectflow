@@ -601,6 +601,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processMapsArchivados, setProcessMapsArchivados] = useState([])
   const [selectedProcessBoxId, setSelectedProcessBoxId] = useState(null)
   const processUndoRef = useRef([])
+  const processSelectionRef = useRef(null)
   const processClipboardRef = useRef([])
   const [nuevoProcessMap, setNuevoProcessMap] = useState({
     nombre: '',
@@ -4982,85 +4983,81 @@ function puntoCanvasProcessDesdeEvento(event) {
   }
 }
 
-function iniciarSeleccionProcess(event) {
-  if (event.button !== 0) return
+function puntoSeleccionProcess(
+  event,
+  canvas
+) {
+  const rect =
+    canvas.getBoundingClientRect()
 
-  const target = event.target
+  return {
+    x:
+      (
+        event.clientX -
+        rect.left +
+        canvas.scrollLeft
+      ) /
+      processZoom,
 
-  const esFondo =
-    target.classList.contains('process-canvas') ||
-    target.classList.contains('process-world')
-
-  if (!esFondo) return
-
-  const canvas = event.currentTarget
-  const rect = canvas.getBoundingClientRect()
-
-  const x =
-    (event.clientX - rect.left + canvas.scrollLeft) / processZoom
-
-  const y =
-    (event.clientY - rect.top + canvas.scrollTop) / processZoom
-
-  setSelectedProcessNodeIds([])
-
-  setProcessSelectionRect({
-    startX: x,
-    startY: y,
-    x,
-    y,
-    width: 0,
-    height: 0,
-  })
+    y:
+      (
+        event.clientY -
+        rect.top +
+        canvas.scrollTop
+      ) /
+      processZoom,
+  }
 }
 
-function moverSeleccionProcess(event) {
-  if (!processSelectionRect) return
+function idsDentroSeleccionProcess(
+  selection
+) {
+  if (!selection) return []
 
-  const canvas = event.currentTarget
-  const rect = canvas.getBoundingClientRect()
+  const left =
+    Math.min(
+      selection.startX,
+      selection.currentX
+    )
 
-  const currentX =
-    (event.clientX - rect.left + canvas.scrollLeft) / processZoom
+  const top =
+    Math.min(
+      selection.startY,
+      selection.currentY
+    )
 
-  const currentY =
-    (event.clientY - rect.top + canvas.scrollTop) / processZoom
+  const right =
+    Math.max(
+      selection.startX,
+      selection.currentX
+    )
 
-  const left = Math.min(
-    processSelectionRect.startX,
-    currentX
-  )
+  const bottom =
+    Math.max(
+      selection.startY,
+      selection.currentY
+    )
 
-  const top = Math.min(
-    processSelectionRect.startY,
-    currentY
-  )
-
-  const right = Math.max(
-    processSelectionRect.startX,
-    currentX
-  )
-
-  const bottom = Math.max(
-    processSelectionRect.startY,
-    currentY
-  )
-
-  setProcessSelectionRect((actual) => ({
-    ...actual,
-    x: left,
-    y: top,
-    width: right - left,
-    height: bottom - top,
-  }))
-
-  const ids = processNodes
+  return processNodes
+    .filter(processNodeVisible)
     .filter((node) => {
-      const nx = Number(node.pos_x)
-      const ny = Number(node.pos_y)
-      const nw = Number(node.ancho)
-      const nh = Number(node.alto)
+      const nx =
+        Number(node.pos_x)
 
+      const ny =
+        Number(node.pos_y)
+
+      const nw =
+        Number(node.ancho)
+
+      const nh =
+        Number(node.alto)
+
+      /*
+        Seleccionamos cualquier componente tocado
+        por el rectángulo. No hace falta encerrarlo
+        completamente.
+      */
       return (
         nx < right &&
         nx + nw > left &&
@@ -5069,12 +5066,198 @@ function moverSeleccionProcess(event) {
       )
     })
     .map((node) => node.id)
-
-  setSelectedProcessNodeIds(ids)
 }
 
-function terminarSeleccionProcess() {
-  if (!processSelectionRect) return
+function actualizarRectSeleccionProcess(
+  selection
+) {
+  const left =
+    Math.min(
+      selection.startX,
+      selection.currentX
+    )
+
+  const top =
+    Math.min(
+      selection.startY,
+      selection.currentY
+    )
+
+  const right =
+    Math.max(
+      selection.startX,
+      selection.currentX
+    )
+
+  const bottom =
+    Math.max(
+      selection.startY,
+      selection.currentY
+    )
+
+  setProcessSelectionRect({
+    startX:
+      selection.startX,
+    startY:
+      selection.startY,
+    currentX:
+      selection.currentX,
+    currentY:
+      selection.currentY,
+    x: left,
+    y: top,
+    width:
+      right - left,
+    height:
+      bottom - top,
+  })
+}
+
+function iniciarSeleccionProcess(event) {
+  if (event.button !== 0) return
+
+  /*
+    No iniciar la caja de selección desde un nodo,
+    conector, flecha, caja o control.
+  */
+  if (
+    event.target.closest(
+      '.process-node, .process-box, .process-link-group, .process-canvas-tools, .process-selection-toolbar'
+    )
+  ) {
+    return
+  }
+
+  const canvas =
+    event.currentTarget
+
+  const point =
+    puntoSeleccionProcess(
+      event,
+      canvas
+    )
+
+  const selection = {
+    startX: point.x,
+    startY: point.y,
+    currentX: point.x,
+    currentY: point.y,
+  }
+
+  processSelectionRef.current =
+    selection
+
+  event.preventDefault()
+
+  setSelectedProcessBoxId(null)
+  setSelectedProcessLinkId(null)
+  setSelectedProcessNodeIds([])
+
+  actualizarRectSeleccionProcess(
+    selection
+  )
+}
+
+function moverSeleccionProcess(event) {
+  const selection =
+    processSelectionRef.current
+
+  if (!selection) return
+
+  const point =
+    puntoSeleccionProcess(
+      event,
+      event.currentTarget
+    )
+
+  const next = {
+    ...selection,
+    currentX: point.x,
+    currentY: point.y,
+  }
+
+  processSelectionRef.current =
+    next
+
+  actualizarRectSeleccionProcess(
+    next
+  )
+
+  /*
+    Esto da feedback mientras se arrastra,
+    pero la selección definitiva se vuelve
+    a calcular también al soltar el mouse.
+  */
+  setSelectedProcessNodeIds(
+    idsDentroSeleccionProcess(next)
+  )
+}
+
+function terminarSeleccionProcess(event) {
+  const selection =
+    processSelectionRef.current
+
+  if (!selection) return
+
+  let finalSelection =
+    selection
+
+  if (
+    event &&
+    Number.isFinite(
+      event.clientX
+    ) &&
+    Number.isFinite(
+      event.clientY
+    )
+  ) {
+    const point =
+      puntoSeleccionProcess(
+        event,
+        event.currentTarget
+      )
+
+    finalSelection = {
+      ...selection,
+      currentX:
+        point.x,
+      currentY:
+        point.y,
+    }
+  }
+
+  const ancho =
+    Math.abs(
+      finalSelection.currentX -
+      finalSelection.startX
+    )
+
+  const alto =
+    Math.abs(
+      finalSelection.currentY -
+      finalSelection.startY
+    )
+
+  /*
+    Un click simple en fondo limpia selección.
+    Un arrastre real deja seleccionados los nodos.
+  */
+  if (
+    ancho >= 4 ||
+    alto >= 4
+  ) {
+    setSelectedProcessNodeIds(
+      idsDentroSeleccionProcess(
+        finalSelection
+      )
+    )
+  } else {
+    setSelectedProcessNodeIds([])
+  }
+
+  processSelectionRef.current =
+    null
+
   setProcessSelectionRect(null)
 }
 
@@ -5887,42 +6070,86 @@ function posicionLocalConectorProcess(node, lado) {
   }
 }
 
-function estiloConectorProcess(node, lado) {
+function offsetVisualConectorProcess(
+  lado
+) {
+  return {
+    x:
+      lado === 'left'
+        ? -8
+        : lado === 'right'
+          ? 8
+          : 0,
+
+    y:
+      lado === 'top'
+        ? -4
+        : lado === 'bottom'
+          ? 4
+          : 0,
+  }
+}
+
+function posicionLocalConectorVisibleProcess(
+  node,
+  lado
+) {
   const punto =
     posicionLocalConectorProcess(
       node,
       lado
     )
 
-  const offsetX =
-    lado === 'left'
-      ? -8
-      : lado === 'right'
-        ? 8
-        : 0
-
-  const offsetY =
-    lado === 'top'
-      ? -4
-      : lado === 'bottom'
-        ? 4
-        : 0
+  const offset =
+    offsetVisualConectorProcess(
+      lado
+    )
 
   return {
-    '--process-connector-x': `${punto.x + offsetX}px`,
-    '--process-connector-y': `${punto.y + offsetY}px`,
+    x:
+      punto.x +
+      offset.x,
+
+    y:
+      punto.y +
+      offset.y,
+  }
+}
+
+function estiloConectorProcess(node, lado) {
+  const punto =
+    posicionLocalConectorVisibleProcess(
+      node,
+      lado
+    )
+
+  return {
+    '--process-connector-x':
+      `${punto.x}px`,
+
+    '--process-connector-y':
+      `${punto.y}px`,
   }
 }
 
 function puntoConectorProcess(node, lado) {
-  const x = Number(node.pos_x)
-  const y = Number(node.pos_y)
-  const ancho = Number(node.ancho)
-  const alto = Number(node.alto)
+  const x =
+    Number(node.pos_x)
+
+  const y =
+    Number(node.pos_y)
+
+  const ancho =
+    Number(node.ancho)
+
+  const alto =
+    Number(node.alto)
 
   const rotacion =
-    ((Number(node.rotacion) || 0) *
-      Math.PI) /
+    (
+      (Number(node.rotacion) || 0) *
+      Math.PI
+    ) /
     180
 
   const cx =
@@ -5931,17 +6158,25 @@ function puntoConectorProcess(node, lado) {
   const cy =
     y + alto / 2
 
+  /*
+    IMPORTANTE:
+    usamos la MISMA posición local que dibuja
+    el punto verde. Así la flecha termina donde
+    el usuario realmente soltó el mouse.
+  */
   const local =
-    posicionLocalConectorProcess(
+    posicionLocalConectorVisibleProcess(
       node,
       lado
     )
 
   const dx =
-    local.x - ancho / 2
+    local.x -
+    ancho / 2
 
   const dy =
-    local.y - alto / 2
+    local.y -
+    alto / 2
 
   return {
     x:
@@ -13168,7 +13403,11 @@ function colorEstadoTarea(tarea) {
                   </div>
 
                   <div
-                    className="process-canvas"
+                    className={`process-canvas ${
+                      processSelectionRect
+                        ? 'selecting'
+                        : ''
+                    }`}
                     style={{
                       '--process-canvas-bg':
                         processCanvasBgActual,
@@ -13187,8 +13426,8 @@ function colorEstadoTarea(tarea) {
                       moverConexionProcess(event)
                       moverProcessLink(event)
                     }}
-                    onMouseUp={() => {
-                      terminarSeleccionProcess()
+                    onMouseUp={(event) => {
+                      terminarSeleccionProcess(event)
                       terminarDragProcessNode()
                       terminarResizeProcessNode()
                       terminarDragProcessBox()
@@ -13222,7 +13461,15 @@ function colorEstadoTarea(tarea) {
                         cancelarConexionProcess()
                       }
                     }}
-                    onMouseLeave={() => {
+                    onMouseLeave={(event) => {
+                      if (
+                        processSelectionRef.current
+                      ) {
+                        terminarSeleccionProcess(
+                          event
+                        )
+                      }
+
                       terminarDragProcessNode()
                       terminarResizeProcessNode()
                       terminarDragProcessBox()
@@ -13900,6 +14147,36 @@ function colorEstadoTarea(tarea) {
                                     lado
                                   )
                                 }
+                                onMouseEnter={() => {
+                                  if (
+                                    processLinkDraft &&
+                                    processLinkDraft.sourceNodeId !==
+                                      node.id
+                                  ) {
+                                    const punto =
+                                      puntoConectorProcess(
+                                        node,
+                                        lado
+                                      )
+
+                                    setProcessMagneticTarget({
+                                      nodeId:
+                                        node.id,
+                                      side:
+                                        lado,
+                                    })
+
+                                    setProcessLinkDraft(
+                                      (actual) => ({
+                                        ...actual,
+                                        currentX:
+                                          punto.x,
+                                        currentY:
+                                          punto.y,
+                                      })
+                                    )
+                                  }
+                                }}
                                 onMouseUp={(event) =>
                                   finalizarConexionProcess(
                                     event,
@@ -18720,8 +18997,8 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V9.4</span>
-        <span>23/09/2026</span>
+        <span>V9.4.1</span>
+        <span>28/09/2026</span>
       </footer>
 
       </div>
