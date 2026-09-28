@@ -5633,13 +5633,45 @@ function iniciarDragProcessNode(event, node) {
     return
   }
 
-  const rect =
-    event.currentTarget.getBoundingClientRect()
+  const canvas =
+    event.currentTarget.closest(
+      '.process-canvas'
+    )
+
+  if (!canvas) return
+
+  const canvasRect =
+    canvas.getBoundingClientRect()
+
+  const clickWorldX =
+    (
+      event.clientX -
+      canvasRect.left +
+      canvas.scrollLeft
+    ) /
+    processZoom
+
+  const clickWorldY =
+    (
+      event.clientY -
+      canvasRect.top +
+      canvas.scrollTop
+    ) /
+    processZoom
+
+  const nodeX =
+    Number(node.pos_x)
+
+  const nodeY =
+    Number(node.pos_y)
 
   const ids =
     selectedProcessNodeIds.includes(node.id)
       ? selectedProcessNodeIds
       : [node.id]
+
+  setSelectedProcessLinkId(null)
+  setSelectedProcessBoxId(null)
 
   if (!selectedProcessNodeIds.includes(node.id)) {
     setSelectedProcessNodeIds([node.id])
@@ -5660,20 +5692,23 @@ function iniciarDragProcessNode(event, node) {
 
   setProcessGroupDragInfo({
     anchorId: node.id,
-    anchorX:
-      Number(node.pos_x),
-    anchorY:
-      Number(node.pos_y),
+    anchorX: nodeX,
+    anchorY: nodeY,
     selectedIds: ids,
     posiciones,
   })
 
+  /*
+    Guardamos la distancia REAL desde el punto clickeado
+    hasta la esquina superior izquierda del nodo.
+    Así el componente no "salta" cuando empieza el drag.
+  */
   setProcessDragInfo({
     id: node.id,
     offsetX:
-      (event.clientX - rect.left) / processZoom,
+      clickWorldX - nodeX,
     offsetY:
-      (event.clientY - rect.top) / processZoom,
+      clickWorldY - nodeY,
   })
 }
 
@@ -6419,6 +6454,71 @@ async function finalizarConexionProcess(event, targetNode, targetSide) {
 
   cancelarConexionProcess()
   await cargarProcessCanvas(processSeleccionadoId)
+}
+
+
+async function cambiarColorFlechaSeleccionada(
+  color
+) {
+  if (!selectedProcessLinkId) return
+
+  const link =
+    processLinks.find(
+      (item) =>
+        item.id ===
+        selectedProcessLinkId
+    )
+
+  if (!link) return
+
+  pushProcessUndo()
+
+  setProcessLinks((actual) =>
+    actual.map((item) =>
+      item.id === link.id
+        ? {
+            ...item,
+            color,
+          }
+        : item
+    )
+  )
+
+  const { error } = await supabase
+    .from('process_links')
+    .update({
+      color,
+    })
+    .eq('id', link.id)
+
+  if (error) {
+    alert(
+      `No se pudo cambiar el color de la flecha: ${error.message}`
+    )
+
+    cargarProcessCanvas(
+      processSeleccionadoId
+    )
+  }
+}
+
+async function eliminarFlechaSeleccionada() {
+  if (!selectedProcessLinkId) return
+
+  const link =
+    processLinks.find(
+      (item) =>
+        item.id ===
+        selectedProcessLinkId
+    )
+
+  if (!link) {
+    setSelectedProcessLinkId(null)
+    return
+  }
+
+  await eliminarProcessLink(link)
+  setSelectedProcessLinkId(null)
 }
 
 function abrirEditarProcessLink(link) {
@@ -13796,6 +13896,79 @@ function colorEstadoTarea(tarea) {
                       </div>
                     )}
 
+
+                    {selectedProcessLinkId &&
+                      selectedProcessNodeIds.length === 0 && (
+                        <div className="process-link-selection-toolbar">
+                          <div className="process-link-selection-summary">
+                            <strong>
+                              Flecha seleccionada
+                            </strong>
+                          </div>
+
+                          <div className="process-link-selection-colors">
+                            <span>
+                              Color
+                            </span>
+
+                            <div>
+                              {[
+                                '#b9c5cf',
+                                '#22d3c5',
+                                '#4ea1ff',
+                                '#f7c948',
+                                '#ff6b6b',
+                                '#a78bfa',
+                                '#ffffff',
+                                '#111111',
+                              ].map(
+                                (color) => (
+                                  <button
+                                    key={color}
+                                    type="button"
+                                    className="process-link-selection-color-dot"
+                                    style={{
+                                      backgroundColor:
+                                        color,
+                                    }}
+                                    onClick={() =>
+                                      cambiarColorFlechaSeleccionada(
+                                        color
+                                      )
+                                    }
+                                    aria-label={`Color ${color}`}
+                                    title={`Color ${color}`}
+                                  />
+                                )
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="process-link-selection-actions">
+                            <button
+                              type="button"
+                              className="selection-delete-all"
+                              onClick={
+                                eliminarFlechaSeleccionada
+                              }
+                            >
+                              Delete
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedProcessLinkId(
+                                  null
+                                )
+                              }
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
                     <div
                       ref={processCanvasPrintRef}
                       className={`process-world ${
@@ -13987,6 +14160,8 @@ function colorEstadoTarea(tarea) {
                                 markerEnd="url(#process-arrow)"
                                 onClick={(event) => {
                                   event.stopPropagation()
+                                  setSelectedProcessNodeIds([])
+                                  setSelectedProcessBoxId(null)
                                   setSelectedProcessLinkId(link.id)
                                 }}
                                 onDoubleClick={(event) => {
@@ -18997,7 +19172,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V9.4.1</span>
+        <span>V9.4.2</span>
         <span>28/09/2026</span>
       </footer>
 
