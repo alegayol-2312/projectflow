@@ -14878,3 +14878,84 @@ select:nth-child(3) {
       1fr;
   }
 }
+
+
+/* =========================================================
+   V9.4.1 - MULTISELECCIÓN + CONECTORES PROCESS
+========================================================= */
+
+/*
+  Durante la selección por arrastre:
+  - no seleccionar texto del navegador
+  - cursor de selección claro
+*/
+.process-canvas.selecting,
+.process-canvas.selecting .process-world {
+  cursor:
+    crosshair !important;
+
+  user-select:
+    none !important;
+
+  -webkit-user-select:
+    none !important;
+}
+
+/* El rectángulo queda siempre visible por encima del grid */
+.process-selection-rect {
+  z-index:
+    130 !important;
+
+  border:
+    1.5px solid
+    rgba(0, 194, 255, .98)
+    !important;
+
+  background:
+    rgba(0, 194, 255, .13)
+    !important;
+
+  box-shadow:
+    0 0 0 1px
+    rgba(0, 194, 255, .08)
+    inset;
+}
+
+/* Selección final más evidente */
+.process-node.multi-selected {
+  filter:
+    drop-shadow(
+      0 0 8px
+      rgba(0, 194, 255, .98)
+    )
+    !important;
+}
+
+/*
+  El hit-area del conector sigue grande,
+  pero el punto verde visible queda centrado exactamente
+  en la coordenada que usa la flecha.
+*/
+.process-node .process-node-connector {
+  cursor:
+    crosshair !important;
+
+  touch-action:
+    none;
+}
+
+.process-node .process-node-connector::after {
+  pointer-events:
+    none !important;
+}
+
+/* Destino magnético: marcar además el punto exacto */
+.process-node.magnetic-target
+.process-node-connector::after {
+  box-shadow:
+    0 0 0 4px
+    rgba(34, 211, 197, .20),
+    0 0 8px
+    rgba(34, 211, 197, .80)
+    !important;
+}
