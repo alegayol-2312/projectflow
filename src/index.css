@@ -15102,3 +15102,2029 @@ select:nth-child(3) {
 
   cursor: pointer;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.0
+   CONSOLIDACIÓN VISUAL + UX
+   Sin nuevas funcionalidades.
+========================================================= */
+
+/* ---------- Design tokens ---------- */
+
+.v10-polish {
+  --pf-bg-0: #081017;
+  --pf-bg-1: #0c151c;
+  --pf-bg-2: #101c25;
+  --pf-bg-3: #15242e;
+
+  --pf-border: #2d4352;
+  --pf-border-soft: rgba(145, 169, 185, .18);
+
+  --pf-text: #f6f9fb;
+  --pf-text-2: #c3d0d9;
+  --pf-text-3: #8ea1af;
+
+  --pf-accent: #00d8ea;
+  --pf-accent-soft: rgba(0, 216, 234, .12);
+  --pf-danger: #ff6678;
+  --pf-warning: #f7c948;
+  --pf-success: #2dd36f;
+  --pf-ai: #a78bfa;
+
+  --pf-r-sm: 7px;
+  --pf-r-md: 10px;
+  --pf-r-lg: 14px;
+
+  --pf-s1: 4px;
+  --pf-s2: 8px;
+  --pf-s3: 12px;
+  --pf-s4: 16px;
+  --pf-s5: 24px;
+
+  --pf-shadow:
+    0 12px 32px rgba(0,0,0,.24);
+
+  color:
+    var(--pf-text);
+}
+
+/* ---------- Tipografía / jerarquía ---------- */
+
+.v10-polish,
+.v10-polish button,
+.v10-polish input,
+.v10-polish select,
+.v10-polish textarea {
+  font-family:
+    Montserrat,
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif !important;
+}
+
+.v10-polish h1 {
+  font-size: 18px !important;
+  line-height: 1.15 !important;
+}
+
+.v10-polish h2 {
+  font-size: 15px !important;
+  line-height: 1.2 !important;
+}
+
+.v10-polish h3 {
+  font-size: 14px !important;
+  line-height: 1.2 !important;
+}
+
+.v10-polish p,
+.v10-polish input,
+.v10-polish textarea,
+.v10-polish select {
+  font-size: 10.5px !important;
+}
+
+.v10-polish small {
+  font-size: 8.5px !important;
+}
+
+/* ---------- Transiciones coherentes ---------- */
+
+.v10-polish button,
+.v10-polish select,
+.v10-polish input,
+.v10-polish textarea,
+.v10-polish .process-node,
+.v10-polish .postit-card,
+.v10-polish .kanban-card,
+.v10-polish .board-shape,
+.v10-polish .board-zone {
+  transition:
+    border-color .12s ease,
+    background-color .12s ease,
+    box-shadow .12s ease,
+    opacity .12s ease,
+    transform .12s ease !important;
+}
+
+.v10-polish button:not(:disabled):active {
+  transform:
+    translateY(1px)
+    scale(.985);
+}
+
+.v10-polish button:disabled {
+  opacity: .42 !important;
+  cursor: not-allowed !important;
+  filter: saturate(.65);
+}
+
+/* ---------- Botones: un único lenguaje visual ---------- */
+
+.v10-polish .btn-primary,
+.v10-polish .btn-secondary,
+.v10-polish .btn-danger-inline,
+.v10-polish .cards-primary-button,
+.v10-polish .cards-export-button,
+.v10-polish .process-ai-button,
+.v10-polish .cards-zone-button,
+.v10-polish .cards-note-button,
+.v10-polish .cards-shape-button,
+.v10-polish .kanban-add-column-button {
+  min-height: 34px !important;
+  padding: 0 12px !important;
+  border-radius: var(--pf-r-sm) !important;
+  font-size: 9px !important;
+  font-weight: 850 !important;
+  letter-spacing: .01em;
+  box-shadow: none !important;
+}
+
+.v10-polish .btn-secondary {
+  border-color: var(--pf-border) !important;
+  background: var(--pf-bg-3) !important;
+  color: var(--pf-text-2) !important;
+}
+
+.v10-polish .btn-secondary:hover:not(:disabled) {
+  border-color: #507083 !important;
+  color: var(--pf-text) !important;
+}
+
+.v10-polish .btn-primary,
+.v10-polish .cards-primary-button {
+  border-color: #19c8d7 !important;
+  background: #0b9eae !important;
+  color: #fff !important;
+}
+
+.v10-polish .btn-primary:hover:not(:disabled),
+.v10-polish .cards-primary-button:hover:not(:disabled) {
+  background: #0aaebe !important;
+  box-shadow:
+    0 0 0 3px
+    rgba(0,216,234,.10)
+    !important;
+}
+
+.v10-polish .btn-danger-inline,
+.v10-polish .selection-delete-all,
+.v10-polish .btn-delete-task {
+  border-color:
+    rgba(255,102,120,.48)
+    !important;
+  background:
+    rgba(117,25,40,.30)
+    !important;
+  color:
+    #ffc2ca
+    !important;
+}
+
+.v10-polish .process-ai-button {
+  border-color:
+    rgba(167,139,250,.72)
+    !important;
+  background:
+    rgba(167,139,250,.13)
+    !important;
+}
+
+/* ---------- Header / sidebar ---------- */
+
+.v10-polish .topbar {
+  min-height: 66px !important;
+  padding:
+    10px 18px !important;
+  border-bottom:
+    1px solid var(--pf-border-soft);
+  background:
+    rgba(8,16,23,.96) !important;
+}
+
+.v10-polish .brand-area h1 {
+  margin-bottom: 3px !important;
+  color: var(--pf-text) !important;
+}
+
+.v10-polish .brand-area p {
+  color: var(--pf-text-3) !important;
+}
+
+.v10-polish .visual-sidebar {
+  background:
+    #091219 !important;
+  border-right:
+    1px solid var(--pf-border-soft) !important;
+}
+
+.v10-polish .visual-sidebar-icon-button {
+  border-radius:
+    var(--pf-r-md) !important;
+}
+
+.v10-polish .visual-sidebar-icon-button:hover {
+  background:
+    rgba(255,255,255,.055) !important;
+}
+
+.v10-polish .visual-sidebar-icon-button.active {
+  background:
+    var(--pf-accent-soft)
+    !important;
+
+  box-shadow:
+    inset 3px 0 0
+    var(--pf-accent);
+}
+
+/* ---------- Módulos / paneles ---------- */
+
+.v10-polish .portfolio-dashboard,
+.v10-polish .task-panel,
+.v10-polish .gantt-panel,
+.v10-polish .boards-panel,
+.v10-polish .cards-canvas-shell,
+.v10-polish .kanban-project-panel,
+.v10-polish .kanban-workspace,
+.v10-polish .process-left-panel,
+.v10-polish .process-workspace {
+  border-color:
+    var(--pf-border-soft)
+    !important;
+
+  border-radius:
+    var(--pf-r-lg)
+    !important;
+
+  box-shadow:
+    0 8px 24px
+    rgba(0,0,0,.12);
+}
+
+/* ---------- Drawers ---------- */
+
+.v10-polish .card-drawer-overlay {
+  background:
+    rgba(2,7,10,.54) !important;
+
+  backdrop-filter:
+    blur(3px);
+}
+
+.v10-polish .card-editor-drawer {
+  border-left:
+    1px solid
+    var(--pf-border)
+    !important;
+
+  background:
+    #0b141b
+    !important;
+
+  box-shadow:
+    -18px 0 48px
+    rgba(0,0,0,.30)
+    !important;
+}
+
+.v10-polish .card-modal-heading {
+  margin-bottom:
+    var(--pf-s4) !important;
+
+  padding-bottom:
+    var(--pf-s3) !important;
+
+  border-bottom:
+    1px solid
+    var(--pf-border-soft);
+}
+
+.v10-polish .card-modal-heading span {
+  color:
+    var(--pf-accent)
+    !important;
+
+  font-size:
+    8px !important;
+
+  font-weight:
+    900 !important;
+
+  letter-spacing:
+    .08em;
+}
+
+.v10-polish .card-modal-heading h3 {
+  margin-top:
+    3px !important;
+
+  color:
+    var(--pf-text)
+    !important;
+}
+
+.v10-polish .form-group {
+  margin-bottom:
+    var(--pf-s3) !important;
+}
+
+.v10-polish .form-group label {
+  margin-bottom:
+    6px !important;
+
+  color:
+    var(--pf-text-2)
+    !important;
+
+  font-size:
+    9px !important;
+
+  font-weight:
+    800 !important;
+}
+
+.v10-polish .form-group input,
+.v10-polish .form-group textarea,
+.v10-polish .form-group select {
+  min-height:
+    40px !important;
+
+  border:
+    1px solid
+    var(--pf-border)
+    !important;
+
+  border-radius:
+    var(--pf-r-sm)
+    !important;
+
+  background:
+    #081118
+    !important;
+
+  color:
+    var(--pf-text)
+    !important;
+
+  box-shadow:
+    none !important;
+}
+
+.v10-polish .form-group textarea {
+  padding:
+    10px 11px !important;
+}
+
+.v10-polish .form-group input:focus,
+.v10-polish .form-group textarea:focus,
+.v10-polish .form-group select:focus {
+  outline:
+    none !important;
+
+  border-color:
+    var(--pf-accent)
+    !important;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(0,216,234,.08)
+    !important;
+}
+
+.v10-polish .connection-drawer-actions {
+  gap:
+    var(--pf-s2) !important;
+
+  margin-top:
+    var(--pf-s4) !important;
+
+  padding-top:
+    var(--pf-s3) !important;
+
+  border-color:
+    var(--pf-border-soft)
+    !important;
+}
+
+/* ---------- Toolbars contextuales ---------- */
+
+.v10-polish .process-selection-toolbar,
+.v10-polish .process-link-selection-toolbar,
+.v10-polish .cards-selection-toolbar,
+.v10-polish .kanban-bg-picker,
+.v10-polish .process-canvas-tools,
+.v10-polish .cards-canvas-bg-picker {
+  border:
+    1px solid
+    var(--pf-border)
+    !important;
+
+  border-radius:
+    var(--pf-r-md)
+    !important;
+
+  background:
+    rgba(10,18,25,.96)
+    !important;
+
+  box-shadow:
+    var(--pf-shadow)
+    !important;
+
+  backdrop-filter:
+    blur(10px);
+}
+
+.v10-polish .process-selection-toolbar,
+.v10-polish .process-link-selection-toolbar {
+  padding:
+    9px 10px !important;
+
+  gap:
+    8px 10px !important;
+}
+
+.v10-polish .process-selection-actions button,
+.v10-polish .process-link-selection-actions button,
+.v10-polish .cards-selection-toolbar button {
+  min-height:
+    32px !important;
+
+  padding:
+    0 10px !important;
+
+  border-radius:
+    var(--pf-r-sm)
+    !important;
+
+  font-size:
+    8.5px !important;
+}
+
+/* ---------- Toggle states ---------- */
+
+.v10-polish
+:is(
+  .process-ruler-tool,
+  .process-snap-tool,
+  .process-arrow-mode-tool,
+  .process-superposition-tool,
+  .cards-undo-tool,
+  .kanban-add-column-button
+) {
+  border-color:
+    #36515f !important;
+
+  background:
+    #12212a !important;
+
+  color:
+    var(--pf-text-2)
+    !important;
+}
+
+.v10-polish
+:is(
+  .process-ruler-tool,
+  .process-snap-tool,
+  .process-arrow-mode-tool,
+  .process-superposition-tool
+).active {
+  border-color:
+    var(--pf-accent)
+    !important;
+
+  background:
+    var(--pf-accent-soft)
+    !important;
+
+  color:
+    #7df4ff !important;
+
+  box-shadow:
+    inset 0 0 0 1px
+    rgba(0,216,234,.18)
+    !important;
+}
+
+/* ---------- Zoom: idéntico Cards / Process ---------- */
+
+.v10-polish .process-zoom-overlay,
+.v10-polish .board-zoom-overlay {
+  min-width:
+    132px !important;
+
+  min-height:
+    42px !important;
+
+  display:
+    inline-flex !important;
+
+  align-items:
+    center !important;
+
+  justify-content:
+    space-between !important;
+
+  gap:
+    7px !important;
+
+  padding:
+    6px 7px !important;
+
+  border:
+    1px solid
+    var(--pf-border)
+    !important;
+
+  border-radius:
+    var(--pf-r-md)
+    !important;
+
+  background:
+    rgba(9,17,23,.96)
+    !important;
+
+  box-shadow:
+    var(--pf-shadow)
+    !important;
+}
+
+.v10-polish .process-zoom-overlay button,
+.v10-polish .board-zoom-overlay button {
+  width:
+    28px !important;
+
+  height:
+    28px !important;
+
+  border-radius:
+    var(--pf-r-sm)
+    !important;
+
+  border-color:
+    #36515f !important;
+
+  background:
+    #13222b !important;
+
+  color:
+    #fff !important;
+}
+
+.v10-polish .process-zoom-overlay span,
+.v10-polish .board-zoom-overlay span {
+  min-width:
+    42px !important;
+
+  font-size:
+    9px !important;
+
+  color:
+    var(--pf-text)
+    !important;
+}
+
+/* ---------- PROCESS: jerarquía visual ---------- */
+
+.v10-polish .process-canvas-header {
+  min-height:
+    58px !important;
+
+  padding:
+    10px 14px !important;
+
+  border-bottom:
+    1px solid
+    var(--pf-border-soft)
+    !important;
+
+  background:
+    #0b151c
+    !important;
+}
+
+.v10-polish .process-canvas-header strong {
+  font-size:
+    12px !important;
+
+  color:
+    var(--pf-text)
+    !important;
+}
+
+.v10-polish .process-canvas-header span {
+  font-size:
+    8.5px !important;
+
+  color:
+    var(--pf-text-3)
+    !important;
+}
+
+.v10-polish .process-canvas-actions {
+  gap:
+    7px !important;
+}
+
+.v10-polish .process-left-panel {
+  background:
+    #0a131a !important;
+}
+
+.v10-polish .process-list-item,
+.v10-polish .process-component-chip {
+  border-radius:
+    var(--pf-r-sm)
+    !important;
+}
+
+.v10-polish .process-list-item:hover,
+.v10-polish .process-component-chip:hover {
+  background:
+    rgba(255,255,255,.045)
+    !important;
+}
+
+/* Nodos */
+.v10-polish .process-node {
+  cursor:
+    grab !important;
+}
+
+.v10-polish .process-node:active {
+  cursor:
+    grabbing !important;
+}
+
+.v10-polish .process-node:hover {
+  filter:
+    drop-shadow(
+      0 5px 8px
+      rgba(0,0,0,.22)
+    );
+}
+
+.v10-polish .process-node.multi-selected {
+  filter:
+    drop-shadow(
+      0 0 8px
+      rgba(0,216,234,.94)
+    )
+    drop-shadow(
+      0 4px 7px
+      rgba(0,0,0,.18)
+    )
+    !important;
+}
+
+.v10-polish .process-node.multi-selected::before {
+  content: "";
+
+  position:
+    absolute;
+
+  inset:
+    -5px;
+
+  border:
+    1.5px solid
+    rgba(0,216,234,.82);
+
+  border-radius:
+    10px;
+
+  pointer-events:
+    none;
+}
+
+/* PNGs: peso visual más parejo */
+.v10-polish .process-node-visual {
+  display:
+    flex !important;
+
+  align-items:
+    center !important;
+
+  justify-content:
+    center !important;
+}
+
+.v10-polish .process-node-visual img {
+  width:
+    100% !important;
+
+  height:
+    100% !important;
+
+  object-fit:
+    contain !important;
+}
+
+/* Flechas */
+.v10-polish .process-link-path {
+  stroke-width:
+    2.1 !important;
+
+  opacity:
+    .92;
+
+  transition:
+    stroke-width .12s ease,
+    opacity .12s ease,
+    filter .12s ease
+    !important;
+}
+
+.v10-polish .process-link-path:hover {
+  stroke-width:
+    3.1 !important;
+
+  opacity:
+    1;
+}
+
+.v10-polish .process-link-path.selected {
+  stroke-width:
+    3.6 !important;
+
+  opacity:
+    1 !important;
+
+  filter:
+    drop-shadow(
+      0 0 4px
+      rgba(0,216,234,.72)
+    );
+}
+
+.v10-polish .process-link-move-handle rect {
+  fill:
+    #071116 !important;
+
+  stroke:
+    var(--pf-accent)
+    !important;
+
+  stroke-width:
+    1.4px;
+}
+
+/* Conectores */
+.v10-polish .process-node .process-node-connector {
+  opacity:
+    .38;
+
+  transition:
+    opacity .10s ease,
+    transform .10s ease
+    !important;
+}
+
+.v10-polish .process-node:hover .process-node-connector,
+.v10-polish .process-world.connecting-mode .process-node-connector,
+.v10-polish .process-node.magnetic-target .process-node-connector {
+  opacity:
+    1 !important;
+}
+
+.v10-polish .process-node.magnetic-target {
+  filter:
+    drop-shadow(
+      0 0 9px
+      rgba(0,216,234,.90)
+    )
+    !important;
+}
+
+/* Boxes menos protagonistas */
+.v10-polish .process-box {
+  opacity:
+    .94;
+}
+
+.v10-polish .process-box:not(.selected) {
+  box-shadow:
+    none !important;
+}
+
+/* ---------- CARDS ---------- */
+
+.v10-polish .postit-card {
+  border-radius:
+    10px !important;
+
+  box-shadow:
+    0 8px 20px
+    rgba(0,0,0,.16)
+    !important;
+}
+
+.v10-polish .postit-card:hover {
+  box-shadow:
+    0 11px 26px
+    rgba(0,0,0,.22)
+    !important;
+}
+
+.v10-polish .postit-card.multi-selected {
+  box-shadow:
+    0 0 0 2px
+    var(--pf-accent),
+    0 10px 26px
+    rgba(0,0,0,.22)
+    !important;
+}
+
+.v10-polish .board-zone.selected,
+.v10-polish .board-shape.selected,
+.v10-polish .board-zone:focus-within,
+.v10-polish .board-shape:focus-within {
+  box-shadow:
+    0 0 0 2px
+    rgba(0,216,234,.74)
+    !important;
+}
+
+/* ---------- KANBAN ---------- */
+
+.v10-polish .kanban-board-header {
+  border-bottom:
+    1px solid
+    var(--pf-border-soft)
+    !important;
+
+  background:
+    rgba(10,18,25,.94)
+    !important;
+}
+
+.v10-polish .kanban-card {
+  border-radius:
+    var(--pf-r-md)
+    !important;
+
+  box-shadow:
+    0 6px 16px
+    rgba(0,0,0,.14);
+}
+
+.v10-polish .kanban-card:hover {
+  transform:
+    translateY(-1px);
+
+  box-shadow:
+    0 9px 22px
+    rgba(0,0,0,.20);
+}
+
+.v10-polish .kanban-column {
+  border-color:
+    var(--pf-border-soft)
+    !important;
+
+  border-radius:
+    var(--pf-r-lg)
+    !important;
+}
+
+/* ---------- Gantt ---------- */
+
+.v10-polish .filters {
+  gap:
+    var(--pf-s2) !important;
+
+  margin-bottom:
+    var(--pf-s3) !important;
+}
+
+.v10-polish .filters select,
+.v10-polish .view-buttons button {
+  min-height:
+    34px !important;
+
+  border-radius:
+    var(--pf-r-sm)
+    !important;
+
+  border-color:
+    var(--pf-border)
+    !important;
+}
+
+.v10-polish .view-buttons button.active {
+  border-color:
+    var(--pf-accent)
+    !important;
+
+  color:
+    #6cf0fa !important;
+
+  background:
+    var(--pf-accent-soft)
+    !important;
+}
+
+/* ---------- Estados vacíos ---------- */
+
+.v10-polish
+:is(
+  .process-empty-canvas,
+  .process-no-selection,
+  .kanban-no-project,
+  .cards-empty-state,
+  .cards-empty
+) {
+  border:
+    1px dashed
+    #49616f !important;
+
+  border-radius:
+    var(--pf-r-lg)
+    !important;
+
+  background:
+    rgba(11,20,27,.70)
+    !important;
+
+  color:
+    var(--pf-text)
+    !important;
+}
+
+.v10-polish
+:is(
+  .process-empty-canvas,
+  .process-no-selection,
+  .kanban-no-project,
+  .cards-empty-state,
+  .cards-empty
+) span {
+  color:
+    var(--pf-text-3)
+    !important;
+}
+
+/* ---------- Scrollbars ---------- */
+
+.v10-polish * {
+  scrollbar-width:
+    thin;
+
+  scrollbar-color:
+    #37505f
+    transparent;
+}
+
+.v10-polish *::-webkit-scrollbar {
+  width:
+    8px;
+
+  height:
+    8px;
+}
+
+.v10-polish *::-webkit-scrollbar-thumb {
+  border:
+    2px solid transparent;
+
+  border-radius:
+    999px;
+
+  background:
+    #37505f;
+
+  background-clip:
+    padding-box;
+}
+
+.v10-polish *::-webkit-scrollbar-track {
+  background:
+    transparent;
+}
+
+/* ---------- Canvas / scroll ---------- */
+
+.v10-polish .process-canvas,
+.v10-polish .cards-canvas {
+  overscroll-behavior:
+    contain;
+
+  scroll-behavior:
+    auto;
+}
+
+.v10-polish .process-world,
+.v10-polish .board-world {
+  isolation:
+    isolate;
+}
+
+/* ---------- Footer ---------- */
+
+.v10-polish .projectflow-footer {
+  min-height:
+    24px !important;
+
+  padding:
+    3px 14px 5px !important;
+
+  gap:
+    8px !important;
+
+  color:
+    rgba(142,161,175,.58)
+    !important;
+
+  font-size:
+    7.5px !important;
+
+  letter-spacing:
+    .025em;
+}
+
+.v10-polish .projectflow-footer span:first-child {
+  color:
+    rgba(195,208,217,.72)
+    !important;
+}
+
+/* ---------- Modo reunión ---------- */
+
+.v10-polish.meeting-mode {
+  background:
+    #071016 !important;
+}
+
+.v10-polish.meeting-mode
+:is(
+  .projectflow-footer,
+  .activity-bell-button
+) {
+  display:
+    none !important;
+}
+
+.v10-polish.meeting-process
+.process-canvas-header,
+.v10-polish.meeting-kanban
+.kanban-board-header {
+  background:
+    rgba(8,16,23,.88)
+    !important;
+
+  box-shadow:
+    var(--pf-shadow);
+}
+
+.v10-polish.meeting-process .process-node,
+.v10-polish.meeting-cards .postit-card,
+.v10-polish.meeting-kanban .kanban-card {
+  font-size:
+    108% !important;
+}
+
+/* ---------- Desktop responsiveness ---------- */
+
+@media (max-width: 1450px) {
+  .v10-polish .process-layout {
+    grid-template-columns:
+      285px minmax(0,1fr)
+      !important;
+  }
+
+  .v10-polish .process-canvas-header {
+    padding:
+      8px 10px !important;
+  }
+
+  .v10-polish .process-canvas-actions {
+    gap:
+      5px !important;
+  }
+
+  .v10-polish .process-canvas-actions button {
+    min-height:
+      31px !important;
+
+    padding:
+      0 9px !important;
+
+    font-size:
+      8px !important;
+  }
+
+  .v10-polish .process-selection-toolbar,
+  .v10-polish .process-link-selection-toolbar {
+    max-width:
+      calc(100% - 18px)
+      !important;
+  }
+}
+
+@media (min-width: 1800px) {
+  .v10-polish .process-layout {
+    grid-template-columns:
+      330px minmax(0,1fr)
+      !important;
+  }
+
+  .v10-polish .card-editor-drawer {
+    max-width:
+      620px;
+  }
+}
+
+/* ---------- Focus accesible y consistente ---------- */
+
+.v10-polish button:focus-visible,
+.v10-polish input:focus-visible,
+.v10-polish textarea:focus-visible,
+.v10-polish select:focus-visible {
+  outline:
+    2px solid
+    var(--pf-accent)
+    !important;
+
+  outline-offset:
+    2px;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.1
+   FIX MODO REUNIÓN + FLUIDEZ PROCESS
+========================================================= */
+
+/*
+  V10.0 había vuelto a object-fit:contain sobre el PNG,
+  mientras la máscara coloreada seguía ocupando el 100%.
+  Eso podía mostrar una "segunda silueta" y, peor,
+  separar el borde visible de la coordenada matemática
+  donde nacen/terminan las flechas.
+
+  Volvemos a una única geometría:
+  PNG + máscara + nodo usan exactamente el mismo rectángulo.
+*/
+.v10-polish .process-node-visual {
+  position: absolute !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+
+  height: 100% !important;
+
+  overflow: visible !important;
+}
+
+.v10-polish .process-node-visual img {
+  position: absolute !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+
+  height: 100% !important;
+
+  object-fit: fill !important;
+
+  display: block !important;
+
+  mix-blend-mode: multiply !important;
+
+  pointer-events: none !important;
+
+  user-select: none !important;
+}
+
+.v10-polish .process-node-visual .process-icon-fill,
+.v10-polish .process-icon-fill {
+  position: absolute !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+
+  height: 100% !important;
+
+  -webkit-mask-size:
+    100% 100% !important;
+
+  mask-size:
+    100% 100% !important;
+
+  -webkit-mask-position:
+    center !important;
+
+  mask-position:
+    center !important;
+
+  -webkit-mask-repeat:
+    no-repeat !important;
+
+  mask-repeat:
+    no-repeat !important;
+}
+
+/*
+  El drop-shadow del nodo completo puede crear una silueta
+  secundaria sobre PNG/máscara. En Process usamos sombra
+  solamente para selección/destino, no para hover normal.
+*/
+.v10-polish .process-node:hover {
+  filter:
+    none !important;
+}
+
+.v10-polish .process-node.multi-selected {
+  filter:
+    drop-shadow(
+      0 0 7px
+      rgba(0,216,234,.90)
+    )
+    !important;
+}
+
+.v10-polish .process-node.magnetic-target {
+  filter:
+    drop-shadow(
+      0 0 7px
+      rgba(0,216,234,.90)
+    )
+    !important;
+}
+
+/* ---------- Modo reunión Process ---------- */
+
+/*
+  Reunión NO cambia geometría del diagrama.
+  Solamente cambia chrome/paneles.
+  Nada de font-size/escala sobre el nodo.
+*/
+.v10-polish.meeting-process
+.process-node {
+  font-size:
+    inherit !important;
+
+  transform-origin:
+    center center !important;
+}
+
+.v10-polish.meeting-process
+.process-node-visual,
+.v10-polish.meeting-process
+.process-node-visual img,
+.v10-polish.meeting-process
+.process-icon-fill {
+  width:
+    100% !important;
+
+  height:
+    100% !important;
+
+  inset:
+    0 !important;
+}
+
+.v10-polish.meeting-process
+.process-node-visual img {
+  object-fit:
+    fill !important;
+}
+
+/*
+  Flechas y nodos comparten exactamente el mismo mundo
+  y el mismo zoom también en reunión.
+*/
+.v10-polish.meeting-process
+.process-world {
+  position:
+    relative !important;
+
+  transform:
+    none !important;
+
+  transform-origin:
+    0 0 !important;
+}
+
+.v10-polish.meeting-process
+.process-links-layer {
+  position:
+    absolute !important;
+
+  inset:
+    0 !important;
+
+  transform:
+    none !important;
+
+  transform-origin:
+    0 0 !important;
+
+  overflow:
+    visible !important;
+}
+
+/* Sin filtros visuales que cambien la caja pintada */
+.v10-polish.meeting-process
+.process-node:not(.multi-selected):not(.magnetic-target) {
+  filter:
+    none !important;
+}
+
+/*
+  Los controles no alteran el tamaño/posición del nodo.
+*/
+.v10-polish.meeting-process
+.process-node-resize,
+.v10-polish.meeting-process
+.process-node-connector {
+  box-sizing:
+    border-box !important;
+}
+
+/* ---------- Sensación de movimiento ---------- */
+
+/*
+  Mientras se arrastra NO interpolamos coordenadas:
+  el objeto sigue al puntero inmediatamente.
+*/
+.v10-polish .process-node,
+.v10-polish .process-node-visual,
+.v10-polish .process-node-copy,
+.v10-polish .process-link-path {
+  transition:
+    none !important;
+}
+
+/* Cursor consistente */
+.v10-polish .process-node {
+  cursor:
+    grab !important;
+}
+
+.v10-polish .process-node:active {
+  cursor:
+    grabbing !important;
+}
+
+/*
+  La guía puede aparecer sin mover físicamente el nodo.
+  El snap real ocurre al soltar.
+*/
+.v10-polish .process-guide {
+  pointer-events:
+    none !important;
+
+  opacity:
+    .72;
+}
+
+/*
+  Conexión más precisa:
+  el target magnético conserva feedback,
+  pero con radio menor en JS para evitar saltos.
+*/
+.v10-polish .process-node.magnetic-target
+.process-node-connector::after {
+  box-shadow:
+    0 0 0 4px
+    rgba(34,211,197,.15),
+    0 0 7px
+    rgba(34,211,197,.74)
+    !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.2
+   SIMULACIÓN + VALIDACIÓN + PENDIENTE
+========================================================= */
+
+.v10-polish .process-simulation-button {
+  min-height: 34px !important;
+  padding: 0 12px !important;
+  border: 1px solid rgba(45,211,111,.62) !important;
+  border-radius: var(--pf-r-sm) !important;
+  background: rgba(45,211,111,.12) !important;
+  color: #dfffea !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  cursor: pointer;
+}
+
+.v10-polish .process-simulation-button:hover {
+  border-color: #2dd36f !important;
+  background: rgba(45,211,111,.18) !important;
+}
+
+.v10-polish .process-simulation-panel {
+  position: sticky;
+  top: 54px;
+  left: 14px;
+  z-index: 180;
+  width: min(560px, calc(100% - 28px));
+  margin: 6px 0 -42px 14px;
+  padding: 11px 12px;
+  border: 1px solid #315061;
+  border-radius: 12px;
+  background: rgba(8,16,22,.97);
+  color: #fff;
+  box-shadow: 0 12px 32px rgba(0,0,0,.34);
+  backdrop-filter: blur(10px);
+}
+
+.v10-polish .process-simulation-panel-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.v10-polish .process-simulation-panel-top > div {
+  min-width: 0;
+}
+
+.v10-polish .process-simulation-panel-top span {
+  display: block;
+  margin-bottom: 3px;
+  color: #66e892;
+  font-size: 8px !important;
+  font-weight: 900;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.v10-polish .process-simulation-panel-top strong {
+  display: block;
+  overflow: hidden;
+  color: #fff;
+  font-size: 12px !important;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v10-polish .process-simulation-close {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid #365161;
+  border-radius: 7px;
+  background: #13222b;
+  color: #fff;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.v10-polish .process-simulation-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 9px 0;
+  border-top: 1px solid rgba(255,255,255,.10);
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+
+.v10-polish .process-simulation-key-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid #334b5a;
+  border-radius: 8px;
+  background: #101d25;
+}
+
+.v10-polish .process-simulation-key-option kbd {
+  min-width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #5f7b8c;
+  border-radius: 6px;
+  background: #071116;
+  color: #77eff9;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 900;
+  box-shadow: inset 0 -2px 0 rgba(255,255,255,.06);
+}
+
+.v10-polish .process-simulation-key-option span {
+  color: #d4e0e7;
+  font-size: 8.5px !important;
+  font-weight: 750;
+}
+
+.v10-polish .process-simulation-finished {
+  color: #7ee79e !important;
+  font-size: 9px !important;
+  font-weight: 900;
+}
+
+.v10-polish .process-simulation-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.v10-polish .process-validation-ok,
+.v10-polish .process-validation-errors {
+  margin-top: 9px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 9px !important;
+  font-weight: 800;
+}
+
+.v10-polish .process-validation-ok {
+  border: 1px solid rgba(45,211,111,.48);
+  background: rgba(45,211,111,.10);
+  color: #bff8d0;
+}
+
+.v10-polish .process-validation-errors {
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgba(255,102,120,.43);
+  background: rgba(255,102,120,.08);
+  color: #ffc7ce;
+}
+
+/* Simulación: el componente activo queda por encima del resto */
+.v10-polish .process-node.simulation-active {
+  z-index: 1000 !important;
+  opacity: 1 !important;
+  filter:
+    drop-shadow(0 0 4px #00d8ea)
+    drop-shadow(0 0 13px rgba(0,216,234,.90))
+    !important;
+}
+
+.v10-polish .process-node.simulation-active::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  z-index: 30;
+  border: 3px solid #00d8ea;
+  border-radius: 12px;
+  pointer-events: none;
+  animation: process-simulation-pulse 1.2s ease-in-out infinite;
+}
+
+.v10-polish .process-node.simulation-dim {
+  opacity: .40 !important;
+  filter: saturate(.62) !important;
+}
+
+.v10-polish .process-link-path.simulation-route {
+  stroke-width: 3px !important;
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 3px rgba(0,216,234,.50));
+}
+
+@keyframes process-simulation-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0,216,234,.10);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(0,216,234,.12);
+  }
+}
+
+/* Pendiente: color exclusivo fuera de la paleta normal */
+.v10-polish .process-pending-action {
+  border-color: rgba(255,79,163,.62) !important;
+  background: rgba(255,79,163,.10) !important;
+  color: #ffd0e7 !important;
+}
+
+.v10-polish .process-node.process-pending:not(.simulation-active) {
+  filter:
+    drop-shadow(0 0 5px rgba(255,79,163,.50))
+    !important;
+}
+
+.v10-polish .process-node.process-pending::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  z-index: 25;
+  border: 2px dashed #ff4fa3;
+  border-radius: 9px;
+  pointer-events: none;
+}
+
+/* En simulación manda el destaque de recorrido */
+.v10-polish .process-node.process-pending.simulation-active::before {
+  opacity: .40;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.3
+   VALIDADOR ESTRICTO + BACK + MEETING PROCESS
+========================================================= */
+
+.v10-polish .process-simulation-back:disabled {
+  opacity: .35 !important;
+}
+
+.v10-polish .process-simulation-panel::after {
+  content:
+    "Backspace o ← para volver cuando no sea una salida del flujo";
+  display: block;
+  margin-top: 8px;
+  color: #8095a3;
+  font-size: 7.5px;
+  font-weight: 650;
+}
+
+/* Reunión vuelve a la geometría visual que usa Process normal. */
+.v10-polish.meeting-process .process-node-visual {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+}
+
+.v10-polish.meeting-process .process-node-visual img {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  mix-blend-mode: multiply !important;
+  transform: none !important;
+  pointer-events: none !important;
+}
+
+.v10-polish.meeting-process .process-icon-fill {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  -webkit-mask-size: contain !important;
+  mask-size: contain !important;
+  -webkit-mask-position: center !important;
+  mask-position: center !important;
+  -webkit-mask-repeat: no-repeat !important;
+  mask-repeat: no-repeat !important;
+}
+
+.v10-polish.meeting-process .process-node,
+.v10-polish.meeting-process .process-node-iniciofin,
+.v10-polish.meeting-process .process-node-actividad,
+.v10-polish.meeting-process .process-node-documento,
+.v10-polish.meeting-process .process-node-decision,
+.v10-polish.meeting-process .process-node-basededatos,
+.v10-polish.meeting-process .process-node-procesopredefinido,
+.v10-polish.meeting-process .process-node-referencia,
+.v10-polish.meeting-process .process-node-preparacion,
+.v10-polish.meeting-process .process-node-notaproceso,
+.v10-polish.meeting-process .process-node-datos,
+.v10-polish.meeting-process .process-node-entradamanual,
+.v10-polish.meeting-process .process-node-operacionmanual,
+.v10-polish.meeting-process .process-node-conectorvertical {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  clip-path: none !important;
+  overflow: visible !important;
+}
+
+.v10-polish.meeting-process .process-links-layer {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  transform-origin: 0 0 !important;
+  overflow: visible !important;
+}
+
+.v10-polish.meeting-process .process-link-path {
+  transform: none !important;
+  vector-effect: none !important;
+}
+
+.v10-polish.meeting-process .process-node-connector,
+.v10-polish.meeting-process .process-node-resize,
+.v10-polish.meeting-process .process-box-edit,
+.v10-polish.meeting-process .process-box-delete,
+.v10-polish.meeting-process .process-box-resize {
+  display: none !important;
+}
+
+.v10-polish.meeting-process
+.process-world.connecting-mode
+.process-node-connector {
+  display: block !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.4
+   REUNIÓN RASTER + REFERENCIA + TRANSICIÓN SIMULADOR
+========================================================= */
+
+/*
+  En reunión renderizamos un PNG ya coloreado con el mismo helper
+  que usa la exportación. Así evitamos diferencias de máscara,
+  blend-mode y zoom entre el modo normal y el modo reunión.
+*/
+.v10-polish.meeting-process
+.process-node-visual
+img.process-meeting-raster {
+  position: absolute !important;
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: contain !important;
+
+  display: block !important;
+
+  mix-blend-mode: normal !important;
+
+  opacity: 1 !important;
+
+  transform: none !important;
+
+  filter: none !important;
+
+  pointer-events: none !important;
+  user-select: none !important;
+
+  animation:
+    process-meeting-raster-in
+    .18s ease-out;
+}
+
+.v10-polish.meeting-process
+.process-node-visual:has(
+  img.process-meeting-raster
+)
+.process-icon-fill {
+  display: none !important;
+}
+
+.v10-polish.meeting-process
+.process-node:not(.simulation-active):not(.process-pending) {
+  filter: none !important;
+}
+
+@keyframes process-meeting-raster-in {
+  from {
+    opacity: .35;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- Simulación: transición suave ---------- */
+
+.v10-polish
+.process-node.simulation-active
+.process-node-visual {
+  transform:
+    scale(1.055) !important;
+
+  transition:
+    transform .24s ease,
+    opacity .24s ease
+    !important;
+}
+
+.v10-polish
+.process-node.simulation-dim
+.process-node-visual {
+  transform:
+    scale(.985);
+
+  transition:
+    transform .24s ease,
+    opacity .24s ease
+    !important;
+}
+
+.v10-polish
+.process-node.simulation-previous {
+  opacity:
+    .72 !important;
+}
+
+.v10-polish
+.process-node.simulation-previous
+.process-node-visual {
+  transform:
+    scale(1.02) !important;
+
+  transition:
+    transform .28s ease,
+    opacity .28s ease
+    !important;
+}
+
+.v10-polish
+.process-link-path.simulation-route {
+  transition:
+    stroke-width .20s ease,
+    opacity .20s ease,
+    filter .20s ease
+    !important;
+}
+
+/*
+  En reunión la transición se aplica solamente sobre la capa visual,
+  nunca sobre la caja matemática del nodo. Las flechas no se mueven.
+*/
+.v10-polish.meeting-process
+.process-node.simulation-active
+.process-node-visual {
+  transform:
+    scale(1.055) !important;
+}
+
+.v10-polish.meeting-process
+.process-node {
+  box-sizing:
+    border-box !important;
+}
+
+/* Referencia = Inicio / Fin */
+.v10-polish
+.process-node-referencia
+.process-node-copy {
+  inset:
+    18% 18% !important;
+
+  align-items:
+    center !important;
+
+  justify-content:
+    center !important;
+
+  text-align:
+    center !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.4.1
+   CLICK DIRECTO EN SIMULACIÓN
+========================================================= */
+
+.v10-polish
+.process-node.simulation-dim,
+.v10-polish
+.process-node.simulation-active {
+  cursor:
+    pointer !important;
+}
+
+.v10-polish
+.process-node.simulation-dim:hover {
+  opacity:
+    .68 !important;
+}
+
+.v10-polish
+.process-node.simulation-dim:hover
+.process-node-visual {
+  transform:
+    scale(1.015) !important;
+
+  transition:
+    transform .15s ease,
+    opacity .15s ease
+    !important;
+}
+
+.v10-polish
+.process-node.simulation-active:active,
+.v10-polish
+.process-node.simulation-dim:active {
+  cursor:
+    pointer !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.4.2
+   SIMULACIÓN LIMPIA + PANEL MOVIBLE + NOTA FUERA DE VALIDACIÓN
+========================================================= */
+
+/* Panel movible dentro del canvas */
+.v10-polish .process-simulation-panel {
+  position:
+    absolute !important;
+
+  margin:
+    0 !important;
+
+  z-index:
+    10060 !important;
+}
+
+.v10-polish
+.process-simulation-panel-top {
+  cursor:
+    grab !important;
+
+  user-select:
+    none !important;
+}
+
+.v10-polish
+.process-simulation-panel-top:active {
+  cursor:
+    grabbing !important;
+}
+
+.v10-polish
+.process-simulation-panel-top
+button {
+  cursor:
+    pointer !important;
+}
+
+/*
+  El texto explicativo al pie ahora tiene contraste real
+  incluso sobre canvas blanco.
+*/
+.v10-polish
+.process-simulation-panel::after {
+  display:
+    block;
+
+  margin-top:
+    9px;
+
+  padding:
+    7px 9px;
+
+  border:
+    1px solid
+    rgba(255,255,255,.14);
+
+  border-radius:
+    7px;
+
+  background:
+    #14222c;
+
+  color:
+    #ffffff !important;
+
+  font-size:
+    8.5px !important;
+
+  font-weight:
+    750;
+
+  line-height:
+    1.35;
+}
+
+/*
+  En simulación el nodo sirve para navegar, no para editar.
+  Evitamos cualquier affordance visual de drag/edición.
+*/
+.v10-polish
+.process-node.simulation-active,
+.v10-polish
+.process-node.simulation-dim {
+  cursor:
+    pointer !important;
+}
+
+.v10-polish
+.process-node.simulation-active
+.process-node-resize,
+.v10-polish
+.process-node.simulation-dim
+.process-node-resize {
+  display:
+    none !important;
+}

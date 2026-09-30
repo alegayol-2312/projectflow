@@ -554,6 +554,15 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processArrowMode, setProcessArrowMode] = useState('orthogonal')
   const [processSuperpuestosVisible, setProcessSuperpuestosVisible] = useState(true)
   const [processMagneticTarget, setProcessMagneticTarget] = useState(null)
+  const [processSimulationOpen, setProcessSimulationOpen] = useState(false)
+  const [processSimulationNodeId, setProcessSimulationNodeId] = useState(null)
+  const [processSimulationHistory, setProcessSimulationHistory] = useState([])
+  const [processSimulationPreviousNodeId, setProcessSimulationPreviousNodeId] = useState(null)
+  const [processSimulationPanelPos, setProcessSimulationPanelPos] = useState({ x: 14, y: 54 })
+  const processSimulationPanelDragRef = useRef(null)
+  const [processMeetingIcons, setProcessMeetingIcons] = useState({})
+  const [processValidationMessages, setProcessValidationMessages] = useState([])
+  const [processValidationOk, setProcessValidationOk] = useState(false)
   const [processAiDrawerOpen, setProcessAiDrawerOpen] = useState(false)
   const [processAiLoading, setProcessAiLoading] = useState(false)
   const [processAiText, setProcessAiText] = useState('')
@@ -4724,6 +4733,7 @@ async function pegarSeleccionProcess() {
       rotacion: Number(node.rotacion) || 0,
       text_align: node.text_align || 'center',
       superpuesto: Boolean(node.superpuesto),
+      pendiente: Boolean(node.pendiente),
       pos_x: Number(node.pos_x) + 34,
       pos_y: Number(node.pos_y) + 34,
       ancho: Number(node.ancho),
@@ -4898,6 +4908,7 @@ async function duplicarProcessNode(node) {
       rotacion: Number(node.rotacion) || 0,
       text_align: node.text_align || 'center',
       superpuesto: Boolean(node.superpuesto),
+      pendiente: Boolean(node.pendiente),
       pos_x: Number(node.pos_x) + 28,
       pos_y: Number(node.pos_y) + 28,
       ancho: Number(node.ancho),
@@ -5743,15 +5754,14 @@ function moverProcessNode(event) {
   let guideX = null
   let guideY = null
 
+  /*
+    V10.1:
+    el movimiento queda LIBRE mientras arrastrás.
+    Antes redondeábamos a la grilla en cada mousemove,
+    por eso el nodo podía sentirse "a saltos".
+    Si Snap está activo, la grilla se aplica recién al soltar.
+  */
   if (processSnapEnabled) {
-    const GRID = 38
-
-    x =
-      Math.round(x / GRID) * GRID
-
-    y =
-      Math.round(y / GRID) * GRID
-
     const centroX =
       x + ancho / 2
 
@@ -5768,7 +5778,7 @@ function moverProcessNode(event) {
           !idsGrupo.includes(item.id)
       )
 
-    const tolerancia = 9
+    const tolerancia = 6
 
     for (const otro of otros) {
       const ox =
@@ -5795,9 +5805,6 @@ function moverProcessNode(event) {
           centroX - otroCentroX
         ) <= tolerancia
       ) {
-        x =
-          otroCentroX - ancho / 2
-
         guideX =
           otroCentroX
       }
@@ -5808,9 +5815,6 @@ function moverProcessNode(event) {
           centroY - otroCentroY
         ) <= tolerancia
       ) {
-        y =
-          otroCentroY - alto / 2
-
         guideY =
           otroCentroY
       }
@@ -5893,10 +5897,86 @@ async function terminarDragProcessNode() {
     processGroupDragInfo?.selectedIds ||
     [processDragInfo.id]
 
-  const nodes =
+  let nodesFinales =
     processNodes.filter((node) =>
       ids.includes(node.id)
     )
+
+  /*
+    Snap al FINAL del movimiento.
+    En grupos desplazamos a todos por el mismo delta,
+    así no se rompe la distribución relativa.
+  */
+  if (
+    processSnapEnabled &&
+    nodesFinales.length > 0
+  ) {
+    const GRID = 38
+
+    const anchor =
+      nodesFinales.find(
+        (node) =>
+          node.id ===
+          processDragInfo.id
+      ) ||
+      nodesFinales[0]
+
+    const anchorX =
+      Number(anchor.pos_x)
+
+    const anchorY =
+      Number(anchor.pos_y)
+
+    const snappedX =
+      Math.round(
+        anchorX / GRID
+      ) * GRID
+
+    const snappedY =
+      Math.round(
+        anchorY / GRID
+      ) * GRID
+
+    const deltaX =
+      snappedX - anchorX
+
+    const deltaY =
+      snappedY - anchorY
+
+    const idsSet =
+      new Set(ids)
+
+    const actualizados =
+      processNodes.map((node) =>
+        idsSet.has(node.id)
+          ? {
+              ...node,
+              pos_x:
+                Math.max(
+                  20,
+                  Number(node.pos_x) +
+                    deltaX
+                ),
+              pos_y:
+                Math.max(
+                  20,
+                  Number(node.pos_y) +
+                    deltaY
+                ),
+            }
+          : node
+      )
+
+    setProcessNodes(
+      actualizados
+    )
+
+    nodesFinales =
+      actualizados.filter(
+        (node) =>
+          idsSet.has(node.id)
+      )
+  }
 
   setProcessDragInfo(null)
   setProcessGroupDragInfo(null)
@@ -5906,7 +5986,9 @@ async function terminarDragProcessNode() {
     y: null,
   })
 
-  await guardarPosicionesProcessNodes(nodes)
+  await guardarPosicionesProcessNodes(
+    nodesFinales
+  )
 }
 
 function iniciarResizeProcessNode(event, node) {
@@ -6309,7 +6391,7 @@ function moverConexionProcess(event) {
         )
 
       if (
-        distancia <= 44 &&
+        distancia <= 28 &&
         (
           !cercano ||
           distancia <
@@ -6574,6 +6656,751 @@ async function eliminarProcessLink(link) {
 
   cerrarProcessLinkDrawer()
   await cargarProcessCanvas(processSeleccionadoId)
+}
+
+
+function processIncomingLinks(nodeId) {
+  return processLinks.filter(
+    (link) =>
+      link.target_node_id === nodeId &&
+      processLinkVisible(link)
+  )
+}
+
+function processOutgoingLinks(nodeId) {
+  return processLinks.filter(
+    (link) =>
+      link.source_node_id === nodeId &&
+      processLinkVisible(link)
+  )
+}
+
+function processRootNodes() {
+  return processNodes
+    .filter(processNodeVisible)
+    .filter(
+      (node) =>
+        processIncomingLinks(
+          node.id
+        ).length === 0
+    )
+}
+
+function processLeafNodes() {
+  return processNodes
+    .filter(processNodeVisible)
+    .filter(
+      (node) =>
+        processOutgoingLinks(
+          node.id
+        ).length === 0
+    )
+}
+
+function processStartNodes() {
+  return processRootNodes()
+    .filter(
+      (node) =>
+        node.tipo === 'Referencia'
+    )
+    .sort(
+      (a, b) =>
+        Number(a.pos_x) -
+          Number(b.pos_x) ||
+        Number(a.pos_y) -
+          Number(b.pos_y)
+    )
+}
+
+function processEndNodes() {
+  return processLeafNodes()
+    .filter(
+      (node) =>
+        node.tipo === 'Referencia'
+    )
+    .sort(
+      (a, b) =>
+        Number(a.pos_x) -
+          Number(b.pos_x) ||
+        Number(a.pos_y) -
+          Number(b.pos_y)
+    )
+}
+
+function direccionVisualProcess(
+  source,
+  target
+) {
+  const sx =
+    Number(source.pos_x) +
+    Number(source.ancho) / 2
+
+  const sy =
+    Number(source.pos_y) +
+    Number(source.alto) / 2
+
+  const tx =
+    Number(target.pos_x) +
+    Number(target.ancho) / 2
+
+  const ty =
+    Number(target.pos_y) +
+    Number(target.alto) / 2
+
+  const dx = tx - sx
+  const dy = ty - sy
+
+  if (
+    Math.abs(dx) >=
+    Math.abs(dy)
+  ) {
+    return dx >= 0
+      ? 'ArrowRight'
+      : 'ArrowLeft'
+  }
+
+  return dy >= 0
+    ? 'ArrowDown'
+    : 'ArrowUp'
+}
+
+function simboloTeclaProcess(key) {
+  return {
+    ArrowRight: '→',
+    ArrowLeft: '←',
+    ArrowDown: '↓',
+    ArrowUp: '↑',
+  }[key] || '→'
+}
+
+function opcionesSimulacionProcess() {
+  const current =
+    processNodeById(
+      processSimulationNodeId
+    )
+
+  if (!current) return []
+
+  const links =
+    processOutgoingLinks(
+      current.id
+    )
+
+  const usadas =
+    new Set()
+
+  const fallbackKeys = [
+    'ArrowRight',
+    'ArrowDown',
+    'ArrowLeft',
+    'ArrowUp',
+  ]
+
+  return links.map(
+    (link, index) => {
+      const target =
+        processNodeById(
+          link.target_node_id
+        )
+
+      if (!target) return null
+
+      let key =
+        direccionVisualProcess(
+          current,
+          target
+        )
+
+      if (
+        links.length > 1 &&
+        usadas.has(key)
+      ) {
+        key =
+          fallbackKeys.find(
+            (item) =>
+              !usadas.has(item)
+          ) ||
+          fallbackKeys[
+            index %
+            fallbackKeys.length
+          ]
+      }
+
+      usadas.add(key)
+
+      return {
+        link,
+        target,
+        key,
+      }
+    }
+  ).filter(Boolean)
+}
+
+function iniciarSimulacionProcess() {
+  if (
+    !processSeleccionadoId ||
+    processNodes.length === 0
+  ) {
+    alert(
+      'El proceso no tiene componentes para simular.'
+    )
+    return
+  }
+
+  const starts =
+    processStartNodes()
+
+  if (starts.length === 0) {
+    setProcessValidationMessages([
+      'Proceso sin inicio (Referencia)',
+    ])
+    setProcessValidationOk(false)
+    setProcessSimulationOpen(true)
+    setProcessSimulationNodeId(null)
+    return
+  }
+
+  setSelectedProcessNodeIds([])
+  setSelectedProcessLinkId(null)
+  setSelectedProcessBoxId(null)
+  setProcessValidationMessages([])
+  setProcessValidationOk(false)
+  setProcessSimulationNodeId(
+    starts[0].id
+  )
+  setProcessSimulationHistory([])
+  setProcessSimulationPreviousNodeId(null)
+  setProcessSimulationPanelPos({
+    x: 14,
+    y: 54,
+  })
+  setProcessSimulationOpen(true)
+}
+
+function cerrarSimulacionProcess() {
+  setProcessSimulationOpen(false)
+  setProcessSimulationNodeId(null)
+  setProcessSimulationHistory([])
+  setProcessSimulationPreviousNodeId(null)
+  setProcessValidationMessages([])
+  setProcessValidationOk(false)
+}
+
+function avanzarSimulacionProcess(
+  key
+) {
+  if (!processSimulationOpen) return
+
+  const options =
+    opcionesSimulacionProcess()
+
+  if (options.length === 0) {
+    return
+  }
+
+  let option =
+    options.find(
+      (item) =>
+        item.key === key
+    )
+
+  /*
+    Si hay un solo camino, cualquier flecha del teclado
+    permite avanzar. En bifurcaciones sí se exige
+    la flecha indicada.
+  */
+  if (
+    !option &&
+    options.length === 1
+  ) {
+    option = options[0]
+  }
+
+  if (!option) return
+
+  setProcessSimulationPreviousNodeId(
+    processSimulationNodeId
+  )
+
+  setProcessSimulationHistory(
+    (actual) => [
+      ...actual,
+      processSimulationNodeId,
+    ]
+  )
+
+  setProcessSimulationNodeId(
+    option.target.id
+  )
+}
+
+function volverSimulacionProcess() {
+  setProcessSimulationHistory(
+    (actual) => {
+      if (actual.length === 0) {
+        return actual
+      }
+
+      const previous =
+        actual[actual.length - 1]
+
+      setProcessSimulationPreviousNodeId(
+        processSimulationNodeId
+      )
+
+      setProcessSimulationNodeId(
+        previous
+      )
+
+      return actual.slice(0, -1)
+    }
+  )
+}
+
+
+function saltarSimulacionAComponente(node) {
+  if (
+    !processSimulationOpen ||
+    !node
+  ) {
+    return
+  }
+
+  setSelectedProcessNodeIds([])
+  setSelectedProcessLinkId(null)
+  setSelectedProcessBoxId(null)
+
+  if (
+    node.id ===
+    processSimulationNodeId
+  ) {
+    return
+  }
+
+  if (processSimulationNodeId) {
+    setProcessSimulationHistory(
+      (actual) => [
+        ...actual,
+        processSimulationNodeId,
+      ]
+    )
+
+    setProcessSimulationPreviousNodeId(
+      processSimulationNodeId
+    )
+  }
+
+  setProcessSimulationNodeId(
+    node.id
+  )
+}
+
+
+function iniciarDragPanelSimulacion(event) {
+  if (
+    event.button !== 0 ||
+    event.target.closest(
+      'button, input, textarea, select, kbd'
+    )
+  ) {
+    return
+  }
+
+  const panel =
+    event.currentTarget.closest(
+      '.process-simulation-panel'
+    )
+
+  const canvas =
+    event.currentTarget.closest(
+      '.process-canvas'
+    )
+
+  if (!panel || !canvas) {
+    return
+  }
+
+  const panelRect =
+    panel.getBoundingClientRect()
+
+  processSimulationPanelDragRef.current = {
+    canvas,
+    offsetX:
+      event.clientX -
+      panelRect.left,
+    offsetY:
+      event.clientY -
+      panelRect.top,
+  }
+
+  event.preventDefault()
+  event.stopPropagation()
+}
+
+function validarProcessActual() {
+  /*
+    NotaProceso es una anotación visual.
+    No forma parte del flujo que se valida.
+  */
+  const validables =
+    processNodes
+      .filter(processNodeVisible)
+      .filter(
+        (node) =>
+          node.tipo !==
+          'NotaProceso'
+      )
+
+  const validableIds =
+    new Set(
+      validables.map(
+        (node) => node.id
+      )
+    )
+
+  const linksValidables =
+    processLinks
+      .filter(processLinkVisible)
+      .filter(
+        (link) =>
+          validableIds.has(
+            link.source_node_id
+          ) &&
+          validableIds.has(
+            link.target_node_id
+          )
+      )
+
+  const incoming =
+    (nodeId) =>
+      linksValidables.filter(
+        (link) =>
+          link.target_node_id ===
+          nodeId
+      )
+
+  const outgoing =
+    (nodeId) =>
+      linksValidables.filter(
+        (link) =>
+          link.source_node_id ===
+          nodeId
+      )
+
+  const roots =
+    validables.filter(
+      (node) =>
+        incoming(node.id).length ===
+        0
+    )
+
+  const leaves =
+    validables.filter(
+      (node) =>
+        outgoing(node.id).length ===
+        0
+    )
+
+  const starts =
+    roots.filter(
+      (node) =>
+        node.tipo === 'Referencia'
+    )
+
+  const ends =
+    leaves.filter(
+      (node) =>
+        node.tipo === 'Referencia'
+    )
+
+  const mensajes = []
+
+  if (validables.length === 0) {
+    mensajes.push(
+      'Proceso sin inicio (Referencia)',
+      'Proceso sin fin (Referencia)'
+    )
+  } else {
+    if (starts.length === 0) {
+      mensajes.push(
+        'Proceso sin inicio (Referencia)'
+      )
+    }
+
+    if (ends.length === 0) {
+      mensajes.push(
+        'Proceso sin fin (Referencia)'
+      )
+    }
+
+    const rootsInvalidos =
+      roots.filter(
+        (node) =>
+          node.tipo !==
+          'Referencia'
+      )
+
+    const leavesInvalidas =
+      leaves.filter(
+        (node) =>
+          node.tipo !==
+          'Referencia'
+      )
+
+    const reachable =
+      new Set()
+
+    const queue =
+      starts.map(
+        (node) => node.id
+      )
+
+    while (queue.length > 0) {
+      const nodeId =
+        queue.shift()
+
+      if (
+        reachable.has(nodeId)
+      ) {
+        continue
+      }
+
+      reachable.add(nodeId)
+
+      outgoing(nodeId)
+        .forEach((link) => {
+          if (
+            !reachable.has(
+              link.target_node_id
+            )
+          ) {
+            queue.push(
+              link.target_node_id
+            )
+          }
+        })
+    }
+
+    const canReachEnd =
+      new Set()
+
+    const reverseQueue =
+      ends.map(
+        (node) => node.id
+      )
+
+    while (
+      reverseQueue.length > 0
+    ) {
+      const nodeId =
+        reverseQueue.shift()
+
+      if (
+        canReachEnd.has(nodeId)
+      ) {
+        continue
+      }
+
+      canReachEnd.add(nodeId)
+
+      incoming(nodeId)
+        .forEach((link) => {
+          if (
+            !canReachEnd.has(
+              link.source_node_id
+            )
+          ) {
+            reverseQueue.push(
+              link.source_node_id
+            )
+          }
+        })
+    }
+
+    const fueraDeFlujo =
+      validables.filter(
+        (node) =>
+          !reachable.has(node.id) ||
+          (
+            ends.length > 0 &&
+            !canReachEnd.has(
+              node.id
+            )
+          )
+      )
+
+    const desconectados =
+      [
+        ...rootsInvalidos,
+        ...leavesInvalidas,
+        ...fueraDeFlujo,
+      ]
+
+    const desconectadosUnicos =
+      [
+        ...new Map(
+          desconectados.map(
+            (node) => [
+              node.id,
+              node,
+            ]
+          )
+        ).values(),
+      ]
+
+    if (
+      desconectadosUnicos.length >
+      0
+    ) {
+      const nombres =
+        desconectadosUnicos
+          .slice(0, 5)
+          .map(
+            (node) =>
+              node.titulo ||
+              etiquetaTipoProceso(
+                node.tipo
+              )
+          )
+          .join(', ')
+
+      mensajes.push(
+        nombres
+          ? `Componentes sin conexión: ${nombres}`
+          : 'Componentes sin conexión'
+      )
+    }
+
+    const decisionesInvalidas =
+      validables.filter(
+        (node) =>
+          node.tipo ===
+            'Decision' &&
+          outgoing(node.id).length <
+            2
+      )
+
+    if (
+      decisionesInvalidas.length >
+      0
+    ) {
+      const nombres =
+        decisionesInvalidas
+          .slice(0, 5)
+          .map(
+            (node) =>
+              node.titulo ||
+              'Decisión'
+          )
+          .join(', ')
+
+      mensajes.push(
+        nombres
+          ? `Componente decisión sin flujo asociado: ${nombres}`
+          : 'Componente decisión sin flujo asociado'
+      )
+    }
+
+    const pendientes =
+      validables.filter(
+        (node) =>
+          Boolean(node.pendiente)
+      )
+
+    if (pendientes.length > 0) {
+      const nombres =
+        pendientes
+          .slice(0, 5)
+          .map(
+            (node) =>
+              node.titulo ||
+              etiquetaTipoProceso(
+                node.tipo
+              )
+          )
+          .join(', ')
+
+      mensajes.push(
+        nombres
+          ? `Tareas pendientes: ${nombres}`
+          : 'Tareas pendientes'
+      )
+    }
+  }
+
+  const unicos =
+    [...new Set(mensajes)]
+
+  setProcessValidationMessages(
+    unicos
+  )
+
+  setProcessValidationOk(
+    unicos.length === 0
+  )
+}
+
+async function togglePendienteSeleccionProcess() {
+  if (
+    selectedProcessNodeIds.length === 0
+  ) {
+    return
+  }
+
+  pushProcessUndo()
+
+  const ids =
+    [...selectedProcessNodeIds]
+
+  const seleccionados =
+    processNodes.filter(
+      (node) =>
+        ids.includes(node.id)
+    )
+
+  const todosPendientes =
+    seleccionados.length > 0 &&
+    seleccionados.every(
+      (node) =>
+        Boolean(node.pendiente)
+    )
+
+  const nuevoValor =
+    !todosPendientes
+
+  setProcessNodes((actual) =>
+    actual.map((node) =>
+      ids.includes(node.id)
+        ? {
+            ...node,
+            pendiente:
+              nuevoValor,
+          }
+        : node
+    )
+  )
+
+  const { error } =
+    await supabase
+      .from('process_nodes')
+      .update({
+        pendiente:
+          nuevoValor,
+        updated_at:
+          new Date().toISOString(),
+      })
+      .in('id', ids)
+
+  if (error) {
+    alert(
+      `No se pudo cambiar Pendiente: ${error.message}`
+    )
+
+    cargarProcessCanvas(
+      processSeleccionadoId
+    )
+  }
 }
 
 function processNodeById(id) {
@@ -11079,12 +11906,254 @@ function colorEstadoTarea(tarea) {
     processSuperpuestosVisible,
   ])
 
+
+  useEffect(() => {
+    if (
+      !processSimulationOpen ||
+      vistaPrincipal !== 'process'
+    ) {
+      return
+    }
+
+    function onSimulationKeyDown(
+      event
+    ) {
+      if (
+        event.key === 'Backspace'
+      ) {
+        event.preventDefault()
+        event.stopPropagation()
+
+        volverSimulacionProcess()
+        return
+      }
+
+      if (
+        ![
+          'ArrowRight',
+          'ArrowLeft',
+          'ArrowUp',
+          'ArrowDown',
+        ].includes(event.key)
+      ) {
+        return
+      }
+
+      event.preventDefault()
+      event.stopPropagation()
+
+      if (
+        event.key === 'ArrowLeft' &&
+        processSimulationHistory.length > 0 &&
+        !opcionesSimulacionProcess().some(
+          (item) =>
+            item.key === 'ArrowLeft'
+        )
+      ) {
+        volverSimulacionProcess()
+        return
+      }
+
+      avanzarSimulacionProcess(
+        event.key
+      )
+    }
+
+    window.addEventListener(
+      'keydown',
+      onSimulationKeyDown,
+      true
+    )
+
+    return () =>
+      window.removeEventListener(
+        'keydown',
+        onSimulationKeyDown,
+        true
+      )
+  }, [
+    processSimulationOpen,
+    processSimulationNodeId,
+    processSimulationHistory,
+    processLinks,
+    processNodes,
+    vistaPrincipal,
+  ])
+
+
+  useEffect(() => {
+    if (!processSimulationPreviousNodeId) {
+      return
+    }
+
+    const timer =
+      window.setTimeout(() => {
+        setProcessSimulationPreviousNodeId(
+          null
+        )
+      }, 320)
+
+    return () =>
+      window.clearTimeout(timer)
+  }, [
+    processSimulationPreviousNodeId,
+    processSimulationNodeId,
+  ])
+
+
+  useEffect(() => {
+    function onMove(event) {
+      const drag =
+        processSimulationPanelDragRef.current
+
+      if (!drag) return
+
+      const canvas =
+        drag.canvas
+
+      const rect =
+        canvas.getBoundingClientRect()
+
+      const nextX =
+        event.clientX -
+        rect.left +
+        canvas.scrollLeft -
+        drag.offsetX
+
+      const nextY =
+        event.clientY -
+        rect.top +
+        canvas.scrollTop -
+        drag.offsetY
+
+      setProcessSimulationPanelPos({
+        x:
+          Math.max(
+            8,
+            nextX
+          ),
+        y:
+          Math.max(
+            8,
+            nextY
+          ),
+      })
+    }
+
+    function onUp() {
+      processSimulationPanelDragRef.current =
+        null
+    }
+
+    window.addEventListener(
+      'mousemove',
+      onMove
+    )
+
+    window.addEventListener(
+      'mouseup',
+      onUp
+    )
+
+    return () => {
+      window.removeEventListener(
+        'mousemove',
+        onMove
+      )
+
+      window.removeEventListener(
+        'mouseup',
+        onUp
+      )
+    }
+  }, [])
+
   const processSeleccionado = processMaps.find(
     (item) => item.id === processSeleccionadoId
   )
 
   const processCanvasBgActual =
     processSeleccionado?.canvas_bg || '#0b1220'
+
+
+  useEffect(() => {
+    if (
+      !meetingMode ||
+      vistaPrincipal !== 'process' ||
+      processNodes.length === 0
+    ) {
+      return
+    }
+
+    let cancelado = false
+
+    async function prepararIconosReunion() {
+      const pares =
+        await Promise.all(
+          processNodes.map(
+            async (node) => {
+              const color =
+                node.pendiente
+                  ? '#ff4fa3'
+                  : (
+                      node.color ||
+                      plantillaProceso(
+                        node.tipo
+                      )?.color ||
+                      '#cfe3cd'
+                    )
+
+              const icon =
+                plantillaProceso(
+                  node.tipo
+                )?.icon
+
+              const raster =
+                await crearIconoProcessColoreado(
+                  icon,
+                  color
+                )
+
+              return [
+                node.id,
+                raster,
+              ]
+            }
+          )
+        )
+
+      if (cancelado) return
+
+      setProcessMeetingIcons(
+        Object.fromEntries(
+          pares
+        )
+      )
+    }
+
+    prepararIconosReunion()
+
+    return () => {
+      cancelado = true
+    }
+  }, [
+    meetingMode,
+    vistaPrincipal,
+    processNodes,
+  ])
+
+
+  useEffect(() => {
+    if (
+      !meetingMode ||
+      vistaPrincipal !== 'process'
+    ) {
+      setProcessMeetingIcons({})
+    }
+  }, [
+    meetingMode,
+    vistaPrincipal,
+  ])
 
   const processWorldSize = useMemo(() => {
     const MIN_WIDTH = 2400
@@ -11336,7 +12405,7 @@ function colorEstadoTarea(tarea) {
 
   return (
     <div
-      className={`app-shell ${
+      className={`app-shell v10-polish ${
         meetingMode
           ? `meeting-mode meeting-${vistaPrincipal}`
           : ''
@@ -13490,6 +14559,14 @@ function colorEstadoTarea(tarea) {
                         ✨ Escribir proceso
                       </button>
 
+                      <button
+                        type="button"
+                        className="process-simulation-button"
+                        onClick={iniciarSimulacionProcess}
+                      >
+                        ▶ Vista de simulación
+                      </button>
+
                       <button type="button" className="btn-secondary" onClick={imprimirProcessFlow}>
                         Imprimir flujo
                       </button>
@@ -13580,6 +14657,7 @@ function colorEstadoTarea(tarea) {
                     }
                     onDrop={soltarNodoProceso}
                   >
+                    {!processSimulationOpen && (
                     <div className="process-canvas-tools">
                       <div className="process-bg-dots">
                         {[
@@ -13736,6 +14814,7 @@ function colorEstadoTarea(tarea) {
                         ↶
                       </button>
                     </div>
+                    )}
 
                     <div className="process-zoom-overlay">
                       <button type="button" onClick={() => cambiarProcessZoom(-0.1)}>−</button>
@@ -13743,7 +14822,8 @@ function colorEstadoTarea(tarea) {
                       <button type="button" onClick={() => cambiarProcessZoom(0.1)}>+</button>
                     </div>
 
-                    {selectedProcessNodeIds.length > 0 && (
+                    {!processSimulationOpen &&
+                      selectedProcessNodeIds.length > 0 && (
                       <div className="process-selection-toolbar">
                         <div className="process-selection-summary">
                           <strong>
@@ -13802,6 +14882,17 @@ function colorEstadoTarea(tarea) {
                             title="Marcar o desmarcar como superposición"
                           >
                             Superposición
+                          </button>
+
+                          <button
+                            type="button"
+                            className="process-pending-action"
+                            onClick={
+                              togglePendienteSeleccionProcess
+                            }
+                            title="Marcar o desmarcar como pendiente"
+                          >
+                            Pendiente
                           </button>
 
                           <div className="process-text-align-actions">
@@ -13897,7 +14988,8 @@ function colorEstadoTarea(tarea) {
                     )}
 
 
-                    {selectedProcessLinkId &&
+                    {!processSimulationOpen &&
+                      selectedProcessLinkId &&
                       selectedProcessNodeIds.length === 0 && (
                         <div className="process-link-selection-toolbar">
                           <div className="process-link-selection-summary">
@@ -13968,6 +15060,137 @@ function colorEstadoTarea(tarea) {
                           </div>
                         </div>
                       )}
+
+
+                    {processSimulationOpen && (
+                      <div
+                        className="process-simulation-panel"
+                        style={{
+                          left:
+                            `${processSimulationPanelPos.x}px`,
+                          top:
+                            `${processSimulationPanelPos.y}px`,
+                        }}
+                        onMouseDown={(event) =>
+                          event.stopPropagation()
+                        }
+                      >
+                        <div
+                          className="process-simulation-panel-top"
+                          onMouseDown={
+                            iniciarDragPanelSimulacion
+                          }
+                          title="Arrastrá para mover el panel"
+                        >
+                          <div>
+                            <span>Vista de simulación</span>
+                            <strong>
+                              {
+                                processNodeById(
+                                  processSimulationNodeId
+                                )?.titulo ||
+                                'Sin componente activo'
+                              }
+                            </strong>
+                          </div>
+
+                          <button
+                            type="button"
+                            className="process-simulation-close"
+                            onMouseDown={(event) =>
+                              event.stopPropagation()
+                            }
+                            onClick={cerrarSimulacionProcess}
+                            title="Salir de simulación"
+                          >
+                            ×
+                          </button>
+                        </div>
+
+                        {processSimulationNodeId && (
+                          <div className="process-simulation-keys">
+                            {opcionesSimulacionProcess().length === 0 ? (
+                              <span className="process-simulation-finished">
+                                Fin del recorrido
+                              </span>
+                            ) : (
+                              opcionesSimulacionProcess().map(
+                                (option) => (
+                                  <div
+                                    key={option.link.id}
+                                    className="process-simulation-key-option"
+                                  >
+                                    <kbd>
+                                      {
+                                        simboloTeclaProcess(
+                                          option.key
+                                        )
+                                      }
+                                    </kbd>
+
+                                    <span>
+                                      {
+                                        option.link.etiqueta ||
+                                        option.target.titulo ||
+                                        'Continuar'
+                                      }
+                                    </span>
+                                  </div>
+                                )
+                              )
+                            )}
+                          </div>
+                        )}
+
+                        <div className="process-simulation-actions">
+                          <button
+                            type="button"
+                            className="btn-secondary process-simulation-back"
+                            disabled={
+                              processSimulationHistory.length === 0
+                            }
+                            onClick={volverSimulacionProcess}
+                            title="Volver al componente anterior (Backspace)"
+                          >
+                            ← Volver
+                          </button>
+
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={validarProcessActual}
+                          >
+                            Validar proceso
+                          </button>
+
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={cerrarSimulacionProcess}
+                          >
+                            Salir
+                          </button>
+                        </div>
+
+                        {processValidationOk && (
+                          <div className="process-validation-ok">
+                            Proceso validado ok
+                          </div>
+                        )}
+
+                        {processValidationMessages.length > 0 && (
+                          <div className="process-validation-errors">
+                            {processValidationMessages.map(
+                              (message) => (
+                                <div key={message}>
+                                  {message}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <div
                       ref={processCanvasPrintRef}
@@ -14152,6 +15375,15 @@ function colorEstadoTarea(tarea) {
                                   link.estilo === 'punteada'
                                     ? 'dashed'
                                     : ''
+                                } ${
+                                  selectedProcessLinkId === link.id
+                                    ? 'selected'
+                                    : ''
+                                } ${
+                                  processSimulationOpen &&
+                                  processSimulationNodeId === link.source_node_id
+                                    ? 'simulation-route'
+                                    : ''
                                 }`}
                                 style={{
                                   stroke:
@@ -14247,6 +15479,25 @@ function colorEstadoTarea(tarea) {
                             processMagneticTarget?.nodeId === node.id
                               ? 'magnetic-target'
                               : ''
+                          } ${
+                            node.pendiente
+                              ? 'process-pending'
+                              : ''
+                          } ${
+                            processSimulationOpen &&
+                            processSimulationNodeId === node.id
+                              ? 'simulation-active'
+                              : ''
+                          } ${
+                            processSimulationOpen &&
+                            processSimulationNodeId !== node.id
+                              ? 'simulation-dim'
+                              : ''
+                          } ${
+                            processSimulationOpen &&
+                            processSimulationPreviousNodeId === node.id
+                              ? 'simulation-previous'
+                              : ''
                           }`}
                           style={{
                             left: `${Number(node.pos_x)}px`,
@@ -14257,16 +15508,37 @@ function colorEstadoTarea(tarea) {
                             '--process-icon':
                               `url(${plantillaProceso(node.tipo)?.icon})`,
                             '--process-color':
-                              node.color ||
-                              plantillaProceso(node.tipo)?.color ||
-                              '#cfe3cd',
+                              node.pendiente
+                                ? '#ff4fa3'
+                                : (
+                                    node.color ||
+                                    plantillaProceso(node.tipo)?.color ||
+                                    '#cfe3cd'
+                                  ),
                             zIndex:
                               20 +
                               (Number(node.z_index) || 10),
                           }}
-                          onMouseDown={(event) =>
-                            iniciarDragProcessNode(event, node)
-                          }
+                          onMouseDown={(event) => {
+                            if (
+                              processSimulationOpen &&
+                              event.button === 0
+                            ) {
+                              event.preventDefault()
+                              event.stopPropagation()
+
+                              saltarSimulacionAComponente(
+                                node
+                              )
+
+                              return
+                            }
+
+                            iniciarDragProcessNode(
+                              event,
+                              node
+                            )
+                          }}
                           onDoubleClick={() =>
                             abrirEditarProcessNode(node)
                           }
@@ -14278,10 +15550,36 @@ function colorEstadoTarea(tarea) {
                           }
                         >
                           <div className="process-node-visual">
-                            <div className="process-icon-fill" />
+                            {!(
+                              meetingMode &&
+                              processMeetingIcons[
+                                node.id
+                              ]
+                            ) && (
+                              <div className="process-icon-fill" />
+                            )}
 
                             <img
-                              src={plantillaProceso(node.tipo)?.icon}
+                              src={
+                                meetingMode &&
+                                processMeetingIcons[
+                                  node.id
+                                ]
+                                  ? processMeetingIcons[
+                                      node.id
+                                    ]
+                                  : plantillaProceso(
+                                      node.tipo
+                                    )?.icon
+                              }
+                              className={
+                                meetingMode &&
+                                processMeetingIcons[
+                                  node.id
+                                ]
+                                  ? 'process-meeting-raster'
+                                  : ''
+                              }
                               alt=""
                               draggable="false"
                             />
@@ -19172,8 +20470,8 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V9.4.2</span>
-        <span>28/09/2026</span>
+        <span>V10.4.2</span>
+        <span>30/09/2026</span>
       </footer>
 
       </div>
