@@ -17375,3 +17375,3597 @@ button {
     rgba(34,211,197,.72)
     !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.5
+   CARPETAS + SIMULACIÓN NATURAL + LEGIBILIDAD
+========================================================= */
+
+/* ---------- Legibilidad general ---------- */
+
+.v10-polish {
+  --pf-text:
+    #ffffff;
+
+  --pf-text-2:
+    #e4edf3;
+
+  --pf-text-3:
+    #becbd4;
+}
+
+.v10-polish
+:is(
+  .process-list-main span,
+  .kanban-project-main span,
+  .board-list-copy small,
+  .project-folder-copy small,
+  .process-canvas-header span,
+  .cards-board-meta span,
+  .kanban-board-header span
+) {
+  color:
+    #d2dde4 !important;
+
+  font-size:
+    9.5px !important;
+
+  font-weight:
+    650 !important;
+
+  line-height:
+    1.35 !important;
+}
+
+.v10-polish
+:is(
+  .process-list-main strong,
+  .kanban-project-main strong,
+  .board-list-copy strong,
+  .project-folder-copy strong
+) {
+  color:
+    #ffffff !important;
+
+  font-size:
+    11px !important;
+
+  font-weight:
+    850 !important;
+
+  line-height:
+    1.25 !important;
+}
+
+.v10-polish
+:is(
+  .process-eyebrow,
+  .cards-eyebrow,
+  .kanban-eyebrow,
+  .process-components-header span,
+  .process-list-header span,
+  .boards-panel-header span,
+  .kanban-project-header span
+) {
+  color:
+    #d9e5ec !important;
+
+  font-size:
+    9px !important;
+
+  font-weight:
+    850 !important;
+}
+
+.v10-polish
+:is(
+  button,
+  .btn-primary,
+  .btn-secondary
+) {
+  font-weight:
+    800;
+}
+
+/* ---------- Botón crear carpeta ---------- */
+
+.v10-polish .folder-create-button {
+  position:
+    relative;
+
+  display:
+    inline-flex !important;
+
+  align-items:
+    center !important;
+
+  justify-content:
+    center !important;
+}
+
+.v10-polish .folder-create-icon,
+.v10-polish .project-folder-loose-icon {
+  position:
+    relative;
+
+  width:
+    17px;
+
+  height:
+    12px;
+
+  display:
+    inline-block;
+}
+
+.v10-polish .folder-create-icon::before,
+.v10-polish .project-folder-loose-icon::before {
+  content: "";
+
+  position:
+    absolute;
+
+  left:
+    1px;
+
+  top:
+    3px;
+
+  width:
+    15px;
+
+  height:
+    9px;
+
+  border:
+    1.5px solid
+    currentColor;
+
+  border-radius:
+    2px;
+}
+
+.v10-polish .folder-create-icon::after,
+.v10-polish .project-folder-loose-icon::after {
+  content: "";
+
+  position:
+    absolute;
+
+  left:
+    2px;
+
+  top:
+    0;
+
+  width:
+    7px;
+
+  height:
+    5px;
+
+  border:
+    1.5px solid
+    currentColor;
+
+  border-bottom:
+    0;
+
+  border-radius:
+    2px 2px 0 0;
+}
+
+/* ---------- Carpetas ---------- */
+
+.v10-polish .project-folder-block {
+  width:
+    100%;
+
+  margin:
+    5px 0;
+}
+
+.v10-polish .project-folder-row {
+  --folder-color:
+    #f7c948;
+
+  display:
+    flex;
+
+  align-items:
+    stretch;
+
+  min-height:
+    48px;
+
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--folder-color) 60%,
+      #38505f
+    );
+
+  border-left:
+    4px solid
+    var(--folder-color);
+
+  border-radius:
+    9px;
+
+  background:
+    #121f28;
+
+  overflow:
+    hidden;
+}
+
+.v10-polish .project-folder-row:hover {
+  border-color:
+    var(--folder-color);
+
+  background:
+    #162630;
+}
+
+.v10-polish .project-folder-main {
+  flex:
+    1;
+
+  min-width:
+    0;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    28px minmax(0,1fr) auto auto;
+
+  align-items:
+    center;
+
+  gap:
+    8px;
+
+  padding:
+    7px 8px;
+
+  border:
+    0 !important;
+
+  background:
+    transparent !important;
+
+  color:
+    #ffffff;
+
+  text-align:
+    left;
+
+  cursor:
+    pointer;
+}
+
+.v10-polish .project-folder-icon {
+  position:
+    relative;
+
+  width:
+    24px;
+
+  height:
+    18px;
+
+  color:
+    var(--folder-color);
+}
+
+.v10-polish .project-folder-icon::before {
+  content: "";
+
+  position:
+    absolute;
+
+  left:
+    0;
+
+  top:
+    5px;
+
+  width:
+    24px;
+
+  height:
+    13px;
+
+  border:
+    2px solid
+    currentColor;
+
+  border-radius:
+    3px;
+
+  background:
+    color-mix(
+      in srgb,
+      currentColor 20%,
+      transparent
+    );
+}
+
+.v10-polish .project-folder-icon::after {
+  content: "";
+
+  position:
+    absolute;
+
+  left:
+    2px;
+
+  top:
+    1px;
+
+  width:
+    10px;
+
+  height:
+    7px;
+
+  border:
+    2px solid
+    currentColor;
+
+  border-bottom:
+    0;
+
+  border-radius:
+    3px 3px 0 0;
+}
+
+.v10-polish .project-folder-copy {
+  min-width:
+    0;
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    2px;
+}
+
+.v10-polish .project-folder-copy strong,
+.v10-polish .project-folder-copy small {
+  overflow:
+    hidden;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.v10-polish .project-folder-count {
+  min-width:
+    22px;
+
+  height:
+    22px;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  border:
+    1px solid
+    rgba(255,255,255,.16);
+
+  border-radius:
+    999px;
+
+  background:
+    #0a141b;
+
+  color:
+    #ffffff;
+
+  font-size:
+    8.5px;
+
+  font-weight:
+    900;
+}
+
+.v10-polish .project-folder-chevron {
+  color:
+    #ffffff;
+
+  font-size:
+    17px;
+
+  font-weight:
+    900;
+}
+
+.v10-polish .project-folder-delete {
+  width:
+    34px;
+
+  flex:
+    0 0 34px;
+
+  border:
+    0 !important;
+
+  border-left:
+    1px solid
+    rgba(255,255,255,.10)
+    !important;
+
+  border-radius:
+    0 !important;
+
+  background:
+    rgba(255,102,120,.06)
+    !important;
+
+  color:
+    #ff9ba8 !important;
+
+  font-size:
+    16px;
+
+  font-weight:
+    900;
+
+  cursor:
+    pointer;
+}
+
+.v10-polish .project-folder-delete:hover {
+  background:
+    rgba(255,102,120,.16)
+    !important;
+}
+
+.v10-polish .project-folder-children {
+  margin:
+    4px 0 8px 15px;
+
+  padding-left:
+    8px;
+
+  border-left:
+    2px solid
+    color-mix(
+      in srgb,
+      var(--folder-color, #627986)
+      35%,
+      transparent
+    );
+}
+
+.v10-polish .folder-project-drag-item {
+  width:
+    100%;
+
+  cursor:
+    grab;
+}
+
+.v10-polish .folder-project-drag-item:active {
+  cursor:
+    grabbing;
+}
+
+.v10-polish .project-folder-empty {
+  padding:
+    9px 8px;
+
+  color:
+    #aebdc7;
+
+  font-size:
+    8.5px;
+
+  font-style:
+    italic;
+}
+
+.v10-polish .project-folder-loose-drop {
+  min-height:
+    34px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    7px;
+
+  margin:
+    6px 0;
+
+  padding:
+    5px 8px;
+
+  border:
+    1px dashed
+    #516b7b;
+
+  border-radius:
+    8px;
+
+  background:
+    rgba(15,28,36,.70);
+
+  color:
+    #cbd7df;
+
+  font-size:
+    8.5px;
+
+  font-weight:
+    750;
+}
+
+.v10-polish .project-folder-loose-drop:hover {
+  border-color:
+    var(--pf-accent);
+
+  color:
+    #ffffff;
+
+  background:
+    rgba(0,216,234,.07);
+}
+
+.v10-polish .folder-project-empty {
+  padding:
+    12px 8px;
+
+  color:
+    #c5d2da;
+
+  font-size:
+    9px;
+}
+
+/* ---------- Drawer carpeta ---------- */
+
+.v10-polish .project-folder-drawer {
+  width:
+    min(480px, 96vw)
+    !important;
+}
+
+.v10-polish .project-folder-module-label {
+  width:
+    fit-content;
+
+  margin-bottom:
+    12px;
+
+  padding:
+    5px 8px;
+
+  border:
+    1px solid
+    #3d5665;
+
+  border-radius:
+    999px;
+
+  background:
+    #111f28;
+
+  color:
+    #ffffff;
+
+  font-size:
+    8.5px;
+
+  font-weight:
+    850;
+}
+
+.v10-polish .project-folder-color-picker {
+  display:
+    flex;
+
+  flex-wrap:
+    wrap;
+
+  gap:
+    8px;
+}
+
+.v10-polish .project-folder-color-picker button {
+  width:
+    30px;
+
+  height:
+    30px;
+
+  padding:
+    0;
+
+  border:
+    2px solid
+    rgba(255,255,255,.20);
+
+  border-radius:
+    7px;
+
+  cursor:
+    pointer;
+}
+
+.v10-polish .project-folder-color-picker button.active {
+  border-color:
+    #ffffff;
+
+  box-shadow:
+    0 0 0 2px
+    var(--pf-accent);
+}
+
+.v10-polish .project-folder-help {
+  margin-top:
+    10px;
+
+  padding:
+    9px 10px;
+
+  border:
+    1px solid
+    #314857;
+
+  border-radius:
+    8px;
+
+  background:
+    #101c24;
+
+  color:
+    #d8e2e8;
+
+  font-size:
+    9px;
+
+  font-weight:
+    650;
+
+  line-height:
+    1.45;
+}
+
+/* ---------- Simulación: avance y vuelta por geometría ---------- */
+
+.v10-polish .process-simulation-navigation {
+  display:
+    grid;
+
+  gap:
+    8px;
+
+  margin-top:
+    9px;
+}
+
+.v10-polish .process-simulation-nav-group {
+  display:
+    grid;
+
+  gap:
+    5px;
+}
+
+.v10-polish .process-simulation-nav-label {
+  color:
+    #74efa1;
+
+  font-size:
+    8px;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .06em;
+
+  text-transform:
+    uppercase;
+}
+
+.v10-polish .process-simulation-nav-label.back {
+  color:
+    #7fd8ff;
+}
+
+.v10-polish
+.process-simulation-key-option.back {
+  border-color:
+    #38596b;
+
+  background:
+    #10212b;
+}
+
+.v10-polish
+.process-simulation-key-option.back
+kbd {
+  color:
+    #8de2ff;
+}
+
+.v10-polish .process-simulation-panel::after {
+  content:
+    "Usá las flechas según la posición de cada componente para avanzar o volver.";
+
+  color:
+    #ffffff !important;
+}
+
+/* =========================================================
+   Legibilidad extra en fondo oscuro
+========================================================= */
+
+.v10-polish
+:is(
+  .process-components-header small,
+  .process-list-empty,
+  .boards-list-empty,
+  .kanban-project-empty,
+  .archive-empty,
+  .share-with-help
+) {
+  color:
+    #c9d5dd !important;
+
+  font-size:
+    9px !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.5.1
+   CONFIGURACIÓN + DARK / LIGHT THEME
+========================================================= */
+
+/* ---------- Settings button ---------- */
+
+.v10-polish .app-settings-wrap {
+  position: relative;
+  z-index: 12000;
+}
+
+.v10-polish .app-settings-button {
+  width: 36px;
+  height: 36px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid #435b6a;
+  border-radius: 9px;
+
+  background: transparent;
+
+  color: #dce6ec;
+
+  cursor: pointer;
+}
+
+.v10-polish .app-settings-button:hover,
+.v10-polish .app-settings-button.active {
+  border-color: var(--pf-accent);
+
+  box-shadow:
+    0 0 0 2px
+    rgba(0,216,234,.14);
+}
+
+.v10-polish .app-settings-gear {
+  position: relative;
+
+  width: 20px;
+  height: 20px;
+
+  display: inline-block;
+}
+
+.v10-polish .app-settings-gear::before {
+  content: "⚙";
+
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: currentColor;
+
+  font-size: 18px;
+  line-height: 1;
+
+  transform-origin: center;
+  transition: transform .22s ease;
+}
+
+.v10-polish .app-settings-button:hover .app-settings-gear::before {
+  transform: rotate(26deg);
+}
+
+.v10-polish .app-settings-gear i,
+.v10-polish .app-settings-gear b {
+  display: none;
+}
+
+/* ---------- Settings menu ---------- */
+
+.v10-polish .app-settings-menu {
+  position: absolute;
+
+  right: 0;
+  top: calc(100% + 8px);
+
+  width: 210px;
+
+  padding: 8px;
+
+  border: 1px solid var(--pf-border);
+  border-radius: 11px;
+
+  background: #101a22;
+
+  box-shadow:
+    0 18px 44px
+    rgba(0,0,0,.34);
+
+  animation:
+    app-settings-in .14s ease-out;
+}
+
+@keyframes app-settings-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.v10-polish .app-settings-menu-title {
+  padding: 6px 8px 8px;
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.v10-polish .app-settings-menu-item {
+  width: 100%;
+  min-height: 38px;
+
+  display: grid;
+  grid-template-columns: 18px minmax(0,1fr) auto;
+
+  align-items: center;
+  gap: 8px;
+
+  padding: 0 9px;
+
+  border: 1px solid transparent;
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #e5eef3;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.v10-polish .app-settings-menu-item:hover {
+  border-color: #3f5969;
+
+  background:
+    rgba(255,255,255,.055);
+}
+
+.v10-polish .app-settings-menu-item.selected {
+  border-color:
+    rgba(0,216,234,.42);
+
+  background:
+    rgba(0,216,234,.08);
+}
+
+.v10-polish .app-settings-menu-item span:nth-child(2) {
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.v10-polish .app-settings-menu-item strong {
+  color: var(--pf-accent);
+  font-size: 11px;
+}
+
+.v10-polish .app-theme-dot {
+  width: 14px;
+  height: 14px;
+
+  display: inline-block;
+
+  border-radius: 50%;
+}
+
+.v10-polish .app-theme-dot.dark {
+  border: 1px solid #7e929f;
+  background: #10181f;
+}
+
+.v10-polish .app-theme-dot.light {
+  border: 1px solid #abb6be;
+  background: #ffffff;
+}
+
+.v10-polish .app-settings-menu-divider {
+  height: 1px;
+
+  margin: 6px 4px;
+
+  background:
+    rgba(255,255,255,.10);
+}
+
+.v10-polish .app-settings-menu-item.logout {
+  color: #ffb7c0;
+}
+
+.v10-polish .app-settings-exit-icon {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+/* =========================================================
+   LIGHT THEME
+========================================================= */
+
+.v10-polish.theme-light {
+  --pf-bg-0: #f3f6f8;
+  --pf-bg-1: #ffffff;
+  --pf-bg-2: #f7f9fb;
+  --pf-bg-3: #eef3f6;
+
+  --pf-border: #c7d2da;
+  --pf-border-soft:
+    rgba(68,91,106,.18);
+
+  --pf-text: #17232c;
+  --pf-text-2: #324650;
+  --pf-text-3: #5f727e;
+
+  background:
+    #f3f6f8 !important;
+
+  color:
+    var(--pf-text) !important;
+}
+
+/* App / top areas */
+.v10-polish.theme-light,
+.v10-polish.theme-light .app-main,
+.v10-polish.theme-light .workspace,
+.v10-polish.theme-light .gantt-page,
+.v10-polish.theme-light .cards-page,
+.v10-polish.theme-light .kanban-page,
+.v10-polish.theme-light .process-page {
+  background:
+    #f3f6f8 !important;
+
+  color:
+    #17232c !important;
+}
+
+.v10-polish.theme-light .topbar {
+  background:
+    #ffffff !important;
+
+  border-bottom-color:
+    #d8e0e5 !important;
+}
+
+.v10-polish.theme-light .brand-area h1,
+.v10-polish.theme-light .topbar h1,
+.v10-polish.theme-light .section-title h2,
+.v10-polish.theme-light .process-toolbar h2,
+.v10-polish.theme-light .cards-toolbar h2,
+.v10-polish.theme-light .kanban-toolbar h2 {
+  color:
+    #14212a !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .brand-area p,
+  .process-toolbar p,
+  .cards-toolbar p,
+  .kanban-toolbar p,
+  .user-email
+) {
+  color:
+    #526672 !important;
+}
+
+/* Sidebar */
+.v10-polish.theme-light .visual-sidebar {
+  background:
+    #ffffff !important;
+
+  border-right-color:
+    #d6e0e6 !important;
+}
+
+.v10-polish.theme-light
+.visual-sidebar-icon-button,
+.v10-polish.theme-light
+.visual-sidebar-icon-button:hover,
+.v10-polish.theme-light
+.visual-sidebar-icon-button:active,
+.v10-polish.theme-light
+.visual-sidebar-icon-button.active,
+.v10-polish.theme-light
+.visual-sidebar-icon-button:focus {
+  background:
+    #ffffff !important;
+}
+
+/* Panels */
+.v10-polish.theme-light
+:is(
+  .portfolio-dashboard,
+  .task-panel,
+  .gantt-panel,
+  .boards-panel,
+  .cards-canvas-shell,
+  .kanban-project-panel,
+  .kanban-workspace,
+  .process-left-panel,
+  .process-workspace
+) {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #d1dbe1 !important;
+
+  color:
+    #17232c !important;
+}
+
+/* Lists */
+.v10-polish.theme-light
+:is(
+  .process-list-header,
+  .process-list,
+  .boards-panel-header,
+  .boards-list,
+  .kanban-project-header,
+  .kanban-project-list
+) {
+  background:
+    #ffffff !important;
+
+  color:
+    #17232c !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-list-item,
+  .board-list-item,
+  .kanban-project-item
+) {
+  border-color:
+    #d4dee4 !important;
+
+  background:
+    #f8fafb !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-list-item.active,
+  .board-list-item.active,
+  .kanban-project-item.active
+) {
+  background:
+    #edf9fb !important;
+
+  border-color:
+    #39bfc9 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-list-main strong,
+  .board-list-copy strong,
+  .kanban-project-main strong,
+  .project-folder-copy strong
+) {
+  color:
+    #18262f !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-list-main span,
+  .board-list-copy small,
+  .kanban-project-main span,
+  .project-folder-copy small
+) {
+  color:
+    #596c78 !important;
+}
+
+/* Folders */
+.v10-polish.theme-light .project-folder-row {
+  background:
+    #f7fafb !important;
+}
+
+.v10-polish.theme-light .project-folder-row:hover {
+  background:
+    #eef5f7 !important;
+}
+
+.v10-polish.theme-light .project-folder-count {
+  background:
+    #ffffff !important;
+
+  color:
+    #273943 !important;
+
+  border-color:
+    #c7d3da !important;
+}
+
+.v10-polish.theme-light .project-folder-chevron {
+  color:
+    #334953 !important;
+}
+
+.v10-polish.theme-light .project-folder-loose-drop {
+  background:
+    #f8fafb !important;
+
+  color:
+    #4b626f !important;
+}
+
+/* Forms + drawers */
+.v10-polish.theme-light .card-drawer-overlay {
+  background:
+    rgba(50,67,78,.28) !important;
+}
+
+.v10-polish.theme-light .card-editor-drawer {
+  background:
+    #ffffff !important;
+
+  color:
+    #17232c !important;
+
+  border-left-color:
+    #cbd6dd !important;
+}
+
+.v10-polish.theme-light .card-modal-heading {
+  border-bottom-color:
+    #dce4e9 !important;
+}
+
+.v10-polish.theme-light .card-modal-heading h3,
+.v10-polish.theme-light .form-group label {
+  color:
+    #1d2d36 !important;
+}
+
+.v10-polish.theme-light
+.form-group
+:is(
+  input,
+  textarea,
+  select
+) {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #bfcdd5 !important;
+
+  color:
+    #17232c !important;
+}
+
+.v10-polish.theme-light
+.form-group
+:is(
+  input,
+  textarea
+)::placeholder {
+  color:
+    #81919c !important;
+}
+
+/* Contextual toolbars */
+.v10-polish.theme-light
+:is(
+  .process-selection-toolbar,
+  .process-link-selection-toolbar,
+  .cards-selection-toolbar,
+  .kanban-bg-picker,
+  .process-canvas-tools,
+  .cards-canvas-bg-picker,
+  .process-simulation-panel
+) {
+  background:
+    rgba(255,255,255,.97)
+    !important;
+
+  border-color:
+    #c5d2da !important;
+
+  color:
+    #17232c !important;
+
+  box-shadow:
+    0 10px 28px
+    rgba(66,82,92,.18)
+    !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-selection-toolbar,
+  .process-link-selection-toolbar,
+  .process-simulation-panel
+)
+:is(
+  strong,
+  span
+) {
+  color:
+    #1d2c35;
+}
+
+/* Simulation details */
+.v10-polish.theme-light
+.process-simulation-panel::after {
+  background:
+    #edf3f6 !important;
+
+  color:
+    #233640 !important;
+
+  border-color:
+    #ccd8de !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-key-option {
+  background:
+    #f6f9fa !important;
+
+  border-color:
+    #cbd6dd !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-key-option
+span {
+  color:
+    #2f4652 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-key-option
+kbd {
+  background:
+    #ffffff !important;
+
+  color:
+    #12798a !important;
+
+  border-color:
+    #9eb5c1 !important;
+}
+
+/* Cards/Kanban surfaces */
+.v10-polish.theme-light
+:is(
+  .kanban-board-header,
+  .process-canvas-header
+) {
+  background:
+    #ffffff !important;
+
+  border-bottom-color:
+    #d6e0e6 !important;
+}
+
+.v10-polish.theme-light .kanban-column {
+  border-color:
+    #ced9df !important;
+}
+
+.v10-polish.theme-light .kanban-card {
+  color:
+    #17232c !important;
+}
+
+/* Filters */
+.v10-polish.theme-light
+:is(
+  .filters select,
+  .project-selector,
+  .view-buttons button
+) {
+  background:
+    #ffffff !important;
+
+  color:
+    #263943 !important;
+
+  border-color:
+    #bdcbd4 !important;
+}
+
+/* Buttons */
+.v10-polish.theme-light .btn-secondary {
+  background:
+    #f3f6f8 !important;
+
+  color:
+    #314651 !important;
+
+  border-color:
+    #bbcbd4 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-ruler-tool,
+  .process-snap-tool,
+  .process-arrow-mode-tool,
+  .process-superposition-tool
+) {
+  background:
+    #f5f8fa !important;
+
+  color:
+    #304753 !important;
+
+  border-color:
+    #bacbd4 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-ruler-tool,
+  .process-snap-tool,
+  .process-arrow-mode-tool,
+  .process-superposition-tool
+).active {
+  background:
+    #e8fbfd !important;
+
+  color:
+    #087b87 !important;
+}
+
+/* Zoom */
+.v10-polish.theme-light
+:is(
+  .process-zoom-overlay,
+  .board-zoom-overlay
+) {
+  background:
+    rgba(255,255,255,.97)
+    !important;
+
+  border-color:
+    #c3d0d8 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-zoom-overlay,
+  .board-zoom-overlay
+)
+button {
+  background:
+    #f3f7f9 !important;
+
+  color:
+    #21353f !important;
+
+  border-color:
+    #b9c9d2 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-zoom-overlay,
+  .board-zoom-overlay
+)
+span {
+  color:
+    #21353f !important;
+}
+
+/* Footer */
+.v10-polish.theme-light .projectflow-footer {
+  color:
+    #748691 !important;
+}
+
+.v10-polish.theme-light
+.projectflow-footer
+span:first-child {
+  color:
+    #405763 !important;
+}
+
+/* Settings light */
+.v10-polish.theme-light .app-settings-button {
+  color:
+    #394e5a;
+
+  border-color:
+    #bdccd4;
+
+  background:
+    #ffffff;
+}
+
+.v10-polish.theme-light .app-settings-menu {
+  background:
+    #ffffff;
+
+  border-color:
+    #c5d2da;
+
+  box-shadow:
+    0 18px 40px
+    rgba(70,87,98,.20);
+}
+
+.v10-polish.theme-light
+.app-settings-menu-title {
+  color:
+    #1b2c35;
+}
+
+.v10-polish.theme-light
+.app-settings-menu-item {
+  color:
+    #2d424e;
+}
+
+.v10-polish.theme-light
+.app-settings-menu-item:hover {
+  background:
+    #f2f6f8;
+
+  border-color:
+    #c2d0d8;
+}
+
+.v10-polish.theme-light
+.app-settings-menu-item.selected {
+  background:
+    #ebfafc;
+}
+
+.v10-polish.theme-light
+.app-settings-menu-divider {
+  background:
+    #d9e1e6;
+}
+
+/*
+  Los canvas conservan su color propio configurado por el usuario.
+  El Light Theme cambia la aplicación, no fuerza blanco sobre
+  un Process/Card canvas que el usuario haya elegido negro/board.
+*/
+
+
+/* =========================================================
+   PROJECTFLOW V10.5.2
+   LIGHT THEME REVIEW + GANTT + FOLDER DRAG UX
+========================================================= */
+
+/* =========================================================
+   GANTT - NUEVA TAREA AL LADO DE BASELINE
+========================================================= */
+
+.v10-polish .gantt-new-task-button {
+  min-height:
+    38px !important;
+
+  padding:
+    0 13px !important;
+
+  white-space:
+    nowrap;
+}
+
+/* =========================================================
+   CARPETAS - DRAG & DROP MÁS LIMPIO
+========================================================= */
+
+.v10-polish .folder-project-list-root {
+  min-height:
+    36px;
+
+  border-radius:
+    10px;
+
+  transition:
+    background-color .16s ease,
+    box-shadow .16s ease;
+}
+
+.v10-polish
+.folder-project-list-root.drag-active {
+  background:
+    rgba(0,216,234,.025);
+}
+
+.v10-polish .project-folder-block {
+  position:
+    relative;
+
+  border-radius:
+    10px;
+
+  transition:
+    transform .16s ease,
+    box-shadow .16s ease,
+    background-color .16s ease;
+}
+
+.v10-polish
+.project-folder-block.drop-target {
+  transform:
+    translateX(3px);
+
+  box-shadow:
+    0 0 0 2px
+    rgba(0,216,234,.30),
+    0 8px 22px
+    rgba(0,0,0,.16);
+}
+
+.v10-polish
+.project-folder-block.drop-target
+.project-folder-row {
+  border-color:
+    var(--pf-accent)
+    !important;
+
+  background:
+    rgba(0,216,234,.08)
+    !important;
+}
+
+.v10-polish
+.folder-project-drag-item {
+  transition:
+    opacity .15s ease,
+    transform .15s ease;
+}
+
+.v10-polish
+.folder-project-drag-item.dragging {
+  opacity:
+    .42;
+
+  transform:
+    scale(.985);
+}
+
+/*
+  Ya no mostramos la antigua caja "Sin carpeta".
+  Para sacar un elemento de una carpeta alcanza con
+  soltarlo en el espacio libre de la lista.
+*/
+.v10-polish .project-folder-loose-drop {
+  display:
+    none !important;
+}
+
+.v10-polish .project-folder-children {
+  margin-top:
+    4px;
+
+  margin-bottom:
+    5px;
+
+  border-left-style:
+    solid !important;
+
+  border-left-width:
+    2px !important;
+
+  transition:
+    opacity .16s ease;
+}
+
+/* =========================================================
+   LIGHT THEME - REVISIÓN GENERAL
+========================================================= */
+
+/* ---------- Gantt: dashboards ---------- */
+
+.v10-polish.theme-light .kpi {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #d0dbe2 !important;
+
+  box-shadow:
+    0 3px 10px
+    rgba(72,90,102,.07)
+    !important;
+}
+
+.v10-polish.theme-light .kpi span {
+  color:
+    #455c68 !important;
+
+  font-weight:
+    750 !important;
+}
+
+.v10-polish.theme-light .kpi small {
+  color:
+    #71838e !important;
+
+  font-weight:
+    650 !important;
+}
+
+/* ---------- Gantt: navegación ---------- */
+
+.v10-polish.theme-light
+.gantt-navigation {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #cad6dd !important;
+
+  box-shadow:
+    0 2px 8px
+    rgba(69,88,101,.05);
+}
+
+.v10-polish.theme-light
+.gantt-period-title span {
+  color:
+    #667b87 !important;
+
+  font-weight:
+    800 !important;
+}
+
+.v10-polish.theme-light
+.gantt-period-title strong {
+  color:
+    #15252e !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .year-picker,
+  .month-picker
+) {
+  background:
+    #ffffff !important;
+
+  color:
+    #243944 !important;
+
+  border-color:
+    #bac9d2 !important;
+
+  color-scheme:
+    light !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .gantt-scroll-button,
+  .today-button,
+  .baseline-button,
+  .meeting-mode-button
+) {
+  background:
+    #f5f9fa !important;
+
+  color:
+    #24505d !important;
+
+  border-color:
+    #b8cbd3 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .gantt-scroll-button,
+  .today-button,
+  .baseline-button,
+  .meeting-mode-button
+):hover {
+  background:
+    #eaf6f8 !important;
+
+  color:
+    #086c79 !important;
+
+  border-color:
+    #56b9c4 !important;
+}
+
+.v10-polish.theme-light
+.baseline-button.active {
+  background:
+    #e5fafd !important;
+
+  color:
+    #087684 !important;
+
+  border-color:
+    #29b7c6 !important;
+}
+
+/* ---------- Gantt: workspace completo ---------- */
+
+.v10-polish.theme-light
+.gantt-workspace {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #cdd8df !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .task-panel,
+  .gantt-panel,
+  .dynamic-gantt
+) {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #d3dde3 !important;
+}
+
+.v10-polish.theme-light
+.section-title {
+  background:
+    #ffffff !important;
+
+  border-bottom-color:
+    #d6e0e5 !important;
+}
+
+.v10-polish.theme-light
+.section-title h2 {
+  color:
+    #192932 !important;
+}
+
+.v10-polish.theme-light
+.section-title span {
+  color:
+    #6d7f89 !important;
+}
+
+.v10-polish.theme-light
+.gantt-title-row {
+  background:
+    #ffffff !important;
+
+  border-bottom-color:
+    #d5dfe5 !important;
+}
+
+.v10-polish.theme-light
+.gantt-title-row h2 {
+  color:
+    #15252e !important;
+}
+
+.v10-polish.theme-light
+.gantt-workspace .table-header {
+  background:
+    #f1f5f7 !important;
+
+  color:
+    #445b67 !important;
+
+  border-bottom-color:
+    #cad6dd !important;
+
+  font-weight:
+    800 !important;
+}
+
+.v10-polish.theme-light
+.days-header {
+  background:
+    #f1f5f7 !important;
+
+  border-bottom-color:
+    #cad6dd !important;
+}
+
+.v10-polish.theme-light
+.day-header {
+  color:
+    #5b707c !important;
+
+  border-right-color:
+    #d6e0e5 !important;
+}
+
+.v10-polish.theme-light
+.day-header strong {
+  color:
+    #223741 !important;
+}
+
+.v10-polish.theme-light
+.day-header span {
+  color:
+    #667a85 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .task-row,
+  .dynamic-gantt-row
+) {
+  background:
+    #ffffff !important;
+
+  border-bottom-color:
+    #dde5ea !important;
+
+  color:
+    #263943 !important;
+}
+
+.v10-polish.theme-light
+.task-row:hover {
+  background:
+    #f7fafb !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .task-name-text,
+  .task-responsibles,
+  .task-responsibles span,
+  .task-responsibles b,
+  .task-parent-hito
+) {
+  color:
+    #324853 !important;
+}
+
+.v10-polish.theme-light
+.day-cell {
+  border-right-color:
+    #dce4e9 !important;
+}
+
+.v10-polish.theme-light
+.day-cell.month-start,
+.v10-polish.theme-light
+.day-header.month-start {
+  border-left-color:
+    rgba(0,145,165,.38)
+    !important;
+}
+
+.v10-polish.theme-light
+.gantt-horizontal-scroll {
+  background:
+    #ffffff !important;
+}
+
+.v10-polish.theme-light
+.legend-chip {
+  background:
+    #f8fafb !important;
+
+  border-color:
+    #d3dde3 !important;
+}
+
+/* ---------- Gantt: mini botones ---------- */
+
+.v10-polish.theme-light
+.mini-button {
+  background:
+    #ffffff !important;
+
+  color:
+    #2b424e !important;
+
+  border-color:
+    #bdccd5 !important;
+}
+
+.v10-polish.theme-light
+.mini-button:hover {
+  background:
+    #edf4f6 !important;
+}
+
+.v10-polish.theme-light
+.mini-button.edit {
+  color:
+    #0089a1 !important;
+}
+
+.v10-polish.theme-light
+.mini-button.success {
+  color:
+    #138a51 !important;
+}
+
+.v10-polish.theme-light
+.mini-button.danger {
+  color:
+    #cb4354 !important;
+}
+
+/* ---------- Portfolio / Historial ---------- */
+
+.v10-polish.theme-light
+:is(
+  .portfolio-dashboard,
+  .history-page
+) {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #cfdae1 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .portfolio-table-header,
+  .history-table-header
+) {
+  background:
+    #f1f5f7 !important;
+
+  color:
+    #455d69 !important;
+
+  border-color:
+    #d1dce2 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .portfolio-row,
+  .history-table-row
+) {
+  color:
+    #324954 !important;
+
+  border-color:
+    #dde5ea !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .portfolio-row,
+  .history-table-row
+):hover {
+  background:
+    #f7fafb !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .portfolio-header h2,
+  .portfolio-project strong,
+  .history-page-header h2,
+  .history-task
+) {
+  color:
+    #172832 !important;
+}
+
+/* ---------- Capacity ---------- */
+
+.v10-polish.theme-light
+:is(
+  .capacity-section,
+  .capacity-workspace,
+  .capacity-team-panel,
+  .capacity-gantt-panel
+) {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #ced9df !important;
+
+  color:
+    #263a44 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .capacity-toolbar,
+  .capacity-team-header,
+  .capacity-days-header
+) {
+  background:
+    #f1f5f7 !important;
+
+  color:
+    #3c5561 !important;
+
+  border-color:
+    #cfdadf !important;
+}
+
+.v10-polish.theme-light
+.capacity-team-row {
+  background:
+    #ffffff !important;
+
+  color:
+    #314852 !important;
+
+  border-color:
+    #dce4e9 !important;
+}
+
+.v10-polish.theme-light
+.capacity-empty {
+  color:
+    #607580 !important;
+}
+
+/* ---------- Heatmap / Semana / Backlog ---------- */
+
+.v10-polish.theme-light
+:is(
+  .heatmap-grid,
+  .week-grid,
+  .backlog-list
+) {
+  background:
+    #ffffff !important;
+
+  color:
+    #263a45 !important;
+
+  border-color:
+    #ced9df !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .heatmap-header,
+  .week-header,
+  .backlog-header
+) {
+  background:
+    #f1f5f7 !important;
+
+  color:
+    #405864 !important;
+
+  border-color:
+    #cfd9df !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .heatmap-dev,
+  .week-dev,
+  .backlog-row
+) {
+  background:
+    #ffffff !important;
+
+  color:
+    #2f4651 !important;
+
+  border-color:
+    #dce4e8 !important;
+}
+
+/* ---------- Kanban ---------- */
+
+.v10-polish.theme-light
+.kanban-workspace {
+  background:
+    #f3f6f8 !important;
+}
+
+.v10-polish.theme-light
+.kanban-board-header {
+  background:
+    #ffffff !important;
+
+  color:
+    #172832 !important;
+
+  border-bottom-color:
+    #d3dde3 !important;
+}
+
+.v10-polish.theme-light
+.kanban-column {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #cad6dd !important;
+
+  color:
+    #263b46 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .kanban-column-header,
+  .kanban-column-title
+) {
+  background:
+    #f3f6f8 !important;
+
+  color:
+    #1f333d !important;
+}
+
+.v10-polish.theme-light
+.kanban-card {
+  color:
+    #172832 !important;
+}
+
+.v10-polish.theme-light
+.kanban-bg-picker
+:is(
+  button,
+  select
+) {
+  color:
+    #233943 !important;
+}
+
+/* ---------- Cards ---------- */
+
+.v10-polish.theme-light
+:is(
+  .cards-toolbar,
+  .boards-panel-header,
+  .cards-board-meta
+) {
+  background:
+    #ffffff !important;
+
+  color:
+    #172832 !important;
+
+  border-color:
+    #d0dbe1 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .cards-toolbar h2,
+  .cards-board-meta strong,
+  .boards-panel-header strong
+) {
+  color:
+    #172832 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .cards-toolbar p,
+  .cards-board-meta span
+) {
+  color:
+    #627680 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .cards-zone-button,
+  .cards-note-button,
+  .cards-shape-button,
+  .cards-export-button
+) {
+  background:
+    #f4f8fa !important;
+
+  color:
+    #2b424d !important;
+
+  border-color:
+    #bdccd5 !important;
+}
+
+/* ---------- Process ---------- */
+
+.v10-polish.theme-light
+:is(
+  .process-toolbar,
+  .process-canvas-header,
+  .process-list-header,
+  .process-components-header
+) {
+  background:
+    #ffffff !important;
+
+  color:
+    #172832 !important;
+
+  border-color:
+    #d0dbe2 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-toolbar h2,
+  .process-canvas-header strong,
+  .process-list-header strong,
+  .process-components-header strong
+) {
+  color:
+    #172832 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-toolbar p,
+  .process-canvas-header span,
+  .process-list-header span,
+  .process-components-header span
+) {
+  color:
+    #617681 !important;
+}
+
+.v10-polish.theme-light
+.process-canvas-actions
+button:not(.process-ai-button):not(.process-simulation-button) {
+  background:
+    #f4f8fa !important;
+
+  color:
+    #263d48 !important;
+
+  border-color:
+    #bccbd4 !important;
+}
+
+.v10-polish.theme-light
+.process-ai-button {
+  background:
+    #f4efff !important;
+
+  color:
+    #6b45a5 !important;
+
+  border-color:
+    #b69cdf !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-button {
+  background:
+    #edf9f1 !important;
+
+  color:
+    #1f7441 !important;
+
+  border-color:
+    #8fcfa5 !important;
+}
+
+/* ---------- Carpetas en Light ---------- */
+
+.v10-polish.theme-light
+.project-folder-block.drop-target
+.project-folder-row {
+  background:
+    #e8f9fb !important;
+
+  border-color:
+    #25aeba !important;
+}
+
+.v10-polish.theme-light
+.folder-project-list-root.drag-active {
+  background:
+    rgba(0,140,160,.025);
+}
+
+.v10-polish.theme-light
+.project-folder-children {
+  border-left-color:
+    #cad7de !important;
+}
+
+/* ---------- Botones genéricos que quedaban blanco sobre blanco ---------- */
+
+.v10-polish.theme-light
+:is(
+  .new-project-button,
+  .export-button,
+  .week-nav button,
+  .week-today,
+  .capacity-date-control input
+) {
+  background:
+    #ffffff !important;
+
+  color:
+    #27404b !important;
+
+  border-color:
+    #b9c9d2 !important;
+}
+
+/* ---------- Settings / Notification / Header ---------- */
+
+.v10-polish.theme-light
+.activity-bell-button {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #c1cfd7 !important;
+}
+
+.v10-polish.theme-light
+.top-actions
+button:not(.btn-primary) {
+  color:
+    #263d48;
+}
+
+/* ---------- Vacíos ---------- */
+
+.v10-polish.theme-light
+:is(
+  .empty-state,
+  .process-list-empty,
+  .boards-list-empty,
+  .kanban-project-empty,
+  .capacity-empty,
+  .folder-project-empty
+) {
+  color:
+    #60737e !important;
+}
+
+.v10-polish.theme-light
+.empty-state h3 {
+  color:
+    #263943 !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.5.3
+   LIGHT THEME - CONTRASTE FINAL
+========================================================= */
+
+/* ---------- Process list descriptions ---------- */
+
+.v10-polish.theme-light
+.process-list-main span,
+.v10-polish.theme-light
+.project-folder-copy small,
+.v10-polish.theme-light
+.process-list-item span {
+  color:
+    #516773 !important;
+
+  opacity:
+    1 !important;
+
+  font-weight:
+    650 !important;
+}
+
+/* ---------- Cards text ---------- */
+
+.v10-polish.theme-light
+:is(
+  .board-list-copy strong,
+  .board-list-copy small,
+  .postit-card,
+  .postit-card strong,
+  .postit-card span,
+  .postit-card p,
+  .card-title,
+  .card-description,
+  .card-meta,
+  .card-meta span,
+  .cards-board-meta,
+  .cards-board-meta strong,
+  .cards-board-meta span,
+  .cards-toolbar,
+  .cards-toolbar h2,
+  .cards-toolbar p
+) {
+  color:
+    #233842 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .board-list-copy small,
+  .card-description,
+  .card-meta,
+  .card-meta span,
+  .cards-toolbar p,
+  .cards-board-meta span
+) {
+  color:
+    #5d717d !important;
+
+  opacity:
+    1 !important;
+}
+
+/* ---------- Cards command bar ---------- */
+
+.v10-polish.theme-light
+.cards-selection-toolbar {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #bdcbd4 !important;
+
+  color:
+    #243843 !important;
+}
+
+.v10-polish.theme-light
+.cards-selection-toolbar
+:is(
+  strong,
+  span,
+  label
+) {
+  color:
+    #2a404b !important;
+}
+
+.v10-polish.theme-light
+.cards-selection-toolbar
+button {
+  background:
+    #f3f7f9 !important;
+
+  color:
+    #243843 !important;
+
+  border-color:
+    #b8c8d1 !important;
+}
+
+.v10-polish.theme-light
+.cards-selection-toolbar
+button:hover {
+  background:
+    #e7f4f6 !important;
+
+  color:
+    #0f6772 !important;
+
+  border-color:
+    #55b3bd !important;
+}
+
+/* ---------- Process command bars ---------- */
+
+.v10-polish.theme-light
+:is(
+  .process-selection-toolbar,
+  .process-link-selection-toolbar,
+  .process-canvas-tools
+) {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #bdcbd4 !important;
+
+  color:
+    #233843 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-selection-toolbar,
+  .process-link-selection-toolbar
+)
+:is(
+  strong,
+  span,
+  label
+) {
+  color:
+    #263b46 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-selection-toolbar,
+  .process-link-selection-toolbar,
+  .process-canvas-tools
+)
+button {
+  background:
+    #f2f6f8 !important;
+
+  color:
+    #243843 !important;
+
+  border-color:
+    #b7c7d0 !important;
+
+  box-shadow:
+    none !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-selection-toolbar,
+  .process-link-selection-toolbar,
+  .process-canvas-tools
+)
+button:hover {
+  background:
+    #e9f5f7 !important;
+
+  color:
+    #0f6874 !important;
+
+  border-color:
+    #54b6c0 !important;
+}
+
+.v10-polish.theme-light
+.process-selection-toolbar
+.selection-delete-all,
+.v10-polish.theme-light
+.process-link-selection-toolbar
+.selection-delete-all {
+  background:
+    #fff0f2 !important;
+
+  color:
+    #b83f50 !important;
+
+  border-color:
+    #e3aab2 !important;
+}
+
+.v10-polish.theme-light
+.process-pending-action {
+  background:
+    #fff0f7 !important;
+
+  color:
+    #b13272 !important;
+
+  border-color:
+    #e6a8c7 !important;
+}
+
+.v10-polish.theme-light
+.process-superposition-action {
+  background:
+    #f4efff !important;
+
+  color:
+    #68439c !important;
+
+  border-color:
+    #bca8da !important;
+}
+
+/* ---------- Process simulation panel ---------- */
+
+.v10-polish.theme-light
+.process-simulation-panel {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #aebfc9 !important;
+
+  color:
+    #213640 !important;
+
+  box-shadow:
+    0 12px 30px
+    rgba(56,76,89,.18)
+    !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-panel-top
+span {
+  color:
+    #21824a !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-panel-top
+strong {
+  color:
+    #182a34 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-close {
+  background:
+    #f1f5f7 !important;
+
+  color:
+    #2a414c !important;
+
+  border-color:
+    #b8c8d1 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-nav-label {
+  color:
+    #24844b !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-nav-label.back {
+  color:
+    #187293 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-key-option {
+  background:
+    #f6f9fa !important;
+
+  border-color:
+    #c2d0d8 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-key-option
+span {
+  color:
+    #2f4651 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-key-option
+kbd {
+  background:
+    #ffffff !important;
+
+  color:
+    #0c7180 !important;
+
+  border-color:
+    #9fb3bf !important;
+}
+
+/* ---------- Validation messages ---------- */
+
+.v10-polish.theme-light
+.process-validation-ok {
+  background:
+    #ebf8ef !important;
+
+  color:
+    #1e6d3d !important;
+
+  border-color:
+    #8dc6a2 !important;
+}
+
+.v10-polish.theme-light
+.process-validation-errors {
+  background:
+    #fff0f2 !important;
+
+  color:
+    #9e3242 !important;
+
+  border-color:
+    #dfa7af !important;
+}
+
+.v10-polish.theme-light
+.process-validation-errors
+div,
+.v10-polish.theme-light
+.process-validation-ok {
+  color:
+    inherit !important;
+
+  font-weight:
+    800 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-panel::after {
+  background:
+    #eef3f6 !important;
+
+  color:
+    #334953 !important;
+
+  border-color:
+    #c7d4db !important;
+
+  font-weight:
+    750 !important;
+}
+
+/* ---------- Process toolbar buttons ---------- */
+
+.v10-polish.theme-light
+.process-canvas-actions
+.btn-secondary {
+  background:
+    #f4f7f9 !important;
+
+  color:
+    #263d48 !important;
+
+  border-color:
+    #bbcbd4 !important;
+}
+
+.v10-polish.theme-light
+.process-canvas-actions
+.btn-secondary:hover {
+  background:
+    #eaf4f6 !important;
+
+  color:
+    #0f6874 !important;
+}
+
+/* ---------- Ensure no inherited white text survives ---------- */
+
+.v10-polish.theme-light
+:is(
+  .process-list,
+  .boards-list,
+  .cards-canvas-shell,
+  .process-left-panel,
+  .process-workspace
+)
+button:not(.btn-primary):not(.process-ai-button):not(.process-simulation-button) {
+  color:
+    #263d48;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.5.4
+   LIGHT THEME - PASADA INTEGRAL + STACKING DRAWERS
+========================================================= */
+
+/* =========================================================
+   STACKING / CONFIGURACIÓN
+========================================================= */
+
+/*
+  La configuración pertenece al header. Cuando se abre cualquier
+  drawer/modal, éstos deben quedar SIEMPRE por encima.
+*/
+.v10-polish .app-settings-wrap {
+  z-index:
+    90 !important;
+}
+
+.v10-polish .app-settings-menu {
+  z-index:
+    95 !important;
+}
+
+.v10-polish .card-drawer-overlay {
+  z-index:
+    20000 !important;
+}
+
+.v10-polish .modal-overlay {
+  z-index:
+    20000 !important;
+}
+
+.v10-polish .process-create-mode-overlay {
+  z-index:
+    20000 !important;
+}
+
+
+/* =========================================================
+   PROCESS - DESCRIPCIÓN EXPLÍCITA
+========================================================= */
+
+.v10-polish.theme-light
+button.process-list-main
+> span.process-list-description {
+  color:
+    #5b707c !important;
+
+  opacity:
+    1 !important;
+
+  font-size:
+    8.8px !important;
+
+  font-weight:
+    700 !important;
+
+  text-shadow:
+    none !important;
+}
+
+.v10-polish.theme-light
+.process-list-item.active
+button.process-list-main
+> span.process-list-description {
+  color:
+    #48616d !important;
+}
+
+
+/* =========================================================
+   LIGHT THEME - DRAWERS / ALTAS / EDICIÓN
+========================================================= */
+
+/*
+  La cabecera sticky de los drawers tenía un background oscuro
+  histórico más específico que el tema.
+*/
+.v10-polish.theme-light
+.card-editor-drawer
+.card-modal-heading {
+  background:
+    #ffffff !important;
+
+  border-bottom-color:
+    #d5dfe5 !important;
+
+  color:
+    #182932 !important;
+}
+
+.v10-polish.theme-light
+.card-editor-drawer
+.card-modal-heading h3 {
+  color:
+    #182932 !important;
+}
+
+.v10-polish.theme-light
+.card-editor-drawer
+.card-modal-heading > button {
+  background:
+    #f2f6f8 !important;
+
+  color:
+    #2a414c !important;
+
+  border:
+    1px solid
+    #bccbd4 !important;
+}
+
+.v10-polish.theme-light
+.card-editor-drawer
+.card-modal-heading > button:hover {
+  background:
+    #e7f2f5 !important;
+
+  color:
+    #0d6b77 !important;
+
+  border-color:
+    #55b4bf !important;
+}
+
+/* Tipo readonly (ej. Card) */
+.v10-polish.theme-light
+.card-type-readonly {
+  background:
+    #f5f8fa !important;
+
+  color:
+    #263b46 !important;
+
+  border-color:
+    #bdccd5 !important;
+}
+
+/* Labels e inputs: evitar cualquier blanco heredado */
+.v10-polish.theme-light
+.card-editor-drawer
+.form-group label {
+  color:
+    #243943 !important;
+}
+
+.v10-polish.theme-light
+.card-editor-drawer
+:is(
+  input,
+  textarea,
+  select
+) {
+  background:
+    #ffffff !important;
+
+  color:
+    #1e313b !important;
+
+  border-color:
+    #b9cad3 !important;
+
+  color-scheme:
+    light !important;
+}
+
+.v10-polish.theme-light
+.card-editor-drawer
+:is(
+  input,
+  textarea
+)::placeholder {
+  color:
+    #82939d !important;
+
+  opacity:
+    1 !important;
+}
+
+/* Bloques internos históricos oscuros */
+.v10-polish.theme-light
+.card-editor-drawer
+:is(
+  .connection-preview,
+  .connection-type-help,
+  .card-layer-tools,
+  .kanban-column-rule,
+  .process-node-actions,
+  .process-ai-intro,
+  .process-ai-result,
+  .process-text-create-loading,
+  .project-folder-help
+) {
+  background:
+    #f5f8fa !important;
+
+  color:
+    #293f4a !important;
+
+  border-color:
+    #c9d5dc !important;
+}
+
+.v10-polish.theme-light
+.card-editor-drawer
+:is(
+  .connection-preview,
+  .connection-type-help,
+  .card-layer-tools,
+  .kanban-column-rule,
+  .process-node-actions,
+  .process-ai-intro,
+  .process-ai-result,
+  .project-folder-help
+)
+:is(
+  strong,
+  span,
+  p,
+  small,
+  label
+) {
+  color:
+    #405863 !important;
+}
+
+.v10-polish.theme-light
+.card-editor-drawer
+:is(
+  .connection-preview,
+  .kanban-column-rule,
+  .process-ai-intro
+)
+strong {
+  color:
+    #1e333d !important;
+}
+
+/* Acciones dentro del drawer */
+.v10-polish.theme-light
+.card-editor-drawer
+:is(
+  .process-node-actions,
+  .card-layer-tools
+)
+button {
+  background:
+    #ffffff !important;
+
+  color:
+    #2a414c !important;
+
+  border-color:
+    #b9c9d2 !important;
+}
+
+.v10-polish.theme-light
+.card-editor-drawer
+:is(
+  .process-node-actions,
+  .card-layer-tools
+)
+button:hover {
+  background:
+    #eaf5f7 !important;
+
+  color:
+    #0e6874 !important;
+
+  border-color:
+    #55b5c0 !important;
+}
+
+
+/* =========================================================
+   LIGHT THEME - MODALES VIEJOS DE GANTT
+========================================================= */
+
+.v10-polish.theme-light
+.modal {
+  background:
+    #ffffff !important;
+
+  color:
+    #1d303a !important;
+
+  border-color:
+    #cad6dd !important;
+
+  box-shadow:
+    0 28px 70px
+    rgba(61,80,93,.24)
+    !important;
+}
+
+.v10-polish.theme-light
+.modal-header {
+  color:
+    #1d303a !important;
+}
+
+.v10-polish.theme-light
+.modal-header h2 {
+  color:
+    #172832 !important;
+}
+
+.v10-polish.theme-light
+.modal-header p {
+  color:
+    #617580 !important;
+}
+
+.v10-polish.theme-light
+.modal
+:is(
+  label,
+  .field-label
+) {
+  color:
+    #2a404b !important;
+}
+
+.v10-polish.theme-light
+.modal
+:is(
+  input,
+  textarea,
+  select
+) {
+  background:
+    #ffffff !important;
+
+  color:
+    #1f333d !important;
+
+  border-color:
+    #b9c9d2 !important;
+
+  color-scheme:
+    light !important;
+}
+
+
+/* =========================================================
+   LIGHT THEME - PROCESS LEFT PANEL
+========================================================= */
+
+.v10-polish.theme-light
+.process-list-header-actions button {
+  background:
+    #f3f7f9 !important;
+
+  color:
+    #29414c !important;
+
+  border-color:
+    #b9cad3 !important;
+}
+
+.v10-polish.theme-light
+.process-list-header-actions button:hover {
+  background:
+    #e7f3f5 !important;
+
+  color:
+    #0e6e7a !important;
+
+  border-color:
+    #57b7c2 !important;
+}
+
+.v10-polish.theme-light
+.process-list-header-actions button img {
+  filter:
+    none !important;
+}
+
+.v10-polish.theme-light
+.process-component-chip {
+  background:
+    #f8fafb !important;
+
+  border-color:
+    #d0dbe1 !important;
+
+  color:
+    #2b404a !important;
+}
+
+.v10-polish.theme-light
+.process-component-chip:hover {
+  background:
+    #edf6f8 !important;
+
+  border-color:
+    #63b9c1 !important;
+}
+
+.v10-polish.theme-light
+.process-component-chip
+> span {
+  color:
+    #334a55 !important;
+
+  opacity:
+    1 !important;
+
+  font-weight:
+    750 !important;
+}
+
+.v10-polish.theme-light
+.process-components-header small {
+  color:
+    #667a85 !important;
+}
+
+
+/* =========================================================
+   LIGHT THEME - PROCESS COMMAND ICONS
+========================================================= */
+
+/* Caja */
+.v10-polish.theme-light
+.process-box-tool > span {
+  border-color:
+    #344b56 !important;
+}
+
+/* Regla */
+.v10-polish.theme-light
+.ruler-shape {
+  border-color:
+    #344b56 !important;
+}
+
+.v10-polish.theme-light
+.ruler-shape i {
+  background:
+    #344b56 !important;
+}
+
+/* Flecha curva */
+.v10-polish.theme-light
+.curve-arrow-icon i {
+  border-top-color:
+    #344b56 !important;
+
+  border-right-color:
+    #344b56 !important;
+}
+
+.v10-polish.theme-light
+.curve-arrow-icon b {
+  border-left-color:
+    #344b56 !important;
+}
+
+/* Icono superposición: el asset estaba forzado a invert blanco */
+.v10-polish.theme-light
+.process-superposition-tool img {
+  filter:
+    brightness(.35)
+    saturate(.7)
+    !important;
+}
+
+.v10-polish.theme-light
+.process-snap-tool.active,
+.v10-polish.theme-light
+.process-arrow-mode-tool.active,
+.v10-polish.theme-light
+.process-superposition-tool.active,
+.v10-polish.theme-light
+.process-ruler-tool.active {
+  background:
+    #e4f9fb !important;
+
+  color:
+    #087783 !important;
+
+  border-color:
+    #28afba !important;
+}
+
+
+/* =========================================================
+   LIGHT THEME - CARDS / BOARD CHROME
+========================================================= */
+
+.v10-polish.theme-light
+:is(
+  .board-list-actions button,
+  .boards-panel-header button,
+  .cards-board-meta-actions button:not(.cards-primary-button):not(.cards-note-button)
+) {
+  background:
+    #f3f7f9 !important;
+
+  color:
+    #28404a !important;
+
+  border-color:
+    #b9cad3 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .board-list-actions button,
+  .boards-panel-header button
+):hover {
+  background:
+    #e9f4f6 !important;
+
+  color:
+    #0d6b77 !important;
+
+  border-color:
+    #55b4bf !important;
+}
+
+.v10-polish.theme-light
+.board-list-actions button img {
+  filter:
+    none !important;
+}
+
+
+/* =========================================================
+   LIGHT THEME - KANBAN CHROME
+========================================================= */
+
+.v10-polish.theme-light
+:is(
+  .kanban-project-item-actions button,
+  .kanban-project-header button
+) {
+  background:
+    #f3f7f9 !important;
+
+  color:
+    #29414c !important;
+
+  border-color:
+    #bacad3 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .kanban-project-item-actions button,
+  .kanban-project-header button
+):hover {
+  background:
+    #e9f4f6 !important;
+
+  color:
+    #0d6c77 !important;
+
+  border-color:
+    #56b4bf !important;
+}
+
+
+/* =========================================================
+   LIGHT THEME - ACTIVITY / ARCHIVE DRAWERS
+========================================================= */
+
+.v10-polish.theme-light
+.card-editor-drawer
+:is(
+  .activity-section,
+  .activity-list,
+  .archive-list
+) {
+  color:
+    #263d48 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .activity-item,
+  .shared-activity-item,
+  .archive-row,
+  .archive-item
+) {
+  background:
+    #f7fafb !important;
+
+  color:
+    #273d48 !important;
+
+  border-color:
+    #d2dde3 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .activity-item,
+  .shared-activity-item,
+  .archive-row,
+  .archive-item
+)
+:is(
+  strong,
+  p,
+  span,
+  small
+) {
+  color:
+    #435b67 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .activity-item,
+  .shared-activity-item,
+  .archive-row,
+  .archive-item
+)
+strong {
+  color:
+    #1f333d !important;
+}
+
+
+/* =========================================================
+   LIGHT THEME - IA / TEXT TO PROCESS MODAL
+========================================================= */
+
+.v10-polish.theme-light
+.process-create-mode-modal {
+  background:
+    #ffffff !important;
+
+  color:
+    #1f333d !important;
+
+  border-color:
+    #c4d1d8 !important;
+
+  box-shadow:
+    0 24px 60px
+    rgba(65,84,96,.22)
+    !important;
+}
+
+.v10-polish.theme-light
+.process-create-mode-heading h3 {
+  color:
+    #182a34 !important;
+}
+
+.v10-polish.theme-light
+.process-create-mode-heading > button {
+  background:
+    #f3f7f9 !important;
+
+  color:
+    #29414c !important;
+
+  border-color:
+    #bdccd4 !important;
+}
+
+.v10-polish.theme-light
+.process-create-option {
+  background:
+    #f7fafb !important;
+
+  color:
+    #223943 !important;
+
+  border-color:
+    #c8d5dc !important;
+}
+
+.v10-polish.theme-light
+.process-create-option span {
+  color:
+    #617580 !important;
+}
+
+.v10-polish.theme-light
+.process-create-option.ai {
+  background:
+    #f7f2ff !important;
+
+  border-color:
+    #bca8dc !important;
+}
+
+
+/* =========================================================
+   LIGHT THEME - ZOOM / FLOATING CONTROLS
+========================================================= */
+
+.v10-polish.theme-light
+.board-archive-button {
+  background:
+    rgba(255,255,255,.96)
+    !important;
+
+  border-color:
+    #c3d0d8 !important;
+
+  box-shadow:
+    0 8px 22px
+    rgba(58,76,88,.16)
+    !important;
+}
+
+.v10-polish.theme-light
+.board-archive-button img {
+  filter:
+    none !important;
+}
+
+
+/* =========================================================
+   LIGHT THEME - TEXTO GENÉRICO: ÚLTIMA CAPA DE SEGURIDAD
+========================================================= */
+
+/*
+  Sólo chrome/paneles. No tocamos texto dentro de nodos Process,
+  Cards coloreadas ni canvas configurables.
+*/
+.v10-polish.theme-light
+:is(
+  .process-left-panel,
+  .boards-panel,
+  .kanban-project-panel,
+  .card-editor-drawer,
+  .topbar
+)
+:is(
+  h1,
+  h2,
+  h3,
+  strong,
+  label
+) {
+  color:
+    #1e323c;
+}
+
+.v10-polish.theme-light
+:is(
+  .process-left-panel,
+  .boards-panel,
+  .kanban-project-panel,
+  .card-editor-drawer,
+  .topbar
+)
+:is(
+  p,
+  small
+) {
+  color:
+    #5c717c;
+}

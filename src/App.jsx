@@ -429,6 +429,329 @@ const KANBAN_COLORES = [
 ]
 
 
+
+function FolderedProjectList({
+  module,
+  folders,
+  items,
+  expandedFolderIds,
+  setExpandedFolderIds,
+  onMoveItem,
+  onDeleteFolder,
+  renderItem,
+  emptyText,
+}) {
+  const [
+    draggingItemId,
+    setDraggingItemId,
+  ] = useState(null)
+
+  const [
+    dragOverFolderId,
+    setDragOverFolderId,
+  ] = useState(null)
+
+  const folderIds =
+    new Set(
+      folders.map(
+        (folder) => folder.id
+      )
+    )
+
+  const looseItems =
+    items.filter(
+      (item) =>
+        !item.folder_id ||
+        !folderIds.has(
+          item.folder_id
+        )
+    )
+
+  function startDrag(
+    event,
+    item
+  ) {
+    setDraggingItemId(
+      item.id
+    )
+
+    event.dataTransfer.effectAllowed =
+      'move'
+
+    event.dataTransfer.setData(
+      'application/x-projectflow-folder-item',
+      JSON.stringify({
+        module,
+        id: item.id,
+      })
+    )
+
+    event.dataTransfer.setData(
+      'text/plain',
+      item.id
+    )
+  }
+
+  function endDrag() {
+    setDraggingItemId(null)
+    setDragOverFolderId(null)
+  }
+
+  function getDragged(event) {
+    const raw =
+      event.dataTransfer.getData(
+        'application/x-projectflow-folder-item'
+      )
+
+    if (!raw) return null
+
+    try {
+      return JSON.parse(raw)
+    } catch {
+      return null
+    }
+  }
+
+  function dropInFolder(
+    event,
+    folderId
+  ) {
+    event.preventDefault()
+    event.stopPropagation()
+
+    const dragged =
+      getDragged(event)
+
+    setDragOverFolderId(null)
+    setDraggingItemId(null)
+
+    if (
+      !dragged ||
+      dragged.module !== module
+    ) {
+      return
+    }
+
+    onMoveItem(
+      dragged.id,
+      folderId
+    )
+  }
+
+  function dropLoose(event) {
+    event.preventDefault()
+    event.stopPropagation()
+
+    const dragged =
+      getDragged(event)
+
+    setDragOverFolderId(null)
+    setDraggingItemId(null)
+
+    if (
+      !dragged ||
+      dragged.module !== module
+    ) {
+      return
+    }
+
+    onMoveItem(
+      dragged.id,
+      null
+    )
+  }
+
+  function renderDraggable(item) {
+    return (
+      <div
+        key={item.id}
+        className={`folder-project-drag-item ${
+          draggingItemId === item.id
+            ? 'dragging'
+            : ''
+        }`}
+        draggable
+        onDragStart={(event) =>
+          startDrag(
+            event,
+            item
+          )
+        }
+        onDragEnd={endDrag}
+      >
+        {renderItem(item)}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={`folder-project-list-root ${
+        draggingItemId
+          ? 'drag-active'
+          : ''
+      }`}
+      onDragOver={(event) => {
+        event.preventDefault()
+
+        if (
+          !event.target.closest(
+            '.project-folder-block'
+          )
+        ) {
+          setDragOverFolderId(
+            null
+          )
+        }
+
+        event.dataTransfer.dropEffect =
+          'move'
+      }}
+      onDrop={dropLoose}
+    >
+      {folders.map((folder) => {
+        const children =
+          items.filter(
+            (item) =>
+              item.folder_id ===
+              folder.id
+          )
+
+        const expanded =
+          expandedFolderIds[
+            folder.id
+          ] !== false
+
+        return (
+          <div
+            key={folder.id}
+            className={`project-folder-block ${
+              dragOverFolderId ===
+              folder.id
+                ? 'drop-target'
+                : ''
+            }`}
+            onDragEnter={(event) => {
+              event.preventDefault()
+
+              setDragOverFolderId(
+                folder.id
+              )
+            }}
+            onDragOver={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+
+              setDragOverFolderId(
+                folder.id
+              )
+
+              event.dataTransfer.dropEffect =
+                'move'
+            }}
+            onDrop={(event) =>
+              dropInFolder(
+                event,
+                folder.id
+              )
+            }
+          >
+            <div
+              className={`project-folder-row ${
+                expanded
+                  ? 'expanded'
+                  : ''
+              }`}
+              style={{
+                '--folder-color':
+                  folder.color ||
+                  '#f7c948',
+              }}
+            >
+              <button
+                type="button"
+                className="project-folder-main"
+                onClick={() =>
+                  setExpandedFolderIds(
+                    (actual) => ({
+                      ...actual,
+                      [folder.id]:
+                        !expanded,
+                    })
+                  )
+                }
+                title={
+                  folder.descripcion ||
+                  folder.nombre
+                }
+              >
+                <span className="project-folder-icon">
+                  <i />
+                </span>
+
+                <span className="project-folder-copy">
+                  <strong>
+                    {folder.nombre}
+                  </strong>
+
+                  <small>
+                    {folder.descripcion ||
+                      'Sin descripción'}
+                  </small>
+                </span>
+
+                <span className="project-folder-count">
+                  {children.length}
+                </span>
+
+                <span className="project-folder-chevron">
+                  {expanded
+                    ? '⌄'
+                    : '›'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="project-folder-delete"
+                onClick={() =>
+                  onDeleteFolder(
+                    folder
+                  )
+                }
+                title="Eliminar carpeta y todo su contenido"
+              >
+                ×
+              </button>
+            </div>
+
+            {expanded &&
+              children.length > 0 && (
+                <div className="project-folder-children">
+                  {children.map(
+                    renderDraggable
+                  )}
+                </div>
+              )}
+          </div>
+        )
+      })}
+
+      {looseItems.map(
+        renderDraggable
+      )}
+
+      {items.length === 0 &&
+        folders.length === 0 && (
+          <div className="folder-project-empty">
+            {emptyText}
+          </div>
+        )}
+    </div>
+  )
+}
+
+
 function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -436,6 +759,14 @@ function App() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
+  const [appTheme, setAppTheme] = useState(() => {
+    try {
+      return localStorage.getItem('projectflow-theme') || 'dark'
+    } catch {
+      return 'dark'
+    }
+  })
+  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false)
 
   const [proyecto, setProyecto] = useState(null)
   const [proyectos, setProyectos] = useState([])
@@ -625,6 +956,15 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   })
 
   const processListRef = useRef(null)
+  const [projectFolders, setProjectFolders] = useState([])
+  const [projectFolderDrawerOpen, setProjectFolderDrawerOpen] = useState(false)
+  const [projectFolderModule, setProjectFolderModule] = useState('process')
+  const [projectFolderForm, setProjectFolderForm] = useState({
+    nombre: '',
+    descripcion: '',
+    color: '#f7c948',
+  })
+  const [expandedFolderIds, setExpandedFolderIds] = useState({})
   const processCanvasPrintRef = useRef(null)
   const processNodeTextRef = useRef(null)
   const cardTitleRef = useRef(null)
@@ -1157,6 +1497,23 @@ useEffect(() => {
 
   const tieneCompartidosSinLeer =
     compartidosSinLeer.length > 0
+
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        'projectflow-theme',
+        appTheme
+      )
+    } catch {
+      // Si el navegador bloquea storage, el tema sigue funcionando en sesión.
+    }
+  }, [appTheme])
+
+  function cambiarAppTheme(theme) {
+    setAppTheme(theme)
+    setSettingsMenuOpen(false)
+  }
 
   async function iniciarApp() {
     const {
@@ -2016,6 +2373,242 @@ async function crearProyecto(event) {
 // =========================
 // CARDS / BOARDS
 // =========================
+
+
+function foldersDeModulo(module) {
+  return projectFolders.filter(
+    (folder) =>
+      folder.module === module
+  )
+}
+
+async function cargarProjectFolders() {
+  const { data, error } =
+    await supabase
+      .from('project_folders')
+      .select('*')
+      .order(
+        'created_at',
+        {
+          ascending: true,
+        }
+      )
+
+  if (error) {
+    console.error(
+      'Error cargando carpetas:',
+      error
+    )
+    return
+  }
+
+  setProjectFolders(
+    data || []
+  )
+}
+
+function abrirNuevaProjectFolder(
+  module
+) {
+  setProjectFolderModule(module)
+
+  setProjectFolderForm({
+    nombre: '',
+    descripcion: '',
+    color: '#f7c948',
+  })
+
+  setProjectFolderDrawerOpen(
+    true
+  )
+}
+
+async function guardarProjectFolder(
+  event
+) {
+  event.preventDefault()
+
+  const nombre =
+    projectFolderForm.nombre.trim()
+
+  if (!nombre) {
+    alert(
+      'Ingresá un nombre para la carpeta.'
+    )
+    return
+  }
+
+  const { data, error } =
+    await supabase
+      .from('project_folders')
+      .insert({
+        module:
+          projectFolderModule,
+        nombre,
+        descripcion:
+          projectFolderForm.descripcion.trim() ||
+          null,
+        color:
+          projectFolderForm.color ||
+          '#f7c948',
+        created_by:
+          session.user.id,
+        updated_at:
+          new Date().toISOString(),
+      })
+      .select()
+      .single()
+
+  if (error) {
+    alert(
+      `No se pudo crear la carpeta: ${error.message}`
+    )
+    return
+  }
+
+  setProjectFolderDrawerOpen(
+    false
+  )
+
+  setExpandedFolderIds(
+    (actual) => ({
+      ...actual,
+      [data.id]: true,
+    })
+  )
+
+  await cargarProjectFolders()
+}
+
+function tablaModuloCarpeta(module) {
+  return {
+    process: 'process_maps',
+    cards: 'card_boards',
+    kanban: 'kanban_projects',
+  }[module]
+}
+
+async function recargarModuloCarpeta(
+  module
+) {
+  if (module === 'process') {
+    await cargarProcessMaps()
+  } else if (
+    module === 'cards'
+  ) {
+    await cargarBoards()
+  } else if (
+    module === 'kanban'
+  ) {
+    await cargarKanbanProjects()
+  }
+}
+
+async function moverItemACarpeta(
+  module,
+  itemId,
+  folderId
+) {
+  const table =
+    tablaModuloCarpeta(module)
+
+  if (!table) return
+
+  const { error } =
+    await supabase
+      .from(table)
+      .update({
+        folder_id:
+          folderId || null,
+        updated_at:
+          new Date().toISOString(),
+      })
+      .eq(
+        'id',
+        itemId
+      )
+
+  if (error) {
+    alert(
+      `No se pudo mover el elemento: ${error.message}`
+    )
+    return
+  }
+
+  if (folderId) {
+    setExpandedFolderIds(
+      (actual) => ({
+        ...actual,
+        [folderId]: true,
+      })
+    )
+  }
+
+  await recargarModuloCarpeta(
+    module
+  )
+}
+
+async function eliminarProjectFolder(
+  folder
+) {
+  if (!folder) return
+
+  const table =
+    tablaModuloCarpeta(
+      folder.module
+    )
+
+  if (!table) return
+
+  const confirmar =
+    window.confirm(
+      `¿Eliminar la carpeta "${folder.nombre}" y TODO el contenido que está dentro?\n\nEsta acción eliminará también los proyectos guardados en la carpeta.`
+    )
+
+  if (!confirmar) return
+
+  const {
+    error: contentError,
+  } = await supabase
+    .from(table)
+    .delete()
+    .eq(
+      'folder_id',
+      folder.id
+    )
+
+  if (contentError) {
+    alert(
+      `No se pudo eliminar el contenido de la carpeta: ${contentError.message}`
+    )
+    return
+  }
+
+  const {
+    error: folderError,
+  } = await supabase
+    .from('project_folders')
+    .delete()
+    .eq(
+      'id',
+      folder.id
+    )
+
+  if (folderError) {
+    alert(
+      `El contenido se eliminó, pero no se pudo eliminar la carpeta: ${folderError.message}`
+    )
+    return
+  }
+
+  await Promise.all([
+    cargarProjectFolders(),
+    recargarModuloCarpeta(
+      folder.module
+    ),
+  ])
+}
 
 async function cargarBoards() {
   const { data, error } = await supabase
@@ -6905,6 +7498,109 @@ function opcionesSimulacionProcess() {
       }
     }
   ).filter(Boolean)
+}
+
+
+function opcionesRetornoSimulacionProcess() {
+  const current =
+    processNodeById(
+      processSimulationNodeId
+    )
+
+  if (!current) return []
+
+  const forward =
+    opcionesSimulacionProcess()
+
+  const usadas =
+    new Set(
+      forward.map(
+        (item) => item.key
+      )
+    )
+
+  const fallbackKeys = [
+    'ArrowLeft',
+    'ArrowUp',
+    'ArrowDown',
+    'ArrowRight',
+  ]
+
+  return processIncomingLinks(
+    current.id
+  ).map(
+    (link, index) => {
+      const source =
+        processNodeById(
+          link.source_node_id
+        )
+
+      if (!source) return null
+
+      let key =
+        direccionVisualProcess(
+          current,
+          source
+        )
+
+      if (usadas.has(key)) {
+        key =
+          fallbackKeys.find(
+            (item) =>
+              !usadas.has(item)
+          ) ||
+          fallbackKeys[
+            index %
+            fallbackKeys.length
+          ]
+      }
+
+      usadas.add(key)
+
+      return {
+        link,
+        target: source,
+        key,
+        back: true,
+      }
+    }
+  ).filter(Boolean)
+}
+
+function navegarAtrasSimulacionProcess(
+  option
+) {
+  if (
+    !option?.target ||
+    !processSimulationNodeId
+  ) {
+    return
+  }
+
+  setProcessSimulationPreviousNodeId(
+    processSimulationNodeId
+  )
+
+  setProcessSimulationHistory(
+    (actual) => {
+      if (
+        actual[
+          actual.length - 1
+        ] === option.target.id
+      ) {
+        return actual.slice(
+          0,
+          -1
+        )
+      }
+
+      return actual
+    }
+  )
+
+  setProcessSimulationNodeId(
+    option.target.id
+  )
 }
 
 function iniciarSimulacionProcess() {
@@ -11828,6 +12524,7 @@ function colorEstadoTarea(tarea) {
     ) {
       cargarBoards()
       cargarBoardsArchivados()
+      cargarProjectFolders()
     }
   }, [session, vistaPrincipal])
 
@@ -11852,6 +12549,7 @@ function colorEstadoTarea(tarea) {
     if (session && vistaPrincipal === 'process') {
       cargarProcessMaps()
       cargarProcessMapsArchivados()
+      cargarProjectFolders()
     }
   }, [session, vistaPrincipal])
 
@@ -11860,6 +12558,7 @@ function colorEstadoTarea(tarea) {
     if (session && vistaPrincipal === 'kanban') {
       cargarKanbanProjects()
       cargarKanbanProjectsArchivados()
+      cargarProjectFolders()
     }
   }, [session, vistaPrincipal])
 
@@ -11989,16 +12688,6 @@ function colorEstadoTarea(tarea) {
       event
     ) {
       if (
-        event.key === 'Backspace'
-      ) {
-        event.preventDefault()
-        event.stopPropagation()
-
-        volverSimulacionProcess()
-        return
-      }
-
-      if (
         ![
           'ArrowRight',
           'ArrowLeft',
@@ -12012,21 +12701,34 @@ function colorEstadoTarea(tarea) {
       event.preventDefault()
       event.stopPropagation()
 
-      if (
-        event.key === 'ArrowLeft' &&
-        processSimulationHistory.length > 0 &&
-        !opcionesSimulacionProcess().some(
-          (item) =>
-            item.key === 'ArrowLeft'
+      const forward =
+        opcionesSimulacionProcess()
+          .find(
+            (item) =>
+              item.key ===
+              event.key
+          )
+
+      if (forward) {
+        avanzarSimulacionProcess(
+          event.key
         )
-      ) {
-        volverSimulacionProcess()
         return
       }
 
-      avanzarSimulacionProcess(
-        event.key
-      )
+      const back =
+        opcionesRetornoSimulacionProcess()
+          .find(
+            (item) =>
+              item.key ===
+              event.key
+          )
+
+      if (back) {
+        navegarAtrasSimulacionProcess(
+          back
+        )
+      }
     }
 
     window.addEventListener(
@@ -12475,7 +13177,7 @@ function colorEstadoTarea(tarea) {
 
   return (
     <div
-      className={`app-shell v10-polish ${
+      className={`app-shell v10-polish theme-${appTheme} ${
         meetingMode
           ? `meeting-mode meeting-${vistaPrincipal}`
           : ''
@@ -12637,29 +13339,89 @@ function colorEstadoTarea(tarea) {
             {session.user.email}
           </span>
 
-          <button
-            className="btn-secondary"
-            onClick={logout}
-          >
-            Salir
-          </button>
-
-          {vistaPrincipal === 'gantt' && (
+          <div className="app-settings-wrap">
             <button
-              className="btn-primary"
-              onClick={abrirNuevaTarea}
-              disabled={
-                proyectoSeleccionadoId === '__all__'
+              type="button"
+              className={`app-settings-button ${
+                settingsMenuOpen
+                  ? 'active'
+                  : ''
+              }`}
+              onClick={() =>
+                setSettingsMenuOpen(
+                  (actual) => !actual
+                )
               }
-              title={
-                proyectoSeleccionadoId === '__all__'
-                  ? 'Seleccioná un proyecto para crear una tarea'
-                  : 'Crear nueva tarea'
-              }
+              title="Configuración"
+              aria-label="Configuración"
             >
-              + Nueva tarea
+              <span className="app-settings-gear">
+                <i />
+                <b />
+              </span>
             </button>
-          )}
+
+            {settingsMenuOpen && (
+              <div className="app-settings-menu">
+                <div className="app-settings-menu-title">
+                  Configuración
+                </div>
+
+                <button
+                  type="button"
+                  className={`app-settings-menu-item ${
+                    appTheme === 'dark'
+                      ? 'selected'
+                      : ''
+                  }`}
+                  onClick={() =>
+                    cambiarAppTheme(
+                      'dark'
+                    )
+                  }
+                >
+                  <span className="app-theme-dot dark" />
+                  <span>Dark Theme</span>
+                  {appTheme === 'dark' && (
+                    <strong>✓</strong>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className={`app-settings-menu-item ${
+                    appTheme === 'light'
+                      ? 'selected'
+                      : ''
+                  }`}
+                  onClick={() =>
+                    cambiarAppTheme(
+                      'light'
+                    )
+                  }
+                >
+                  <span className="app-theme-dot light" />
+                  <span>Light Theme</span>
+                  {appTheme === 'light' && (
+                    <strong>✓</strong>
+                  )}
+                </button>
+
+                <div className="app-settings-menu-divider" />
+
+                <button
+                  type="button"
+                  className="app-settings-menu-item logout"
+                  onClick={logout}
+                >
+                  <span className="app-settings-exit-icon">
+                    ↪
+                  </span>
+                  <span>Salir</span>
+                </button>
+              </div>
+            )}
+          </div>
 
         </div>
 
@@ -13153,6 +13915,24 @@ function colorEstadoTarea(tarea) {
                     ? 'Ocultar baseline'
                     : 'Mostrar baseline'}
                 </button>
+
+                {!meetingMode && (
+                  <button
+                    type="button"
+                    className="btn-primary gantt-new-task-button"
+                    onClick={abrirNuevaTarea}
+                    disabled={
+                      proyectoSeleccionadoId === '__all__'
+                    }
+                    title={
+                      proyectoSeleccionadoId === '__all__'
+                        ? 'Seleccioná un proyecto para crear una tarea'
+                        : 'Crear nueva tarea'
+                    }
+                  >
+                    + Nueva tarea
+                  </button>
+                )}
               </div>
             </div>
           </section>
@@ -14479,6 +15259,21 @@ function colorEstadoTarea(tarea) {
 
                     <button
                       type="button"
+                      className="folder-create-button"
+                      onClick={() =>
+                        abrirNuevaProjectFolder(
+                          'process'
+                        )
+                      }
+                      title="Crear carpeta de procesos"
+                    >
+                      <span className="folder-create-icon">
+                        <i />
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
                       className="process-list-scroll-button"
                       onClick={() => scrollProcessList('up')}
                       title="Subir"
@@ -14506,40 +15301,75 @@ function colorEstadoTarea(tarea) {
                 </div>
 
                 <div className="process-list" ref={processListRef}>
-                  {processMaps.map((process) => (
-                    <div
-                      key={process.id}
-                      className={
-                        process.id === processSeleccionadoId
-                          ? 'process-list-item active'
-                          : 'process-list-item'
-                      }
-                    >
-                      <button
-                        type="button"
-                        className="process-list-main"
-                        onClick={() => setProcessSeleccionadoId(process.id)}
+                  <FolderedProjectList
+                    module="process"
+                    folders={
+                      foldersDeModulo(
+                        'process'
+                      )
+                    }
+                    items={processMaps}
+                    expandedFolderIds={
+                      expandedFolderIds
+                    }
+                    setExpandedFolderIds={
+                      setExpandedFolderIds
+                    }
+                    onMoveItem={(
+                      itemId,
+                      folderId
+                    ) =>
+                      moverItemACarpeta(
+                        'process',
+                        itemId,
+                        folderId
+                      )
+                    }
+                    onDeleteFolder={
+                      eliminarProjectFolder
+                    }
+                    emptyText="Todavía no hay procesos."
+                    renderItem={(process) => (
+                      <div
+                        className={
+                          process.id === processSeleccionadoId
+                            ? 'process-list-item active'
+                            : 'process-list-item'
+                        }
                       >
-                        <strong>{process.nombre}</strong>
-                        <span>{process.descripcion || 'Sin descripción'}</span>
-                      </button>
+                        <button
+                          type="button"
+                          className="process-list-main"
+                          onClick={() =>
+                            setProcessSeleccionadoId(
+                              process.id
+                            )
+                          }
+                        >
+                          <strong>
+                            {process.nombre}
+                          </strong>
+                          <span className="process-list-description">
+                            {process.descripcion ||
+                              'Sin descripción'}
+                          </span>
+                        </button>
 
-                      <button
-                        type="button"
-                        className="process-list-delete"
-                        onClick={() => eliminarProcessMap(process)}
-                        title="Eliminar proceso"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-
-                  {processMaps.length === 0 && (
-                    <div className="process-list-empty">
-                      Todavía no hay procesos.
-                    </div>
-                  )}
+                        <button
+                          type="button"
+                          className="process-list-delete"
+                          onClick={() =>
+                            eliminarProcessMap(
+                              process
+                            )
+                          }
+                          title="Eliminar proceso"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                  />
                 </div>
               </div>
 
@@ -15178,53 +16008,85 @@ function colorEstadoTarea(tarea) {
                         </div>
 
                         {processSimulationNodeId && (
-                          <div className="process-simulation-keys">
-                            {opcionesSimulacionProcess().length === 0 ? (
-                              <span className="process-simulation-finished">
-                                Fin del recorrido
+                          <div className="process-simulation-navigation">
+                            <div className="process-simulation-nav-group">
+                              <span className="process-simulation-nav-label">
+                                Avanzar
                               </span>
-                            ) : (
-                              opcionesSimulacionProcess().map(
-                                (option) => (
-                                  <div
-                                    key={option.link.id}
-                                    className="process-simulation-key-option"
-                                  >
-                                    <kbd>
-                                      {
-                                        simboloTeclaProcess(
-                                          option.key
-                                        )
-                                      }
-                                    </kbd>
 
-                                    <span>
-                                      {
-                                        option.link.etiqueta ||
-                                        option.target.titulo ||
-                                        'Continuar'
-                                      }
-                                    </span>
-                                  </div>
-                                )
-                              )
+                              <div className="process-simulation-keys">
+                                {opcionesSimulacionProcess().length === 0 ? (
+                                  <span className="process-simulation-finished">
+                                    Sin salidas
+                                  </span>
+                                ) : (
+                                  opcionesSimulacionProcess().map(
+                                    (option) => (
+                                      <div
+                                        key={`forward-${option.link.id}`}
+                                        className="process-simulation-key-option"
+                                      >
+                                        <kbd>
+                                          {
+                                            simboloTeclaProcess(
+                                              option.key
+                                            )
+                                          }
+                                        </kbd>
+
+                                        <span>
+                                          {
+                                            option.link.etiqueta ||
+                                            option.target.titulo ||
+                                            'Continuar'
+                                          }
+                                        </span>
+                                      </div>
+                                    )
+                                  )
+                                )}
+                              </div>
+                            </div>
+
+                            {opcionesRetornoSimulacionProcess().length > 0 && (
+                              <div className="process-simulation-nav-group">
+                                <span className="process-simulation-nav-label back">
+                                  Volver
+                                </span>
+
+                                <div className="process-simulation-keys">
+                                  {opcionesRetornoSimulacionProcess().map(
+                                    (option) => (
+                                      <div
+                                        key={`back-${option.link.id}`}
+                                        className="process-simulation-key-option back"
+                                      >
+                                        <kbd>
+                                          {
+                                            simboloTeclaProcess(
+                                              option.key
+                                            )
+                                          }
+                                        </kbd>
+
+                                        <span>
+                                          {
+                                            option.link.etiqueta
+                                              ? `${option.link.etiqueta} · ${option.target.titulo || 'Anterior'}`
+                                              : option.target.titulo ||
+                                                'Anterior'
+                                          }
+                                        </span>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              </div>
                             )}
                           </div>
                         )}
 
                         <div className="process-simulation-actions">
-                          <button
-                            type="button"
-                            className="btn-secondary process-simulation-back"
-                            disabled={
-                              processSimulationHistory.length === 0
-                            }
-                            onClick={volverSimulacionProcess}
-                            title="Volver al componente anterior (Backspace)"
-                          >
-                            ← Volver
-                          </button>
-
                           <button
                             type="button"
                             className="btn-primary"
@@ -15823,6 +16685,21 @@ function colorEstadoTarea(tarea) {
 
                   <button
                     type="button"
+                    className="folder-create-button"
+                    onClick={() =>
+                      abrirNuevaProjectFolder(
+                        'kanban'
+                      )
+                    }
+                    title="Crear carpeta de Kanban"
+                  >
+                    <span className="folder-create-icon">
+                      <i />
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={abrirNuevoKanbanProject}
                   >
                     +
@@ -15831,59 +16708,93 @@ function colorEstadoTarea(tarea) {
               </div>
 
               <div className="kanban-project-list">
-                {kanbanProjects.map((project) => (
-                  <div
-                    key={project.id}
-                    className={`kanban-project-item ${
-                      project.id === kanbanProjectId
-                        ? 'active'
-                        : ''
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      className="kanban-project-main"
-                      onClick={() =>
-                        setKanbanProjectId(project.id)
-                      }
+                <FolderedProjectList
+                  module="kanban"
+                  folders={
+                    foldersDeModulo(
+                      'kanban'
+                    )
+                  }
+                  items={kanbanProjects}
+                  expandedFolderIds={
+                    expandedFolderIds
+                  }
+                  setExpandedFolderIds={
+                    setExpandedFolderIds
+                  }
+                  onMoveItem={(
+                    itemId,
+                    folderId
+                  ) =>
+                    moverItemACarpeta(
+                      'kanban',
+                      itemId,
+                      folderId
+                    )
+                  }
+                  onDeleteFolder={
+                    eliminarProjectFolder
+                  }
+                  emptyText="Todavía no hay proyectos Kanban."
+                  renderItem={(project) => (
+                    <div
+                      className={`kanban-project-item ${
+                        project.id === kanbanProjectId
+                          ? 'active'
+                          : ''
+                      }`}
                     >
-                      <strong>{project.nombre}</strong>
-                      <span>
-                        {project.descripcion ||
-                          'Sin descripción'}
-                      </span>
-                    </button>
-
-                    <div className="kanban-project-item-actions">
                       <button
                         type="button"
+                        className="kanban-project-main"
                         onClick={() =>
-                          archivarKanbanProject(project)
+                          setKanbanProjectId(
+                            project.id
+                          )
                         }
-                        title="Archivar tablero"
                       >
-                        <img src={archiveIcon} alt="" />
+                        <strong>
+                          {project.nombre}
+                        </strong>
+
+                        <span>
+                          {project.descripcion ||
+                            'Sin descripción'}
+                        </span>
                       </button>
 
-                      <button
-                        type="button"
-                        className="kanban-project-delete"
-                        onClick={() =>
-                          eliminarKanbanProject(project)
-                        }
-                        title="Eliminar proyecto"
-                      >
-                        ×
-                      </button>
+                      <div className="kanban-project-item-actions">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            archivarKanbanProject(
+                              project
+                            )
+                          }
+                          title="Archivar tablero"
+                        >
+                          <img
+                            src={archiveIcon}
+                            alt=""
+                          />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="kanban-project-delete"
+                          onClick={() =>
+                            eliminarKanbanProject(
+                              project
+                            )
+                          }
+                          title="Eliminar proyecto"
+                        >
+                          ×
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-
-                {kanbanProjects.length === 0 && (
-                  <div className="kanban-project-empty">
-                    Todavía no hay proyectos Kanban.
-                  </div>
-                )}
+                  )}
+                />
               </div>
             </aside>
 
@@ -16252,6 +17163,21 @@ function colorEstadoTarea(tarea) {
 
                   <button
                     type="button"
+                    className="folder-create-button"
+                    onClick={() =>
+                      abrirNuevaProjectFolder(
+                        'cards'
+                      )
+                    }
+                    title="Crear carpeta de boards"
+                  >
+                    <span className="folder-create-icon">
+                      <i />
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={abrirNuevoBoard}
                     title="Crear board"
                   >
@@ -16261,90 +17187,115 @@ function colorEstadoTarea(tarea) {
               </div>
 
               <div className="boards-list">
-                {boards.map((board) => (
-                  <div
-                    key={board.id}
-                    className={
-                      board.id === boardSeleccionadoId
-                        ? 'board-list-item active'
-                        : 'board-list-item'
-                    }
-                  >
-                    <button
-                      type="button"
-                      className="board-list-main"
-                      onClick={() =>
-                        setBoardSeleccionadoId(
-                          board.id
-                        )
+                <FolderedProjectList
+                  module="cards"
+                  folders={
+                    foldersDeModulo(
+                      'cards'
+                    )
+                  }
+                  items={boards}
+                  expandedFolderIds={
+                    expandedFolderIds
+                  }
+                  setExpandedFolderIds={
+                    setExpandedFolderIds
+                  }
+                  onMoveItem={(
+                    itemId,
+                    folderId
+                  ) =>
+                    moverItemACarpeta(
+                      'cards',
+                      itemId,
+                      folderId
+                    )
+                  }
+                  onDeleteFolder={
+                    eliminarProjectFolder
+                  }
+                  emptyText="Todavía no hay boards."
+                  renderItem={(board) => (
+                    <div
+                      className={
+                        board.id === boardSeleccionadoId
+                          ? 'board-list-item active'
+                          : 'board-list-item'
                       }
-                      title={board.descripcion || board.nombre}
                     >
-                      <span className="board-list-pin">
-                        ●
-                      </span>
-
-                      <span className="board-list-copy">
-                        <strong>
-                          {board.nombre}
-                        </strong>
-
-                        <small>
-                          {board.descripcion ||
-                            'Sin descripción'}
-                        </small>
-                      </span>
-                    </button>
-
-                    <div className="board-list-actions">
                       <button
                         type="button"
+                        className="board-list-main"
                         onClick={() =>
-                          abrirEditarBoard(board)
+                          setBoardSeleccionadoId(
+                            board.id
+                          )
                         }
-                        title="Editar board"
+                        title={
+                          board.descripcion ||
+                          board.nombre
+                        }
                       >
-                        ✎
+                        <span className="board-list-pin">
+                          ●
+                        </span>
+
+                        <span className="board-list-copy">
+                          <strong>
+                            {board.nombre}
+                          </strong>
+
+                          <small>
+                            {board.descripcion ||
+                              'Sin descripción'}
+                          </small>
+                        </span>
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          archivarBoard(board)
-                        }
-                        title="Archivar board"
-                      >
-                        <img src={archiveIcon} alt="" />
-                      </button>
+                      <div className="board-list-actions">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            abrirEditarBoard(
+                              board
+                            )
+                          }
+                          title="Editar board"
+                        >
+                          ✎
+                        </button>
 
-                      <button
-                        type="button"
-                        className="danger"
-                        onClick={() =>
-                          eliminarBoard(board)
-                        }
-                        title="Eliminar board"
-                      >
-                        ×
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            archivarBoard(
+                              board
+                            )
+                          }
+                          title="Archivar board"
+                        >
+                          <img
+                            src={archiveIcon}
+                            alt=""
+                          />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="danger"
+                          onClick={() =>
+                            eliminarBoard(
+                              board
+                            )
+                          }
+                          title="Eliminar board"
+                        >
+                          ×
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-
-                {boards.length === 0 && (
-                  <div className="boards-list-empty">
-                    <span>
-                      Todavía no hay boards.
-                    </span>
-
-                    <button
-                      type="button"
-                      onClick={abrirNuevoBoard}
-                    >
-                      Crear el primero
-                    </button>
-                  </div>
-                )}
+                  )}
+                />
               </div>
             </aside>
 
@@ -17481,6 +18432,154 @@ function colorEstadoTarea(tarea) {
                 </section>
               )
             })}
+          </aside>
+        </div>
+      )}
+
+      {projectFolderDrawerOpen && (
+        <div className="card-drawer-overlay">
+          <aside className="card-editor-drawer project-folder-drawer">
+            <form
+              onSubmit={
+                guardarProjectFolder
+              }
+            >
+              <div className="card-modal-heading">
+                <div>
+                  <span>Organización</span>
+                  <h3>Nueva carpeta</h3>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setProjectFolderDrawerOpen(
+                      false
+                    )
+                  }
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="project-folder-module-label">
+                {projectFolderModule ===
+                  'process'
+                  ? 'Process'
+                  : projectFolderModule ===
+                      'cards'
+                    ? 'Cards'
+                    : 'Kanban'}
+              </div>
+
+              <div className="form-group">
+                <label>Nombre</label>
+                <input
+                  autoFocus
+                  value={
+                    projectFolderForm.nombre
+                  }
+                  onChange={(event) =>
+                    setProjectFolderForm(
+                      (actual) => ({
+                        ...actual,
+                        nombre:
+                          event.target.value,
+                      })
+                    )
+                  }
+                  placeholder="Ej: Procesos ALE"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Descripción</label>
+                <textarea
+                  rows="4"
+                  value={
+                    projectFolderForm.descripcion
+                  }
+                  onChange={(event) =>
+                    setProjectFolderForm(
+                      (actual) => ({
+                        ...actual,
+                        descripcion:
+                          event.target.value,
+                      })
+                    )
+                  }
+                  placeholder="Ej: Procesos del equipo de Automatización"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Color</label>
+
+                <div className="project-folder-color-picker">
+                  {[
+                    '#f7c948',
+                    '#00c2ff',
+                    '#2dd36f',
+                    '#ff6b6b',
+                    '#a78bfa',
+                    '#ff8a00',
+                    '#ff4fa3',
+                    '#9aa8b3',
+                  ].map(
+                    (color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={
+                          projectFolderForm.color ===
+                          color
+                            ? 'active'
+                            : ''
+                        }
+                        style={{
+                          backgroundColor:
+                            color,
+                        }}
+                        onClick={() =>
+                          setProjectFolderForm(
+                            (actual) => ({
+                              ...actual,
+                              color,
+                            })
+                          )
+                        }
+                        title={color}
+                      />
+                    )
+                  )}
+                </div>
+              </div>
+
+              <div className="project-folder-help">
+                Después podés arrastrar proyectos sobre la carpeta para guardarlos, o a “Sin carpeta” para sacarlos.
+              </div>
+
+              <div className="connection-drawer-actions">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() =>
+                    setProjectFolderDrawerOpen(
+                      false
+                    )
+                  }
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn-primary"
+                >
+                  Crear carpeta
+                </button>
+              </div>
+            </form>
           </aside>
         </div>
       )}
@@ -20542,7 +21641,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.4.3</span>
+        <span>V10.5.4</span>
         <span>01/10/2026</span>
       </footer>
 
