@@ -6337,22 +6337,86 @@ function iniciarConexionProcess(event, node, lado) {
 function moverConexionProcess(event) {
   if (!processLinkDraft) return
 
-  const canvas = event.currentTarget
-  const rect =
-    canvas.getBoundingClientRect()
+  /*
+    La flecha se dibuja dentro de process-world.
+    Calculamos el puntero contra ESE rectángulo,
+    no contra el scroll del canvas. Esto evita el
+    desfase que aparecía con zoom + scroll.
+  */
+  const world =
+    processCanvasPrintRef.current
 
-  const canvasX =
+  if (!world) return
+
+  const worldRect =
+    world.getBoundingClientRect()
+
+  const worldX =
     (event.clientX -
-      rect.left +
-      canvas.scrollLeft) /
+      worldRect.left) /
     processZoom
 
-  const canvasY =
+  const worldY =
     (event.clientY -
-      rect.top +
-      canvas.scrollTop) /
+      worldRect.top) /
     processZoom
 
+  /*
+    Si el mouse está EXACTAMENTE sobre un punto verde,
+    ese conector gana siempre. No dejamos que el algoritmo
+    magnético elija otro lateral.
+  */
+  const connector =
+    event.target.closest(
+      '.process-node-connector'
+    )
+
+  if (connector) {
+    const nodeId =
+      connector.dataset.nodeId
+
+    const side =
+      connector.dataset.side
+
+    const node =
+      processNodeById(nodeId)
+
+    if (
+      node &&
+      node.id !==
+        processLinkDraft.sourceNodeId &&
+      side
+    ) {
+      const point =
+        puntoConectorProcess(
+          node,
+          side
+        )
+
+      setProcessMagneticTarget({
+        nodeId:
+          node.id,
+        side,
+      })
+
+      setProcessLinkDraft(
+        (actual) => ({
+          ...actual,
+          currentX:
+            point.x,
+          currentY:
+            point.y,
+        })
+      )
+
+      return
+    }
+  }
+
+  /*
+    Fuera del punto exacto la punta acompaña al puntero
+    1:1. El magnetismo sólo actúa muy cerca del conector.
+  */
   const candidatos =
     processNodes
       .filter(
@@ -6385,13 +6449,13 @@ function moverConexionProcess(event) {
       const distancia =
         Math.hypot(
           candidate.point.x -
-            canvasX,
+            worldX,
           candidate.point.y -
-            canvasY
+            worldY
         )
 
       if (
-        distancia <= 28 &&
+        distancia <= 16 &&
         (
           !cercano ||
           distancia <
@@ -6408,8 +6472,10 @@ function moverConexionProcess(event) {
 
   if (cercano) {
     setProcessMagneticTarget({
-      nodeId: cercano.node.id,
-      side: cercano.side,
+      nodeId:
+        cercano.node.id,
+      side:
+        cercano.side,
     })
 
     setProcessLinkDraft(
@@ -6427,11 +6493,15 @@ function moverConexionProcess(event) {
 
   setProcessMagneticTarget(null)
 
-  setProcessLinkDraft((actual) => ({
-    ...actual,
-    currentX: canvasX,
-    currentY: canvasY,
-  }))
+  setProcessLinkDraft(
+    (actual) => ({
+      ...actual,
+      currentX:
+        worldX,
+      currentY:
+        worldY,
+    })
+  )
 }
 
 function cancelarConexionProcess() {
@@ -15609,6 +15679,8 @@ function colorEstadoTarea(tarea) {
                                 key={lado}
                                 type="button"
                                 className={`process-node-connector ${lado}`}
+                                data-node-id={node.id}
+                                data-side={lado}
                                 style={estiloConectorProcess(
                                   node,
                                   lado
@@ -20470,8 +20542,8 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.4.2</span>
-        <span>30/09/2026</span>
+        <span>V10.4.3</span>
+        <span>01/10/2026</span>
       </footer>
 
       </div>

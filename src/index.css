@@ -17128,3 +17128,250 @@ button {
   display:
     none !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.4.3
+   MEETING FULL WIDTH + SIDEBAR + FLECHAS 1:1
+========================================================= */
+
+/* ---------- Modo reunión Process: canvas REALMENTE full width ---------- */
+
+/*
+  Había reglas posteriores de .process-layout con 285/320/330px
+  que volvían a ganar sobre la regla histórica de reunión.
+  Esta definición final tiene mayor especificidad y queda al final.
+*/
+.app-shell.v10-polish.meeting-process {
+  grid-template-columns:
+    minmax(0, 1fr)
+    !important;
+
+  width:
+    100% !important;
+
+  max-width:
+    none !important;
+}
+
+.app-shell.v10-polish.meeting-process
+.app-main {
+  width:
+    100% !important;
+
+  min-width:
+    0 !important;
+
+  max-width:
+    none !important;
+}
+
+.app-shell.v10-polish.meeting-process
+.process-page {
+  width:
+    100% !important;
+
+  max-width:
+    none !important;
+
+  height:
+    100vh !important;
+
+  padding:
+    0 !important;
+
+  margin:
+    0 !important;
+
+  overflow:
+    hidden !important;
+}
+
+.app-shell.v10-polish.meeting-process
+.process-layout {
+  display:
+    grid !important;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    !important;
+
+  width:
+    100% !important;
+
+  max-width:
+    none !important;
+
+  height:
+    100% !important;
+
+  min-width:
+    0 !important;
+
+  gap:
+    0 !important;
+
+  margin:
+    0 !important;
+
+  padding:
+    0 !important;
+}
+
+.app-shell.v10-polish.meeting-process
+.process-workspace {
+  grid-column:
+    1 / -1 !important;
+
+  width:
+    100% !important;
+
+  min-width:
+    0 !important;
+
+  max-width:
+    none !important;
+
+  height:
+    100% !important;
+
+  margin:
+    0 !important;
+}
+
+.app-shell.v10-polish.meeting-process
+.process-canvas {
+  width:
+    100% !important;
+
+  min-width:
+    0 !important;
+
+  max-width:
+    none !important;
+
+  height:
+    100% !important;
+
+  margin:
+    0 !important;
+
+  border-radius:
+    0 !important;
+}
+
+/*
+  El panel de componentes que existe en meeting sigue flotando,
+  pero jamás reserva una columna del layout.
+*/
+.app-shell.v10-polish.meeting-process
+.process-left-panel {
+  position:
+    fixed !important;
+
+  width:
+    270px !important;
+
+  min-width:
+    0 !important;
+}
+
+/* ---------- Sidebar: conservar fondo original al pulsar/seleccionar ---------- */
+
+.v10-polish
+.visual-sidebar-icon-button,
+.v10-polish
+.visual-sidebar-icon-button:hover,
+.v10-polish
+.visual-sidebar-icon-button:active,
+.v10-polish
+.visual-sidebar-icon-button.active,
+.v10-polish
+.visual-sidebar-icon-button:focus {
+  background:
+    #f4f6f8 !important;
+}
+
+/*
+  La selección se comunica por borde y halo,
+  no cambiando el fondo del botón.
+*/
+.v10-polish
+.visual-sidebar-icon-button.active {
+  border-color:
+    var(--pf-accent)
+    !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(0,216,234,.20),
+    0 8px 18px
+    rgba(0,0,0,.18)
+    !important;
+}
+
+.v10-polish
+.visual-sidebar-icon-button:hover {
+  border-color:
+    #5d8198
+    !important;
+
+  box-shadow:
+    0 7px 16px
+    rgba(0,0,0,.16)
+    !important;
+}
+
+.v10-polish
+.visual-sidebar-icon-button:active {
+  transform:
+    scale(.96)
+    !important;
+
+  border-color:
+    var(--pf-accent)
+    !important;
+}
+
+/* ---------- Process connections ---------- */
+
+/*
+  Durante el drag no interpolamos SVG ni puntos.
+  La punta debe acompañar exactamente al mouse.
+*/
+.v10-polish
+.process-link-draft {
+  transition:
+    none !important;
+
+  pointer-events:
+    none !important;
+}
+
+.v10-polish
+.process-world.connecting-mode
+.process-node-connector {
+  opacity:
+    1 !important;
+}
+
+.v10-polish
+.process-node-connector {
+  transition:
+    opacity .08s ease
+    !important;
+}
+
+/*
+  El punto exacto bajo el mouse recibe una marca clara.
+*/
+.v10-polish
+.process-node.magnetic-target
+.process-node-connector::after {
+  box-shadow:
+    0 0 0 3px
+    rgba(34,211,197,.17),
+    0 0 7px
+    rgba(34,211,197,.72)
+    !important;
+}
