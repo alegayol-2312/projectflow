@@ -20969,3 +20969,2676 @@ strong {
   color:
     #5c717c;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.5.5
+   LIGHT THEME - CONTRASTE FINAL SOBRE BASE V10.5.4
+   + BOTONES CON TEXTO APROX. 2px MÁS GRANDES
+========================================================= */
+
+/* =========================================================
+   BOTONES / CONTROLES DE TEXTO
+========================================================= */
+
+.v10-polish
+:is(
+  .btn-primary,
+  .btn-secondary,
+  .assign-button,
+  .baseline-button,
+  .today-button,
+  .meeting-mode-button,
+  .gantt-new-task-button,
+  .week-nav button,
+  .archive-list-actions button,
+  .card-checklist-heading > button,
+  .kanban-checklist-editor button,
+  .task-type-selector button,
+  .process-simulation-actions button,
+  .process-canvas-actions button,
+  .process-selection-toolbar button,
+  .process-link-selection-toolbar button,
+  .cards-selection-toolbar button,
+  .cards-board-meta-actions button,
+  .boards-panel-header button,
+  .kanban-project-header button,
+  .kanban-project-item-actions button,
+  .project-folder-delete,
+  .project-folder-main,
+  .app-settings-menu-item
+) {
+  font-size:
+    11px !important;
+
+  font-weight:
+    800 !important;
+}
+
+.v10-polish
+:is(
+  .btn-primary,
+  .btn-secondary,
+  .assign-button,
+  .baseline-button,
+  .today-button,
+  .meeting-mode-button,
+  .gantt-new-task-button
+) {
+  min-height:
+    38px !important;
+
+  padding-left:
+    12px !important;
+
+  padding-right:
+    12px !important;
+}
+
+.v10-polish
+:is(
+  .kanban-bg-picker select,
+  .filters select,
+  .project-selector,
+  .year-picker,
+  .month-picker
+) {
+  font-size:
+    10.5px !important;
+
+  font-weight:
+    750 !important;
+}
+
+
+/* =========================================================
+   GANTT - DRAWER NUEVA / EDITAR TAREA
+========================================================= */
+
+.v10-polish.theme-light
+.gantt-task-drawer-header {
+  background:
+    #ffffff !important;
+
+  border-bottom:
+    1px solid
+    #d5e0e6 !important;
+}
+
+.v10-polish.theme-light
+.gantt-task-drawer-header h2 {
+  color:
+    #172832 !important;
+}
+
+.v10-polish.theme-light
+.gantt-task-drawer-header p {
+  color:
+    #607580 !important;
+}
+
+.v10-polish.theme-light
+.gantt-task-drawer-header
+.close-btn {
+  background:
+    #f2f6f8 !important;
+
+  color:
+    #253d48 !important;
+
+  border:
+    1px solid
+    #bccbd4 !important;
+}
+
+.v10-polish.theme-light
+.task-type-selector button {
+  background:
+    #ffffff !important;
+
+  color:
+    #2b424d !important;
+
+  border:
+    1px solid
+    #b9c9d2 !important;
+
+  box-shadow:
+    none !important;
+}
+
+.v10-polish.theme-light
+.task-type-selector button:hover {
+  background:
+    #f1f7f9 !important;
+
+  border-color:
+    #71bfc8 !important;
+}
+
+.v10-polish.theme-light
+.task-type-selector button.active {
+  background:
+    #e9fbfd !important;
+
+  color:
+    #078193 !important;
+
+  border-color:
+    #19b8ca !important;
+}
+
+.v10-polish.theme-light
+.task-type-selector button.hito {
+  background:
+    #ffffff !important;
+
+  color:
+    #4a5660 !important;
+}
+
+.v10-polish.theme-light
+.task-type-selector button.hito.active {
+  background:
+    #fff0f8 !important;
+
+  color:
+    #b6377d !important;
+
+  border-color:
+    #e1a5c4 !important;
+}
+
+
+/* =========================================================
+   CARDS / KANBAN - CHECKLISTS
+========================================================= */
+
+.v10-polish.theme-light
+:is(
+  .card-checklist-editor,
+  .kanban-checklist-editor
+) {
+  background:
+    #f6f9fa !important;
+
+  border:
+    1px solid
+    #cbd7de !important;
+
+  color:
+    #263e49 !important;
+}
+
+.v10-polish.theme-light
+.card-checklist-heading span,
+.v10-polish.theme-light
+.kanban-checklist-editor
+.card-checklist-heading span {
+  color:
+    #60747f !important;
+}
+
+.v10-polish.theme-light
+.card-checklist-heading strong,
+.v10-polish.theme-light
+.kanban-checklist-editor
+.card-checklist-heading strong {
+  color:
+    #1e333d !important;
+}
+
+.v10-polish.theme-light
+.card-checklist-heading > button,
+.v10-polish.theme-light
+.kanban-checklist-editor
+.card-checklist-heading > button {
+  background:
+    #ffffff !important;
+
+  color:
+    #28414c !important;
+
+  border-color:
+    #b8c9d2 !important;
+}
+
+.v10-polish.theme-light
+.card-checklist-empty {
+  background:
+    #ffffff !important;
+
+  color:
+    #5d727e !important;
+
+  border-color:
+    #bdcbd4 !important;
+}
+
+.v10-polish.theme-light
+.card-checklist-row
+input[type='text'] {
+  background:
+    #ffffff !important;
+
+  color:
+    #243a45 !important;
+
+  border-color:
+    #bdcbd4 !important;
+}
+
+
+/* =========================================================
+   CARDS - SHAPES
+========================================================= */
+
+.v10-polish.theme-light
+.shape-type-options button {
+  background:
+    #f6f9fa !important;
+
+  color:
+    #263e49 !important;
+
+  border:
+    1px solid
+    #bdccd5 !important;
+}
+
+.v10-polish.theme-light
+.shape-type-options button:hover {
+  background:
+    #edf6f8 !important;
+
+  border-color:
+    #68b9c2 !important;
+}
+
+.v10-polish.theme-light
+.shape-type-options button.active {
+  background:
+    #e7fafd !important;
+
+  color:
+    #087a88 !important;
+
+  border-color:
+    #18b7c8 !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(24,183,200,.12)
+    !important;
+}
+
+
+/* =========================================================
+   ARCHIVADOS - CARDS / PROCESS / KANBAN
+========================================================= */
+
+.v10-polish.theme-light
+.archive-list-item {
+  background:
+    #f7fafb !important;
+
+  border:
+    1px solid
+    #d1dce2 !important;
+
+  color:
+    #283f4a !important;
+}
+
+.v10-polish.theme-light
+.archive-list-item strong {
+  color:
+    #1d323c !important;
+}
+
+.v10-polish.theme-light
+.archive-list-item span {
+  color:
+    #60747f !important;
+
+  opacity:
+    1 !important;
+}
+
+.v10-polish.theme-light
+.archive-list-actions button {
+  background:
+    #ffffff !important;
+
+  color:
+    #29414c !important;
+
+  border-color:
+    #b9c9d2 !important;
+}
+
+.v10-polish.theme-light
+.archive-list-actions button:hover {
+  background:
+    #eaf5f7 !important;
+
+  color:
+    #0b6c78 !important;
+
+  border-color:
+    #57b4be !important;
+}
+
+.v10-polish.theme-light
+.archive-list-actions button.danger {
+  background:
+    #fff1f3 !important;
+
+  color:
+    #bd4051 !important;
+
+  border-color:
+    #e0a8b0 !important;
+}
+
+
+/* =========================================================
+   KANBAN
+========================================================= */
+
+.v10-polish.theme-light
+.kanban-bg-picker {
+  background:
+    #ffffff !important;
+
+  border:
+    1px solid
+    #c7d4dc !important;
+
+  box-shadow:
+    0 8px 20px
+    rgba(53,72,84,.10)
+    !important;
+}
+
+.v10-polish.theme-light
+.kanban-bg-picker
+:is(
+  select,
+  button:not(.kanban-bg-color)
+) {
+  background:
+    #f3f7f9 !important;
+
+  color:
+    #263d48 !important;
+
+  border-color:
+    #b9c9d2 !important;
+}
+
+.v10-polish.theme-light
+.kanban-bg-picker select {
+  color-scheme:
+    light !important;
+}
+
+.v10-polish.theme-light
+.kanban-column-empty {
+  background:
+    #ffffff !important;
+
+  color:
+    #677b86 !important;
+
+  border-color:
+    #c2d1d9 !important;
+}
+
+
+/* =========================================================
+   CAPACITY
+========================================================= */
+
+.v10-polish.theme-light
+.capacity-section {
+  background:
+    #ffffff !important;
+
+  border:
+    1px solid
+    #ccd8df !important;
+}
+
+.v10-polish.theme-light
+.capacity-toolbar {
+  background:
+    #ffffff !important;
+
+  border-bottom-color:
+    #d6e0e6 !important;
+}
+
+.v10-polish.theme-light
+.capacity-toolbar h2 {
+  color:
+    #172832 !important;
+}
+
+.v10-polish.theme-light
+.capacity-toolbar p {
+  color:
+    #5e737e !important;
+}
+
+.v10-polish.theme-light
+.capacity-date-control,
+.v10-polish.theme-light
+.capacity-date-control label {
+  color:
+    #435b67 !important;
+}
+
+.v10-polish.theme-light
+.capacity-date-control input {
+  background:
+    #ffffff !important;
+
+  color:
+    #263d48 !important;
+
+  border-color:
+    #b9cad3 !important;
+
+  color-scheme:
+    light !important;
+}
+
+.v10-polish.theme-light
+.capacity-team-panel {
+  background:
+    #ffffff !important;
+
+  border-right-color:
+    #d4dee4 !important;
+}
+
+.v10-polish.theme-light
+.capacity-team-header,
+.v10-polish.theme-light
+.capacity-days-header {
+  background:
+    #eef3f6 !important;
+
+  color:
+    #3e5662 !important;
+
+  border-color:
+    #ccd8df !important;
+}
+
+.v10-polish.theme-light
+.capacity-team-row {
+  background:
+    #ffffff !important;
+
+  border-bottom-color:
+    #dce5ea !important;
+}
+
+.v10-polish.theme-light
+.capacity-dev-name {
+  color:
+    #223842 !important;
+}
+
+.v10-polish.theme-light
+.capacity-dev-metrics {
+  color:
+    #5b707b !important;
+}
+
+.v10-polish.theme-light
+.capacity-dev-metrics b {
+  color:
+    #4a606b !important;
+}
+
+.v10-polish.theme-light
+.capacity-dev-metrics .available {
+  color:
+    #168b54 !important;
+}
+
+.v10-polish.theme-light
+.capacity-dev-metrics .negative {
+  color:
+    #cf4555 !important;
+}
+
+.v10-polish.theme-light
+.capacity-day {
+  color:
+    #60747f !important;
+
+  border-right-color:
+    #d7e1e6 !important;
+}
+
+.v10-polish.theme-light
+.capacity-day strong {
+  color:
+    #334b56 !important;
+}
+
+.v10-polish.theme-light
+.capacity-gantt-row,
+.v10-polish.theme-light
+.capacity-grid {
+  background:
+    #ffffff !important;
+}
+
+.v10-polish.theme-light
+.capacity-gantt-row {
+  border-bottom-color:
+    #dce5ea !important;
+}
+
+.v10-polish.theme-light
+.capacity-grid-day {
+  border-right-color:
+    #dce5ea !important;
+}
+
+
+/* =========================================================
+   BACKLOG / PLANIFICACIÓN
+========================================================= */
+
+.v10-polish.theme-light
+.planning-section {
+  background:
+    #ffffff !important;
+
+  border:
+    1px solid
+    #ccd8df !important;
+}
+
+.v10-polish.theme-light
+.planning-toolbar {
+  background:
+    #ffffff !important;
+
+  border-bottom-color:
+    #d6e0e6 !important;
+}
+
+.v10-polish.theme-light
+.planning-toolbar h2 {
+  color:
+    #172832 !important;
+}
+
+.v10-polish.theme-light
+.planning-toolbar p {
+  color:
+    #5f747f !important;
+}
+
+.v10-polish.theme-light
+.planning-control,
+.v10-polish.theme-light
+.planning-control label {
+  color:
+    #435b67 !important;
+}
+
+.v10-polish.theme-light
+.planning-control input {
+  background:
+    #ffffff !important;
+
+  color:
+    #243b46 !important;
+
+  border-color:
+    #b9cad3 !important;
+
+  color-scheme:
+    light !important;
+}
+
+.v10-polish.theme-light
+.backlog-header {
+  background:
+    #eef3f6 !important;
+
+  color:
+    #3e5662 !important;
+
+  border-bottom-color:
+    #cdd9df !important;
+}
+
+.v10-polish.theme-light
+.backlog-row {
+  background:
+    #ffffff !important;
+
+  color:
+    #435965 !important;
+
+  border-bottom-color:
+    #dce5ea !important;
+}
+
+.v10-polish.theme-light
+.backlog-row strong {
+  color:
+    #223842 !important;
+}
+
+.v10-polish.theme-light
+.backlog-row small {
+  color:
+    #6c7f89 !important;
+}
+
+.v10-polish.theme-light
+.suggestion-box strong {
+  color:
+    #14884f !important;
+}
+
+.v10-polish.theme-light
+.assign-button {
+  background:
+    #ecfbf3 !important;
+
+  color:
+    #15884f !important;
+
+  border:
+    1px solid
+    #8fd3ad !important;
+}
+
+
+/* =========================================================
+   VISTA SEMANAL
+========================================================= */
+
+.v10-polish.theme-light
+.week-header {
+  background:
+    #eef3f6 !important;
+
+  color:
+    #60747f !important;
+
+  border-color:
+    #cfdbe1 !important;
+}
+
+.v10-polish.theme-light
+.week-header strong {
+  color:
+    #2e4651 !important;
+}
+
+.v10-polish.theme-light
+.week-dev {
+  background:
+    #ffffff !important;
+
+  border-color:
+    #dce5ea !important;
+}
+
+.v10-polish.theme-light
+.week-dev strong {
+  color:
+    #233944 !important;
+}
+
+.v10-polish.theme-light
+.week-dev small {
+  color:
+    #6a7d87 !important;
+}
+
+.v10-polish.theme-light
+.week-cell,
+.v10-polish.theme-light
+.week-cell:nth-child(even),
+.v10-polish.theme-light
+.week-cell:nth-child(odd) {
+  background:
+    #ffffff !important;
+
+  color:
+    #263d48 !important;
+
+  border-color:
+    #dce5ea !important;
+}
+
+.v10-polish.theme-light
+.week-hours strong {
+  color:
+    #1d333d !important;
+}
+
+.v10-polish.theme-light
+.week-hours span {
+  color:
+    #607580 !important;
+}
+
+.v10-polish.theme-light
+.week-tasks span {
+  background:
+    #edf5ff !important;
+
+  color:
+    #315f9d !important;
+
+  border-color:
+    #c9dcf4 !important;
+}
+
+.v10-polish.theme-light
+.week-tasks em {
+  color:
+    #71838d !important;
+}
+
+.v10-polish.theme-light
+.week-nav button {
+  background:
+    #ffffff !important;
+
+  color:
+    #29414c !important;
+
+  border-color:
+    #b9cad3 !important;
+}
+
+.v10-polish.theme-light
+.week-nav .week-today {
+  color:
+    #087c8c !important;
+}
+
+
+/* =========================================================
+   HEATMAP
+========================================================= */
+
+.v10-polish.theme-light
+.heatmap-header {
+  background:
+    #eef3f6 !important;
+
+  color:
+    #405864 !important;
+
+  border-color:
+    #cfdae0 !important;
+}
+
+.v10-polish.theme-light
+.heatmap-header strong,
+.v10-polish.theme-light
+.heatmap-header span {
+  color:
+    #405864 !important;
+}
+
+.v10-polish.theme-light
+.heatmap-dev {
+  background:
+    #ffffff !important;
+
+  color:
+    #253c47 !important;
+
+  border-color:
+    #dce5ea !important;
+}
+
+.v10-polish.theme-light
+.heatmap-legend,
+.v10-polish.theme-light
+.heatmap-legend span {
+  background:
+    #ffffff !important;
+
+  color:
+    #516773 !important;
+
+  border-bottom-color:
+    #dce5ea !important;
+}
+
+
+/* =========================================================
+   SIMULADOR PROCESS
+========================================================= */
+
+.v10-polish.theme-light
+.process-simulation-panel {
+  background:
+    #ffffff !important;
+
+  color:
+    #213741 !important;
+
+  border:
+    1px solid
+    #aebfc9 !important;
+
+  box-shadow:
+    0 12px 30px
+    rgba(52,70,82,.18)
+    !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-panel-top span {
+  color:
+    #178347 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-panel-top strong {
+  color:
+    #172b35 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-close {
+  background:
+    #f2f6f8 !important;
+
+  color:
+    #29414c !important;
+
+  border-color:
+    #b8c8d1 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-nav-label {
+  color:
+    #177b46 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-nav-label.back {
+  color:
+    #156f91 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-key-option {
+  background:
+    #f5f8fa !important;
+
+  border-color:
+    #c4d1d8 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-key-option span {
+  color:
+    #2c4550 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-key-option kbd {
+  background:
+    #ffffff !important;
+
+  color:
+    #087886 !important;
+
+  border-color:
+    #9db4c0 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-actions .btn-primary {
+  background:
+    #0ba6b7 !important;
+
+  color:
+    #ffffff !important;
+
+  border-color:
+    #0a93a2 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-actions .btn-secondary {
+  background:
+    #ffffff !important;
+
+  color:
+    #2b424d !important;
+
+  border-color:
+    #b9c9d2 !important;
+}
+
+.v10-polish.theme-light
+.process-validation-ok {
+  background:
+    #eaf8ef !important;
+
+  color:
+    #176b3a !important;
+
+  border-color:
+    #91cba6 !important;
+}
+
+.v10-polish.theme-light
+.process-validation-errors {
+  background:
+    #fff0f2 !important;
+
+  color:
+    #a03646 !important;
+
+  border-color:
+    #dfabb2 !important;
+}
+
+.v10-polish.theme-light
+.process-validation-errors div {
+  color:
+    #a03646 !important;
+}
+
+.v10-polish.theme-light
+.process-simulation-panel::after {
+  background:
+    #edf3f6 !important;
+
+  color:
+    #334b56 !important;
+
+  border-color:
+    #c6d3da !important;
+
+  font-size:
+    10px !important;
+
+  font-weight:
+    750 !important;
+}
+
+
+/* =========================================================
+   ACCIONES DEL DRAWER
+========================================================= */
+
+.v10-polish.theme-light
+.card-editor-drawer
+.connection-drawer-actions
+:is(
+  .btn-primary,
+  .btn-secondary
+) {
+  font-size:
+    11px !important;
+}
+
+.v10-polish.theme-light
+.btn-delete-task {
+  background:
+    #fff1f3 !important;
+
+  color:
+    #b83d4e !important;
+
+  border:
+    1px solid
+    #dfa8b0 !important;
+
+  font-size:
+    11px !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.5.6
+   BASE: V10.5.5
+   Ajustes visuales light theme + recuperación de colores
+========================================================= */
+
+/* ---------------------------------------------------------
+   Recuperar colores visibles en pickers / barras flotantes
+--------------------------------------------------------- */
+
+.v10-polish.theme-light .process-bg-dot.white,
+.v10-polish.theme-light .cards-bg-dot.white,
+.v10-polish.theme-light .kanban-bg-dot.white {
+  background: #ffffff !important;
+}
+
+.v10-polish.theme-light .process-bg-dot.black,
+.v10-polish.theme-light .cards-bg-dot.black,
+.v10-polish.theme-light .kanban-bg-dot.black {
+  background: #0b1220 !important;
+}
+
+.v10-polish.theme-light .process-bg-dot.board,
+.v10-polish.theme-light .cards-bg-dot.board,
+.v10-polish.theme-light .kanban-bg-dot.board {
+  background: #5d6670 !important;
+}
+
+.v10-polish.theme-light .process-bg-dot,
+.v10-polish.theme-light .cards-bg-dot,
+.v10-polish.theme-light .kanban-bg-dot,
+.v10-polish.theme-light .process-selection-color-dot,
+.v10-polish.theme-light .process-link-selection-color-dot,
+.v10-polish.theme-light .unified-color-options button,
+.v10-polish.theme-light .process-box-color-options button,
+.v10-polish.theme-light .process-link-color-options button,
+.v10-polish.theme-light .zone-color-options button,
+.v10-polish.theme-light .kanban-card-color-options button {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.v10-polish.theme-light .process-canvas-bg-picker,
+.v10-polish.theme-light .cards-canvas-bg-picker,
+.v10-polish.theme-light .kanban-bg-picker {
+  background: rgba(255,255,255,.96) !important;
+  border-color: #c8d5dc !important;
+  box-shadow: 0 8px 18px rgba(59,75,86,.12) !important;
+}
+
+.v10-polish.theme-light .process-overlay-divider,
+.v10-polish.theme-light .cards-bg-divider,
+.v10-polish.theme-light .kanban-bg-divider {
+  background: #c9d5dc !important;
+}
+
+/* ---------------------------------------------------------
+   Más aire útil: márgenes / alineación superior
+--------------------------------------------------------- */
+
+.v10-polish.theme-light .cards-page,
+.v10-polish.theme-light .kanban-page,
+.v10-polish.theme-light .process-page {
+  padding: 10px 14px 14px !important;
+}
+
+.v10-polish.theme-light .cards-toolbar,
+.v10-polish.theme-light .kanban-toolbar,
+.v10-polish.theme-light .process-toolbar {
+  margin-bottom: 8px !important;
+}
+
+.v10-polish.theme-light .cards-toolbar {
+  padding: 10px 14px !important;
+}
+
+.v10-polish.theme-light .cards-layout,
+.v10-polish.theme-light .kanban-layout,
+.v10-polish.theme-light .process-layout {
+  gap: 10px !important;
+}
+
+/* ---------------------------------------------------------
+   Gantt KPIs: fondo del color de la métrica + texto blanco
+--------------------------------------------------------- */
+
+.v10-polish.theme-light .kpi {
+  background: linear-gradient(180deg, #08a0d8 0%, #087ab5 100%) !important;
+  border-color: transparent !important;
+  box-shadow: 0 5px 16px rgba(39,98,141,.16) !important;
+}
+
+.v10-polish.theme-light .kpi.green {
+  background: linear-gradient(180deg, #1ec87f 0%, #11935b 100%) !important;
+}
+
+.v10-polish.theme-light .kpi.purple {
+  background: linear-gradient(180deg, #a663f6 0%, #7e3fe0 100%) !important;
+}
+
+.v10-polish.theme-light .kpi.orange {
+  background: linear-gradient(180deg, #ffb44f 0%, #f08a22 100%) !important;
+}
+
+.v10-polish.theme-light .kpi.pink {
+  background: linear-gradient(180deg, #ff64bf 0%, #ea2c93 100%) !important;
+}
+
+.v10-polish.theme-light .kpi span,
+.v10-polish.theme-light .kpi small,
+.v10-polish.theme-light .kpi strong {
+  color: #ffffff !important;
+}
+
+.v10-polish.theme-light .kpi span,
+.v10-polish.theme-light .kpi small {
+  opacity: .94 !important;
+}
+
+/* ---------------------------------------------------------
+   Cards: textos más oscuros y alineación mejor
+--------------------------------------------------------- */
+
+.v10-polish.theme-light .cards-toolbar,
+.v10-polish.theme-light .boards-panel,
+.v10-polish.theme-light .cards-board-area,
+.v10-polish.theme-light .cards-canvas-shell {
+  color: #182830 !important;
+}
+
+.v10-polish.theme-light .cards-eyebrow,
+.v10-polish.theme-light .cards-toolbar p,
+.v10-polish.theme-light .cards-board-meta span,
+.v10-polish.theme-light .cards-counter,
+.v10-polish.theme-light .board-list-copy small,
+.v10-polish.theme-light .cards-empty span,
+.v10-polish.theme-light .cards-empty p {
+  color: #455964 !important;
+}
+
+.v10-polish.theme-light .cards-toolbar h2,
+.v10-polish.theme-light .cards-board-meta strong,
+.v10-polish.theme-light .board-list-copy strong,
+.v10-polish.theme-light .cards-empty strong,
+.v10-polish.theme-light .boards-panel-header strong {
+  color: #162730 !important;
+}
+
+.v10-polish.theme-light .boards-panel-header span {
+  color: #566a75 !important;
+}
+
+.v10-polish.theme-light .board-list-item,
+.v10-polish.theme-light .cards-empty,
+.v10-polish.theme-light .boards-panel {
+  background: #ffffff !important;
+}
+
+.v10-polish.theme-light .cards-empty {
+  border-color: #d4dee4 !important;
+}
+
+.v10-polish.theme-light .cards-board-meta {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+/* ---------------------------------------------------------
+   Kanban: márgenes + contraste
+--------------------------------------------------------- */
+
+.v10-polish.theme-light .kanban-toolbar,
+.v10-polish.theme-light .kanban-project-panel,
+.v10-polish.theme-light .kanban-workspace {
+  color: #182830 !important;
+}
+
+.v10-polish.theme-light .kanban-eyebrow,
+.v10-polish.theme-light .kanban-toolbar p,
+.v10-polish.theme-light .kanban-project-main span,
+.v10-polish.theme-light .kanban-no-project span,
+.v10-polish.theme-light .kanban-column-empty,
+.v10-polish.theme-light .kanban-card-meta span {
+  color: #455964 !important;
+}
+
+.v10-polish.theme-light .kanban-toolbar h2,
+.v10-polish.theme-light .kanban-project-main strong,
+.v10-polish.theme-light .kanban-column-header strong,
+.v10-polish.theme-light .kanban-card-title,
+.v10-polish.theme-light .kanban-no-project strong {
+  color: #162730 !important;
+}
+
+.v10-polish.theme-light .kanban-project-header span,
+.v10-polish.theme-light .kanban-project-header strong {
+  color: #223740 !important;
+}
+
+.v10-polish.theme-light .kanban-project-empty,
+.v10-polish.theme-light .kanban-no-project {
+  color: #51646f !important;
+}
+
+.v10-polish.theme-light .kanban-workspace {
+  padding-top: 8px !important;
+}
+
+/* ---------------------------------------------------------
+   Process: márgenes + contraste
+--------------------------------------------------------- */
+
+.v10-polish.theme-light .process-toolbar,
+.v10-polish.theme-light .process-left-panel,
+.v10-polish.theme-light .process-workspace {
+  color: #182830 !important;
+}
+
+.v10-polish.theme-light .process-eyebrow,
+.v10-polish.theme-light .process-toolbar p,
+.v10-polish.theme-light .process-list-main span,
+.v10-polish.theme-light .process-empty-state p,
+.v10-polish.theme-light .process-no-selection p {
+  color: #455964 !important;
+}
+
+.v10-polish.theme-light .process-toolbar h2,
+.v10-polish.theme-light .process-list-main strong,
+.v10-polish.theme-light .process-list-header strong,
+.v10-polish.theme-light .process-empty-state strong,
+.v10-polish.theme-light .process-no-selection strong {
+  color: #162730 !important;
+}
+
+.v10-polish.theme-light .process-list-header span {
+  color: #566a75 !important;
+}
+
+.v10-polish.theme-light .process-list-item {
+  background: #ffffff !important;
+}
+
+/* ---------------------------------------------------------
+   Botones más legibles (otros +2px adicionales reales)
+--------------------------------------------------------- */
+
+.v10-polish
+:is(
+  .btn-primary,
+  .btn-secondary,
+  .assign-button,
+  .baseline-button,
+  .today-button,
+  .meeting-mode-button,
+  .gantt-new-task-button,
+  .week-nav button,
+  .archive-list-actions button,
+  .card-checklist-heading > button,
+  .kanban-checklist-editor button,
+  .task-type-selector button,
+  .process-simulation-actions button,
+  .process-canvas-actions button,
+  .process-selection-toolbar button,
+  .process-link-selection-toolbar button,
+  .cards-selection-toolbar button,
+  .cards-board-meta-actions button,
+  .boards-panel-header button,
+  .kanban-project-header button,
+  .kanban-project-item-actions button,
+  .project-folder-delete,
+  .project-folder-main,
+  .app-settings-menu-item,
+  .process-secondary-button,
+  .cards-secondary-button,
+  .cards-primary-button,
+  .kanban-add-column-button
+) {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+
+.v10-polish.theme-light
+:is(
+  .btn-primary,
+  .btn-secondary,
+  .assign-button,
+  .baseline-button,
+  .today-button,
+  .meeting-mode-button,
+  .gantt-new-task-button,
+  .process-secondary-button,
+  .cards-secondary-button,
+  .cards-primary-button,
+  .kanban-add-column-button
+) {
+  color: #142631 !important;
+}
+
+.v10-polish.theme-light .cards-primary-button,
+.v10-polish.theme-light .meeting-mode-button,
+.v10-polish.theme-light .gantt-new-task-button,
+.v10-polish.theme-light .btn-primary {
+  color: #ffffff !important;
+}
+
+/* ---------------------------------------------------------
+   Toolbars flotantes de selección: un poco más compactas
+--------------------------------------------------------- */
+
+.v10-polish.theme-light .process-selection-toolbar,
+.v10-polish.theme-light .process-link-selection-toolbar,
+.v10-polish.theme-light .cards-selection-toolbar {
+  gap: 8px !important;
+  padding: 10px 12px !important;
+}
+
+.v10-polish.theme-light .process-selection-toolbar strong,
+.v10-polish.theme-light .process-link-selection-toolbar strong,
+.v10-polish.theme-light .cards-selection-toolbar strong,
+.v10-polish.theme-light .process-selection-toolbar span,
+.v10-polish.theme-light .process-link-selection-toolbar span,
+.v10-polish.theme-light .cards-selection-toolbar span,
+.v10-polish.theme-light .process-selection-toolbar label,
+.v10-polish.theme-light .process-link-selection-toolbar label,
+.v10-polish.theme-light .cards-selection-toolbar label {
+  color: #20353f !important;
+}
+
+/* ---------------------------------------------------------
+   Dashboard / labels en general más visibles
+--------------------------------------------------------- */
+
+.v10-polish.theme-light .gantt-page label,
+.v10-polish.theme-light .kanban-page label,
+.v10-polish.theme-light .cards-page label,
+.v10-polish.theme-light .process-page label,
+.v10-polish.theme-light .field-help,
+.v10-polish.theme-light .muted,
+.v10-polish.theme-light small {
+  color: #526571 !important;
+}
+
+
+
+/* =========================================================
+   PROJECTFLOW V10.5.7
+   BASE: V10.5.6
+   Fix final de headers, márgenes y botones en light theme
+========================================================= */
+
+/* --- Márgenes generales consistentes para Cards / Kanban / Process --- */
+.v10-polish.theme-light .cards-page,
+.v10-polish.theme-light .kanban-page,
+.v10-polish.theme-light .process-page {
+  padding: 12px 18px 18px !important;
+}
+
+.v10-polish.theme-light .cards-layout,
+.v10-polish.theme-light .kanban-layout,
+.v10-polish.theme-light .process-layout,
+.v10-polish.theme-light .cards-toolbar,
+.v10-polish.theme-light .kanban-toolbar,
+.v10-polish.theme-light .process-toolbar {
+  box-sizing: border-box !important;
+}
+
+/* --- Headers: línea / caja visible en Kanban y Process --- */
+.v10-polish.theme-light .kanban-toolbar,
+.v10-polish.theme-light .process-toolbar {
+  padding: 14px 16px !important;
+  margin-bottom: 10px !important;
+  border: 1px solid #d1dce2 !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(40, 63, 78, 0.04) !important;
+}
+
+.v10-polish.theme-light .cards-toolbar {
+  padding: 14px 16px !important;
+  margin-bottom: 10px !important;
+}
+
+/* --- Alinear el bloque inferior con el encabezado --- */
+.v10-polish.theme-light .cards-layout,
+.v10-polish.theme-light .kanban-layout,
+.v10-polish.theme-light .process-layout {
+  gap: 12px !important;
+}
+
+/* --- Textos de encabezado más oscuros --- */
+.v10-polish.theme-light .kanban-eyebrow,
+.v10-polish.theme-light .process-eyebrow,
+.v10-polish.theme-light .cards-eyebrow {
+  color: #2f5566 !important;
+}
+
+.v10-polish.theme-light .kanban-toolbar h2,
+.v10-polish.theme-light .process-toolbar h2,
+.v10-polish.theme-light .cards-toolbar h2 {
+  color: #122733 !important;
+}
+
+.v10-polish.theme-light .kanban-toolbar p,
+.v10-polish.theme-light .process-toolbar p,
+.v10-polish.theme-light .cards-toolbar p {
+  color: #455964 !important;
+}
+
+/* --- Botones de cabecera derecha: recuperar color y contraste --- */
+.v10-polish.theme-light .meeting-mode-button {
+  background: #dffcff !important;
+  color: #0b5d69 !important;
+  border: 1px solid #7fd8df !important;
+  box-shadow: 0 0 0 1px rgba(0, 201, 215, 0.06) !important;
+  opacity: 1 !important;
+}
+
+.v10-polish.theme-light .meeting-mode-button:hover:not(:disabled) {
+  background: #c8f8fc !important;
+  color: #084f58 !important;
+  border-color: #55c6cf !important;
+}
+
+.v10-polish.theme-light .meeting-mode-button:disabled {
+  opacity: 0.55 !important;
+  color: #48757d !important;
+  background: #eef7f8 !important;
+  border-color: #c1dce0 !important;
+}
+
+.v10-polish.theme-light .cards-secondary-button,
+.v10-polish.theme-light .process-secondary-button {
+  background: #122738 !important;
+  color: #ffffff !important;
+  border: 1px solid #122738 !important;
+  box-shadow: 0 4px 12px rgba(18, 39, 56, 0.12) !important;
+}
+
+.v10-polish.theme-light .cards-secondary-button:hover,
+.v10-polish.theme-light .process-secondary-button:hover {
+  background: #183247 !important;
+  border-color: #183247 !important;
+  color: #ffffff !important;
+}
+
+/* --- Botones de Cards superiores a la derecha del board --- */
+.v10-polish.theme-light .cards-zone-button,
+.v10-polish.theme-light .cards-note-button,
+.v10-polish.theme-light .cards-shape-button,
+.v10-polish.theme-light .cards-export-button {
+  background: #ffffff !important;
+  color: #183041 !important;
+  border: 1px solid #bfd0d8 !important;
+}
+
+.v10-polish.theme-light .cards-zone-button:hover,
+.v10-polish.theme-light .cards-note-button:hover,
+.v10-polish.theme-light .cards-shape-button:hover,
+.v10-polish.theme-light .cards-export-button:hover {
+  background: #eff7fa !important;
+  color: #0b6775 !important;
+  border-color: #63bcc6 !important;
+}
+
+/* --- Panel de Cards: textos grises a negro más utilizable --- */
+.v10-polish.theme-light .board-list-copy small,
+.v10-polish.theme-light .cards-board-meta span,
+.v10-polish.theme-light .cards-counter,
+.v10-polish.theme-light .card-description,
+.v10-polish.theme-light .card-meta,
+.v10-polish.theme-light .card-meta span,
+.v10-polish.theme-light .cards-empty span,
+.v10-polish.theme-light .cards-empty p {
+  color: #4c606c !important;
+  opacity: 1 !important;
+}
+
+.v10-polish.theme-light .board-list-copy strong,
+.v10-polish.theme-light .cards-board-meta strong,
+.v10-polish.theme-light .card-title {
+  color: #152833 !important;
+}
+
+/* --- Kanban / Process: grises demasiado claros -> oscurecer --- */
+.v10-polish.theme-light .kanban-project-main span,
+.v10-polish.theme-light .kanban-project-empty,
+.v10-polish.theme-light .kanban-column-empty,
+.v10-polish.theme-light .kanban-card-meta span,
+.v10-polish.theme-light .process-list-main span,
+.v10-polish.theme-light .process-empty-state p,
+.v10-polish.theme-light .process-no-selection p,
+.v10-polish.theme-light .project-folder-copy small {
+  color: #4f6571 !important;
+  opacity: 1 !important;
+}
+
+.v10-polish.theme-light .kanban-project-main strong,
+.v10-polish.theme-light .kanban-column-header strong,
+.v10-polish.theme-light .kanban-card-title,
+.v10-polish.theme-light .process-list-main strong,
+.v10-polish.theme-light .process-empty-state strong,
+.v10-polish.theme-light .process-no-selection strong,
+.v10-polish.theme-light .project-folder-copy strong {
+  color: #152833 !important;
+}
+
+/* --- Separación visual entre header y contenido --- */
+.v10-polish.theme-light .kanban-layout {
+  min-height: calc(100vh - 210px) !important;
+}
+
+.v10-polish.theme-light .process-layout {
+  min-height: calc(100vh - 210px) !important;
+}
+
+/* --- Pequeño ajuste: botones un poco más grandes y legibles --- */
+.v10-polish.theme-light :is(
+  .meeting-mode-button,
+  .cards-secondary-button,
+  .process-secondary-button,
+  .cards-zone-button,
+  .cards-note-button,
+  .cards-shape-button,
+  .cards-export-button
+) {
+  min-height: 40px !important;
+  padding: 0 14px !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+}
+
+/* --- Asegurar que paneles principales mantengan el contorno en light --- */
+.v10-polish.theme-light .boards-panel,
+.v10-polish.theme-light .kanban-project-panel,
+.v10-polish.theme-light .process-list-panel,
+.v10-polish.theme-light .process-workspace,
+.v10-polish.theme-light .kanban-workspace,
+.v10-polish.theme-light .cards-board-area {
+  border-color: #d1dce2 !important;
+}
+
+/* --- Colores de los KPI del gantt: mantenerlos sí o sí --- */
+.v10-polish.theme-light .kpi,
+.v10-polish.theme-light .kpi.green,
+.v10-polish.theme-light .kpi.purple,
+.v10-polish.theme-light .kpi.orange,
+.v10-polish.theme-light .kpi.pink {
+  color: #ffffff !important;
+}
+
+
+
+/* =========================================================
+   PROJECTFLOW V10.5.8
+   Branding + transiciones + alineación general
+========================================================= */
+
+.v10-polish .projectflow-brand-title {
+  margin: 0;
+  font-size: 38px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em;
+  color: #102432 !important;
+}
+
+.v10-polish .projectflow-brand-title span {
+  color: #10bfd0 !important;
+}
+
+.v10-polish .visual-sidebar-gp {
+  overflow: hidden;
+  background: linear-gradient(180deg, #ffffff 0%, #f6fbfd 100%);
+  padding: 0 !important;
+}
+
+.v10-polish .visual-sidebar-gp video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.v10-polish .projectflow-nav-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.42), rgba(255,255,255,0.02) 60%, transparent 70%);
+  animation: projectflowTransitionFade 0.42s ease forwards;
+}
+
+.v10-polish .projectflow-nav-transition-video {
+  width: 132px;
+  height: 132px;
+  object-fit: cover;
+  border-radius: 28px;
+  box-shadow: 0 20px 48px rgba(18, 39, 56, 0.18);
+  background: rgba(255,255,255,0.92);
+}
+
+@keyframes projectflowTransitionFade {
+  0% { opacity: 0; transform: scale(0.9); }
+  18% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.04); }
+}
+
+/* Alineación general en vistas principales */
+.v10-polish .cards-page,
+.v10-polish .kanban-page,
+.v10-polish .process-page {
+  padding: 12px 18px 18px !important;
+}
+
+.v10-polish .cards-toolbar,
+.v10-polish .kanban-toolbar,
+.v10-polish .process-toolbar,
+.v10-polish .cards-layout,
+.v10-polish .kanban-layout,
+.v10-polish .process-layout {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+}
+
+.v10-polish .cards-layout,
+.v10-polish .kanban-layout,
+.v10-polish .process-layout {
+  align-items: stretch;
+}
+
+/* headers más consistentes */
+.v10-polish.theme-light .cards-toolbar,
+.v10-polish.theme-light .kanban-toolbar,
+.v10-polish.theme-light .process-toolbar {
+  border: 1px solid #d1dce2 !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  padding: 14px 16px !important;
+  margin-bottom: 12px !important;
+  box-shadow: 0 2px 10px rgba(40, 63, 78, 0.04) !important;
+}
+
+/* Botones principales con contraste correcto */
+.v10-polish.theme-light .cards-toolbar-actions .meeting-mode-button,
+.v10-polish.theme-light .kanban-toolbar-actions .meeting-mode-button,
+.v10-polish.theme-light .process-toolbar-actions .meeting-mode-button {
+  background: #ddfafd !important;
+  color: #0e5b67 !important;
+  border-color: #66cdd6 !important;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions .cards-secondary-button,
+.v10-polish.theme-light .kanban-toolbar-actions .cards-secondary-button,
+.v10-polish.theme-light .process-toolbar-actions .process-secondary-button {
+  background: #102432 !important;
+  color: #ffffff !important;
+  border-color: #102432 !important;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions .cards-secondary-button:hover,
+.v10-polish.theme-light .kanban-toolbar-actions .cards-secondary-button:hover,
+.v10-polish.theme-light .process-toolbar-actions .process-secondary-button:hover,
+.v10-polish.theme-light .cards-toolbar-actions .meeting-mode-button:hover,
+.v10-polish.theme-light .kanban-toolbar-actions .meeting-mode-button:hover,
+.v10-polish.theme-light .process-toolbar-actions .meeting-mode-button:hover {
+  filter: brightness(0.98);
+}
+
+/* Zoom y carpetas con contraste */
+.v10-polish.theme-light .board-zoom-overlay span,
+.v10-polish.theme-light .process-zoom-overlay span {
+  color: #102432 !important;
+  font-weight: 900 !important;
+}
+
+.v10-polish.theme-light .folder-create-icon,
+.v10-polish.theme-light .project-folder-loose-icon {
+  color: #e64747 !important;
+}
+
+.v10-polish.theme-light .folder-create-icon::before,
+.v10-polish.theme-light .folder-create-icon::after,
+.v10-polish.theme-light .project-folder-loose-icon::before,
+.v10-polish.theme-light .project-folder-loose-icon::after {
+  background: #e64747 !important;
+}
+
+/* pequeños textos demasiado claros */
+.v10-polish.theme-light .cards-page p,
+.v10-polish.theme-light .cards-page small,
+.v10-polish.theme-light .kanban-page p,
+.v10-polish.theme-light .kanban-page small,
+.v10-polish.theme-light .process-page p,
+.v10-polish.theme-light .process-page small,
+.v10-polish.theme-light .cards-page span,
+.v10-polish.theme-light .kanban-page span,
+.v10-polish.theme-light .process-page span {
+  color: inherit;
+}
+
+.v10-polish.theme-light .cards-eyebrow,
+.v10-polish.theme-light .kanban-eyebrow,
+.v10-polish.theme-light .process-eyebrow,
+.v10-polish.theme-light .cards-toolbar p,
+.v10-polish.theme-light .kanban-toolbar p,
+.v10-polish.theme-light .process-toolbar p,
+.v10-polish.theme-light .board-list-copy small,
+.v10-polish.theme-light .process-list-main span,
+.v10-polish.theme-light .kanban-project-main span {
+  color: #506471 !important;
+}
+
+/* topbar kept with logo and title */
+.v10-polish .topbar {
+  align-items: center;
+}
+
+.v10-polish .brand-area-project p {
+  margin-top: 4px;
+}
+
+/* ensure sidebar nav buttons do not stick on black */
+.v10-polish .visual-sidebar-icon-button:active {
+  transform: scale(0.98);
+  background: #f4f8fb !important;
+}
+
+/* cards right action buttons over board */
+.v10-polish.theme-light .cards-board-actions button {
+  color: #173041 !important;
+}
+
+
+
+/* =========================================================
+   PROJECTFLOW V10.5.8.1
+   Alineación fina + login branding
+========================================================= */
+
+/* login ProjectFlow */
+.login-logo-projectflow {
+  width: 86px !important;
+  height: 86px !important;
+  margin: 0 auto 18px auto !important;
+  padding: 0 !important;
+  border-radius: 22px !important;
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(98, 214, 224, 0.22) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.login-logo-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.login-brand-title {
+  text-align: center;
+  margin-bottom: 8px !important;
+  font-size: 34px !important;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+}
+
+.login-brand-title span {
+  color: #10bfd0;
+}
+
+.login-card > p {
+  text-align: center;
+}
+
+/* keep content aligned in cards / kanban / process */
+.v10-polish .cards-page,
+.v10-polish .kanban-page,
+.v10-polish .process-page {
+  padding: 12px 16px 18px !important;
+}
+
+.v10-polish .cards-page > .cards-toolbar,
+.v10-polish .cards-page > .cards-layout,
+.v10-polish .kanban-page > .kanban-toolbar,
+.v10-polish .kanban-page > .kanban-layout,
+.v10-polish .process-page > .process-toolbar,
+.v10-polish .process-page > .process-layout {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* force section headers to visually match top area */
+.v10-polish.theme-light .cards-toolbar,
+.v10-polish.theme-light .kanban-toolbar,
+.v10-polish.theme-light .process-toolbar {
+  border: 1px solid #d1dce2 !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  padding: 16px 18px !important;
+  margin-bottom: 12px !important;
+  box-shadow: 0 1px 8px rgba(40, 63, 78, 0.04) !important;
+}
+
+/* toolbar right buttons readable */
+.v10-polish.theme-light .cards-toolbar-actions,
+.v10-polish.theme-light .kanban-toolbar-actions,
+.v10-polish.theme-light .process-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions button,
+.v10-polish.theme-light .kanban-toolbar-actions button,
+.v10-polish.theme-light .process-toolbar-actions button {
+  min-height: 44px !important;
+  padding: 0 18px !important;
+  border-radius: 12px !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em;
+  box-shadow: none !important;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions .meeting-mode-button,
+.v10-polish.theme-light .kanban-toolbar-actions .meeting-mode-button,
+.v10-polish.theme-light .process-toolbar-actions .meeting-mode-button {
+  background: #e9fbfd !important;
+  color: #116776 !important;
+  border: 1px solid #78d4dc !important;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions .cards-secondary-button,
+.v10-polish.theme-light .kanban-toolbar-actions .cards-secondary-button,
+.v10-polish.theme-light .process-toolbar-actions .process-secondary-button {
+  background: #0f2231 !important;
+  color: #ffffff !important;
+  border: 1px solid #0f2231 !important;
+}
+
+/* darker supporting copy */
+.v10-polish.theme-light .cards-eyebrow,
+.v10-polish.theme-light .kanban-eyebrow,
+.v10-polish.theme-light .process-eyebrow {
+  color: #3f5563 !important;
+}
+
+.v10-polish.theme-light .cards-toolbar p,
+.v10-polish.theme-light .kanban-toolbar p,
+.v10-polish.theme-light .process-toolbar p,
+.v10-polish.theme-light .cards-toolbar span,
+.v10-polish.theme-light .kanban-toolbar span,
+.v10-polish.theme-light .process-toolbar span {
+  color: #516572 !important;
+}
+
+/* topbars always aligned and consistent */
+.v10-polish.theme-light .topbar {
+  padding: 18px 16px 16px !important;
+  border-bottom: 1px solid #d5dfe4 !important;
+  margin-bottom: 6px !important;
+}
+
+/* small contrast fixes requested */
+.v10-polish.theme-light .board-zoom-overlay span,
+.v10-polish.theme-light .process-zoom-overlay span {
+  color: #0f2231 !important;
+  font-weight: 900 !important;
+}
+
+.v10-polish.theme-light .folder-create-icon,
+.v10-polish.theme-light .project-folder-loose-icon {
+  color: #e04747 !important;
+}
+
+.v10-polish.theme-light .folder-create-icon::before,
+.v10-polish.theme-light .folder-create-icon::after,
+.v10-polish.theme-light .project-folder-loose-icon::before,
+.v10-polish.theme-light .project-folder-loose-icon::after {
+  background: #e04747 !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.5.8.2
+   SUPER POLISH - LIGHT THEME ALIGNMENT / CONTRAST / SPACING
+========================================================= */
+.v10-polish.theme-light {
+  --pf-page-x: 26px;
+  --pf-page-y: 14px;
+  --pf-card-border: #c8d6df;
+  --pf-soft-text: #4b6270;
+  --pf-main-text: #13283a;
+  --pf-muted-text: #5d7482;
+  --pf-white: #ffffff;
+  --pf-dark-btn: #102234;
+  --pf-dark-btn-hover: #173049;
+  --pf-cyan-bg: #dff8fb;
+  --pf-cyan-border: #7fd4dc;
+  --pf-cyan-text: #126574;
+}
+
+/* same left-right rhythm as top header */
+.v10-polish.theme-light .topbar {
+  padding: 18px var(--pf-page-x) 16px !important;
+  margin: 0 0 10px 0 !important;
+  border-bottom: 1px solid #d2dde4 !important;
+}
+
+.v10-polish.theme-light .cards-page,
+.v10-polish.theme-light .kanban-page,
+.v10-polish.theme-light .process-page {
+  padding: var(--pf-page-y) var(--pf-page-x) 22px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.v10-polish.theme-light .cards-page > .cards-toolbar,
+.v10-polish.theme-light .cards-page > .cards-layout,
+.v10-polish.theme-light .kanban-page > .kanban-toolbar,
+.v10-polish.theme-light .kanban-page > .kanban-layout,
+.v10-polish.theme-light .process-page > .process-toolbar,
+.v10-polish.theme-light .process-page > .process-layout {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* headers */
+.v10-polish.theme-light .cards-toolbar,
+.v10-polish.theme-light .kanban-toolbar,
+.v10-polish.theme-light .process-toolbar {
+  background: var(--pf-white) !important;
+  border: 1px solid var(--pf-card-border) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 2px 12px rgba(27, 56, 77, 0.05) !important;
+  padding: 18px 18px !important;
+  margin-bottom: 12px !important;
+  align-items: center !important;
+}
+
+.v10-polish.theme-light .cards-toolbar h2,
+.v10-polish.theme-light .kanban-toolbar h2,
+.v10-polish.theme-light .process-toolbar h2,
+.v10-polish.theme-light .topbar h1 {
+  color: var(--pf-main-text) !important;
+}
+
+.v10-polish.theme-light .cards-toolbar p,
+.v10-polish.theme-light .kanban-toolbar p,
+.v10-polish.theme-light .process-toolbar p,
+.v10-polish.theme-light .topbar p,
+.v10-polish.theme-light .cards-page p,
+.v10-polish.theme-light .kanban-page p,
+.v10-polish.theme-light .process-page p,
+.v10-polish.theme-light .cards-page small,
+.v10-polish.theme-light .kanban-page small,
+.v10-polish.theme-light .process-page small,
+.v10-polish.theme-light .cards-page span,
+.v10-polish.theme-light .kanban-page span,
+.v10-polish.theme-light .process-page span {
+  color: var(--pf-soft-text) !important;
+}
+
+/* list descriptions clearly visible */
+.v10-polish.theme-light .process-list-description,
+.v10-polish.theme-light .board-list-copy small,
+.v10-polish.theme-light .kanban-project-main span,
+.v10-polish.theme-light .empty-folder-dropzone,
+.v10-polish.theme-light .project-folder-meta,
+.v10-polish.theme-light .cards-empty-copy,
+.v10-polish.theme-light .kanban-empty-copy,
+.v10-polish.theme-light .process-empty-copy {
+  color: var(--pf-muted-text) !important;
+}
+
+.v10-polish.theme-light .process-list-item strong,
+.v10-polish.theme-light .board-list-copy strong,
+.v10-polish.theme-light .kanban-project-main strong,
+.v10-polish.theme-light .cards-toolbar h2,
+.v10-polish.theme-light .kanban-toolbar h2,
+.v10-polish.theme-light .process-toolbar h2 {
+  color: var(--pf-main-text) !important;
+}
+
+/* main layout blocks */
+.v10-polish.theme-light .cards-layout,
+.v10-polish.theme-light .kanban-layout,
+.v10-polish.theme-light .process-layout {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-top: 2px !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+}
+
+/* action buttons readable everywhere */
+.v10-polish.theme-light .cards-toolbar-actions,
+.v10-polish.theme-light .kanban-toolbar-actions,
+.v10-polish.theme-light .process-toolbar-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions button,
+.v10-polish.theme-light .kanban-toolbar-actions button,
+.v10-polish.theme-light .process-toolbar-actions button {
+  min-height: 42px !important;
+  padding: 0 18px !important;
+  border-radius: 12px !important;
+  border: 1px solid #b8cad5 !important;
+  background: #ffffff !important;
+  color: var(--pf-main-text) !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+  box-shadow: none !important;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions button:hover,
+.v10-polish.theme-light .kanban-toolbar-actions button:hover,
+.v10-polish.theme-light .process-toolbar-actions button:hover {
+  border-color: #93b6c8 !important;
+  background: #f7fbfd !important;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions .meeting-mode-button,
+.v10-polish.theme-light .kanban-toolbar-actions .meeting-mode-button,
+.v10-polish.theme-light .process-toolbar-actions .meeting-mode-button {
+  background: var(--pf-cyan-bg) !important;
+  color: var(--pf-cyan-text) !important;
+  border-color: var(--pf-cyan-border) !important;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions .cards-secondary-button,
+.v10-polish.theme-light .kanban-toolbar-actions .cards-secondary-button,
+.v10-polish.theme-light .process-toolbar-actions .process-secondary-button {
+  background: var(--pf-dark-btn) !important;
+  color: #ffffff !important;
+  border-color: var(--pf-dark-btn) !important;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions .cards-secondary-button:hover,
+.v10-polish.theme-light .kanban-toolbar-actions .cards-secondary-button:hover,
+.v10-polish.theme-light .process-toolbar-actions .process-secondary-button:hover {
+  background: var(--pf-dark-btn-hover) !important;
+  border-color: var(--pf-dark-btn-hover) !important;
+}
+
+/* internal panels */
+.v10-polish.theme-light .cards-board-panel,
+.v10-polish.theme-light .kanban-project-panel,
+.v10-polish.theme-light .process-left-panel,
+.v10-polish.theme-light .process-workspace,
+.v10-polish.theme-light .cards-canvas-shell,
+.v10-polish.theme-light .kanban-board-area,
+.v10-polish.theme-light .process-canvas-shell,
+.v10-polish.theme-light .process-map-shell {
+  border-color: var(--pf-card-border) !important;
+}
+
+/* darker text on empty states / labels */
+.v10-polish.theme-light .kanban-project-empty,
+.v10-polish.theme-light .cards-board-empty,
+.v10-polish.theme-light .process-empty-state,
+.v10-polish.theme-light .cards-page label,
+.v10-polish.theme-light .kanban-page label,
+.v10-polish.theme-light .process-page label {
+  color: var(--pf-soft-text) !important;
+}
+
+/* zoom overlays: black percentage */
+.v10-polish.theme-light .board-zoom-overlay,
+.v10-polish.theme-light .process-zoom-overlay {
+  background: rgba(255,255,255,0.96) !important;
+  border: 1px solid #c8d7df !important;
+  box-shadow: 0 10px 24px rgba(22, 45, 63, 0.12) !important;
+}
+
+.v10-polish.theme-light .board-zoom-overlay button,
+.v10-polish.theme-light .process-zoom-overlay button {
+  color: #102234 !important;
+  background: #ffffff !important;
+  border: 1px solid #bdd0db !important;
+}
+
+.v10-polish.theme-light .board-zoom-overlay span,
+.v10-polish.theme-light .process-zoom-overlay span {
+  color: #111111 !important;
+  font-weight: 900 !important;
+}
+
+/* folder icon: red, no white fill confusion */
+.v10-polish.theme-light .folder-create-icon,
+.v10-polish.theme-light .project-folder-loose-icon {
+  color: #d84a4a !important;
+}
+
+.v10-polish.theme-light .folder-create-icon::before,
+.v10-polish.theme-light .folder-create-icon::after,
+.v10-polish.theme-light .project-folder-loose-icon::before,
+.v10-polish.theme-light .project-folder-loose-icon::after {
+  background: transparent !important;
+  border-color: #d84a4a !important;
+}
+
+/* keep toolbar color circles visible */
+.v10-polish.theme-light .cards-toolbar .color-dot,
+.v10-polish.theme-light .kanban-toolbar .color-dot,
+.v10-polish.theme-light .process-toolbar .color-dot,
+.v10-polish.theme-light .board-toolbar .color-dot,
+.v10-polish.theme-light .process-toolbar-floating .color-dot,
+.v10-polish.theme-light .board-floating-toolbar .color-dot,
+.v10-polish.theme-light .process-floating-toolbar .color-dot,
+.v10-polish.theme-light .board-color-option,
+.v10-polish.theme-light .process-color-option,
+.v10-polish.theme-light .kanban-color-option {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* dashboard cards on gantt keep colored backgrounds with white copy */
+.v10-polish.theme-light .metric-card,
+.v10-polish.theme-light .gantt-stat-card,
+.v10-polish.theme-light .dashboard-kpi-card {
+  color: #ffffff !important;
+}
+
+.v10-polish.theme-light .metric-card p,
+.v10-polish.theme-light .metric-card span,
+.v10-polish.theme-light .metric-card strong,
+.v10-polish.theme-light .gantt-stat-card p,
+.v10-polish.theme-light .gantt-stat-card span,
+.v10-polish.theme-light .dashboard-kpi-card p,
+.v10-polish.theme-light .dashboard-kpi-card span {
+  color: #ffffff !important;
+}
+
+/* process specific: internal action buttons row readable */
+.v10-polish.theme-light .process-action-bar button,
+.v10-polish.theme-light .process-map-actions button {
+  color: var(--pf-main-text) !important;
+  background: #ffffff !important;
+  border: 1px solid #bfd0da !important;
+  font-weight: 800 !important;
+}
+
+/* reduce accidental low-contrast whites in left side panels */
+.v10-polish.theme-light .process-left-panel *,
+.v10-polish.theme-light .kanban-project-panel *,
+.v10-polish.theme-light .cards-board-panel * {
+  text-shadow: none !important;
+}
+
+/* cards / kanban / process content slightly tighter to gain room */
+.v10-polish.theme-light .cards-layout,
+.v10-polish.theme-light .kanban-layout,
+.v10-polish.theme-light .process-layout,
+.v10-polish.theme-light .cards-toolbar,
+.v10-polish.theme-light .kanban-toolbar,
+.v10-polish.theme-light .process-toolbar {
+  max-width: calc(100vw - 92px) !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.5.8.3
+   FIX DIRECTO: ZOOM + CARPETA
+========================================================= */
+
+/* Zoom: valor negro en light, sin depender de reglas anteriores */
+.v10-polish.theme-light .process-zoom-value,
+.v10-polish.theme-light .board-zoom-value,
+.v10-polish.theme-light .process-zoom-overlay > span,
+.v10-polish.theme-light .board-zoom-overlay > span {
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  opacity: 1 !important;
+  font-weight: 900 !important;
+  text-shadow: none !important;
+}
+
+/* Dark: conservar legibilidad */
+.v10-polish.theme-dark .process-zoom-value,
+.v10-polish.theme-dark .board-zoom-value,
+.v10-polish.theme-dark .process-zoom-overlay > span,
+.v10-polish.theme-dark .board-zoom-overlay > span {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Carpeta: icono ROJO real en light theme */
+.v10-polish.theme-light .folder-create-button .folder-create-icon {
+  color: #d84a4a !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.v10-polish.theme-light .folder-create-button .folder-create-icon::before,
+.v10-polish.theme-light .folder-create-button .folder-create-icon::after {
+  background: transparent !important;
+  border-color: #d84a4a !important;
+  opacity: 1 !important;
+}
+
+/* Botón contenedor de carpeta: fondo claro para que el rojo se vea */
+.v10-polish.theme-light .folder-create-button {
+  background: #ffffff !important;
+  border-color: #b9cad3 !important;
+  color: #d84a4a !important;
+}
+
+.v10-polish.theme-light .folder-create-button:hover {
+  background: #fff5f5 !important;
+  border-color: #d88b8b !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.5.9
+   PASADA VISUAL COMPLETA
+   PRIORIDAD: márgenes, alineación, contraste, zoom y carpeta
+========================================================= */
+
+.v10-polish.theme-light {
+  --pf-edge: 10px;
+  --pf-gap: 10px;
+  --pf-border-clean: #cad7df;
+  --pf-border-strong: #b8c9d3;
+  --pf-text-main: #142a36;
+  --pf-text-secondary: #485f6c;
+  --pf-text-muted: #617681;
+  --pf-surface: #ffffff;
+  --pf-surface-soft: #f5f8fa;
+  --pf-accent-dark: #102433;
+  --pf-cyan-soft: #e3fafd;
+  --pf-cyan-line: #72ced7;
+  --pf-cyan-text: #0d6270;
+}
+
+/* =========================================================
+   1. MÁRGENES GLOBALES
+   Reducimos el viejo padding de .app de 24px.
+   Todo queda alineado a 10px del borde útil, de ambos lados.
+========================================================= */
+
+.v10-polish.theme-light.app-shell .app.app-main,
+.v10-polish.theme-light .app.app-main {
+  padding: 8px var(--pf-edge) 12px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.v10-polish.theme-light .topbar {
+  width: 100% !important;
+  margin: 0 0 8px 0 !important;
+  padding: 12px 14px !important;
+  box-sizing: border-box !important;
+  border-bottom: 1px solid var(--pf-border-clean) !important;
+}
+
+.v10-polish.theme-light .cards-page,
+.v10-polish.theme-light .kanban-page,
+.v10-polish.theme-light .process-page {
+  padding: 6px 0 12px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.v10-polish.theme-light .cards-page > .cards-toolbar,
+.v10-polish.theme-light .cards-page > .cards-layout,
+.v10-polish.theme-light .kanban-page > .kanban-toolbar,
+.v10-polish.theme-light .kanban-page > .kanban-layout,
+.v10-polish.theme-light .process-page > .process-toolbar,
+.v10-polish.theme-light .process-page > .process-layout {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Gantt y módulos secundarios también respetan el mismo borde */
+.v10-polish.theme-light :is(
+  .filters,
+  .dashboard,
+  .portfolio-dashboard,
+  .gantt-navigation,
+  .gantt-workspace,
+  .capacity-section,
+  .planning-section,
+  .history-page
+) {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+/* =========================================================
+   2. ENCABEZADOS CARDS / KANBAN / PROCESS
+========================================================= */
+
+.v10-polish.theme-light .cards-toolbar,
+.v10-polish.theme-light .kanban-toolbar,
+.v10-polish.theme-light .process-toolbar {
+  min-height: 86px !important;
+  margin: 0 0 var(--pf-gap) 0 !important;
+  padding: 14px 16px !important;
+  border: 1px solid var(--pf-border-clean) !important;
+  border-radius: 14px !important;
+  background: var(--pf-surface) !important;
+  box-shadow: 0 2px 9px rgba(31, 61, 79, .045) !important;
+  align-items: center !important;
+}
+
+.v10-polish.theme-light .cards-toolbar h2,
+.v10-polish.theme-light .kanban-toolbar h2,
+.v10-polish.theme-light .process-toolbar h2 {
+  color: var(--pf-text-main) !important;
+  font-size: 18px !important;
+  line-height: 1.1 !important;
+  font-weight: 900 !important;
+}
+
+.v10-polish.theme-light .cards-eyebrow,
+.v10-polish.theme-light .kanban-eyebrow,
+.v10-polish.theme-light .process-eyebrow {
+  color: #335565 !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  letter-spacing: .055em !important;
+}
+
+.v10-polish.theme-light .cards-toolbar p,
+.v10-polish.theme-light .kanban-toolbar p,
+.v10-polish.theme-light .process-toolbar p {
+  margin-top: 4px !important;
+  color: var(--pf-text-secondary) !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+}
+
+/* =========================================================
+   3. LAYOUTS PRINCIPALES / ALINEACIÓN
+========================================================= */
+
+.v10-polish.theme-light .cards-layout,
+.v10-polish.theme-light .kanban-layout,
+.v10-polish.theme-light .process-layout {
+  gap: var(--pf-gap) !important;
+  margin-top: 0 !important;
+  align-items: stretch !important;
+  border-radius: 12px !important;
+}
+
+.v10-polish.theme-light :is(
+  .boards-panel,
+  .kanban-project-panel,
+  .process-left-panel,
+  .cards-board-area,
+  .kanban-workspace,
+  .process-workspace
+) {
+  border-color: var(--pf-border-clean) !important;
+  box-shadow: 0 2px 9px rgba(31, 61, 79, .035) !important;
+}
+
+/* =========================================================
+   4. BOTONES DE CABECERA
+========================================================= */
+
+.v10-polish.theme-light .cards-toolbar-actions,
+.v10-polish.theme-light .kanban-toolbar-actions,
+.v10-polish.theme-light .process-toolbar-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions button,
+.v10-polish.theme-light .kanban-toolbar-actions button,
+.v10-polish.theme-light .process-toolbar-actions button {
+  min-height: 40px !important;
+  padding: 0 15px !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  font-weight: 850 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions .meeting-mode-button,
+.v10-polish.theme-light .kanban-toolbar-actions .meeting-mode-button,
+.v10-polish.theme-light .process-toolbar-actions .meeting-mode-button {
+  background: var(--pf-cyan-soft) !important;
+  border: 1px solid var(--pf-cyan-line) !important;
+  color: var(--pf-cyan-text) !important;
+  -webkit-text-fill-color: var(--pf-cyan-text) !important;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions .cards-secondary-button,
+.v10-polish.theme-light .kanban-toolbar-actions .cards-secondary-button,
+.v10-polish.theme-light .process-toolbar-actions .process-secondary-button {
+  background: var(--pf-accent-dark) !important;
+  border: 1px solid var(--pf-accent-dark) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.v10-polish.theme-light .cards-toolbar-actions .cards-secondary-button:hover,
+.v10-polish.theme-light .kanban-toolbar-actions .cards-secondary-button:hover,
+.v10-polish.theme-light .process-toolbar-actions .process-secondary-button:hover {
+  background: #17384d !important;
+  border-color: #17384d !important;
+}
+
+/* =========================================================
+   5. TEXTOS - SIN GRISES LAVADOS
+========================================================= */
+
+.v10-polish.theme-light :is(
+  .process-list-description,
+  .board-list-copy small,
+  .kanban-project-main span,
+  .project-folder-copy small,
+  .cards-counter,
+  .cards-board-meta span,
+  .kanban-project-empty,
+  .process-list-empty,
+  .folder-project-empty
+) {
+  color: var(--pf-text-secondary) !important;
+  -webkit-text-fill-color: var(--pf-text-secondary) !important;
+  opacity: 1 !important;
+  font-weight: 650 !important;
+}
+
+.v10-polish.theme-light :is(
+  .process-list-main strong,
+  .board-list-copy strong,
+  .kanban-project-main strong,
+  .project-folder-copy strong,
+  .cards-board-meta strong
+) {
+  color: var(--pf-text-main) !important;
+  -webkit-text-fill-color: var(--pf-text-main) !important;
+}
+
+/* =========================================================
+   6. CARPETA - SVG REAL ROJO
+   No usa pseudo-elemento: no puede quedar blanco.
+========================================================= */
+
+.v10-polish .folder-create-svg {
+  width: 19px !important;
+  height: 17px !important;
+  display: block !important;
+  overflow: visible !important;
+  flex: 0 0 auto !important;
+}
+
+.v10-polish.theme-light .folder-create-button {
+  background: #ffffff !important;
+  border: 1px solid #bdccd5 !important;
+  color: #d83f4a !important;
+}
+
+.v10-polish.theme-light .folder-create-button .folder-create-svg {
+  color: #d83f4a !important;
+  stroke: #d83f4a !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.v10-polish.theme-light .folder-create-button:hover {
+  background: #fff3f4 !important;
+  border-color: #df969d !important;
+}
+
+/* Ocultamos cualquier resto del icono viejo por pseudo-elementos */
+.v10-polish .folder-create-button .folder-create-icon {
+  display: none !important;
+}
+
+/* =========================================================
+   7. ZOOM - NEGRO FORZADO EN LIGHT
+========================================================= */
+
+.v10-polish.theme-light .process-zoom-value,
+.v10-polish.theme-light .board-zoom-value,
+.v10-polish.theme-light .process-zoom-overlay > span,
+.v10-polish.theme-light .board-zoom-overlay > span {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  opacity: 1 !important;
+  font-weight: 950 !important;
+  text-shadow: none !important;
+}
+
+.v10-polish.theme-light .process-zoom-overlay,
+.v10-polish.theme-light .board-zoom-overlay {
+  background: rgba(255,255,255,.98) !important;
+  border: 1px solid #c6d4dc !important;
+  box-shadow: 0 8px 22px rgba(25, 49, 65, .13) !important;
+}
+
+.v10-polish.theme-light .process-zoom-overlay button,
+.v10-polish.theme-light .board-zoom-overlay button {
+  background: #f7fafb !important;
+  border: 1px solid #bccdd6 !important;
+  color: #122936 !important;
+  -webkit-text-fill-color: #122936 !important;
+  font-weight: 900 !important;
+}
+
+/* =========================================================
+   8. BARRAS DE COMANDOS / COLOR PICKERS
+========================================================= */
+
+.v10-polish.theme-light :is(
+  .process-canvas-tools,
+  .process-selection-toolbar,
+  .process-link-selection-toolbar,
+  .cards-selection-toolbar,
+  .cards-canvas-bg-picker,
+  .process-canvas-bg-picker,
+  .kanban-bg-picker
+) {
+  background: rgba(255,255,255,.98) !important;
+  border-color: #c8d6dd !important;
+  color: var(--pf-text-main) !important;
+  box-shadow: 0 8px 20px rgba(31, 57, 72, .10) !important;
+}
+
+.v10-polish.theme-light :is(
+  .process-canvas-tools,
+  .process-selection-toolbar,
+  .process-link-selection-toolbar,
+  .cards-selection-toolbar
+) button {
+  color: var(--pf-text-main) !important;
+  -webkit-text-fill-color: var(--pf-text-main) !important;
+}
+
+/* colores siempre visibles */
+.v10-polish.theme-light :is(
+  .process-bg-dot,
+  .cards-bg-dot,
+  .kanban-bg-dot,
+  .process-selection-color-dot,
+  .process-link-selection-color-dot,
+  .unified-color-options button,
+  .process-box-color-options button,
+  .process-link-color-options button,
+  .zone-color-options button,
+  .kanban-card-color-options button
+) {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* =========================================================
+   9. GANTT KPI - CONSERVAR COLOR + TEXTO BLANCO
+========================================================= */
+
+.v10-polish.theme-light .kpi {
+  color: #ffffff !important;
+  border-color: transparent !important;
+}
+
+.v10-polish.theme-light .kpi span,
+.v10-polish.theme-light .kpi small,
+.v10-polish.theme-light .kpi strong {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* =========================================================
+   10. LOGIN / BRAND
+========================================================= */
+
+.login-brand-title {
+  font-size: 34px !important;
+  font-weight: 900 !important;
+  letter-spacing: -.04em !important;
+}
+
+.login-brand-title span {
+  color: #10bfd0 !important;
+}
+
+/* =========================================================
+   11. RESPONSIVE DESKTOP
+========================================================= */
+
+@media (max-width: 1200px) {
+  .v10-polish.theme-light {
+    --pf-edge: 8px;
+    --pf-gap: 8px;
+  }
+
+  .v10-polish.theme-light .cards-toolbar,
+  .v10-polish.theme-light .kanban-toolbar,
+  .v10-polish.theme-light .process-toolbar {
+    padding: 12px 13px !important;
+  }
+}

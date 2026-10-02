@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import './index.css'
 import { supabase } from './lib/supabase'
-import logoGP from './assets/logo-gp.png'
+import projectflowAnimatedLogo from './assets/ai-generations_minimax-h3_948fbf32-6e8e-48ab-ac75-0565b45fde7d-MsP9kN.mp4'
 import ganttIcon from './assets/icon-gantt.png'
 import cardsIcon from './assets/icon-cards.png'
 import archiveIcon from './assets/icon-archive.png'
@@ -767,6 +767,8 @@ function App() {
     }
   })
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false)
+  const [navTransitionVisible, setNavTransitionVisible] = useState(false)
+  const [navTransitionTarget, setNavTransitionTarget] = useState('gantt')
 
   const [proyecto, setProyecto] = useState(null)
   const [proyectos, setProyectos] = useState([])
@@ -1546,6 +1548,21 @@ useEffect(() => {
     setHistorial([])
     setPerfiles([])
   }
+
+function navegarVistaPrincipal(destino) {
+  if (destino === vistaPrincipal) {
+    return
+  }
+
+  setNavTransitionTarget(destino)
+  setNavTransitionVisible(true)
+  window.setTimeout(() => {
+    setVistaPrincipal(destino)
+  }, 90)
+  window.setTimeout(() => {
+    setNavTransitionVisible(false)
+  }, 430)
+}
 
   async function cargarProyectos() {
   const { data, error } = await supabase
@@ -13122,15 +13139,24 @@ function colorEstadoTarea(tarea) {
       <div className="login-screen">
         <div className="login-card">
 
-          <div className="login-logo image-logo">
-  <img src={logoGP} alt="Grupo Petersen" />
-</div>
+          <div className="login-logo login-logo-projectflow">
+            <video
+              src={projectflowAnimatedLogo}
+              autoPlay
+              muted
+              playsInline
+              loop
+              className="login-logo-video"
+            />
+          </div>
 
-          <h1>Grupo Petersen</h1>
+          <h1 className="login-brand-title">
+            Project<span>Flow</span>
+          </h1>
 
-<p>
-  Gestión colaborativa de proyectos
-</p>
+          <p>
+            Gestión colaborativa de proyectos
+          </p>
 
           <form onSubmit={login}>
 
@@ -13183,6 +13209,18 @@ function colorEstadoTarea(tarea) {
           : ''
       }`}
     >
+      {navTransitionVisible && (
+        <div className="projectflow-nav-transition" aria-hidden="true">
+          <video
+            src={projectflowAnimatedLogo}
+            autoPlay
+            muted
+            playsInline
+            loop
+            className="projectflow-nav-transition-video"
+          />
+        </div>
+      )}
       {meetingMode && (
         <button
           type="button"
@@ -13193,19 +13231,19 @@ function colorEstadoTarea(tarea) {
         </button>
       )}
       <aside className="visual-sidebar">
-        <a
-          href="https://www.grupopetersen.com.ar/inicio"
-          target="_blank"
-          rel="noreferrer"
+        <div
           className="visual-sidebar-gp"
-          title="Grupo Petersen"
-          aria-label="Abrir Grupo Petersen"
+          title="ProjectFlow"
+          aria-label="ProjectFlow"
         >
-          <img
-            src={logoGP}
-            alt="Grupo Petersen"
+          <video
+            src={projectflowAnimatedLogo}
+            autoPlay
+            muted
+            playsInline
+            loop
           />
-        </a>
+        </div>
 
         <div className="visual-sidebar-divider" />
 
@@ -13216,7 +13254,7 @@ function colorEstadoTarea(tarea) {
               ? 'visual-sidebar-icon-button active'
               : 'visual-sidebar-icon-button'
           }
-          onClick={() => setVistaPrincipal('gantt')}
+          onClick={() => navegarVistaPrincipal('gantt')}
           title="Gantt"
           aria-label="Gantt"
         >
@@ -13234,7 +13272,7 @@ function colorEstadoTarea(tarea) {
               ? 'visual-sidebar-icon-button active'
               : 'visual-sidebar-icon-button'
           }
-          onClick={() => setVistaPrincipal('cards')}
+          onClick={() => navegarVistaPrincipal('cards')}
           title="Boards / Cards"
           aria-label="Boards / Cards"
         >
@@ -13252,7 +13290,7 @@ function colorEstadoTarea(tarea) {
               ? 'visual-sidebar-icon-button active'
               : 'visual-sidebar-icon-button'
           }
-          onClick={() => setVistaPrincipal('kanban')}
+          onClick={() => navegarVistaPrincipal('kanban')}
           title="Kanban"
           aria-label="Kanban"
         >
@@ -13270,7 +13308,7 @@ function colorEstadoTarea(tarea) {
               ? 'visual-sidebar-icon-button active'
               : 'visual-sidebar-icon-button'
           }
-          onClick={() => setVistaPrincipal('process')}
+          onClick={() => navegarVistaPrincipal('process')}
           title="Process"
           aria-label="Process"
         >
@@ -13288,14 +13326,8 @@ function colorEstadoTarea(tarea) {
 
         <div className="brand-area brand-area-project">
           <div>
-            <h1>
-              {vistaPrincipal === 'cards'
-                ? 'Boards'
-                : vistaPrincipal === 'kanban'
-                  ? 'Kanban'
-                  : vistaPrincipal === 'process'
-                    ? 'Process'
-                    : 'Gestión de proyectos'}
+            <h1 className="projectflow-brand-title">
+              Project<span>Flow</span>
             </h1>
 
             <p>
@@ -15267,9 +15299,25 @@ function colorEstadoTarea(tarea) {
                       }
                       title="Crear carpeta de procesos"
                     >
-                      <span className="folder-create-icon">
-                        <i />
-                      </span>
+                      <svg
+                        className="folder-create-svg"
+                        viewBox="0 0 24 20"
+                        aria-hidden="true"
+                        style={{
+                          color:
+                            appTheme === 'light'
+                              ? '#d83f4a'
+                              : '#f7c948',
+                        }}
+                      >
+                        <path
+                          d="M2.5 5.5h7l2-2.5h10v14.5h-19z"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </button>
 
                     <button
@@ -15718,7 +15766,23 @@ function colorEstadoTarea(tarea) {
 
                     <div className="process-zoom-overlay">
                       <button type="button" onClick={() => cambiarProcessZoom(-0.1)}>−</button>
-                      <span>{Math.round(processZoom * 100)}%</span>
+                      <span
+                        className="process-zoom-value"
+                        style={{
+                          color:
+                            appTheme === 'light'
+                              ? '#000000'
+                              : '#ffffff',
+                          WebkitTextFillColor:
+                            appTheme === 'light'
+                              ? '#000000'
+                              : '#ffffff',
+                          opacity: 1,
+                          fontWeight: 900,
+                        }}
+                      >
+                        {Math.round(processZoom * 100)}%
+                      </span>
                       <button type="button" onClick={() => cambiarProcessZoom(0.1)}>+</button>
                     </div>
 
@@ -16693,9 +16757,25 @@ function colorEstadoTarea(tarea) {
                     }
                     title="Crear carpeta de Kanban"
                   >
-                    <span className="folder-create-icon">
-                      <i />
-                    </span>
+                    <svg
+                        className="folder-create-svg"
+                        viewBox="0 0 24 20"
+                        aria-hidden="true"
+                        style={{
+                          color:
+                            appTheme === 'light'
+                              ? '#d83f4a'
+                              : '#f7c948',
+                        }}
+                      >
+                        <path
+                          d="M2.5 5.5h7l2-2.5h10v14.5h-19z"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                   </button>
 
                   <button
@@ -17171,9 +17251,25 @@ function colorEstadoTarea(tarea) {
                     }
                     title="Crear carpeta de boards"
                   >
-                    <span className="folder-create-icon">
-                      <i />
-                    </span>
+                    <svg
+                        className="folder-create-svg"
+                        viewBox="0 0 24 20"
+                        aria-hidden="true"
+                        style={{
+                          color:
+                            appTheme === 'light'
+                              ? '#d83f4a'
+                              : '#f7c948',
+                        }}
+                      >
+                        <path
+                          d="M2.5 5.5h7l2-2.5h10v14.5h-19z"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                   </button>
 
                   <button
@@ -17491,7 +17587,21 @@ function colorEstadoTarea(tarea) {
                       −
                     </button>
 
-                    <span>
+                    <span
+                      className="board-zoom-value"
+                      style={{
+                        color:
+                          appTheme === 'light'
+                            ? '#000000'
+                            : '#ffffff',
+                        WebkitTextFillColor:
+                          appTheme === 'light'
+                            ? '#000000'
+                            : '#ffffff',
+                        opacity: 1,
+                        fontWeight: 900,
+                      }}
+                    >
                       {Math.round(
                         boardZoom * 100
                       )}%
@@ -21641,7 +21751,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.5.4</span>
+        <span>V10.5.9</span>
         <span>01/10/2026</span>
       </footer>
 
