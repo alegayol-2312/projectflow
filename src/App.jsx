@@ -140,6 +140,65 @@ const PROCESO_COMPONENTES = [
 ]
 
 
+
+const FLOW_COLOR_PALETTES = [
+  {
+    name: 'Cyan',
+    c1: '#06aabc',
+    c2: '#20d6e4',
+    c3: '#7eeaf1',
+    c4: '#10bfd0',
+    glow: 'rgba(16,191,208,.28)',
+  },
+  {
+    name: 'Azul',
+    c1: '#2563eb',
+    c2: '#3b82f6',
+    c3: '#93c5fd',
+    c4: '#1d4ed8',
+    glow: 'rgba(59,130,246,.28)',
+  },
+  {
+    name: 'Violeta',
+    c1: '#7c3aed',
+    c2: '#a855f7',
+    c3: '#d8b4fe',
+    c4: '#8b5cf6',
+    glow: 'rgba(168,85,247,.28)',
+  },
+  {
+    name: 'Esmeralda',
+    c1: '#059669',
+    c2: '#10b981',
+    c3: '#6ee7b7',
+    c4: '#0d9488',
+    glow: 'rgba(16,185,129,.28)',
+  },
+  {
+    name: 'Fucsia',
+    c1: '#db2777',
+    c2: '#ec4899',
+    c3: '#f9a8d4',
+    c4: '#c026d3',
+    glow: 'rgba(236,72,153,.28)',
+  },
+]
+
+function randomDifferentIndex(currentIndex, total) {
+  if (total <= 1) return 0
+
+  let nextIndex = currentIndex
+
+  while (nextIndex === currentIndex) {
+    nextIndex =
+      Math.floor(
+        Math.random() * total
+      )
+  }
+
+  return nextIndex
+}
+
 const AVATAR_COLORS = [
   '#E74C3C',
   '#F97316',
@@ -822,6 +881,25 @@ function App() {
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false)
   const [navTransitionVisible, setNavTransitionVisible] = useState(false)
   const [navTransitionTarget, setNavTransitionTarget] = useState('gantt')
+  const [flowPaletteIndex, setFlowPaletteIndex] = useState(() => {
+    try {
+      const stored =
+        Number(
+          localStorage.getItem(
+            'projectflow-flow-palette'
+          )
+        )
+
+      return Number.isInteger(stored) &&
+        stored >= 0 &&
+        stored < FLOW_COLOR_PALETTES.length
+        ? stored
+        : 0
+    } catch {
+      return 0
+    }
+  })
+
   const [avatarColor, setAvatarColor] = useState(() => {
     try {
       return (
@@ -1728,6 +1806,29 @@ useEffect(() => {
 
   function cambiarAvatarColor(color) {
     setAvatarColor(color)
+  }
+
+  function cambiarFlowColorRandom() {
+    setFlowPaletteIndex(
+      (actual) => {
+        const siguiente =
+          randomDifferentIndex(
+            actual,
+            FLOW_COLOR_PALETTES.length
+          )
+
+        try {
+          localStorage.setItem(
+            'projectflow-flow-palette',
+            String(siguiente)
+          )
+        } catch {
+          // Si storage está bloqueado, el cambio sigue funcionando en sesión.
+        }
+
+        return siguiente
+      }
+    )
   }
 
   async function iniciarApp() {
@@ -13476,6 +13577,13 @@ function colorEstadoTarea(tarea) {
         session.user.id
     )
 
+
+  const flowPalette =
+    FLOW_COLOR_PALETTES[
+      flowPaletteIndex
+    ] ||
+    FLOW_COLOR_PALETTES[0]
+
   const hoyPos = posicionHoy()
 
   return (
@@ -13485,6 +13593,13 @@ function colorEstadoTarea(tarea) {
           ? `meeting-mode meeting-${vistaPrincipal}`
           : ''
       }`}
+      style={{
+        '--flow-c1': flowPalette.c1,
+        '--flow-c2': flowPalette.c2,
+        '--flow-c3': flowPalette.c3,
+        '--flow-c4': flowPalette.c4,
+        '--flow-glow': flowPalette.glow,
+      }}
     >
       {navTransitionVisible && (
         <div className="projectflow-nav-transition" aria-hidden="true">
@@ -13508,10 +13623,12 @@ function colorEstadoTarea(tarea) {
         </button>
       )}
       <aside className="visual-sidebar">
-        <div
-          className="visual-sidebar-gp"
-          title="ProjectFlow"
-          aria-label="ProjectFlow"
+        <button
+          type="button"
+          className="visual-sidebar-gp flow-color-trigger"
+          title={`Cambiar color de Flow · ${flowPalette.name}`}
+          aria-label="Cambiar color de Flow"
+          onClick={cambiarFlowColorRandom}
         >
           <video
             src={projectflowAnimatedLogo}
@@ -13520,7 +13637,7 @@ function colorEstadoTarea(tarea) {
             playsInline
             loop
           />
-        </div>
+        </button>
 
         <div className="visual-sidebar-divider" />
 
@@ -22336,7 +22453,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.6.4</span>
+        <span>V10.6.5</span>
         <span>01/10/2026</span>
       </footer>
 

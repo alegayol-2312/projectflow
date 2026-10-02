@@ -25884,3 +25884,147 @@ button.cards-undo-tool:hover {
       50% 50% !important;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.6.5
+   FLOW RANDOM COLOR BY LOGO CLICK
+========================================================= */
+
+/* Flow toma la paleta activa desde variables del app-shell */
+.v10-polish
+.projectflow-brand-flow {
+  color:
+    var(--flow-c4, #10bfd0)
+    !important;
+
+  background:
+    linear-gradient(
+      100deg,
+      var(--flow-c1, #06aabc) 0%,
+      var(--flow-c2, #20d6e4) 22%,
+      var(--flow-c3, #7eeaf1) 40%,
+      var(--flow-c4, #10bfd0) 58%,
+      var(--flow-c1, #06aabc) 78%,
+      var(--flow-c2, #20d6e4) 100%
+    )
+    !important;
+
+  background-size:
+    220% 100%
+    !important;
+
+  background-position:
+    100% 50%;
+
+  -webkit-background-clip:
+    text !important;
+
+  background-clip:
+    text !important;
+
+  -webkit-text-fill-color:
+    transparent !important;
+
+  transition:
+    filter .18s ease;
+}
+
+.v10-polish
+.projectflow-brand-title:hover
+.projectflow-brand-flow {
+  filter:
+    brightness(1.12)
+    drop-shadow(
+      0 0 7px
+      var(
+        --flow-glow,
+        rgba(16,191,208,.24)
+      )
+    )
+    !important;
+}
+
+
+/* El logo animado se convierte en disparador de color */
+.v10-polish
+.flow-color-trigger {
+  appearance:
+    none;
+
+  cursor:
+    pointer;
+
+  border:
+    1px solid
+    rgba(109,132,145,.28)
+    !important;
+
+  transition:
+    transform .12s ease,
+    border-color .16s ease,
+    box-shadow .16s ease;
+}
+
+.v10-polish
+.flow-color-trigger:hover {
+  transform:
+    translateY(-1px);
+
+  border-color:
+    var(
+      --flow-c2,
+      #20d6e4
+    )
+    !important;
+
+  box-shadow:
+    0 0 0 3px
+    color-mix(
+      in srgb,
+      var(--flow-c2, #20d6e4) 18%,
+      transparent
+    ),
+    0 5px 14px
+    rgba(24,48,61,.10)
+    !important;
+}
+
+.v10-polish
+.flow-color-trigger:active {
+  transform:
+    scale(.94);
+}
+
+/* pequeño feedback visual en el video al click */
+.v10-polish
+.flow-color-trigger:active video {
+  transform:
+    scale(.92)
+    rotate(-2deg);
+}
+
+.v10-polish
+.flow-color-trigger video {
+  transition:
+    transform .14s ease;
+}
+
+
+/* fallback por si color-mix no está disponible */
+@supports not (
+  color:
+    color-mix(
+      in srgb,
+      red,
+      blue
+    )
+) {
+  .v10-polish
+  .flow-color-trigger:hover {
+    box-shadow:
+      0 5px 14px
+      rgba(24,48,61,.12)
+      !important;
+  }
+}
