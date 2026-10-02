@@ -24486,3 +24486,1182 @@ input[type='text'] {
     max-width: 150px;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.6.1
+   PROCESS TOOLBAR COMPACTA + COLORES LIGHT + AVATAR SETTINGS
+========================================================= */
+
+/* ---------------------------------------------------------
+   PROCESS MULTISELECT
+   Row 1: resumen | Duplicar Frente Atrás Snap Superposición Pendiente
+   Row 2:         | colores + alineación + Delete + Cancelar
+--------------------------------------------------------- */
+
+.v10-polish .process-selection-toolbar {
+  width: max-content !important;
+  min-width: 0 !important;
+  max-width: calc(100% - 18px) !important;
+
+  display: grid !important;
+  grid-template-columns: 116px auto !important;
+  grid-template-rows: auto auto !important;
+
+  align-items: center !important;
+  justify-content: start !important;
+
+  column-gap: 10px !important;
+  row-gap: 7px !important;
+
+  margin: 6px 0 -42px 8px !important;
+  padding: 9px 10px !important;
+
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+.v10-polish .process-selection-summary {
+  grid-column: 1 !important;
+  grid-row: 1 / span 2 !important;
+
+  align-self: start !important;
+
+  min-width: 0 !important;
+  width: 116px !important;
+
+  padding-top: 4px !important;
+}
+
+.v10-polish .process-selection-actions-primary {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+
+  width: max-content !important;
+  max-width: 100% !important;
+
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+
+  gap: 6px !important;
+}
+
+.v10-polish .process-selection-actions-primary button {
+  min-height: 34px !important;
+  height: 34px !important;
+
+  padding: 0 10px !important;
+
+  border-radius: 7px !important;
+
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  white-space: nowrap !important;
+}
+
+.v10-polish .process-selection-secondary-row {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+
+  width: max-content !important;
+  max-width: 100% !important;
+
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+
+  gap: 6px !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Colors begin exactly below Duplicar */
+.v10-polish .process-selection-colors {
+  width: auto !important;
+  max-width: none !important;
+
+  flex: 0 0 auto !important;
+
+  display: block !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border: 0 !important;
+}
+
+.v10-polish .process-selection-colors > span {
+  display: none !important;
+}
+
+.v10-polish .process-selection-colors > div {
+  width: auto !important;
+
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+
+  gap: 6px !important;
+}
+
+/* Critical: old light-theme button rule was painting all dots white */
+.v10-polish .process-selection-color-dot {
+  --selection-color: #cfe3cd;
+
+  width: 27px !important;
+  height: 27px !important;
+  min-width: 27px !important;
+  min-height: 27px !important;
+
+  padding: 0 !important;
+
+  border-radius: 7px !important;
+
+  background: var(--selection-color) !important;
+  background-color: var(--selection-color) !important;
+
+  border: 1.5px solid #9fb4bf !important;
+
+  opacity: 1 !important;
+  filter: none !important;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.35) !important;
+}
+
+.v10-polish.theme-light .process-selection-color-dot {
+  background: var(--selection-color) !important;
+  background-color: var(--selection-color) !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.v10-polish .process-selection-color-dot:hover {
+  transform: translateY(-1px) scale(1.04) !important;
+
+  border-color: #506d7b !important;
+
+  box-shadow:
+    0 0 0 2px rgba(20,186,200,.18),
+    inset 0 0 0 1px rgba(255,255,255,.38) !important;
+}
+
+
+/* Alignment immediately after colors */
+.v10-polish .process-text-align-actions {
+  height: 29px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+
+  gap: 5px !important;
+
+  margin: 0 2px !important;
+  padding: 0 7px !important;
+
+  border-left: 1px solid rgba(95,119,132,.28) !important;
+  border-right: 1px solid rgba(95,119,132,.28) !important;
+}
+
+.v10-polish .process-text-align-actions .process-align-icon {
+  width: 29px !important;
+  min-width: 29px !important;
+  height: 29px !important;
+  min-height: 29px !important;
+
+  padding: 6px 6px !important;
+
+  border-radius: 6px !important;
+
+  gap: 2px !important;
+}
+
+.v10-polish.theme-light .process-align-icon i {
+  background: #334a56 !important;
+  opacity: 1 !important;
+}
+
+.v10-polish.theme-dark .process-align-icon i {
+  background: #ffffff !important;
+}
+
+
+/* Delete + Cancel immediately after alignment */
+.v10-polish .process-selection-secondary-row > .selection-delete-all,
+.v10-polish .process-selection-secondary-row > .process-selection-cancel {
+  min-height: 29px !important;
+  height: 29px !important;
+
+  padding: 0 10px !important;
+
+  border-radius: 6px !important;
+
+  font-size: 9.5px !important;
+  font-weight: 850 !important;
+  white-space: nowrap !important;
+}
+
+.v10-polish.theme-light
+.process-selection-secondary-row > .selection-delete-all {
+  background: #fff1f1 !important;
+  border-color: #e8a3a3 !important;
+  color: #8c2222 !important;
+  -webkit-text-fill-color: #8c2222 !important;
+}
+
+.v10-polish.theme-light
+.process-selection-secondary-row > .process-selection-cancel {
+  background: #ffffff !important;
+  border-color: #bacbd4 !important;
+  color: #203844 !important;
+  -webkit-text-fill-color: #203844 !important;
+}
+
+
+/* ---------------------------------------------------------
+   PROCESS ARROW COLORS
+   Also protect these from generic light button styling.
+--------------------------------------------------------- */
+
+.v10-polish .process-link-selection-color-dot {
+  --link-selection-color: #b9c5cf;
+
+  background: var(--link-selection-color) !important;
+  background-color: var(--link-selection-color) !important;
+
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.v10-polish.theme-light .process-link-selection-color-dot {
+  background: var(--link-selection-color) !important;
+  background-color: var(--link-selection-color) !important;
+}
+
+
+/* ---------------------------------------------------------
+   TOOLBAR LIGHT THEME
+--------------------------------------------------------- */
+
+.v10-polish.theme-light .process-selection-toolbar {
+  background: rgba(255,255,255,.99) !important;
+  border: 1px solid #c3d2da !important;
+
+  box-shadow:
+    0 9px 22px rgba(34,57,70,.12) !important;
+}
+
+.v10-polish.theme-light .process-selection-summary strong {
+  color: #203641 !important;
+  -webkit-text-fill-color: #203641 !important;
+}
+
+.v10-polish.theme-light .process-selection-summary span {
+  color: #73858e !important;
+  -webkit-text-fill-color: #73858e !important;
+}
+
+.v10-polish.theme-light .process-selection-actions-primary button {
+  background: #f4f8fa !important;
+  border: 1px solid #b8cad4 !important;
+
+  color: #203641 !important;
+  -webkit-text-fill-color: #203641 !important;
+}
+
+
+/* ---------------------------------------------------------
+   AVATAR COLOR PICKER
+   10 swatches stay inside the settings panel.
+--------------------------------------------------------- */
+
+.v10-polish .avatar-settings-block {
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.v10-polish .avatar-color-grid {
+  display: grid !important;
+
+  grid-template-columns: repeat(5, 22px) !important;
+  grid-auto-rows: 22px !important;
+
+  justify-content: start !important;
+
+  gap: 5px !important;
+
+  width: auto !important;
+  max-width: 100% !important;
+}
+
+.v10-polish .avatar-color-grid button {
+  width: 22px !important;
+  height: 22px !important;
+
+  min-width: 22px !important;
+  min-height: 22px !important;
+
+  aspect-ratio: auto !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border-width: 2px !important;
+  border-radius: 6px !important;
+
+  box-sizing: border-box !important;
+}
+
+.v10-polish .avatar-color-grid button.active {
+  box-shadow:
+    0 0 0 1px rgba(255,216,77,.42) !important;
+}
+
+
+/* Keep toolbar usable on narrower Process canvases */
+@media (max-width: 1180px) {
+  .v10-polish .process-selection-toolbar {
+    grid-template-columns: 104px minmax(0, 1fr) !important;
+    max-width: calc(100% - 12px) !important;
+  }
+
+  .v10-polish .process-selection-actions-primary,
+  .v10-polish .process-selection-secondary-row {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    scrollbar-width: thin;
+  }
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.6.2
+   FIX DEFINITIVO DE COLORES + UNDO LIGHT + KPI DARK
+========================================================= */
+
+/* ---------------------------------------------------------
+   1. PROCESS
+   El selector genérico de Light Theme tenía mayor especificidad
+   y estaba pintando los dots de blanco.
+--------------------------------------------------------- */
+
+.v10-polish.theme-light
+.process-selection-toolbar
+button.process-selection-color-dot {
+  background:
+    var(--selection-color)
+    !important;
+
+  background-color:
+    var(--selection-color)
+    !important;
+
+  color:
+    transparent
+    !important;
+
+  -webkit-text-fill-color:
+    transparent
+    !important;
+
+  border:
+    1.5px solid
+    #9aadb8
+    !important;
+
+  opacity:
+    1
+    !important;
+
+  filter:
+    none
+    !important;
+}
+
+.v10-polish.theme-light
+.process-selection-toolbar
+button.process-selection-color-dot:hover {
+  background:
+    var(--selection-color)
+    !important;
+
+  background-color:
+    var(--selection-color)
+    !important;
+
+  border-color:
+    #486674
+    !important;
+}
+
+
+/* Links / flechas: mismo blindaje */
+.v10-polish.theme-light
+.process-link-selection-toolbar
+button.process-link-selection-color-dot {
+  background:
+    var(--link-selection-color)
+    !important;
+
+  background-color:
+    var(--link-selection-color)
+    !important;
+
+  opacity:
+    1
+    !important;
+
+  filter:
+    none
+    !important;
+}
+
+
+/* ---------------------------------------------------------
+   2. KANBAN
+   Los viejos estilos trataban TODOS los botones del picker
+   como botones de comando y les ponían fondo blanco.
+--------------------------------------------------------- */
+
+.v10-polish.theme-light
+.kanban-bg-picker
+button.kanban-bg-dot {
+  opacity:
+    1
+    !important;
+
+  filter:
+    none
+    !important;
+}
+
+.v10-polish.theme-light
+.kanban-bg-picker
+button.kanban-bg-dot.white {
+  background:
+    #ffffff
+    !important;
+
+  background-color:
+    #ffffff
+    !important;
+}
+
+.v10-polish.theme-light
+.kanban-bg-picker
+button.kanban-bg-dot.black {
+  background:
+    #0b1220
+    !important;
+
+  background-color:
+    #0b1220
+    !important;
+}
+
+.v10-polish.theme-light
+.kanban-bg-picker
+button.kanban-bg-dot.board {
+  background:
+    #5d6670
+    !important;
+
+  background-color:
+    #5d6670
+    !important;
+}
+
+
+/* Colores de columnas Kanban */
+.v10-polish.theme-light
+.kanban-bg-picker
+button.kanban-column-color-dot {
+  width:
+    22px
+    !important;
+
+  height:
+    22px
+    !important;
+
+  min-width:
+    22px
+    !important;
+
+  min-height:
+    22px
+    !important;
+
+  padding:
+    0
+    !important;
+
+  background:
+    var(--kanban-column-color)
+    !important;
+
+  background-color:
+    var(--kanban-column-color)
+    !important;
+
+  border:
+    2px solid
+    #a9bbc5
+    !important;
+
+  border-radius:
+    4px
+    !important;
+
+  opacity:
+    1
+    !important;
+
+  filter:
+    none
+    !important;
+}
+
+.v10-polish.theme-light
+.kanban-bg-picker
+button.kanban-column-color-dot.active {
+  border-color:
+    #00b8ca
+    !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(0,184,202,.18)
+    !important;
+}
+
+
+/* También en dark deben mostrar su color real */
+.v10-polish.theme-dark
+.kanban-bg-picker
+button.kanban-column-color-dot {
+  background:
+    var(--kanban-column-color)
+    !important;
+
+  background-color:
+    var(--kanban-column-color)
+    !important;
+}
+
+
+/* ---------------------------------------------------------
+   3. CARDS UNDO
+   Light Theme: fondo blanco + flecha NEGRA.
+--------------------------------------------------------- */
+
+.v10-polish.theme-light
+.cards-canvas-bg-picker
+button.cards-undo-tool,
+.v10-polish.theme-light
+.cards-bg-picker
+button.cards-undo-tool,
+.v10-polish.theme-light
+button.cards-undo-tool {
+  background:
+    #ffffff
+    !important;
+
+  background-color:
+    #ffffff
+    !important;
+
+  color:
+    #111111
+    !important;
+
+  -webkit-text-fill-color:
+    #111111
+    !important;
+
+  border:
+    1px solid
+    #b9cad3
+    !important;
+
+  opacity:
+    1
+    !important;
+
+  filter:
+    none
+    !important;
+
+  box-shadow:
+    none
+    !important;
+}
+
+.v10-polish.theme-light
+.cards-canvas-bg-picker
+button.cards-undo-tool:hover,
+.v10-polish.theme-light
+.cards-bg-picker
+button.cards-undo-tool:hover,
+.v10-polish.theme-light
+button.cards-undo-tool:hover {
+  background:
+    #f2f7f9
+    !important;
+
+  color:
+    #111111
+    !important;
+
+  -webkit-text-fill-color:
+    #111111
+    !important;
+
+  border-color:
+    #65bdc6
+    !important;
+}
+
+
+/* ---------------------------------------------------------
+   4. GANTT KPI EN DARK THEME
+   Exactamente el mismo estilo/color del Light Theme.
+--------------------------------------------------------- */
+
+.v10-polish.theme-dark
+.kpis
+.kpi,
+.v10-polish.theme-dark
+.global-kpis
+.kpi {
+  background:
+    linear-gradient(
+      180deg,
+      #08a0d8 0%,
+      #087ab5 100%
+    )
+    !important;
+
+  border-color:
+    transparent
+    !important;
+
+  color:
+    #ffffff
+    !important;
+
+  box-shadow:
+    0 5px 16px
+    rgba(39,98,141,.16)
+    !important;
+}
+
+.v10-polish.theme-dark
+.kpis
+.kpi.green,
+.v10-polish.theme-dark
+.global-kpis
+.kpi.green {
+  background:
+    linear-gradient(
+      180deg,
+      #1ec87f 0%,
+      #11935b 100%
+    )
+    !important;
+}
+
+.v10-polish.theme-dark
+.kpis
+.kpi.purple,
+.v10-polish.theme-dark
+.global-kpis
+.kpi.purple {
+  background:
+    linear-gradient(
+      180deg,
+      #a663f6 0%,
+      #7e3fe0 100%
+    )
+    !important;
+}
+
+.v10-polish.theme-dark
+.kpis
+.kpi.orange,
+.v10-polish.theme-dark
+.global-kpis
+.kpi.orange {
+  background:
+    linear-gradient(
+      180deg,
+      #ffb44f 0%,
+      #f08a22 100%
+    )
+    !important;
+}
+
+.v10-polish.theme-dark
+.kpis
+.kpi.pink,
+.v10-polish.theme-dark
+.global-kpis
+.kpi.pink {
+  background:
+    linear-gradient(
+      180deg,
+      #ff64bf 0%,
+      #ea2c93 100%
+    )
+    !important;
+}
+
+.v10-polish.theme-dark
+.kpis
+.kpi span,
+.v10-polish.theme-dark
+.kpis
+.kpi small,
+.v10-polish.theme-dark
+.kpis
+.kpi strong,
+.v10-polish.theme-dark
+.global-kpis
+.kpi span,
+.v10-polish.theme-dark
+.global-kpis
+.kpi small,
+.v10-polish.theme-dark
+.global-kpis
+.kpi strong {
+  color:
+    #ffffff
+    !important;
+
+  -webkit-text-fill-color:
+    #ffffff
+    !important;
+
+  opacity:
+    1
+    !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.6.3
+   CONFIRMACIÓN VISUAL DE BORRADO
+========================================================= */
+
+.v10-polish .delete-confirm-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 26000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background:
+    rgba(7, 15, 21, .62);
+
+  backdrop-filter:
+    blur(4px);
+}
+
+.v10-polish .delete-confirm-dialog {
+  width: min(
+    430px,
+    calc(100vw - 32px)
+  );
+
+  display: grid;
+
+  grid-template-columns:
+    48px minmax(0, 1fr);
+
+  gap: 14px;
+
+  padding: 20px;
+
+  border-radius: 16px;
+
+  border:
+    1px solid
+    rgba(122, 145, 158, .34);
+
+  background:
+    #ffffff;
+
+  color:
+    #182f3b;
+
+  box-shadow:
+    0 28px 72px
+    rgba(7, 24, 34, .30);
+}
+
+.v10-polish .delete-confirm-icon {
+  width: 46px;
+  height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background:
+    #fff0f1;
+
+  border:
+    1px solid
+    #f1b0b5;
+
+  color:
+    #cc303c;
+
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.v10-polish .delete-confirm-content {
+  min-width: 0;
+}
+
+.v10-polish .delete-confirm-eyebrow {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color:
+    #b0323c !important;
+
+  -webkit-text-fill-color:
+    #b0323c !important;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.v10-polish .delete-confirm-content h3 {
+  margin: 0;
+
+  color:
+    #182f3b !important;
+
+  -webkit-text-fill-color:
+    #182f3b !important;
+
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.v10-polish .delete-confirm-content p {
+  margin:
+    8px 0 0;
+
+  color:
+    #506672 !important;
+
+  -webkit-text-fill-color:
+    #506672 !important;
+
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
+.v10-polish .delete-confirm-resource {
+  margin-top: 12px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+
+  padding: 9px 10px;
+
+  border:
+    1px solid
+    #d8e2e7;
+
+  border-radius: 9px;
+
+  background:
+    #f7fafb;
+}
+
+.v10-polish .delete-confirm-resource span {
+  color:
+    #71848e !important;
+
+  -webkit-text-fill-color:
+    #71848e !important;
+
+  font-size: 8.5px;
+  font-weight: 850;
+
+  text-transform: uppercase;
+  letter-spacing: .045em;
+}
+
+.v10-polish .delete-confirm-resource strong {
+  overflow: hidden;
+
+  color:
+    #203844 !important;
+
+  -webkit-text-fill-color:
+    #203844 !important;
+
+  font-size: 11px;
+  font-weight: 850;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v10-polish .delete-confirm-actions {
+  grid-column:
+    1 / -1;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 8px;
+
+  margin-top: 4px;
+}
+
+.v10-polish .delete-confirm-actions button {
+  min-height: 38px;
+
+  padding:
+    0 16px;
+
+  border-radius: 9px;
+
+  font-size: 11px;
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+.v10-polish .delete-confirm-cancel {
+  background:
+    #ffffff;
+
+  border:
+    1px solid
+    #b9cbd5;
+
+  color:
+    #203844;
+
+  -webkit-text-fill-color:
+    #203844;
+}
+
+.v10-polish .delete-confirm-cancel:hover:not(:disabled) {
+  background:
+    #f2f7f9;
+
+  border-color:
+    #94b2c1;
+}
+
+.v10-polish .delete-confirm-danger {
+  background:
+    #d83f4a;
+
+  border:
+    1px solid
+    #d83f4a;
+
+  color:
+    #ffffff;
+
+  -webkit-text-fill-color:
+    #ffffff;
+
+  box-shadow:
+    0 5px 14px
+    rgba(216, 63, 74, .20);
+}
+
+.v10-polish .delete-confirm-danger:hover:not(:disabled) {
+  background:
+    #bd303a;
+
+  border-color:
+    #bd303a;
+}
+
+.v10-polish .delete-confirm-actions button:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+
+/* -------------------------
+   LIGHT THEME
+------------------------- */
+
+.v10-polish.theme-light
+.delete-confirm-dialog {
+  background:
+    #ffffff;
+
+  border-color:
+    #c8d5dc;
+}
+
+.v10-polish.theme-light
+.delete-confirm-resource {
+  background:
+    #f6f9fa;
+
+  border-color:
+    #d4e0e5;
+}
+
+
+/* -------------------------
+   DARK THEME
+------------------------- */
+
+.v10-polish.theme-dark
+.delete-confirm-overlay {
+  background:
+    rgba(0, 0, 0, .72);
+}
+
+.v10-polish.theme-dark
+.delete-confirm-dialog {
+  background:
+    #101a22;
+
+  border-color:
+    #354b59;
+
+  color:
+    #eef5f7;
+
+  box-shadow:
+    0 30px 80px
+    rgba(0, 0, 0, .55);
+}
+
+.v10-polish.theme-dark
+.delete-confirm-icon {
+  background:
+    rgba(216, 63, 74, .15);
+
+  border-color:
+    rgba(244, 105, 115, .42);
+
+  color:
+    #ff7b84;
+}
+
+.v10-polish.theme-dark
+.delete-confirm-eyebrow {
+  color:
+    #ff8c94 !important;
+
+  -webkit-text-fill-color:
+    #ff8c94 !important;
+}
+
+.v10-polish.theme-dark
+.delete-confirm-content h3 {
+  color:
+    #ffffff !important;
+
+  -webkit-text-fill-color:
+    #ffffff !important;
+}
+
+.v10-polish.theme-dark
+.delete-confirm-content p {
+  color:
+    #b2c1c9 !important;
+
+  -webkit-text-fill-color:
+    #b2c1c9 !important;
+}
+
+.v10-polish.theme-dark
+.delete-confirm-resource {
+  background:
+    #15232d;
+
+  border-color:
+    #304854;
+}
+
+.v10-polish.theme-dark
+.delete-confirm-resource span {
+  color:
+    #8fa5b0 !important;
+
+  -webkit-text-fill-color:
+    #8fa5b0 !important;
+}
+
+.v10-polish.theme-dark
+.delete-confirm-resource strong {
+  color:
+    #eef5f7 !important;
+
+  -webkit-text-fill-color:
+    #eef5f7 !important;
+}
+
+.v10-polish.theme-dark
+.delete-confirm-cancel {
+  background:
+    #182731;
+
+  border-color:
+    #3c5665;
+
+  color:
+    #eef5f7;
+
+  -webkit-text-fill-color:
+    #eef5f7;
+}
+
+.v10-polish.theme-dark
+.delete-confirm-cancel:hover:not(:disabled) {
+  background:
+    #203541;
+
+  border-color:
+    #537184;
+}
+
+.v10-polish.theme-dark
+.delete-confirm-danger {
+  background:
+    #d83f4a;
+
+  border-color:
+    #d83f4a;
+
+  color:
+    #ffffff;
+
+  -webkit-text-fill-color:
+    #ffffff;
+}

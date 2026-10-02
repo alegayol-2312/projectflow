@@ -836,6 +836,9 @@ function App() {
   })
   const [usuariosConectados, setUsuariosConectados] = useState([])
   const [presencePanelOpen, setPresencePanelOpen] = useState(false)
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState(null)
+  const [deleteConfirmBusy, setDeleteConfirmBusy] = useState(false)
+
 
 
   const [proyecto, setProyecto] = useState(null)
@@ -4451,6 +4454,55 @@ async function eliminarProcessMap(process) {
   const restantes = processMaps.filter((item) => item.id !== process.id)
   setProcessMaps(restantes)
   setProcessSeleccionadoId(restantes[0]?.id || null)
+}
+
+function abrirConfirmacionBorrado(tipo, item) {
+  if (!item) return
+
+  setDeleteConfirmModal({
+    tipo,
+    item,
+  })
+}
+
+function cerrarConfirmacionBorrado() {
+  if (deleteConfirmBusy) return
+
+  setDeleteConfirmModal(null)
+}
+
+async function confirmarBorradoSeleccionado() {
+  if (
+    !deleteConfirmModal ||
+    deleteConfirmBusy
+  ) {
+    return
+  }
+
+  setDeleteConfirmBusy(true)
+
+  try {
+    const {
+      tipo,
+      item,
+    } = deleteConfirmModal
+
+    if (tipo === 'process') {
+      await eliminarProcessMap(item)
+    }
+
+    if (tipo === 'kanban') {
+      await eliminarKanbanProject(item)
+    }
+
+    if (tipo === 'cards') {
+      await eliminarBoard(item)
+    }
+
+    setDeleteConfirmModal(null)
+  } finally {
+    setDeleteConfirmBusy(false)
+  }
 }
 
 async function archivarProcessMap(process) {
@@ -9554,12 +9606,6 @@ function abrirEditarBoard(board) {
 }
 
 async function eliminarBoard(board) {
-  const confirmar = window.confirm(
-    `¿Eliminar el board "${board.nombre}"?\n\nSe eliminarán también todas sus cards y conexiones.`
-  )
-
-  if (!confirmar) return
-
   const { error } = await supabase
     .from('card_boards')
     .delete()
@@ -12162,11 +12208,6 @@ function colorEstadoTarea(tarea) {
   }
 
   async function eliminarKanbanProject(project) {
-    const confirmar = window.confirm(
-      `¿Eliminar el proyecto Kanban "${project.nombre}" y todas sus tarjetas?`
-    )
-    if (!confirmar) return
-
     const { error } = await supabase
       .from('kanban_projects')
       .delete()
@@ -15851,7 +15892,8 @@ function colorEstadoTarea(tarea) {
                           type="button"
                           className="process-list-delete"
                           onClick={() =>
-                            eliminarProcessMap(
+                            abrirConfirmacionBorrado(
+                              'process',
                               process
                             )
                           }
@@ -15965,7 +16007,16 @@ function colorEstadoTarea(tarea) {
                       <button type="button" className="btn-secondary" onClick={() => archivarProcessMap(processSeleccionado)}>
                         Archivar
                       </button>
-                      <button type="button" className="btn-danger-inline" onClick={() => eliminarProcessMap(processSeleccionado)}>
+                      <button
+                        type="button"
+                        className="btn-danger-inline"
+                        onClick={() =>
+                          abrirConfirmacionBorrado(
+                            'process',
+                            processSeleccionado
+                          )
+                        }
+                      >
                         Borrar
                       </button>
                     </div>
@@ -16244,7 +16295,7 @@ function colorEstadoTarea(tarea) {
                           </span>
                         </div>
 
-                        <div className="process-selection-actions">
+                        <div className="process-selection-actions process-selection-actions-primary">
                           <button
                             type="button"
                             onClick={duplicarSeleccionProcess}
@@ -16302,6 +16353,43 @@ function colorEstadoTarea(tarea) {
                           >
                             Pendiente
                           </button>
+                        </div>
+
+                        <div className="process-selection-secondary-row">
+                          <div className="process-selection-colors">
+                            <div>
+                              {[
+                                { value: '#cfe3cd', label: 'Verde suave' },
+                                { value: '#fde68a', label: 'Amarillo' },
+                                { value: '#fecaca', label: 'Rosa claro' },
+                                { value: '#bfdbfe', label: 'Celeste' },
+                                { value: '#ddd6fe', label: 'Lila' },
+                                { value: '#fdba74', label: 'Naranja' },
+                                { value: '#e5e7eb', label: 'Gris claro' },
+                              ].map((color) => (
+                                <button
+                                  key={color.value}
+                                  type="button"
+                                  className="process-selection-color-dot"
+                                  style={{
+                                    '--selection-color':
+                                      color.value,
+                                  }}
+                                  title={
+                                    `Aplicar ${color.label} a todos`
+                                  }
+                                  aria-label={
+                                    `Aplicar ${color.label} a todos`
+                                  }
+                                  onClick={() =>
+                                    cambiarColorSeleccionProcess(
+                                      color.value
+                                    )
+                                  }
+                                />
+                              ))}
+                            </div>
+                          </div>
 
                           <div className="process-text-align-actions">
                             <button
@@ -16348,49 +16436,13 @@ function colorEstadoTarea(tarea) {
 
                           <button
                             type="button"
+                            className="process-selection-cancel"
                             onClick={() =>
                               setSelectedProcessNodeIds([])
                             }
                           >
                             Cancelar
                           </button>
-                        </div>
-
-                        <div className="process-selection-colors">
-                          <span>Color</span>
-
-                          <div>
-                            {[
-                              { value: '#cfe3cd', label: 'Verde suave' },
-                              { value: '#fde68a', label: 'Amarillo' },
-                              { value: '#fecaca', label: 'Rosa claro' },
-                              { value: '#bfdbfe', label: 'Celeste' },
-                              { value: '#ddd6fe', label: 'Lila' },
-                              { value: '#fdba74', label: 'Naranja' },
-                              { value: '#e5e7eb', label: 'Gris claro' },
-                            ].map((color) => (
-                              <button
-                                key={color.value}
-                                type="button"
-                                className="process-selection-color-dot"
-                                style={{
-                                  backgroundColor:
-                                    color.value,
-                                }}
-                                title={
-                                  `Aplicar ${color.label} a todos`
-                                }
-                                aria-label={
-                                  `Aplicar ${color.label} a todos`
-                                }
-                                onClick={() =>
-                                  cambiarColorSeleccionProcess(
-                                    color.value
-                                  )
-                                }
-                              />
-                            ))}
-                          </div>
                         </div>
                       </div>
                     )}
@@ -16428,7 +16480,7 @@ function colorEstadoTarea(tarea) {
                                     type="button"
                                     className="process-link-selection-color-dot"
                                     style={{
-                                      backgroundColor:
+                                      '--link-selection-color':
                                         color,
                                     }}
                                     onClick={() =>
@@ -17307,7 +17359,8 @@ function colorEstadoTarea(tarea) {
                           type="button"
                           className="kanban-project-delete"
                           onClick={() =>
-                            eliminarKanbanProject(
+                            abrirConfirmacionBorrado(
+                              'kanban',
                               project
                             )
                           }
@@ -17380,7 +17433,7 @@ function colorEstadoTarea(tarea) {
                       <button
                         key={bg.key}
                         type="button"
-                        className={`kanban-bg-dot ${bg.className} ${
+                        className={`kanban-bg-dot kanban-bg-color ${bg.className} ${
                           kanbanCanvasBgActual === bg.key
                             ? 'active'
                             : ''
@@ -17413,8 +17466,15 @@ function colorEstadoTarea(tarea) {
                         <button
                           key={color}
                           type="button"
-                          className={kanbanColumnBgActual === color ? 'active' : ''}
-                          style={{ backgroundColor: color }}
+                          className={`kanban-column-color-dot kanban-bg-color ${
+                            kanbanColumnBgActual === color
+                              ? 'active'
+                              : ''
+                          }`}
+                          style={{
+                            '--kanban-column-color':
+                              color,
+                          }}
                           onClick={() => actualizarKanbanColumnBg(color)}
                         />
                       ))}
@@ -17824,7 +17884,8 @@ function colorEstadoTarea(tarea) {
                           type="button"
                           className="danger"
                           onClick={() =>
-                            eliminarBoard(
+                            abrirConfirmacionBorrado(
+                              'cards',
                               board
                             )
                           }
@@ -19949,7 +20010,16 @@ function colorEstadoTarea(tarea) {
                     <button type="button" className="btn-secondary" onClick={() => restaurarProcessMap(process)}>
                       Restaurar
                     </button>
-                    <button type="button" className="btn-delete-task" onClick={() => eliminarProcessMap(process)}>
+                    <button
+                      type="button"
+                      className="btn-delete-task"
+                      onClick={() =>
+                        abrirConfirmacionBorrado(
+                          'process',
+                          process
+                        )
+                      }
+                    >
                       Eliminar
                     </button>
                   </div>
@@ -21703,6 +21773,76 @@ function colorEstadoTarea(tarea) {
         </div>
       )}
 
+      {deleteConfirmModal && (
+        <div
+          className="delete-confirm-overlay"
+          role="presentation"
+        >
+          <div
+            className="delete-confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-confirm-title"
+            aria-describedby="delete-confirm-message"
+          >
+            <div className="delete-confirm-icon">
+              !
+            </div>
+
+            <div className="delete-confirm-content">
+              <span className="delete-confirm-eyebrow">
+                Confirmación
+              </span>
+
+              <h3 id="delete-confirm-title">
+                Borrar tablero
+              </h3>
+
+              <p id="delete-confirm-message">
+                Desea borrar el tablero? Esta acción no podrá reversarse
+              </p>
+
+              <div className="delete-confirm-resource">
+                <span>
+                  {deleteConfirmModal.tipo === 'process'
+                    ? 'Process'
+                    : deleteConfirmModal.tipo === 'kanban'
+                      ? 'Kanban'
+                      : 'Cards'}
+                </span>
+
+                <strong>
+                  {deleteConfirmModal.item?.nombre ||
+                    'Sin nombre'}
+                </strong>
+              </div>
+            </div>
+
+            <div className="delete-confirm-actions">
+              <button
+                type="button"
+                className="delete-confirm-cancel"
+                onClick={cerrarConfirmacionBorrado}
+                disabled={deleteConfirmBusy}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                className="delete-confirm-danger"
+                onClick={confirmarBorradoSeleccionado}
+                disabled={deleteConfirmBusy}
+              >
+                {deleteConfirmBusy
+                  ? 'Borrando...'
+                  : 'Borrar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modalProyectoOpen && (
         <div className="modal-overlay">
           <div className="modal project-modal">
@@ -22195,7 +22335,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.6.0</span>
+        <span>V10.6.3</span>
         <span>01/10/2026</span>
       </footer>
 
