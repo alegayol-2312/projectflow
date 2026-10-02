@@ -139,6 +139,59 @@ const PROCESO_COMPONENTES = [
   },
 ]
 
+
+const AVATAR_COLORS = [
+  '#E74C3C',
+  '#F97316',
+  '#F59E0B',
+  '#22C55E',
+  '#14B8A6',
+  '#06B6D4',
+  '#3B82F6',
+  '#6366F1',
+  '#8B5CF6',
+  '#EC4899',
+]
+
+function randomAvatarColor() {
+  return AVATAR_COLORS[
+    Math.floor(
+      Math.random() *
+      AVATAR_COLORS.length
+    )
+  ]
+}
+
+function initialsFromName(
+  nombre,
+  email = ''
+) {
+  const limpio =
+    String(
+      nombre ||
+      email.split('@')[0] ||
+      'PF'
+    )
+      .trim()
+      .replace(/\s+/g, ' ')
+
+  const primerNombre =
+    limpio.split(' ')[0] || 'PF'
+
+  return primerNombre
+    .slice(0, 2)
+    .toUpperCase()
+}
+
+function moduleLabel(module) {
+  return {
+    gantt: 'Gantt',
+    cards: 'Cards',
+    kanban: 'Kanban',
+    process: 'Process',
+  }[module] || 'ProjectFlow'
+}
+
 function plantillaProceso(tipo) {
   return (
     PROCESO_COMPONENTES.find((item) => item.tipo === tipo) ||
@@ -769,6 +822,21 @@ function App() {
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false)
   const [navTransitionVisible, setNavTransitionVisible] = useState(false)
   const [navTransitionTarget, setNavTransitionTarget] = useState('gantt')
+  const [avatarColor, setAvatarColor] = useState(() => {
+    try {
+      return (
+        localStorage.getItem(
+          'projectflow-avatar-color'
+        ) ||
+        randomAvatarColor()
+      )
+    } catch {
+      return randomAvatarColor()
+    }
+  })
+  const [usuariosConectados, setUsuariosConectados] = useState([])
+  const [presencePanelOpen, setPresencePanelOpen] = useState(false)
+
 
   const [proyecto, setProyecto] = useState(null)
   const [proyectos, setProyectos] = useState([])
@@ -1164,6 +1232,144 @@ useEffect(() => {
 
 
   useEffect(() => {
+    try {
+      localStorage.setItem(
+        'projectflow-avatar-color',
+        avatarColor
+      )
+    } catch {
+      // El avatar sigue funcionando aunque storage esté bloqueado.
+    }
+  }, [avatarColor])
+
+
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setUsuariosConectados([])
+      return
+    }
+
+    const perfilActual =
+      perfiles.find(
+        (perfil) =>
+          perfil.id === session.user.id
+      )
+
+    const nombreActual =
+      perfilActual?.nombre ||
+      session.user.email?.split('@')[0] ||
+      'Usuario'
+
+    const presenceChannel =
+      supabase.channel(
+        'projectflow-presence',
+        {
+          config: {
+            presence: {
+              key:
+                session.user.id,
+            },
+          },
+        }
+      )
+
+    function sincronizarPresence() {
+      const state =
+        presenceChannel.presenceState()
+
+      const flattened =
+        Object.values(state)
+          .flat()
+          .filter(Boolean)
+
+      const unique =
+        Array.from(
+          new Map(
+            flattened
+              .filter(
+                (item) =>
+                  item.user_id
+              )
+              .map(
+                (item) => [
+                  item.user_id,
+                  item,
+                ]
+              )
+          ).values()
+        )
+
+      setUsuariosConectados(
+        unique.sort(
+          (a, b) =>
+            String(
+              a.nombre || ''
+            ).localeCompare(
+              String(
+                b.nombre || ''
+              ),
+              'es'
+            )
+        )
+      )
+    }
+
+    presenceChannel
+      .on(
+        'presence',
+        { event: 'sync' },
+        sincronizarPresence
+      )
+      .on(
+        'presence',
+        { event: 'join' },
+        sincronizarPresence
+      )
+      .on(
+        'presence',
+        { event: 'leave' },
+        sincronizarPresence
+      )
+      .subscribe(
+        async (status) => {
+          if (
+            status ===
+            'SUBSCRIBED'
+          ) {
+            await presenceChannel.track({
+              user_id:
+                session.user.id,
+              nombre:
+                nombreActual,
+              email:
+                session.user.email,
+              avatar_color:
+                avatarColor,
+              vista:
+                vistaPrincipal,
+              online_at:
+                new Date().toISOString(),
+            })
+          }
+        }
+      )
+
+    return () => {
+      presenceChannel.untrack()
+      supabase.removeChannel(
+        presenceChannel
+      )
+    }
+  }, [
+    session?.user?.id,
+    session?.user?.email,
+    avatarColor,
+    vistaPrincipal,
+    perfiles,
+  ])
+
+
+  useEffect(() => {
     if (!session?.user?.id) return
 
     const channel = supabase
@@ -1515,6 +1721,10 @@ useEffect(() => {
   function cambiarAppTheme(theme) {
     setAppTheme(theme)
     setSettingsMenuOpen(false)
+  }
+
+  function cambiarAvatarColor(color) {
+    setAvatarColor(color)
   }
 
   async function iniciarApp() {
@@ -13199,6 +13409,32 @@ function colorEstadoTarea(tarea) {
     )
   }
 
+
+  const perfilActual =
+    perfiles.find(
+      (perfil) =>
+        perfil.id ===
+        session.user.id
+    )
+
+  const nombreUsuarioActual =
+    perfilActual?.nombre ||
+    session.user.email?.split('@')[0] ||
+    'Usuario'
+
+  const initialsUsuarioActual =
+    initialsFromName(
+      nombreUsuarioActual,
+      session.user.email
+    )
+
+  const otrosConectados =
+    usuariosConectados.filter(
+      (usuario) =>
+        usuario.user_id !==
+        session.user.id
+    )
+
   const hoyPos = posicionHoy()
 
   return (
@@ -13348,27 +13584,163 @@ function colorEstadoTarea(tarea) {
 
         <div className="top-actions">
 
-          <button
-            type="button"
-            className="activity-bell-button"
-            onClick={abrirActividad}
-            title="Actividad reciente"
-            aria-label="Actividad reciente"
-          >
-            <img
-              src={
-                tieneCompartidosSinLeer
-                  ? bellShareIcon
-                  : actividadTieneNovedades
-                    ? bellActivityIcon
-                    : bellIcon
+          <div className="presence-wrap">
+            <button
+              type="button"
+              className="presence-summary-button"
+              onClick={() =>
+                setPresencePanelOpen(
+                  (actual) => !actual
+                )
               }
-              alt=""
-            />
-          </button>
+              title={`${usuariosConectados.length} conectado${usuariosConectados.length === 1 ? '' : 's'} ahora`}
+            >
+              <span className="presence-live-dot" />
+
+              <span className="presence-avatar-stack">
+                {otrosConectados
+                  .slice(0, 3)
+                  .map(
+                    (usuario) => (
+                      <span
+                        key={
+                          usuario.user_id
+                        }
+                        className="user-avatar presence-mini-avatar"
+                        style={{
+                          background:
+                            usuario.avatar_color ||
+                            '#3B82F6',
+                        }}
+                        title={`${usuario.nombre || usuario.email || 'Usuario'} · ${moduleLabel(usuario.vista)}`}
+                      >
+                        {initialsFromName(
+                          usuario.nombre,
+                          usuario.email
+                        )}
+                      </span>
+                    )
+                  )}
+
+                {otrosConectados.length > 3 && (
+                  <span className="presence-more-count">
+                    +{otrosConectados.length - 3}
+                  </span>
+                )}
+              </span>
+
+              <strong>
+                {usuariosConectados.length}
+              </strong>
+            </button>
+
+            {presencePanelOpen && (
+              <div className="presence-panel">
+                <div className="presence-panel-heading">
+                  <div>
+                    <strong>
+                      Conectados ahora
+                    </strong>
+                    <span>
+                      {usuariosConectados.length}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPresencePanelOpen(
+                        false
+                      )
+                    }
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="presence-panel-list">
+                  {usuariosConectados.map(
+                    (usuario) => {
+                      const esActual =
+                        usuario.user_id ===
+                        session.user.id
+
+                      return (
+                        <div
+                          key={
+                            usuario.user_id
+                          }
+                          className="presence-user-row"
+                        >
+                          <span
+                            className="user-avatar"
+                            style={{
+                              background:
+                                usuario.avatar_color ||
+                                (
+                                  esActual
+                                    ? avatarColor
+                                    : '#3B82F6'
+                                ),
+                            }}
+                            title={
+                              usuario.nombre ||
+                              usuario.email ||
+                              'Usuario'
+                            }
+                          >
+                            {initialsFromName(
+                              usuario.nombre,
+                              usuario.email
+                            )}
+                          </span>
+
+                          <span className="presence-user-copy">
+                            <strong>
+                              {usuario.nombre ||
+                                usuario.email ||
+                                'Usuario'}
+                              {esActual
+                                ? ' (vos)'
+                                : ''}
+                            </strong>
+
+                            <small>
+                              {moduleLabel(
+                                usuario.vista
+                              )}
+                            </small>
+                          </span>
+
+                          <span className="presence-row-dot" />
+                        </div>
+                      )
+                    }
+                  )}
+
+                  {usuariosConectados.length === 0 && (
+                    <div className="presence-empty">
+                      Sin usuarios conectados.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           <span className="user-email">
             {session.user.email}
+          </span>
+
+          <span
+            className="user-avatar current-user-avatar"
+            style={{
+              background:
+                avatarColor,
+            }}
+            title={`${nombreUsuarioActual} · ${session.user.email}`}
+          >
+            {initialsUsuarioActual}
           </span>
 
           <div className="app-settings-wrap">
@@ -13398,6 +13770,59 @@ function colorEstadoTarea(tarea) {
                 <div className="app-settings-menu-title">
                   Configuración
                 </div>
+
+                <div className="avatar-settings-block">
+                  <div className="avatar-settings-heading">
+                    <span
+                      className="user-avatar avatar-settings-preview"
+                      style={{
+                        background:
+                          avatarColor,
+                      }}
+                    >
+                      {initialsUsuarioActual}
+                    </span>
+
+                    <div>
+                      <strong>
+                        Color de avatar
+                      </strong>
+                      <small>
+                        {nombreUsuarioActual}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div className="avatar-color-grid">
+                    {AVATAR_COLORS.map(
+                      (color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          className={
+                            avatarColor ===
+                            color
+                              ? 'active'
+                              : ''
+                          }
+                          style={{
+                            background:
+                              color,
+                          }}
+                          onClick={() =>
+                            cambiarAvatarColor(
+                              color
+                            )
+                          }
+                          title={`Usar ${color}`}
+                          aria-label={`Usar color ${color}`}
+                        />
+                      )
+                    )}
+                  </div>
+                </div>
+
+                <div className="app-settings-menu-divider" />
 
                 <button
                   type="button"
@@ -13454,6 +13879,25 @@ function colorEstadoTarea(tarea) {
               </div>
             )}
           </div>
+
+          <button
+            type="button"
+            className="activity-bell-button"
+            onClick={abrirActividad}
+            title="Actividad reciente"
+            aria-label="Actividad reciente"
+          >
+            <img
+              src={
+                tieneCompartidosSinLeer
+                  ? bellShareIcon
+                  : actividadTieneNovedades
+                    ? bellActivityIcon
+                    : bellIcon
+              }
+              alt=""
+            />
+          </button>
 
         </div>
 
@@ -21751,7 +22195,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.5.10</span>
+        <span>V10.6.0</span>
         <span>01/10/2026</span>
       </footer>
 
