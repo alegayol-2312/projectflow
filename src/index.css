@@ -25665,3 +25665,222 @@ button.cards-undo-tool:hover {
   -webkit-text-fill-color:
     #ffffff;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.6.4
+   BRAND ANIMATION + GANTT SUBTITLE
+========================================================= */
+
+.v10-polish .projectflow-brand-title {
+  position: relative;
+
+  display: inline-flex;
+  align-items: baseline;
+
+  overflow: visible;
+
+  isolation: isolate;
+
+  animation:
+    projectflow-brand-enter
+    520ms
+    cubic-bezier(.2,.72,.25,1)
+    both;
+}
+
+.v10-polish
+.projectflow-brand-static {
+  color: #102432 !important;
+  -webkit-text-fill-color: #102432 !important;
+
+  background: none !important;
+
+  position: relative;
+  z-index: 2;
+}
+
+.v10-polish
+.projectflow-brand-flow {
+  position: relative;
+  z-index: 2;
+
+  color: #10bfd0 !important;
+
+  background:
+    linear-gradient(
+      100deg,
+      #06aabc 0%,
+      #20d6e4 22%,
+      #7eeaf1 40%,
+      #10bfd0 58%,
+      #08aebe 78%,
+      #20d6e4 100%
+    );
+
+  background-size:
+    220% 100%;
+
+  background-position:
+    100% 50%;
+
+  -webkit-background-clip:
+    text;
+
+  background-clip:
+    text;
+
+  -webkit-text-fill-color:
+    transparent !important;
+
+  animation:
+    projectflow-flow-gradient
+      2.8s
+      ease-in-out
+      infinite;
+}
+
+/*
+  Brillo corto al entrar y luego cada varios segundos.
+  No cambia tamaño ni posición del título.
+*/
+.v10-polish
+.projectflow-brand-flow::after {
+  content: "";
+
+  position: absolute;
+
+  inset:
+    -2px -3px -2px -3px;
+
+  z-index: 3;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      105deg,
+      transparent 0%,
+      transparent 38%,
+      rgba(255,255,255,.0) 42%,
+      rgba(255,255,255,.75) 50%,
+      rgba(255,255,255,.0) 58%,
+      transparent 62%,
+      transparent 100%
+    );
+
+  transform:
+    translateX(-135%);
+
+  mix-blend-mode:
+    screen;
+
+  opacity:
+    0;
+
+  animation:
+    projectflow-flow-shine
+      7s
+      ease-in-out
+      700ms
+      infinite;
+}
+
+/* Hover corto, sin mover el layout */
+.v10-polish
+.projectflow-brand-title:hover
+.projectflow-brand-flow {
+  filter:
+    brightness(1.12)
+    drop-shadow(
+      0 0 7px
+      rgba(16,191,208,.24)
+    );
+}
+
+@keyframes projectflow-brand-enter {
+  0% {
+    opacity: 0;
+    transform:
+      translateX(-8px);
+    filter:
+      blur(2px);
+  }
+
+  65% {
+    opacity: 1;
+    transform:
+      translateX(1px);
+    filter:
+      blur(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform:
+      translateX(0);
+    filter:
+      blur(0);
+  }
+}
+
+@keyframes projectflow-flow-gradient {
+  0%,
+  100% {
+    background-position:
+      100% 50%;
+  }
+
+  50% {
+    background-position:
+      0% 50%;
+  }
+}
+
+@keyframes projectflow-flow-shine {
+  0%,
+  76% {
+    opacity: 0;
+    transform:
+      translateX(-135%);
+  }
+
+  79% {
+    opacity: .72;
+  }
+
+  84% {
+    opacity: .58;
+    transform:
+      translateX(135%);
+  }
+
+  86%,
+  100% {
+    opacity: 0;
+    transform:
+      translateX(135%);
+  }
+}
+
+/* Dark Theme: Project queda claro; Flow conserva el cyan animado */
+.v10-polish.theme-dark
+.projectflow-brand-static {
+  color: #f1f7fa !important;
+  -webkit-text-fill-color: #f1f7fa !important;
+}
+
+/* Accesibilidad: si el sistema reduce animaciones, queda estático */
+@media (prefers-reduced-motion: reduce) {
+  .v10-polish .projectflow-brand-title,
+  .v10-polish .projectflow-brand-flow,
+  .v10-polish .projectflow-brand-flow::after {
+    animation:
+      none !important;
+  }
+
+  .v10-polish .projectflow-brand-flow {
+    background-position:
+      50% 50% !important;
+  }
+}

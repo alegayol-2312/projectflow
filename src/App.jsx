@@ -13604,7 +13604,12 @@ function colorEstadoTarea(tarea) {
         <div className="brand-area brand-area-project">
           <div>
             <h1 className="projectflow-brand-title">
-              Project<span>Flow</span>
+              <span className="projectflow-brand-static">
+                Project
+              </span>
+              <span className="projectflow-brand-flow">
+                Flow
+              </span>
             </h1>
 
             <p>
@@ -13614,11 +13619,7 @@ function colorEstadoTarea(tarea) {
                   ? 'Seguimiento visual de tareas'
                   : vistaPrincipal === 'process'
                     ? 'Mapeo simple de procesos'
-                    : `Proyecto: ${
-                    proyectoSeleccionadoId === '__all__'
-                      ? 'Todos los proyectos'
-                      : proyecto?.nombre || 'Sin proyecto'
-                  }`}
+                    : 'Seguimiento de Proyectos detallado'}
             </p>
           </div>
         </div>
@@ -22335,7 +22336,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.6.3</span>
+        <span>V10.6.4</span>
         <span>01/10/2026</span>
       </footer>
 
