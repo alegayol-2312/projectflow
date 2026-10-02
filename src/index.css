@@ -23642,3 +23642,278 @@ input[type='text'] {
     padding: 12px 13px !important;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.5.10
+   PROCESS PALETTE + FOLDERS + HEADER + REAL MARGINS
+========================================================= */
+
+/* GLOBAL MARGINS: 8px useful edge, all main modules */
+.v10-polish:not(.meeting-mode) .app.app-main {
+  padding: 8px 8px 12px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+.v10-polish:not(.meeting-mode) .topbar {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 0 8px 0 !important;
+  box-sizing: border-box !important;
+}
+
+.v10-polish:not(.meeting-mode) .module-page-flush {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+.v10-polish:not(.meeting-mode)
+.module-page-flush > :is(
+  .cards-toolbar,
+  .cards-layout,
+  .kanban-toolbar,
+  .kanban-layout,
+  .process-toolbar,
+  .process-layout
+) {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Gantt and its subviews follow the same edge */
+.v10-polish:not(.meeting-mode)
+.app-main > :is(
+  .filters,
+  .dashboard,
+  .portfolio-dashboard,
+  .gantt-navigation,
+  .gantt-workspace,
+  .capacity-section,
+  .planning-section,
+  .history-page
+) {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+
+/* PROCESS PALETTE: full light-green tile + black labels */
+.v10-polish .process-components-grid {
+  gap: 8px !important;
+  padding: 0 2px 2px 0 !important;
+}
+
+.v10-polish .process-component-chip,
+.v10-polish.theme-light .process-component-chip {
+  min-height: 92px !important;
+  padding: 8px 8px 7px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  overflow: hidden !important;
+  background: #d9ead6 !important;
+  border: 1.5px solid #80957e !important;
+  border-radius: 9px !important;
+  color: #101010 !important;
+  -webkit-text-fill-color: #101010 !important;
+  box-shadow: 0 2px 5px rgba(32,55,42,.08) !important;
+}
+
+.v10-polish .process-component-chip:hover,
+.v10-polish.theme-light .process-component-chip:hover {
+  background: #cfe5cc !important;
+  border-color: #566d55 !important;
+  box-shadow: 0 4px 10px rgba(32,55,42,.12) !important;
+}
+
+.v10-polish .process-component-chip > span,
+.v10-polish.theme-light .process-component-chip > span {
+  position: relative !important;
+  z-index: 8 !important;
+  width: 100% !important;
+  min-height: 14px !important;
+  display: block !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  opacity: 1 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+}
+
+.v10-polish .process-component-icon {
+  position: relative !important;
+  width: 76px !important;
+  max-width: calc(100% - 8px) !important;
+  height: 52px !important;
+  flex: 0 0 52px !important;
+  overflow: hidden !important;
+  background: #d9ead6 !important;
+  border-radius: 6px !important;
+}
+
+.v10-polish .process-component-icon img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  opacity: 1 !important;
+  filter: contrast(1.18) brightness(.92) !important;
+}
+
+.v10-polish .process-components-grid .process-icon-fill {
+  background: #cfe3cd !important;
+  opacity: 1 !important;
+}
+
+.v10-polish .process-component-icon-basededatos {
+  width: 48px !important;
+  max-width: 48px !important;
+}
+
+/* Predefined Process stays inside its tile */
+.v10-polish .process-component-icon-procesopredefinido {
+  width: 68px !important;
+  max-width: 68px !important;
+  height: 48px !important;
+  flex-basis: 48px !important;
+  overflow: hidden !important;
+}
+
+.v10-polish
+.process-component-chip.process-node-procesopredefinido::before,
+.v10-polish
+.process-component-chip.process-node-procesopredefinido::after {
+  content: "" !important;
+  position: absolute !important;
+  z-index: 7 !important;
+  top: 15px !important;
+  bottom: 26px !important;
+  width: 0 !important;
+  border: 0 !important;
+  border-left: 2px solid #111111 !important;
+  background: transparent !important;
+  opacity: 1 !important;
+}
+
+.v10-polish
+.process-component-chip.process-node-procesopredefinido::before {
+  left: 22px !important;
+  right: auto !important;
+}
+
+.v10-polish
+.process-component-chip.process-node-procesopredefinido::after {
+  right: 22px !important;
+  left: auto !important;
+}
+
+.v10-polish .decision-palette-diamond {
+  background: #cfe3cd !important;
+  border: 2px solid #111111 !important;
+}
+
+
+/* PROCESS LIST HEADER: Procesos + count, black and bigger */
+.v10-polish.theme-light .process-list-header > div:first-child {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+
+.v10-polish.theme-light
+.process-list-header > div:first-child > span {
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  opacity: 1 !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+.v10-polish.theme-light
+.process-list-header > div:first-child > strong {
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  opacity: 1 !important;
+  font-size: 14px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+
+/* FOLDERS: filled red icons */
+.v10-polish.theme-light .folder-create-button {
+  background: #ffffff !important;
+  border: 1px solid #bccbd4 !important;
+  color: #d83f4a !important;
+}
+
+.v10-polish.theme-light
+.folder-create-button .folder-create-svg {
+  color: #d83f4a !important;
+  fill: #d83f4a !important;
+  stroke: #d83f4a !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.v10-polish.theme-light .project-folder-icon {
+  color: #d83f4a !important;
+}
+
+.v10-polish.theme-light .project-folder-icon::before,
+.v10-polish.theme-light .project-folder-icon::after {
+  background: #d83f4a !important;
+  border-color: #b72f39 !important;
+  opacity: 1 !important;
+}
+
+
+/* Process palette heading */
+.v10-polish.theme-light .process-components-header span {
+  color: #233944 !important;
+  -webkit-text-fill-color: #233944 !important;
+  opacity: 1 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+}
+
+.v10-polish.theme-light .process-components-header small {
+  color: #4e6571 !important;
+  -webkit-text-fill-color: #4e6571 !important;
+  opacity: 1 !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+}
+
+/* Keep zoom black in Light Theme */
+.v10-polish.theme-light .process-zoom-value,
+.v10-polish.theme-light .board-zoom-value,
+.v10-polish.theme-light .process-zoom-overlay > span,
+.v10-polish.theme-light .board-zoom-overlay > span {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  opacity: 1 !important;
+  font-weight: 950 !important;
+}

@@ -15237,7 +15237,7 @@ function colorEstadoTarea(tarea) {
 
 
       {vistaPrincipal === 'process' && (
-        <section className="process-page">
+        <section className="process-page module-page-flush">
           <div className="process-toolbar">
             <div>
               <span className="process-eyebrow">Mapa de proceso</span>
@@ -15312,9 +15312,9 @@ function colorEstadoTarea(tarea) {
                       >
                         <path
                           d="M2.5 5.5h7l2-2.5h10v14.5h-19z"
-                          fill="none"
+                          fill="currentColor"
                           stroke="currentColor"
-                          strokeWidth="2"
+                          strokeWidth="1.5"
                           strokeLinejoin="round"
                         />
                       </svg>
@@ -16694,7 +16694,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       {vistaPrincipal === 'kanban' && (
-        <section className="kanban-page">
+        <section className="kanban-page module-page-flush">
           <div className="kanban-toolbar">
             <div>
               <span className="kanban-eyebrow">
@@ -16770,9 +16770,9 @@ function colorEstadoTarea(tarea) {
                       >
                         <path
                           d="M2.5 5.5h7l2-2.5h10v14.5h-19z"
-                          fill="none"
+                          fill="currentColor"
                           stroke="currentColor"
-                          strokeWidth="2"
+                          strokeWidth="1.5"
                           strokeLinejoin="round"
                         />
                       </svg>
@@ -17182,7 +17182,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       {vistaPrincipal === 'cards' && (
-        <section className="cards-page">
+        <section className="cards-page module-page-flush">
           <div className="cards-toolbar">
             <div>
               <span className="cards-eyebrow">
@@ -17264,9 +17264,9 @@ function colorEstadoTarea(tarea) {
                       >
                         <path
                           d="M2.5 5.5h7l2-2.5h10v14.5h-19z"
-                          fill="none"
+                          fill="currentColor"
                           stroke="currentColor"
-                          strokeWidth="2"
+                          strokeWidth="1.5"
                           strokeLinejoin="round"
                         />
                       </svg>
@@ -21751,7 +21751,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.5.9</span>
+        <span>V10.5.10</span>
         <span>01/10/2026</span>
       </footer>
 
