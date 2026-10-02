@@ -26028,3 +26028,248 @@ button.cards-undo-tool:hover {
       !important;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.6.6
+   SIMULACIÓN LIGHT + HEADERS PROCESS/KANBAN/CARDS
+========================================================= */
+
+/* ---------------------------------------------------------
+   1. PROCESS SIMULATION — LIGHT THEME
+   Blindaje final contra textos blancos heredados.
+--------------------------------------------------------- */
+
+body
+.v10-polish.theme-light
+.process-simulation-panel {
+  background: #ffffff !important;
+  color: #172b35 !important;
+  -webkit-text-fill-color: #172b35 !important;
+}
+
+body
+.v10-polish.theme-light
+.process-simulation-panel
+.process-simulation-panel-top
+span {
+  color: #287743 !important;
+  -webkit-text-fill-color: #287743 !important;
+  opacity: 1 !important;
+}
+
+body
+.v10-polish.theme-light
+.process-simulation-panel
+.process-simulation-panel-top
+strong {
+  color: #172b35 !important;
+  -webkit-text-fill-color: #172b35 !important;
+  opacity: 1 !important;
+}
+
+body
+.v10-polish.theme-light
+.process-simulation-panel
+.process-simulation-nav-label {
+  color: #267845 !important;
+  -webkit-text-fill-color: #267845 !important;
+  opacity: 1 !important;
+}
+
+body
+.v10-polish.theme-light
+.process-simulation-panel
+.process-simulation-nav-label.back {
+  color: #166c8b !important;
+  -webkit-text-fill-color: #166c8b !important;
+}
+
+body
+.v10-polish.theme-light
+.process-simulation-panel
+.process-simulation-key-option {
+  background: #f5f8fa !important;
+  border-color: #bfd0d8 !important;
+  color: #223945 !important;
+  -webkit-text-fill-color: #223945 !important;
+  opacity: 1 !important;
+}
+
+body
+.v10-polish.theme-light
+.process-simulation-panel
+.process-simulation-key-option
+span {
+  color: #223945 !important;
+  -webkit-text-fill-color: #223945 !important;
+  opacity: 1 !important;
+  font-weight: 750 !important;
+}
+
+body
+.v10-polish.theme-light
+.process-simulation-panel
+.process-simulation-key-option
+kbd {
+  background: #ffffff !important;
+  border-color: #9fb4bf !important;
+  color: #0b7282 !important;
+  -webkit-text-fill-color: #0b7282 !important;
+  opacity: 1 !important;
+}
+
+body
+.v10-polish.theme-light
+.process-simulation-panel
+.process-simulation-finished {
+  color: #5c707b !important;
+  -webkit-text-fill-color: #5c707b !important;
+  opacity: 1 !important;
+}
+
+body
+.v10-polish.theme-light
+.process-simulation-panel
+.process-simulation-actions
+.btn-primary {
+  background: #0aa8b8 !important;
+  border-color: #0793a2 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body
+.v10-polish.theme-light
+.process-simulation-panel
+.process-simulation-actions
+.btn-secondary {
+  background: #ffffff !important;
+  border-color: #b8c8d1 !important;
+  color: #263e49 !important;
+  -webkit-text-fill-color: #263e49 !important;
+}
+
+body
+.v10-polish.theme-light
+.process-simulation-panel::after {
+  background: #edf3f6 !important;
+  border-color: #c6d3da !important;
+  color: #334b56 !important;
+  -webkit-text-fill-color: #334b56 !important;
+  opacity: 1 !important;
+}
+
+
+/* ---------------------------------------------------------
+   2. LEFT PANEL HEADERS
+   Process / Kanban / Cards share the same visual hierarchy.
+--------------------------------------------------------- */
+
+.v10-polish
+.process-list-header > div:first-child,
+.v10-polish
+.kanban-project-header > div:first-child,
+.v10-polish
+.boards-panel-header > div:first-child {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+
+/* words: Procesos / Proyectos / Mis boards */
+.v10-polish.theme-light
+.process-list-header > div:first-child > span,
+.v10-polish.theme-light
+.kanban-project-header > div:first-child > span,
+.v10-polish.theme-light
+.boards-panel-header > div:first-child > span {
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  opacity: 1 !important;
+
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+/* numeric counts — no circle/badge */
+.v10-polish.theme-light
+.process-list-header > div:first-child > strong,
+.v10-polish.theme-light
+.kanban-project-header > div:first-child > strong,
+.v10-polish.theme-light
+.boards-panel-header > div:first-child > strong {
+  min-width: 0 !important;
+  width: auto !important;
+  height: auto !important;
+
+  display: inline !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  background: transparent !important;
+  box-shadow: none !important;
+
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  opacity: 1 !important;
+
+  font-size: 14px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+/* Dark theme mirrors the same sizing, with white type */
+.v10-polish.theme-dark
+.process-list-header > div:first-child > span,
+.v10-polish.theme-dark
+.kanban-project-header > div:first-child > span,
+.v10-polish.theme-dark
+.boards-panel-header > div:first-child > span {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.v10-polish.theme-dark
+.process-list-header > div:first-child > strong,
+.v10-polish.theme-dark
+.kanban-project-header > div:first-child > strong,
+.v10-polish.theme-dark
+.boards-panel-header > div:first-child > strong {
+  min-width: 0 !important;
+  width: auto !important;
+  height: auto !important;
+
+  display: inline !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  background: transparent !important;
+  box-shadow: none !important;
+
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+
+  font-size: 14px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
