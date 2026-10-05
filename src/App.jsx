@@ -16095,11 +16095,17 @@ function colorEstadoTarea(tarea) {
                       <strong>
                         {processSeleccionado?.nombre || 'Proceso'}
                       </strong>
-                      <span>
-                        {processConnectSource
-                          ? `Conectando desde: ${processConnectSource.titulo}`
-                          : 'Arrastrá componentes al canvas. Doble click para editar. Arrastrá desde cualquiera de los 4 puntos verdes para conectar.'}
+
+                      <span className="process-canvas-description">
+                        {processSeleccionado?.descripcion ||
+                          'Sin descripción'}
                       </span>
+
+                      {processConnectSource && (
+                        <small className="process-canvas-connect-status">
+                          {`Conectando desde: ${processConnectSource.titulo}`}
+                        </small>
+                      )}
                     </div>
 
                     <div className="process-canvas-actions">
@@ -22453,7 +22459,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.6.6</span>
+        <span>V10.6.7</span>
         <span>01/10/2026</span>
       </footer>
 

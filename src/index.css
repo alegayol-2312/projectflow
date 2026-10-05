@@ -26273,3 +26273,149 @@ body
   font-weight: 950 !important;
   line-height: 1 !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.6.7
+   PROCESS LIGHT: COUNT + DESCRIPTION CONTRAST
+========================================================= */
+
+/* ---------------------------------------------------------
+   PROCESS COUNT
+   Restore the Process count circle and make the number visible.
+   Kanban / Cards keep their plain count styling.
+--------------------------------------------------------- */
+
+.v10-polish.theme-light
+.process-list-header > div:first-child > strong {
+  min-width: 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border: 1px solid #b9cad3 !important;
+  border-radius: 999px !important;
+
+  background: #ffffff !important;
+
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+
+  opacity: 1 !important;
+
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+
+  box-shadow: none !important;
+}
+
+.v10-polish.theme-dark
+.process-list-header > div:first-child > strong {
+  min-width: 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border: 1px solid #536b79 !important;
+  border-radius: 999px !important;
+
+  background: #162630 !important;
+
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+
+  opacity: 1 !important;
+
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+
+/* ---------------------------------------------------------
+   PROCESS HEADER DESCRIPTION
+   Light: black/dark text
+   Dark: white/light text
+--------------------------------------------------------- */
+
+.v10-polish.theme-light
+.process-canvas-header
+.process-canvas-description {
+  display: block !important;
+
+  margin-top: 4px !important;
+
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+
+  opacity: 1 !important;
+
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+}
+
+.v10-polish.theme-dark
+.process-canvas-header
+.process-canvas-description {
+  display: block !important;
+
+  margin-top: 4px !important;
+
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+
+  opacity: 1 !important;
+
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+}
+
+
+/* Connection status stays secondary */
+.v10-polish
+.process-canvas-connect-status {
+  display: block !important;
+
+  margin-top: 3px !important;
+
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+}
+
+.v10-polish.theme-light
+.process-canvas-connect-status {
+  color: #536975 !important;
+  -webkit-text-fill-color: #536975 !important;
+}
+
+.v10-polish.theme-dark
+.process-canvas-connect-status {
+  color: #a9bbc4 !important;
+  -webkit-text-fill-color: #a9bbc4 !important;
+}
+
+
+/* Title itself explicitly visible in Light */
+.v10-polish.theme-light
+.process-canvas-header > div:first-child > strong {
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+
+  opacity: 1 !important;
+}
