@@ -28398,3 +28398,87 @@ body .v10-polish.theme-dark .process-undo-tool {
   color: #eef7fb !important;
   -webkit-text-fill-color: #eef7fb !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.8.2
+   AVATAR HOVER PREVIEW
+========================================================= */
+
+/*
+  El avatar elegido se amplía al pasar el mouse,
+  manteniendo siempre proporción 1:1 y sin deformar la imagen.
+*/
+body .v10-polish .current-user-avatar,
+body .v10-polish .avatar-settings-preview {
+  position: relative !important;
+  z-index: 120 !important;
+  transform-origin: center center !important;
+
+  transition:
+    transform .18s cubic-bezier(.2,.72,.25,1),
+    box-shadow .18s ease,
+    z-index 0s !important;
+
+  cursor: zoom-in !important;
+  overflow: hidden !important;
+}
+
+body .v10-polish .current-user-avatar:hover {
+  z-index: 25000 !important;
+  transform: scale(3.15) !important;
+
+  box-shadow:
+    0 8px 26px rgba(10,31,43,.28),
+    0 0 0 2px #ffd84d !important;
+}
+
+body .v10-polish .avatar-settings-preview:hover {
+  z-index: 25000 !important;
+  transform: scale(2.6) !important;
+
+  box-shadow:
+    0 8px 24px rgba(10,31,43,.26),
+    0 0 0 2px #ffd84d !important;
+}
+
+/* La imagen conserva su relación de aspecto */
+body .v10-polish
+:is(
+  .current-user-avatar,
+  .avatar-settings-preview
+)
+> img {
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: cover !important;
+  object-position: center !important;
+
+  transform: none !important;
+  aspect-ratio: 1 / 1 !important;
+}
+
+/* Evita que el contenedor recorte el avatar ampliado */
+body .v10-polish .top-actions,
+body .v10-polish .topbar,
+body .v10-polish .app-settings-wrap,
+body .v10-polish .app-settings-menu {
+  overflow: visible !important;
+}
+
+/* Light y Dark conservan el mismo borde amarillo */
+body .v10-polish.theme-dark .current-user-avatar:hover,
+body .v10-polish.theme-dark .avatar-settings-preview:hover,
+body .v10-polish.theme-light .current-user-avatar:hover,
+body .v10-polish.theme-light .avatar-settings-preview:hover {
+  border-color: #ffd84d !important;
+}
+
+/* Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  body .v10-polish .current-user-avatar,
+  body .v10-polish .avatar-settings-preview {
+    transition: none !important;
+  }
+}
