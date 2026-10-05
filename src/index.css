@@ -28280,3 +28280,121 @@ body .v10-polish.theme-dark .empty-state-action {
     border-color: rgba(19,196,213,.3);
   }
 }
+
+
+/* =========================================================
+   V10.8.1 — DARK PROCESS ICONS + KANBAN +COLUMNAS
+========================================================= */
+
+/* + Columnas no debe quedar cuadrado por la regla general de botones cortos */
+body .v10-polish .kanban-add-column-button {
+  width: auto !important;
+  min-width: 108px !important;
+  max-width: none !important;
+  flex: 0 0 auto !important;
+  padding: 0 14px !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+
+body .v10-polish .kanban-bg-picker {
+  flex-wrap: nowrap !important;
+}
+
+body .v10-polish .kanban-add-column-button,
+body .v10-polish.theme-light .kanban-add-column-button,
+body .v10-polish.theme-dark .kanban-add-column-button {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+}
+
+/* Process toolbar en dark: más contraste y pictogramas legibles */
+body .v10-polish.theme-dark .process-canvas-tools {
+  background: rgba(8, 15, 22, 0.94) !important;
+  border-color: rgba(92, 119, 136, 0.56) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42) !important;
+}
+
+body .v10-polish.theme-dark .process-overlay-divider {
+  background: rgba(196, 220, 232, 0.28) !important;
+}
+
+body .v10-polish.theme-dark .process-canvas-tools button {
+  background: #122130 !important;
+  border-color: #476072 !important;
+  color: #eef7fb !important;
+  -webkit-text-fill-color: #eef7fb !important;
+  box-shadow: none !important;
+}
+
+body .v10-polish.theme-dark .process-canvas-tools button:hover {
+  background: #173142 !important;
+  border-color: #4fd3dd !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body .v10-polish.theme-dark .process-snap-tool.active,
+body .v10-polish.theme-dark .process-arrow-mode-tool.active,
+body .v10-polish.theme-dark .process-superposition-tool.active,
+body .v10-polish.theme-dark .process-ruler-tool.active {
+  background: rgba(18, 120, 139, 0.34) !important;
+  border-color: #39d4df !important;
+  color: #dffcff !important;
+  -webkit-text-fill-color: #dffcff !important;
+}
+
+body .v10-polish.theme-dark .process-box-tool > span {
+  border-color: #f4fbff !important;
+}
+
+body .v10-polish.theme-dark .ruler-shape {
+  border-color: #f4fbff !important;
+}
+
+body .v10-polish.theme-dark .ruler-shape i {
+  background: #f4fbff !important;
+}
+
+body .v10-polish.theme-dark .curve-arrow-icon i {
+  border-top-color: #f4fbff !important;
+  border-right-color: #f4fbff !important;
+}
+
+body .v10-polish.theme-dark .curve-arrow-icon b {
+  border-left-color: #f4fbff !important;
+}
+
+body .v10-polish.theme-dark .process-superposition-tool img {
+  filter: brightness(0) invert(1) saturate(0) brightness(2) !important;
+  opacity: 0.96 !important;
+}
+
+/* Puntos de fondo del process: siempre legibles en dark */
+body .v10-polish.theme-dark .process-bg-dot {
+  border: 2px solid rgba(218, 232, 239, 0.52) !important;
+  box-shadow: inset 0 0 0 1px rgba(8, 15, 22, 0.14) !important;
+}
+
+body .v10-polish.theme-dark .process-bg-dot.white {
+  background: #ffffff !important;
+}
+
+body .v10-polish.theme-dark .process-bg-dot.black {
+  background: #0b1220 !important;
+  border-color: rgba(228, 240, 245, 0.8) !important;
+}
+
+body .v10-polish.theme-dark .process-bg-dot.board {
+  background: #5d6670 !important;
+}
+
+body .v10-polish.theme-dark .process-bg-dot.active {
+  outline: 2px solid #2fd4df !important;
+  outline-offset: 2px !important;
+}
+
+body .v10-polish.theme-dark .process-undo-tool {
+  color: #eef7fb !important;
+  -webkit-text-fill-color: #eef7fb !important;
+}

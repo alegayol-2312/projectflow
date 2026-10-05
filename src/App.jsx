@@ -23232,7 +23232,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.8.0</span>
+        <span>V10.8.1</span>
         <span>01/10/2026</span>
       </footer>
 
