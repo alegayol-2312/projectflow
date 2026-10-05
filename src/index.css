@@ -27765,3 +27765,518 @@ body .v10-polish
 ) strong {
   font-weight: var(--pf-weight-meta) !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.8.0
+   UX POLISH COMPLETO — 10 PUNTOS
+========================================================= */
+
+body .v10-polish {
+  --pf-control-h: 38px;
+  --pf-control-sm: 32px;
+  --pf-radius-control: 9px;
+  --pf-radius-panel: 14px;
+
+  --pf-state-pending: #42b8ef;
+  --pf-state-progress: #8b5cf6;
+  --pf-state-done: #2dcc82;
+  --pf-state-overdue: #ef5b6a;
+  --pf-state-blocked: #f59e42;
+  --pf-state-dismissed: #8a9aa5;
+  --pf-state-process-pending: #ff4fa3;
+
+  --pf-selection: #13c4d5;
+  --pf-selection-soft: rgba(19,196,213,.16);
+}
+
+
+/* =========================================================
+   1. CONTROLES — ALTURAS / RADIOS / RITMO ÚNICO
+========================================================= */
+
+body .v10-polish
+:is(
+  .filters select,
+  .filters button,
+  .project-selector,
+  .topbar button,
+  .cards-toolbar button,
+  .kanban-toolbar button,
+  .process-toolbar button,
+  .gantt-navigation button,
+  .planning-toolbar button,
+  .cards-board-header button,
+  .kanban-board-header button,
+  .process-canvas-header button,
+  .drawer-actions button,
+  .modal-actions button,
+  .btn-primary,
+  .btn-secondary
+) {
+  min-height: var(--pf-control-h) !important;
+  border-radius: var(--pf-radius-control) !important;
+  box-sizing: border-box !important;
+}
+
+body .v10-polish
+:is(
+  .process-list-header-actions button,
+  .boards-panel-header button,
+  .kanban-project-header button,
+  .process-canvas-tools button,
+  .cards-canvas-bg-picker button,
+  .kanban-bg-picker button
+) {
+  min-width: var(--pf-control-sm) !important;
+  width: var(--pf-control-sm);
+  min-height: var(--pf-control-sm) !important;
+  height: var(--pf-control-sm) !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  box-sizing: border-box !important;
+}
+
+body .v10-polish
+:is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select
+) {
+  min-height: var(--pf-control-h) !important;
+  border-radius: var(--pf-radius-control) !important;
+  box-sizing: border-box !important;
+}
+
+body .v10-polish textarea {
+  border-radius: var(--pf-radius-control) !important;
+}
+
+
+/* =========================================================
+   2. JERARQUÍA ENTRE MÓDULO / ACTIVO / DESCRIPCIÓN
+========================================================= */
+
+body .v10-polish
+:is(
+  .cards-toolbar h2,
+  .kanban-toolbar h2,
+  .process-toolbar h2
+) {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  line-height: 1.08 !important;
+  margin-bottom: 3px !important;
+}
+
+body .v10-polish
+:is(
+  .cards-board-meta strong,
+  .kanban-board-header strong,
+  .process-canvas-header > div:first-child > strong
+) {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.12 !important;
+}
+
+body .v10-polish
+:is(
+  .cards-board-meta span,
+  .kanban-board-header span,
+  .process-canvas-description
+) {
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  opacity: .78 !important;
+}
+
+
+/* =========================================================
+   3. SISTEMA ÚNICO DE ESTADOS
+========================================================= */
+
+body .v10-polish .status-dot.pendiente {
+  background: var(--pf-state-pending) !important;
+}
+body .v10-polish .status-dot.en-curso {
+  background: var(--pf-state-progress) !important;
+}
+body .v10-polish .status-dot.finalizado {
+  background: var(--pf-state-done) !important;
+}
+body .v10-polish .status-dot.vencido {
+  background: var(--pf-state-overdue) !important;
+}
+body .v10-polish .status-dot.bloqueado {
+  background: var(--pf-state-blocked) !important;
+}
+body .v10-polish .status-dot.desestimado {
+  background: var(--pf-state-dismissed) !important;
+}
+
+body .v10-polish .postit-status-badge.pendiente {
+  color: #116b91 !important;
+  border-color: color-mix(in srgb, var(--pf-state-pending) 56%, transparent) !important;
+  background: color-mix(in srgb, var(--pf-state-pending) 14%, white) !important;
+}
+body .v10-polish .postit-status-badge.en-curso {
+  color: #6439aa !important;
+  border-color: color-mix(in srgb, var(--pf-state-progress) 52%, transparent) !important;
+  background: color-mix(in srgb, var(--pf-state-progress) 13%, white) !important;
+}
+body .v10-polish .postit-status-badge.finalizado {
+  color: #177f53 !important;
+  border-color: color-mix(in srgb, var(--pf-state-done) 54%, transparent) !important;
+  background: color-mix(in srgb, var(--pf-state-done) 13%, white) !important;
+}
+body .v10-polish .postit-status-badge.bloqueado {
+  color: #a15a13 !important;
+  border-color: color-mix(in srgb, var(--pf-state-blocked) 56%, transparent) !important;
+  background: color-mix(in srgb, var(--pf-state-blocked) 15%, white) !important;
+}
+body .v10-polish .postit-status-badge.desestimado {
+  color: #5e707b !important;
+  border-color: color-mix(in srgb, var(--pf-state-dismissed) 48%, transparent) !important;
+  background: color-mix(in srgb, var(--pf-state-dismissed) 12%, white) !important;
+}
+
+body .v10-polish .kanban-column.state-por-hacer {
+  --kanban-state-color: var(--pf-state-pending);
+}
+body .v10-polish .kanban-column.state-en-curso {
+  --kanban-state-color: var(--pf-state-progress);
+}
+body .v10-polish .kanban-column.state-listo {
+  --kanban-state-color: var(--pf-state-done);
+}
+body .v10-polish .kanban-column {
+  --kanban-state-color: #8ea2ae;
+}
+body .v10-polish .kanban-column-header {
+  border-top: 3px solid var(--kanban-state-color) !important;
+}
+
+body .v10-polish .process-node.pending,
+body .v10-polish .process-node.pendiente {
+  --process-color: var(--pf-state-process-pending) !important;
+}
+
+
+/* =========================================================
+   4. SELECCIÓN MÁS EVIDENTE, SIN CAMBIOS BRUSCOS DE FONDO
+========================================================= */
+
+body .v10-polish .process-node.multi-selected {
+  outline: 2px solid var(--pf-selection) !important;
+  outline-offset: 3px !important;
+  filter:
+    drop-shadow(0 0 7px rgba(19,196,213,.38))
+    !important;
+}
+
+body .v10-polish .process-box.selected {
+  outline: 2px solid var(--pf-selection) !important;
+  outline-offset: 2px !important;
+}
+
+body .v10-polish .process-link-path.selected {
+  stroke: var(--pf-selection) !important;
+  stroke-width: 3 !important;
+  filter:
+    drop-shadow(0 0 4px rgba(19,196,213,.36));
+}
+
+body .v10-polish .postit-card.multi-selected {
+  outline: 2px solid var(--pf-selection) !important;
+  outline-offset: 3px !important;
+  box-shadow:
+    0 0 0 5px var(--pf-selection-soft),
+    0 10px 24px rgba(20,49,65,.12)
+    !important;
+}
+
+
+/* =========================================================
+   5. TOOLBARS MÁS INTELIGENTES / COMPACTAS
+========================================================= */
+
+body .v10-polish
+:is(
+  .process-selection-toolbar,
+  .process-link-selection-toolbar,
+  .cards-selection-toolbar
+) {
+  border-radius: 11px !important;
+  box-shadow:
+    0 10px 24px rgba(22,48,63,.13)
+    !important;
+}
+
+body .v10-polish .cards-selection-toolbar {
+  width: max-content !important;
+  max-width: calc(100% - 16px) !important;
+  gap: 6px !important;
+  padding: 7px 8px !important;
+}
+
+body .v10-polish .cards-selection-toolbar > span {
+  display: none !important;
+}
+
+body .v10-polish .cards-selection-toolbar button {
+  min-height: 31px !important;
+  padding: 0 10px !important;
+}
+
+body .v10-polish
+:is(
+  .selection-delete-all,
+  .process-selection-secondary-row > .selection-delete-all
+) {
+  margin-left: 5px !important;
+  border-color: #e8a2a7 !important;
+  background: #fff2f3 !important;
+  color: #a12f38 !important;
+  -webkit-text-fill-color: #a12f38 !important;
+}
+
+
+/* =========================================================
+   6. ESTADOS VACÍOS CON CTA
+========================================================= */
+
+body .v10-polish .empty-state-polished {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  text-align: center !important;
+  padding: 24px !important;
+}
+
+body .v10-polish .empty-state-icon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--pf-selection) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pf-selection) 32%, transparent);
+  color: #087b88 !important;
+  -webkit-text-fill-color: #087b88 !important;
+  font-size: 21px;
+  font-weight: 500;
+}
+
+body .v10-polish .empty-state-action {
+  min-height: 34px !important;
+  margin-top: 4px;
+  padding: 0 12px !important;
+  border: 1px solid #77cbd3 !important;
+  border-radius: 8px !important;
+  background: #e9fbfd !important;
+  color: #0c6673 !important;
+  -webkit-text-fill-color: #0c6673 !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   7. TOASTS
+========================================================= */
+
+body .v10-polish .ui-toast-stack {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 28000;
+  width: min(330px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+body .v10-polish .ui-toast {
+  width: max-content;
+  max-width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border: 1px solid #c7d6de;
+  border-radius: 11px;
+  background: rgba(255,255,255,.97);
+  color: #213945 !important;
+  -webkit-text-fill-color: #213945 !important;
+  box-shadow: 0 12px 32px rgba(22,45,59,.17);
+  backdrop-filter: blur(8px);
+  font-size: 10px;
+  font-weight: 500;
+  animation: pf-toast-in .2s ease both;
+}
+
+body .v10-polish .ui-toast-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 22px;
+  border-radius: 999px;
+  background: #daf7e8;
+  color: #13784e !important;
+  -webkit-text-fill-color: #13784e !important;
+  font-weight: 800;
+}
+
+body .v10-polish .ui-toast.error .ui-toast-icon {
+  background: #ffe5e7;
+  color: #b3313c !important;
+  -webkit-text-fill-color: #b3313c !important;
+}
+
+body .v10-polish.theme-dark .ui-toast {
+  border-color: #38515f;
+  background: rgba(17,28,36,.97);
+  color: #edf5f7 !important;
+  -webkit-text-fill-color: #edf5f7 !important;
+}
+
+@keyframes pf-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* =========================================================
+   8. TOOLTIPS CONSISTENTES
+========================================================= */
+
+body .v10-polish .ui-global-tooltip {
+  position: fixed;
+  z-index: 30000;
+  max-width: 220px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  background: #12242f;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(8,25,35,.22);
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.25;
+  pointer-events: none;
+  animation: pf-tooltip-in .10s ease both;
+}
+
+@keyframes pf-tooltip-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* =========================================================
+   9. AVATARES + CONECTADOS
+========================================================= */
+
+body .v10-polish .presence-summary-button {
+  min-height: 36px !important;
+  padding: 3px 9px !important;
+  gap: 6px !important;
+}
+
+body .v10-polish .presence-count-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  white-space: nowrap;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+}
+
+body .v10-polish .presence-count-label span {
+  font-size: 8.5px !important;
+  font-weight: 400 !important;
+  opacity: .72;
+}
+
+body .v10-polish .presence-user-row {
+  transition: background .12s ease;
+}
+
+
+/* =========================================================
+   10. PROCESS — MENOS RUIDO, MÁS FOCO EN EL FLUJO
+========================================================= */
+
+body .v10-polish .process-box:not(.selected) {
+  box-shadow: none !important;
+  opacity: .82;
+}
+
+body .v10-polish .process-box:not(.selected) .process-box-title {
+  font-weight: 600 !important;
+}
+
+body .v10-polish .process-link-path:not(.selected):not(.simulation-route) {
+  opacity: .72 !important;
+  stroke-width: 1.6 !important;
+}
+
+body .v10-polish .process-node:not(.multi-selected):not(.magnetic-target) {
+  filter: none !important;
+}
+
+body .v10-polish .process-node:not(.multi-selected):not(.magnetic-target) {
+  box-shadow:
+    0 3px 10px rgba(22,47,61,.08)
+    !important;
+}
+
+body .v10-polish .process-node-copy strong {
+  font-weight: 500 !important;
+}
+
+body .v10-polish .process-node-notaproceso .process-node-copy strong {
+  font-weight: 400 !important;
+}
+
+body .v10-polish .process-node.multi-selected .process-node-copy strong,
+body .v10-polish .process-node.magnetic-target .process-node-copy strong {
+  font-weight: 600 !important;
+}
+
+
+/* Dark keeps the same semantic status colors */
+body .v10-polish.theme-dark .kanban-column-header {
+  border-top-color: var(--kanban-state-color) !important;
+}
+
+body .v10-polish.theme-dark .empty-state-action {
+  background: rgba(19,196,213,.13) !important;
+  color: #8ae4ec !important;
+  -webkit-text-fill-color: #8ae4ec !important;
+  border-color: rgba(80,211,222,.45) !important;
+}
+
+@supports not (
+  color: color-mix(in srgb, red, blue)
+) {
+  body .v10-polish .empty-state-icon {
+    background: rgba(19,196,213,.12);
+    border-color: rgba(19,196,213,.3);
+  }
+}

@@ -981,6 +981,9 @@ function App() {
   const [presencePanelOpen, setPresencePanelOpen] = useState(false)
   const [deleteConfirmModal, setDeleteConfirmModal] = useState(null)
   const [deleteConfirmBusy, setDeleteConfirmBusy] = useState(false)
+  const [uiToasts, setUiToasts] = useState([])
+  const [uiTooltip, setUiTooltip] = useState(null)
+
 
 
 
@@ -1439,6 +1442,152 @@ useEffect(() => {
 
 
 
+
+
+  useEffect(() => {
+    if (!session) {
+      setUiTooltip(null)
+      return
+    }
+
+    function tooltipTarget(target) {
+      if (!(target instanceof Element)) {
+        return null
+      }
+
+      return target.closest(
+        '[title], [data-pf-tooltip]'
+      )
+    }
+
+    function onMouseOver(event) {
+      const target =
+        tooltipTarget(event.target)
+
+      if (!target) return
+
+      const texto =
+        target.getAttribute('title') ||
+        target.getAttribute(
+          'data-pf-tooltip'
+        )
+
+      if (!texto) return
+
+      if (target.hasAttribute('title')) {
+        target.setAttribute(
+          'data-pf-tooltip',
+          texto
+        )
+        target.removeAttribute(
+          'title'
+        )
+      }
+
+      setUiTooltip({
+        texto,
+        x:
+          Math.min(
+            event.clientX + 14,
+            window.innerWidth - 240
+          ),
+        y:
+          Math.min(
+            event.clientY + 16,
+            window.innerHeight - 60
+          ),
+      })
+    }
+
+    function onMouseMove(event) {
+      setUiTooltip(
+        (actual) =>
+          actual
+            ? {
+                ...actual,
+                x:
+                  Math.min(
+                    event.clientX + 14,
+                    window.innerWidth - 240
+                  ),
+                y:
+                  Math.min(
+                    event.clientY + 16,
+                    window.innerHeight - 60
+                  ),
+              }
+            : actual
+      )
+    }
+
+    function onMouseOut(event) {
+      const target =
+        tooltipTarget(event.target)
+
+      if (!target) return
+
+      const related =
+        event.relatedTarget
+
+      if (
+        related instanceof Node &&
+        target.contains(related)
+      ) {
+        return
+      }
+
+      const texto =
+        target.getAttribute(
+          'data-pf-tooltip'
+        )
+
+      if (texto) {
+        target.setAttribute(
+          'title',
+          texto
+        )
+        target.removeAttribute(
+          'data-pf-tooltip'
+        )
+      }
+
+      setUiTooltip(null)
+    }
+
+    document.addEventListener(
+      'mouseover',
+      onMouseOver,
+      true
+    )
+    document.addEventListener(
+      'mousemove',
+      onMouseMove,
+      true
+    )
+    document.addEventListener(
+      'mouseout',
+      onMouseOut,
+      true
+    )
+
+    return () => {
+      document.removeEventListener(
+        'mouseover',
+        onMouseOver,
+        true
+      )
+      document.removeEventListener(
+        'mousemove',
+        onMouseMove,
+        true
+      )
+      document.removeEventListener(
+        'mouseout',
+        onMouseOut,
+        true
+      )
+    }
+  }, [session])
 
 
   useEffect(() => {
@@ -1949,6 +2098,50 @@ useEffect(() => {
         error
       )
     }
+  }
+
+  function mostrarToast(
+    mensaje,
+    tipo = 'success'
+  ) {
+    const id =
+      `${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2)}`
+
+    setUiToasts(
+      (actual) => [
+        ...actual,
+        {
+          id,
+          mensaje,
+          tipo,
+        },
+      ].slice(-4)
+    )
+
+    window.setTimeout(
+      () => {
+        setUiToasts(
+          (actual) =>
+            actual.filter(
+              (toast) =>
+                toast.id !== id
+            )
+        )
+      },
+      3200
+    )
+  }
+
+  function uiStateSlug(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
   }
 
   function cambiarFlowColorRandom() {
@@ -2744,6 +2937,12 @@ function navegarVistaPrincipal(destino) {
       cargarTareas(proyecto.id),
       cargarTodasLasTareas(),
     ])
+
+    mostrarToast(
+      tareaEditando
+        ? 'Tarea actualizada'
+        : 'Tarea creada'
+    )
   }
 async function crearProyecto(event) {
   event.preventDefault()
@@ -3294,6 +3493,8 @@ async function archivarBoard(board) {
     cargarBoards(),
     cargarBoardsArchivados(),
   ])
+
+  mostrarToast('Board archivado')
 }
 
 async function restaurarBoard(board) {
@@ -4810,6 +5011,8 @@ async function guardarProcessMap(event) {
   setProcessMapDrawerOpen(false)
   await cargarProcessMaps()
   setProcessSeleccionadoId(data.id)
+
+  mostrarToast('Proceso creado')
 }
 
 async function eliminarProcessMap(process) {
@@ -4873,6 +5076,7 @@ async function confirmarBorradoSeleccionado() {
     }
 
     setDeleteConfirmModal(null)
+    mostrarToast('Elemento eliminado')
   } finally {
     setDeleteConfirmBusy(false)
   }
@@ -4912,6 +5116,8 @@ async function archivarProcessMap(process) {
     cargarProcessMaps(),
     cargarProcessMapsArchivados(),
   ])
+
+  mostrarToast('Proceso archivado')
 }
 
 async function restaurarProcessMap(process) {
@@ -6130,6 +6336,12 @@ async function guardarProcessNode(event) {
 
   cerrarProcessNodeDrawer()
   await cargarProcessCanvas(processSeleccionadoId)
+
+  mostrarToast(
+    processNodeEditando
+      ? 'Componente actualizado'
+      : 'Componente creado'
+  )
 }
 
 
@@ -9958,6 +10170,12 @@ async function guardarBoard(event) {
   setModalBoardOpen(false)
 
   await cargarBoards()
+
+  mostrarToast(
+    boardEditando
+      ? 'Board actualizado'
+      : 'Board creado'
+  )
 }
 
 function abrirNuevoBoard() {
@@ -10301,6 +10519,12 @@ async function guardarCard(event) {
 
   cerrarModalCard()
   await cargarCards(boardSeleccionadoId)
+
+  mostrarToast(
+    cardEditando
+      ? 'Card actualizada'
+      : 'Card creada'
+  )
 }
 
 async function eliminarCard() {
@@ -12444,6 +12668,8 @@ function colorEstadoTarea(tarea) {
       cargarKanbanProjects(),
       cargarKanbanProjectsArchivados(),
     ])
+
+    mostrarToast('Kanban archivado')
   }
 
   async function restaurarKanbanProject(project) {
@@ -12578,6 +12804,8 @@ function colorEstadoTarea(tarea) {
     setKanbanProjectDrawerOpen(false)
     await cargarKanbanProjects()
     setKanbanProjectId(data.id)
+
+    mostrarToast('Kanban creado')
   }
 
   async function eliminarKanbanProject(project) {
@@ -12931,6 +13159,12 @@ function colorEstadoTarea(tarea) {
 
     cerrarKanbanCardDrawer()
     await cargarKanbanCards(kanbanProjectId)
+
+    mostrarToast(
+      kanbanCardEditando
+        ? 'Tarjeta actualizada'
+        : 'Tarjeta creada'
+    )
   }
 
   async function moverKanbanCard(cardId, nuevoEstado) {
@@ -14045,6 +14279,46 @@ function colorEstadoTarea(tarea) {
         '--flow-glow': flowPalette.glow,
       }}
     >
+      <div
+        className="ui-toast-stack"
+        aria-live="polite"
+        aria-atomic="false"
+      >
+        {uiToasts.map(
+          (toast) => (
+            <div
+              key={toast.id}
+              className={`ui-toast ${toast.tipo}`}
+            >
+              <span className="ui-toast-icon">
+                {toast.tipo === 'error'
+                  ? '!'
+                  : toast.tipo === 'warning'
+                    ? '!'
+                    : '✓'}
+              </span>
+
+              <span>
+                {toast.mensaje}
+              </span>
+            </div>
+          )
+        )}
+      </div>
+
+      {uiTooltip && (
+        <div
+          className="ui-global-tooltip"
+          style={{
+            left: uiTooltip.x,
+            top: uiTooltip.y,
+          }}
+          role="tooltip"
+        >
+          {uiTooltip.texto}
+        </div>
+      )}
+
       {navTransitionVisible && (
         <div className="projectflow-nav-transition" aria-hidden="true">
           <video
@@ -14240,8 +14514,11 @@ function colorEstadoTarea(tarea) {
                 )}
               </span>
 
-              <strong>
+              <strong className="presence-count-label">
                 {usuariosConectados.length}
+                <span>
+                  {' '}conectado{usuariosConectados.length === 1 ? '' : 's'}
+                </span>
               </strong>
             </button>
 
@@ -15652,9 +15929,21 @@ function colorEstadoTarea(tarea) {
           ))}
 
           {tareasFiltradas.length === 0 && (
-            <div className="empty-state">
+            <div className="empty-state empty-state-polished">
+              <div className="empty-state-icon">
+                +
+              </div>
               <h3>No hay tareas</h3>
-              <p>No hay tareas que coincidan con los filtros seleccionados.</p>
+              <p>
+                No hay tareas que coincidan con los filtros seleccionados.
+              </p>
+              <button
+                type="button"
+                className="empty-state-action"
+                onClick={abrirNuevaTarea}
+              >
+                + Nueva tarea
+              </button>
             </div>
           )}
         </section>
@@ -17755,9 +18044,25 @@ function colorEstadoTarea(tarea) {
                       ))}
 
                       {processNodes.length === 0 && (
-                        <div className="process-empty-canvas">
+                        <div className="process-empty-canvas empty-state-polished">
+                          <div className="empty-state-icon">
+                            +
+                          </div>
                           <strong>Proceso vacío</strong>
-                          <span>Arrastrá componentes desde el panel izquierdo para empezar.</span>
+                          <span>
+                            Arrastrá componentes desde el panel izquierdo o agregá el primero.
+                          </span>
+                          <button
+                            type="button"
+                            className="empty-state-action"
+                            onClick={() =>
+                              abrirNuevoProcessNode(
+                                'Actividad'
+                              )
+                            }
+                          >
+                            + Agregar componente
+                          </button>
                         </div>
                       )}
                     </div>
@@ -17962,11 +18267,21 @@ function colorEstadoTarea(tarea) {
               }}
             >
               {!kanbanProjectId ? (
-                <div className="kanban-no-project">
+                <div className="kanban-no-project empty-state-polished">
+                  <div className="empty-state-icon">
+                    +
+                  </div>
                   <strong>Creá tu primer Kanban</strong>
                   <span>
                     Después vas a poder agregar tarjetas y moverlas entre estados.
                   </span>
+                  <button
+                    type="button"
+                    className="empty-state-action"
+                    onClick={abrirNuevoKanbanProject}
+                  >
+                    + Proyecto Kanban
+                  </button>
                 </div>
               ) : (
                 <>
@@ -18158,7 +18473,9 @@ function colorEstadoTarea(tarea) {
                       return (
                         <section
                           key={estado}
-                          className="kanban-column"
+                          className={`kanban-column state-${uiStateSlug(
+                            estado
+                          )}`}
                           style={{
                             backgroundColor: kanbanColumnBgActual,
                             color: colorTextoContraste(kanbanColumnBgActual),
@@ -22915,7 +23232,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.7.2</span>
+        <span>V10.8.0</span>
         <span>01/10/2026</span>
       </footer>
 
