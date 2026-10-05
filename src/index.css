@@ -26555,3 +26555,829 @@ body
   background: #162630 !important;
   border: 1px solid #536b79 !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.6.10
+   PROCESS NOTA — TEXTO RESPONSIVE DENTRO DE LA FIGURA
+========================================================= */
+
+/*
+  La nota puede redimensionarse mucho más angosta que su tamaño original.
+  El texto ahora adapta el tamaño a la anchura REAL del componente.
+*/
+.v10-polish .process-node-notaproceso {
+  container-type: size !important;
+}
+
+/*
+  Zona útil del cuerpo de la nota:
+  dejamos libre la parte inferior para la "punta" del globo.
+*/
+.v10-polish
+.process-node-notaproceso
+.process-node-copy {
+  inset:
+    7% 13% 27% 13%
+    !important;
+
+  width:
+    auto !important;
+
+  height:
+    auto !important;
+
+  padding:
+    0 !important;
+
+  display:
+    flex !important;
+
+  align-items:
+    center !important;
+
+  justify-content:
+    center !important;
+
+  overflow:
+    hidden !important;
+
+  box-sizing:
+    border-box !important;
+
+  text-align:
+    center !important;
+}
+
+/*
+  cqw = porcentaje del ancho del propio nodo.
+  Así, si la nota se achica, la tipografía también se achica.
+*/
+.v10-polish
+.process-node-notaproceso
+.process-node-copy
+strong {
+  width:
+    100% !important;
+
+  max-width:
+    100% !important;
+
+  margin:
+    0 !important;
+
+  padding:
+    0 2px !important;
+
+  color:
+    #111111 !important;
+
+  -webkit-text-fill-color:
+    #111111 !important;
+
+  font-size:
+    clamp(
+      6px,
+      8cqw,
+      11px
+    )
+    !important;
+
+  font-weight:
+    850 !important;
+
+  line-height:
+    1.03 !important;
+
+  letter-spacing:
+    -0.02em !important;
+
+  text-align:
+    center !important;
+
+  white-space:
+    normal !important;
+
+  overflow-wrap:
+    anywhere !important;
+
+  word-break:
+    normal !important;
+
+  hyphens:
+    auto !important;
+
+  text-wrap:
+    balance;
+
+  overflow:
+    hidden !important;
+}
+
+/*
+  Fallback para navegadores sin container query units.
+*/
+@supports not (
+  font-size:
+    8cqw
+) {
+  .v10-polish
+  .process-node-notaproceso
+  .process-node-copy
+  strong {
+    font-size:
+      8px !important;
+  }
+}
+
+/*
+  En notas extremadamente angostas reducimos también el padding visual.
+*/
+@container (max-width: 85px) {
+  .v10-polish
+  .process-node-notaproceso
+  .process-node-copy {
+    inset:
+      6% 10% 25% 10%
+      !important;
+  }
+
+  .v10-polish
+  .process-node-notaproceso
+  .process-node-copy
+  strong {
+    padding:
+      0 1px !important;
+
+    line-height:
+      1 !important;
+  }
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.6.11
+   CAMBIO DE CLAVE DESDE LOGIN / SUPABASE AUTH
+========================================================= */
+
+.login-change-password-button {
+  width: 100%;
+  min-height: 38px;
+
+  margin-top: 4px;
+
+  border:
+    1px solid
+    rgba(63, 211, 225, .40);
+
+  border-radius: 9px;
+
+  background:
+    rgba(25, 196, 212, .07);
+
+  color:
+    #7de5ee;
+
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .045em;
+
+  cursor: pointer;
+
+  transition:
+    background .15s ease,
+    border-color .15s ease,
+    transform .12s ease;
+}
+
+.login-change-password-button:hover {
+  background:
+    rgba(25, 196, 212, .14);
+
+  border-color:
+    rgba(80, 225, 237, .75);
+}
+
+.login-change-password-button:active {
+  transform:
+    scale(.985);
+}
+
+
+/* Request reset modal */
+.password-reset-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 30000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 18px;
+
+  background:
+    rgba(4, 9, 14, .72);
+
+  backdrop-filter:
+    blur(5px);
+}
+
+.password-reset-dialog {
+  position: relative;
+
+  width:
+    min(
+      410px,
+      calc(100vw - 30px)
+    );
+
+  padding:
+    24px;
+
+  border:
+    1px solid
+    #33434f;
+
+  border-radius:
+    16px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #111923,
+      #0d141b
+    );
+
+  color:
+    #ffffff;
+
+  box-shadow:
+    0 28px 80px
+    rgba(0,0,0,.48);
+}
+
+.password-reset-close {
+  position: absolute;
+
+  top: 12px;
+  right: 12px;
+
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border:
+    1px solid
+    #405563;
+
+  border-radius:
+    8px;
+
+  background:
+    #17232d;
+
+  color:
+    #e9f4f7;
+
+  font-size:
+    16px;
+
+  font-weight:
+    900;
+
+  cursor:
+    pointer;
+}
+
+.password-reset-eyebrow {
+  display: block;
+
+  margin-bottom:
+    4px;
+
+  color:
+    #4bd1df;
+
+  font-size:
+    9px;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .08em;
+
+  text-transform:
+    uppercase;
+}
+
+.password-reset-dialog h2 {
+  margin:
+    0;
+
+  color:
+    #ffffff;
+
+  font-size:
+    20px;
+
+  font-weight:
+    900;
+}
+
+.password-reset-dialog > p {
+  margin:
+    8px 0 17px;
+
+  color:
+    #a9bac4;
+
+  font-size:
+    11px;
+
+  line-height:
+    1.45;
+}
+
+.password-reset-dialog form {
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    8px;
+}
+
+.password-reset-dialog label {
+  color:
+    #aab9c2;
+
+  font-size:
+    9px;
+
+  font-weight:
+    800;
+}
+
+.password-reset-dialog input {
+  width:
+    100%;
+
+  min-height:
+    41px;
+
+  padding:
+    0 11px;
+
+  border:
+    1px solid
+    #364a57;
+
+  border-radius:
+    9px;
+
+  outline:
+    none;
+
+  background:
+    #091017;
+
+  color:
+    #ffffff;
+
+  font-size:
+    12px;
+
+  box-sizing:
+    border-box;
+}
+
+.password-reset-dialog input:focus {
+  border-color:
+    #28c3d3;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(40,195,211,.12);
+}
+
+.password-reset-success {
+  padding:
+    9px 10px;
+
+  border:
+    1px solid
+    rgba(52,211,153,.38);
+
+  border-radius:
+    8px;
+
+  background:
+    rgba(52,211,153,.09);
+
+  color:
+    #8be8bf;
+
+  font-size:
+    10px;
+
+  line-height:
+    1.35;
+}
+
+.password-reset-actions {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    flex-end;
+
+  gap:
+    8px;
+
+  margin-top:
+    8px;
+}
+
+.password-reset-actions button {
+  min-height:
+    37px;
+
+  padding:
+    0 14px;
+
+  border-radius:
+    8px;
+
+  font-size:
+    10px;
+
+  font-weight:
+    900;
+
+  cursor:
+    pointer;
+}
+
+.password-reset-cancel {
+  border:
+    1px solid
+    #415764;
+
+  background:
+    #15212a;
+
+  color:
+    #dce8ed;
+}
+
+.password-reset-submit {
+  border:
+    1px solid
+    #09a9bb;
+
+  background:
+    #0aaabd;
+
+  color:
+    #ffffff;
+}
+
+.password-reset-submit:hover:not(:disabled) {
+  background:
+    #0b98aa;
+}
+
+.password-reset-actions button:disabled,
+.password-reset-close:disabled {
+  opacity:
+    .55;
+
+  cursor:
+    wait;
+}
+
+
+/* Recovery link screen */
+.password-recovery-card {
+  width:
+    410px;
+}
+
+.password-recovery-card
+.password-recovery-hint {
+  margin-top:
+    14px;
+
+  padding:
+    9px 10px;
+
+  border:
+    1px solid
+    rgba(77, 206, 218, .16);
+
+  border-radius:
+    8px;
+
+  color:
+    #8297a3;
+
+  font-size:
+    9px;
+
+  line-height:
+    1.4;
+
+  text-align:
+    center;
+}
+
+.password-recovery-card
+.login-button:disabled {
+  opacity:
+    .55;
+
+  cursor:
+    wait;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.7.0
+   AVATARES ILUSTRADOS
+========================================================= */
+
+.v10-polish .user-avatar.image-avatar {
+  overflow: hidden !important;
+
+  padding: 0 !important;
+
+  background: #ffffff !important;
+
+  border: 2px solid #ffd84d !important;
+
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.v10-polish .user-avatar.image-avatar > img {
+  width: 100% !important;
+  height: 100% !important;
+
+  display: block !important;
+
+  object-fit: cover !important;
+  object-position: center !important;
+
+  border-radius: inherit !important;
+}
+
+.v10-polish .avatar-fallback {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: inherit;
+
+  background: #3b82f6;
+
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+
+  font-size: 8px;
+  font-weight: 950;
+}
+
+
+/* Settings picker */
+.v10-polish .avatar-settings-block {
+  overflow: hidden !important;
+}
+
+.v10-polish .avatar-image-grid {
+  display: grid !important;
+
+  grid-template-columns:
+    repeat(5, 30px) !important;
+
+  grid-auto-rows:
+    30px !important;
+
+  gap: 5px !important;
+
+  justify-content: start !important;
+
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.v10-polish .avatar-image-grid button {
+  position: relative;
+
+  width: 30px !important;
+  height: 30px !important;
+
+  min-width: 30px !important;
+  min-height: 30px !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  overflow: hidden;
+
+  border: 2px solid
+    transparent !important;
+
+  border-radius: 999px !important;
+
+  background: #ffffff !important;
+
+  cursor: pointer;
+
+  box-sizing: border-box !important;
+
+  transition:
+    transform .12s ease,
+    border-color .12s ease,
+    box-shadow .12s ease;
+}
+
+.v10-polish
+.avatar-image-grid
+button img {
+  width: 100% !important;
+  height: 100% !important;
+
+  display: block !important;
+
+  object-fit: cover !important;
+
+  border-radius: inherit !important;
+}
+
+.v10-polish
+.avatar-image-grid
+button:hover {
+  transform: translateY(-1px);
+
+  border-color:
+    #ffd84d !important;
+}
+
+.v10-polish
+.avatar-image-grid
+button.active {
+  border-color:
+    #ffd84d !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(255,216,77,.25) !important;
+}
+
+.v10-polish
+.avatar-settings-preview {
+  width: 42px !important;
+  height: 42px !important;
+
+  flex-basis: 42px !important;
+}
+
+
+/* Header avatar */
+.v10-polish
+.current-user-avatar {
+  width: 36px !important;
+  height: 36px !important;
+
+  flex-basis: 36px !important;
+}
+
+
+/* Presence stack */
+.v10-polish
+.presence-mini-avatar {
+  width: 28px !important;
+  height: 28px !important;
+
+  flex-basis: 28px !important;
+}
+
+
+/* Dark menu keeps the same white avatar surface */
+.v10-polish.theme-dark
+.user-avatar.image-avatar,
+.v10-polish.theme-dark
+.avatar-image-grid button {
+  background: #ffffff !important;
+}
+
+
+/* Old color grid is no longer used */
+.v10-polish .avatar-color-grid {
+  display: none !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.7.1
+   PROCESS NOTA — TEXTO ARRIBA, NO CENTRADO ABAJO
+========================================================= */
+
+/*
+  NotaProceso usa siempre alineación vertical superior.
+  El JSX también fuerza flex-start para evitar que el inline
+  justifyContent='center' vuelva a ganar.
+*/
+.v10-polish
+.process-node-notaproceso
+.process-node-copy {
+  inset:
+    8% 12% 29% 12%
+    !important;
+
+  display:
+    flex !important;
+
+  flex-direction:
+    column !important;
+
+  align-items:
+    center !important;
+
+  justify-content:
+    flex-start !important;
+
+  padding:
+    4% 2px 0 !important;
+
+  text-align:
+    center !important;
+
+  overflow:
+    hidden !important;
+
+  box-sizing:
+    border-box !important;
+}
+
+.v10-polish
+.process-node-notaproceso
+.process-node-copy
+strong {
+  margin:
+    0 !important;
+
+  align-self:
+    stretch !important;
+
+  color:
+    #111111 !important;
+
+  -webkit-text-fill-color:
+    #111111 !important;
+
+  text-align:
+    center !important;
+
+  line-height:
+    1.05 !important;
+
+  white-space:
+    normal !important;
+
+  overflow-wrap:
+    anywhere !important;
+
+  word-break:
+    normal !important;
+}
+
+/* Muy angosta: todavía más cerca de la parte superior */
+@container (max-width: 85px) {
+  .v10-polish
+  .process-node-notaproceso
+  .process-node-copy {
+    inset:
+      6% 9% 27% 9%
+      !important;
+
+    padding-top:
+      3% !important;
+  }
+}

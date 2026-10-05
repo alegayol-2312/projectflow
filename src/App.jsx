@@ -12,6 +12,26 @@ import bellNotifIcon from './assets/bell-icon-notif.png'
 import bellActivityIcon from './assets/bell-icon-activity.png'
 import bellShareIcon from './assets/bell-icon-share.png'
 import superpositionIcon from './assets/icon-superposicion.png'
+import avatar01 from './assets/avatars/avatar-01.png'
+import avatar02 from './assets/avatars/avatar-02.png'
+import avatar03 from './assets/avatars/avatar-03.png'
+import avatar04 from './assets/avatars/avatar-04.png'
+import avatar05 from './assets/avatars/avatar-05.png'
+import avatar06 from './assets/avatars/avatar-06.png'
+import avatar07 from './assets/avatars/avatar-07.png'
+import avatar08 from './assets/avatars/avatar-08.png'
+import avatar09 from './assets/avatars/avatar-09.png'
+import avatar10 from './assets/avatars/avatar-10.png'
+import avatar11 from './assets/avatars/avatar-11.png'
+import avatar12 from './assets/avatars/avatar-12.png'
+import avatar13 from './assets/avatars/avatar-13.png'
+import avatar14 from './assets/avatars/avatar-14.png'
+import avatar15 from './assets/avatars/avatar-15.png'
+import avatar16 from './assets/avatars/avatar-16.png'
+import avatar17 from './assets/avatars/avatar-17.png'
+import avatar18 from './assets/avatars/avatar-18.png'
+import avatar19 from './assets/avatars/avatar-19.png'
+import avatar20 from './assets/avatars/avatar-20.png'
 
 import processTerminatorIcon from './assets/process/process-terminador.png'
 import processReferenceIcon from './assets/process/process-referencia.png'
@@ -199,26 +219,53 @@ function randomDifferentIndex(currentIndex, total) {
   return nextIndex
 }
 
-const AVATAR_COLORS = [
-  '#E74C3C',
-  '#F97316',
-  '#F59E0B',
-  '#22C55E',
-  '#14B8A6',
-  '#06B6D4',
-  '#3B82F6',
-  '#6366F1',
-  '#8B5CF6',
-  '#EC4899',
+const AVATAR_OPTIONS = [
+  { id: 'avatar-01', src: avatar01, label: 'Avatar 01' },
+  { id: 'avatar-02', src: avatar02, label: 'Avatar 02' },
+  { id: 'avatar-03', src: avatar03, label: 'Avatar 03' },
+  { id: 'avatar-04', src: avatar04, label: 'Avatar 04' },
+  { id: 'avatar-05', src: avatar05, label: 'Avatar 05' },
+  { id: 'avatar-06', src: avatar06, label: 'Avatar 06' },
+  { id: 'avatar-07', src: avatar07, label: 'Avatar 07' },
+  { id: 'avatar-08', src: avatar08, label: 'Avatar 08' },
+  { id: 'avatar-09', src: avatar09, label: 'Avatar 09' },
+  { id: 'avatar-10', src: avatar10, label: 'Avatar 10' },
+  { id: 'avatar-11', src: avatar11, label: 'Avatar 11' },
+  { id: 'avatar-12', src: avatar12, label: 'Avatar 12' },
+  { id: 'avatar-13', src: avatar13, label: 'Avatar 13' },
+  { id: 'avatar-14', src: avatar14, label: 'Avatar 14' },
+  { id: 'avatar-15', src: avatar15, label: 'Avatar 15' },
+  { id: 'avatar-16', src: avatar16, label: 'Avatar 16' },
+  { id: 'avatar-17', src: avatar17, label: 'Avatar 17' },
+  { id: 'avatar-18', src: avatar18, label: 'Avatar 18' },
+  { id: 'avatar-19', src: avatar19, label: 'Avatar 19' },
+  { id: 'avatar-20', src: avatar20, label: 'Avatar 20' },
 ]
 
-function randomAvatarColor() {
-  return AVATAR_COLORS[
+function randomAvatarId() {
+  return AVATAR_OPTIONS[
     Math.floor(
       Math.random() *
-      AVATAR_COLORS.length
+      AVATAR_OPTIONS.length
     )
-  ]
+  ].id
+}
+
+function avatarSrcById(avatarId) {
+  return (
+    AVATAR_OPTIONS.find(
+      (avatar) =>
+        avatar.id === avatarId
+    )?.src ||
+    AVATAR_OPTIONS[0].src
+  )
+}
+
+function avatarExists(avatarId) {
+  return AVATAR_OPTIONS.some(
+    (avatar) =>
+      avatar.id === avatarId
+  )
 }
 
 function initialsFromName(
@@ -873,6 +920,19 @@ function App() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
+
+  const [passwordResetRequestOpen, setPasswordResetRequestOpen] =
+    useState(false)
+  const [passwordResetEmail, setPasswordResetEmail] = useState('')
+  const [passwordResetSending, setPasswordResetSending] = useState(false)
+  const [passwordResetMessage, setPasswordResetMessage] = useState('')
+  const [passwordResetError, setPasswordResetError] = useState('')
+
+  const [passwordRecoveryOpen, setPasswordRecoveryOpen] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState('')
+  const [passwordRecoverySaving, setPasswordRecoverySaving] = useState(false)
+  const [passwordRecoveryError, setPasswordRecoveryError] = useState('')
   const [appTheme, setAppTheme] = useState(() => {
     try {
       return localStorage.getItem('projectflow-theme') || 'dark'
@@ -902,18 +962,21 @@ function App() {
     }
   })
 
-  const [avatarColor, setAvatarColor] = useState(() => {
+  const [avatarId, setAvatarId] = useState(() => {
     try {
-      return (
+      const stored =
         localStorage.getItem(
-          'projectflow-avatar-color'
-        ) ||
-        randomAvatarColor()
-      )
+          'projectflow-avatar-id'
+        )
+
+      return avatarExists(stored)
+        ? stored
+        : randomAvatarId()
     } catch {
-      return randomAvatarColor()
+      return randomAvatarId()
     }
   })
+
   const [usuariosConectados, setUsuariosConectados] = useState([])
   const [presencePanelOpen, setPresencePanelOpen] = useState(false)
   const [deleteConfirmModal, setDeleteConfirmModal] = useState(null)
@@ -1295,8 +1358,15 @@ useEffect(() => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession)
+
+      if (event === 'PASSWORD_RECOVERY') {
+        setPasswordRecoveryOpen(true)
+        setPasswordRecoveryError('')
+        setNewPassword('')
+        setNewPasswordConfirm('')
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -1317,13 +1387,58 @@ useEffect(() => {
   useEffect(() => {
     try {
       localStorage.setItem(
-        'projectflow-avatar-color',
-        avatarColor
+        'projectflow-avatar-id',
+        avatarId
       )
     } catch {
       // El avatar sigue funcionando aunque storage esté bloqueado.
     }
-  }, [avatarColor])
+  }, [avatarId])
+
+
+  useEffect(() => {
+    if (!session?.user?.id) return
+
+    const metadataAvatar =
+      session.user.user_metadata
+        ?.projectflow_avatar_id
+
+    if (avatarExists(metadataAvatar)) {
+      if (metadataAvatar !== avatarId) {
+        setAvatarId(metadataAvatar)
+      }
+
+      try {
+        localStorage.setItem(
+          'projectflow-avatar-id',
+          metadataAvatar
+        )
+      } catch {
+        // Sin impacto funcional.
+      }
+
+      return
+    }
+
+    /*
+      Primer ingreso con el nuevo sistema:
+      el avatar aleatorio actual queda guardado en Supabase Auth metadata.
+      Así persiste también si el usuario entra desde otro equipo.
+    */
+    supabase.auth.updateUser({
+      data: {
+        projectflow_avatar_id:
+          avatarId,
+      },
+    })
+  }, [
+    session?.user?.id,
+    session?.user?.user_metadata
+      ?.projectflow_avatar_id,
+  ])
+
+
+
 
 
   useEffect(() => {
@@ -1426,8 +1541,8 @@ useEffect(() => {
                 nombreActual,
               email:
                 session.user.email,
-              avatar_color:
-                avatarColor,
+              avatar_id:
+                avatarId,
               vista:
                 vistaPrincipal,
               online_at:
@@ -1446,7 +1561,7 @@ useEffect(() => {
   }, [
     session?.user?.id,
     session?.user?.email,
-    avatarColor,
+    avatarId,
     vistaPrincipal,
     perfiles,
   ])
@@ -1806,8 +1921,34 @@ useEffect(() => {
     setSettingsMenuOpen(false)
   }
 
-  function cambiarAvatarColor(color) {
-    setAvatarColor(color)
+  async function cambiarAvatar(nuevoAvatarId) {
+    if (!avatarExists(nuevoAvatarId)) return
+
+    setAvatarId(nuevoAvatarId)
+
+    try {
+      localStorage.setItem(
+        'projectflow-avatar-id',
+        nuevoAvatarId
+      )
+    } catch {
+      // Sin impacto funcional.
+    }
+
+    const { error } =
+      await supabase.auth.updateUser({
+        data: {
+          projectflow_avatar_id:
+            nuevoAvatarId,
+        },
+      })
+
+    if (error) {
+      console.error(
+        'Error guardando avatar:',
+        error
+      )
+    }
   }
 
   function cambiarFlowColorRandom() {
@@ -1853,6 +1994,135 @@ useEffect(() => {
 
     if (error) {
       setLoginError('Usuario o contraseña incorrectos.')
+    }
+  }
+
+  function abrirCambioClaveDesdeLogin() {
+    setPasswordResetEmail(email || '')
+    setPasswordResetMessage('')
+    setPasswordResetError('')
+    setPasswordResetRequestOpen(true)
+  }
+
+  function cerrarCambioClaveDesdeLogin() {
+    if (passwordResetSending) return
+
+    setPasswordResetRequestOpen(false)
+    setPasswordResetMessage('')
+    setPasswordResetError('')
+  }
+
+  async function solicitarCambioClave(event) {
+    event.preventDefault()
+
+    const emailLimpio =
+      passwordResetEmail.trim().toLowerCase()
+
+    setPasswordResetMessage('')
+    setPasswordResetError('')
+
+    if (!emailLimpio) {
+      setPasswordResetError(
+        'Ingresá el email del usuario registrado.'
+      )
+      return
+    }
+
+    setPasswordResetSending(true)
+
+    try {
+      const redirectTo =
+        `${window.location.origin}${window.location.pathname}`
+
+      const { error } =
+        await supabase.auth.resetPasswordForEmail(
+          emailLimpio,
+          {
+            redirectTo,
+          }
+        )
+
+      if (error) {
+        throw error
+      }
+
+      /*
+        Por seguridad no informamos si el mail existe o no.
+        Supabase solo permitirá completar el cambio a un usuario
+        previamente registrado que reciba el enlace.
+      */
+      setPasswordResetMessage(
+        'Si el usuario está registrado, recibirá un email para cambiar su clave.'
+      )
+    } catch (error) {
+      console.error(
+        'Error solicitando cambio de clave:',
+        error
+      )
+
+      setPasswordResetError(
+        'No se pudo iniciar el cambio de clave. Verificá el email o intentá nuevamente.'
+      )
+    } finally {
+      setPasswordResetSending(false)
+    }
+  }
+
+  async function guardarNuevaClave(event) {
+    event.preventDefault()
+
+    setPasswordRecoveryError('')
+
+    if (newPassword.length < 8) {
+      setPasswordRecoveryError(
+        'La nueva clave debe tener al menos 8 caracteres.'
+      )
+      return
+    }
+
+    if (newPassword !== newPasswordConfirm) {
+      setPasswordRecoveryError(
+        'Las claves no coinciden.'
+      )
+      return
+    }
+
+    setPasswordRecoverySaving(true)
+
+    try {
+      const { error } =
+        await supabase.auth.updateUser({
+          password: newPassword,
+        })
+
+      if (error) {
+        throw error
+      }
+
+      /*
+        Luego del cambio cerramos la sesión de recuperación.
+        El usuario debe ingresar normalmente con la nueva clave.
+      */
+      await supabase.auth.signOut()
+
+      setPasswordRecoveryOpen(false)
+      setNewPassword('')
+      setNewPasswordConfirm('')
+      setPassword('')
+      setLoginError(
+        'Clave actualizada correctamente. Ingresá con tu nueva contraseña.'
+      )
+    } catch (error) {
+      console.error(
+        'Error actualizando clave:',
+        error
+      )
+
+      setPasswordRecoveryError(
+        'No se pudo actualizar la clave. El enlace puede haber vencido; solicitá uno nuevo.'
+      )
+    } finally {
+      setPasswordRecoverySaving(false)
     }
   }
 
@@ -13488,6 +13758,85 @@ function colorEstadoTarea(tarea) {
     )
   }
 
+  if (passwordRecoveryOpen) {
+    return (
+      <div className={`login-screen password-recovery-screen theme-${appTheme}`}>
+        <div className="login-card password-recovery-card">
+
+          <div className="login-logo login-logo-projectflow">
+            <video
+              src={projectflowAnimatedLogo}
+              autoPlay
+              muted
+              playsInline
+              loop
+              className="login-logo-video"
+            />
+          </div>
+
+          <h1 className="login-brand-title">
+            Project<span>Flow</span>
+          </h1>
+
+          <p>
+            Cambiar clave de acceso
+          </p>
+
+          <form onSubmit={guardarNuevaClave}>
+            <label>Nueva clave</label>
+
+            <input
+              type="password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(event) =>
+                setNewPassword(
+                  event.target.value
+                )
+              }
+              placeholder="Mínimo 8 caracteres"
+            />
+
+            <label>Repetir nueva clave</label>
+
+            <input
+              type="password"
+              autoComplete="new-password"
+              value={newPasswordConfirm}
+              onChange={(event) =>
+                setNewPasswordConfirm(
+                  event.target.value
+                )
+              }
+              placeholder="Repetí la nueva clave"
+            />
+
+            {passwordRecoveryError && (
+              <div className="login-error">
+                {passwordRecoveryError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn-primary login-button"
+              disabled={passwordRecoverySaving}
+            >
+              {passwordRecoverySaving
+                ? 'Actualizando...'
+                : 'Guardar nueva clave'}
+            </button>
+          </form>
+
+          <div className="password-recovery-hint">
+            El cambio se aplicará al usuario de ProjectFlow asociado al enlace recibido.
+          </div>
+
+        </div>
+      </div>
+    )
+  }
+
   if (!session) {
     return (
       <div className="login-screen">
@@ -13546,9 +13895,102 @@ function colorEstadoTarea(tarea) {
               Ingresar
             </button>
 
+            <button
+              type="button"
+              className="login-change-password-button"
+              onClick={abrirCambioClaveDesdeLogin}
+            >
+              CAMBIAR CLAVE
+            </button>
+
           </form>
 
         </div>
+
+        {passwordResetRequestOpen && (
+          <div className="password-reset-overlay">
+            <div
+              className="password-reset-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="password-reset-title"
+            >
+              <button
+                type="button"
+                className="password-reset-close"
+                onClick={cerrarCambioClaveDesdeLogin}
+                disabled={passwordResetSending}
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
+
+              <span className="password-reset-eyebrow">
+                Seguridad
+              </span>
+
+              <h2 id="password-reset-title">
+                Cambiar clave
+              </h2>
+
+              <p>
+                Ingresá el email de un usuario ya registrado en ProjectFlow.
+                Recibirá un enlace para definir una nueva contraseña.
+              </p>
+
+              <form onSubmit={solicitarCambioClave}>
+                <label>Email</label>
+
+                <input
+                  type="email"
+                  autoFocus
+                  autoComplete="email"
+                  value={passwordResetEmail}
+                  onChange={(event) =>
+                    setPasswordResetEmail(
+                      event.target.value
+                    )
+                  }
+                  placeholder="usuario@dominio.com"
+                />
+
+                {passwordResetError && (
+                  <div className="login-error">
+                    {passwordResetError}
+                  </div>
+                )}
+
+                {passwordResetMessage && (
+                  <div className="password-reset-success">
+                    {passwordResetMessage}
+                  </div>
+                )}
+
+                <div className="password-reset-actions">
+                  <button
+                    type="button"
+                    className="password-reset-cancel"
+                    onClick={cerrarCambioClaveDesdeLogin}
+                    disabled={passwordResetSending}
+                  >
+                    Cancelar
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="password-reset-submit"
+                    disabled={passwordResetSending}
+                  >
+                    {passwordResetSending
+                      ? 'Enviando...'
+                      : 'Enviar enlace'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
       </div>
     )
   }
@@ -13767,17 +14209,25 @@ function colorEstadoTarea(tarea) {
                         key={
                           usuario.user_id
                         }
-                        className="user-avatar presence-mini-avatar"
-                        style={{
-                          background:
-                            usuario.avatar_color ||
-                            '#3B82F6',
-                        }}
+                        className="user-avatar image-avatar presence-mini-avatar"
                         title={`${usuario.nombre || usuario.email || 'Usuario'} · ${moduleLabel(usuario.vista)}`}
                       >
-                        {initialsFromName(
-                          usuario.nombre,
-                          usuario.email
+                        {avatarExists(
+                          usuario.avatar_id
+                        ) ? (
+                          <img
+                            src={avatarSrcById(
+                              usuario.avatar_id
+                            )}
+                            alt=""
+                          />
+                        ) : (
+                          <span className="avatar-fallback">
+                            {initialsFromName(
+                              usuario.nombre,
+                              usuario.email
+                            )}
+                          </span>
                         )}
                       </span>
                     )
@@ -13834,26 +14284,21 @@ function colorEstadoTarea(tarea) {
                           className="presence-user-row"
                         >
                           <span
-                            className="user-avatar"
-                            style={{
-                              background:
-                                usuario.avatar_color ||
-                                (
-                                  esActual
-                                    ? avatarColor
-                                    : '#3B82F6'
-                                ),
-                            }}
+                            className="user-avatar image-avatar"
                             title={
                               usuario.nombre ||
                               usuario.email ||
                               'Usuario'
                             }
                           >
-                            {initialsFromName(
-                              usuario.nombre,
-                              usuario.email
-                            )}
+                            <img
+                              src={avatarSrcById(
+                                esActual
+                                  ? avatarId
+                                  : usuario.avatar_id
+                              )}
+                              alt=""
+                            />
                           </span>
 
                           <span className="presence-user-copy">
@@ -13894,14 +14339,15 @@ function colorEstadoTarea(tarea) {
           </span>
 
           <span
-            className="user-avatar current-user-avatar"
-            style={{
-              background:
-                avatarColor,
-            }}
+            className="user-avatar image-avatar current-user-avatar"
             title={`${nombreUsuarioActual} · ${session.user.email}`}
           >
-            {initialsUsuarioActual}
+            <img
+              src={avatarSrcById(
+                avatarId
+              )}
+              alt=""
+            />
           </span>
 
           <div className="app-settings-wrap">
@@ -13934,19 +14380,18 @@ function colorEstadoTarea(tarea) {
 
                 <div className="avatar-settings-block">
                   <div className="avatar-settings-heading">
-                    <span
-                      className="user-avatar avatar-settings-preview"
-                      style={{
-                        background:
-                          avatarColor,
-                      }}
-                    >
-                      {initialsUsuarioActual}
+                    <span className="user-avatar image-avatar avatar-settings-preview">
+                      <img
+                        src={avatarSrcById(
+                          avatarId
+                        )}
+                        alt=""
+                      />
                     </span>
 
                     <div>
                       <strong>
-                        Color de avatar
+                        Elegir avatar
                       </strong>
                       <small>
                         {nombreUsuarioActual}
@@ -13954,30 +14399,31 @@ function colorEstadoTarea(tarea) {
                     </div>
                   </div>
 
-                  <div className="avatar-color-grid">
-                    {AVATAR_COLORS.map(
-                      (color) => (
+                  <div className="avatar-image-grid">
+                    {AVATAR_OPTIONS.map(
+                      (avatar) => (
                         <button
-                          key={color}
+                          key={avatar.id}
                           type="button"
                           className={
-                            avatarColor ===
-                            color
+                            avatarId ===
+                            avatar.id
                               ? 'active'
                               : ''
                           }
-                          style={{
-                            background:
-                              color,
-                          }}
                           onClick={() =>
-                            cambiarAvatarColor(
-                              color
+                            cambiarAvatar(
+                              avatar.id
                             )
                           }
-                          title={`Usar ${color}`}
-                          aria-label={`Usar color ${color}`}
-                        />
+                          title={avatar.label}
+                          aria-label={avatar.label}
+                        >
+                          <img
+                            src={avatar.src}
+                            alt=""
+                          />
+                        </button>
                       )
                     )}
                   </div>
@@ -17205,20 +17651,28 @@ function colorEstadoTarea(tarea) {
 
                           <div
                             className="process-node-copy"
-                            data-text-align={node.text_align || 'center'}
+                            data-text-align={
+                              node.tipo === 'NotaProceso'
+                                ? 'top'
+                                : node.text_align || 'center'
+                            }
                             style={{
                               transform: `rotate(${-(
                                 Number(node.rotacion) || 0
                               )}deg)`,
                               justifyContent:
-                                (node.text_align || 'center') === 'top'
+                                node.tipo === 'NotaProceso'
                                   ? 'flex-start'
-                                  : (node.text_align || 'center') === 'bottom'
-                                    ? 'flex-end'
-                                    : 'center',
+                                  : (node.text_align || 'center') === 'top'
+                                    ? 'flex-start'
+                                    : (node.text_align || 'center') === 'bottom'
+                                      ? 'flex-end'
+                                      : 'center',
                             }}
                           >
-                            <strong>{node.titulo}</strong>
+                            <strong title={node.titulo}>
+                              {node.titulo}
+                            </strong>
                           </div>
 
                           {['top', 'right', 'bottom', 'left'].map(
@@ -22461,7 +22915,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.6.9</span>
+        <span>V10.7.1</span>
         <span>01/10/2026</span>
       </footer>
 
