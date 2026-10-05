@@ -813,7 +813,9 @@ function FolderedProjectList({
                 </span>
 
                 <span className="project-folder-count">
-                  {children.length}
+                  <b className="project-folder-count-value">
+                    {children.length}
+                  </b>
                 </span>
 
                 <span className="project-folder-chevron">
@@ -22459,7 +22461,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.6.8</span>
+        <span>V10.6.9</span>
         <span>01/10/2026</span>
       </footer>
 

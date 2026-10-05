@@ -26496,3 +26496,62 @@ body
 
   text-shadow: none !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.6.9
+   FIX REAL: NÚMERO DENTRO DEL CÍRCULO DE CARPETA
+========================================================= */
+
+/*
+  El problema estaba en el texto heredado por el span.
+  Ahora el número tiene un nodo propio (.project-folder-count-value)
+  y se pinta directamente.
+*/
+
+.v10-polish
+.project-folder-count-value {
+  display: block !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  opacity: 1 !important;
+  visibility: visible !important;
+
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+
+  text-align: center !important;
+  text-shadow: none !important;
+}
+
+.v10-polish.theme-light
+.process-page
+.project-folder-count-value {
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+}
+
+.v10-polish.theme-dark
+.process-page
+.project-folder-count-value {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Circle itself remains visible */
+.v10-polish.theme-light
+.process-page
+.project-folder-count {
+  background: #ffffff !important;
+  border: 1px solid #b8c9d2 !important;
+}
+
+.v10-polish.theme-dark
+.process-page
+.project-folder-count {
+  background: #162630 !important;
+  border: 1px solid #536b79 !important;
+}
