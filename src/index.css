@@ -27381,3 +27381,387 @@ strong {
       3% !important;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.7.2
+   SISTEMA TIPOGRÁFICO GLOBAL
+   Más fino para lectura; negrita reservada a jerarquía visual.
+========================================================= */
+
+body .v10-polish {
+  --pf-font-ui:
+    Inter,
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+
+  --pf-weight-regular: 400;
+  --pf-weight-meta: 500;
+  --pf-weight-control: 600;
+  --pf-weight-title: 700;
+  --pf-weight-heading: 800;
+  --pf-weight-brand: 900;
+
+  font-family: var(--pf-font-ui) !important;
+  font-weight: var(--pf-weight-regular);
+  letter-spacing: 0;
+}
+
+/* Todos los controles heredan la misma familia */
+body .v10-polish
+:is(
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  option
+) {
+  font-family: var(--pf-font-ui) !important;
+}
+
+
+/* =========================================================
+   NIVEL 1 — TEXTO NORMAL
+========================================================= */
+
+body .v10-polish
+:is(
+  p,
+  small,
+  .muted,
+  .field-help,
+  .process-list-description,
+  .board-list-copy small,
+  .kanban-project-main span,
+  .project-folder-copy small,
+  .card-description,
+  .card-meta,
+  .cards-counter,
+  .process-canvas-description,
+  .process-canvas-connect-status,
+  .process-simulation-finished,
+  .presence-user-copy small
+) {
+  font-weight: var(--pf-weight-regular) !important;
+  letter-spacing: 0 !important;
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   NIVEL 2 — LABELS / METADATOS
+========================================================= */
+
+body .v10-polish
+:is(
+  label,
+  .cards-eyebrow,
+  .kanban-eyebrow,
+  .process-eyebrow,
+  .process-node-type,
+  .project-folder-count,
+  .presence-summary-button strong,
+  .user-email,
+  .process-simulation-nav-label,
+  .process-components-header small
+) {
+  font-weight: var(--pf-weight-meta) !important;
+  letter-spacing: 0.01em !important;
+}
+
+
+/* =========================================================
+   NIVEL 3 — BOTONES Y CONTROLES
+   Destacados, pero sin aspecto "bold pesado".
+========================================================= */
+
+body .v10-polish
+:is(
+  button,
+  .btn-primary,
+  .btn-secondary,
+  .meeting-mode-button,
+  .cards-primary-button,
+  .cards-secondary-button,
+  .process-secondary-button,
+  .gantt-new-task-button,
+  .today-button,
+  .baseline-button,
+  .assign-button,
+  .kanban-add-column-button,
+  .app-settings-menu-item
+) {
+  font-weight: var(--pf-weight-control) !important;
+  letter-spacing: 0 !important;
+}
+
+
+/* =========================================================
+   NIVEL 4 — TÍTULOS DE CONTENIDO
+========================================================= */
+
+body .v10-polish
+:is(
+  .process-list-main strong,
+  .board-list-copy strong,
+  .kanban-project-main strong,
+  .project-folder-copy strong,
+  .card-title,
+  .cards-board-meta strong,
+  .presence-user-copy strong,
+  .process-canvas-header strong,
+  .kanban-card-title,
+  .task-name,
+  .task-title
+) {
+  font-weight: var(--pf-weight-title) !important;
+  letter-spacing: -0.01em !important;
+}
+
+
+/* =========================================================
+   NIVEL 5 — ENCABEZADOS
+========================================================= */
+
+body .v10-polish
+:is(
+  h1,
+  h2,
+  h3,
+  .process-list-header > div:first-child > span,
+  .kanban-project-header > div:first-child > span,
+  .boards-panel-header > div:first-child > span,
+  .process-components-header span,
+  .app-settings-menu-title,
+  .presence-panel-heading strong
+) {
+  font-weight: var(--pf-weight-heading) !important;
+  letter-spacing: -0.02em !important;
+}
+
+
+/* ProjectFlow conserva identidad fuerte */
+body .v10-polish
+.projectflow-brand-title,
+body .v10-polish
+.projectflow-brand-title * {
+  font-weight: var(--pf-weight-brand) !important;
+}
+
+
+/* =========================================================
+   PROCESS — NODOS Y NOTAS
+========================================================= */
+
+/* Texto común de los nodos: más fino y legible */
+body .v10-polish
+.process-node-copy strong {
+  font-weight: var(--pf-weight-meta) !important;
+  letter-spacing: -0.005em !important;
+  line-height: 1.15 !important;
+}
+
+/* Nota: la opción más fina de la preview */
+body .v10-polish
+.process-node-notaproceso
+.process-node-copy
+strong {
+  font-weight: var(--pf-weight-regular) !important;
+  letter-spacing: 0 !important;
+  line-height: 1.15 !important;
+}
+
+/* Texto de componentes de la paleta */
+body .v10-polish
+.process-component-chip > span {
+  font-weight: var(--pf-weight-meta) !important;
+  letter-spacing: 0 !important;
+}
+
+
+/* =========================================================
+   CARDS
+========================================================= */
+
+body .v10-polish
+:is(
+  .card-description,
+  .card-meta,
+  .postit-description,
+  .card-comment,
+  .card-checklist-item
+) {
+  font-weight: var(--pf-weight-regular) !important;
+  line-height: 1.4 !important;
+}
+
+body .v10-polish
+:is(
+  .card-title,
+  .postit-title
+) {
+  font-weight: var(--pf-weight-control) !important;
+}
+
+
+/* =========================================================
+   KANBAN
+========================================================= */
+
+body .v10-polish
+:is(
+  .kanban-card p,
+  .kanban-card small,
+  .kanban-card-description,
+  .kanban-card-meta
+) {
+  font-weight: var(--pf-weight-regular) !important;
+}
+
+body .v10-polish
+:is(
+  .kanban-card strong,
+  .kanban-card-title
+) {
+  font-weight: var(--pf-weight-control) !important;
+}
+
+
+/* =========================================================
+   GANTT
+========================================================= */
+
+body .v10-polish
+:is(
+  .task-row,
+  .task-row span,
+  .task-team,
+  .task-date,
+  .gantt-cell
+) {
+  font-weight: var(--pf-weight-regular) !important;
+}
+
+body .v10-polish
+:is(
+  .task-name,
+  .task-title
+) {
+  font-weight: var(--pf-weight-meta) !important;
+}
+
+/* KPIs sí deben destacar */
+body .v10-polish
+.kpi strong {
+  font-weight: var(--pf-weight-heading) !important;
+}
+
+body .v10-polish
+.kpi span,
+body .v10-polish
+.kpi small {
+  font-weight: var(--pf-weight-meta) !important;
+}
+
+
+/* =========================================================
+   COUNTS / BADGES
+========================================================= */
+
+body .v10-polish
+:is(
+  .project-folder-count-value,
+  .process-list-header > div:first-child > strong,
+  .kanban-project-header > div:first-child > strong,
+  .boards-panel-header > div:first-child > strong
+) {
+  font-weight: var(--pf-weight-title) !important;
+}
+
+
+/* =========================================================
+   LOGIN / MODALES / DRAWERS
+========================================================= */
+
+body .v10-polish
+:is(
+  .modal-content p,
+  .drawer-content p,
+  .delete-confirm-content p,
+  .password-reset-dialog > p,
+  .password-recovery-hint
+) {
+  font-weight: var(--pf-weight-regular) !important;
+  line-height: 1.45 !important;
+}
+
+body .v10-polish
+:is(
+  .modal-content h2,
+  .modal-content h3,
+  .drawer-content h2,
+  .drawer-content h3,
+  .delete-confirm-content h3,
+  .password-reset-dialog h2
+) {
+  font-weight: var(--pf-weight-heading) !important;
+}
+
+
+/* Login vive fuera de .v10-polish */
+.login-screen,
+.login-card,
+.password-reset-dialog,
+.password-recovery-card {
+  font-family:
+    Inter,
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif !important;
+}
+
+.login-card label,
+.password-reset-dialog label {
+  font-weight: 500 !important;
+}
+
+.login-card input,
+.password-reset-dialog input {
+  font-weight: 400 !important;
+}
+
+.login-button,
+.login-change-password-button,
+.password-reset-actions button {
+  font-weight: 600 !important;
+}
+
+.login-brand-title,
+.login-brand-title * {
+  font-weight: 900 !important;
+}
+
+
+/* =========================================================
+   EVITAR BOLD HEREDADO EN TEXTOS SECUNDARIOS
+========================================================= */
+
+body .v10-polish
+:is(
+  p,
+  small,
+  .process-list-description,
+  .board-list-copy small,
+  .kanban-project-main span,
+  .project-folder-copy small,
+  .card-description,
+  .process-canvas-description
+) strong {
+  font-weight: var(--pf-weight-meta) !important;
+}
