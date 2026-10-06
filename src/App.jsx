@@ -587,6 +587,103 @@ const KANBAN_COLORES = [
   '#A7F432',
 ]
 
+const KANBAN_COLUMN_ACCENTS = [
+  '#00C2FF',
+  '#9B5DE5',
+  '#2DD36F',
+  '#FF8A00',
+  '#FF4FB3',
+  '#14B8A6',
+  '#F59E0B',
+  '#6366F1',
+]
+
+function esKanbanColumnaDefault(nombre) {
+  return KANBAN_ESTADOS.includes(
+    String(nombre || '').trim()
+  )
+}
+
+function colorKanbanColumnaPorNombre(nombre, index = 0) {
+  const nombreLimpio = String(nombre || '').trim()
+
+  if (nombreLimpio === 'Por hacer') return '#00C2FF'
+  if (nombreLimpio === 'En curso') return '#9B5DE5'
+  if (nombreLimpio === 'Listo') return '#2DD36F'
+
+  return KANBAN_COLUMN_ACCENTS[
+    Math.abs(index) % KANBAN_COLUMN_ACCENTS.length
+  ]
+}
+
+function normalizarKanbanColumna(item, index = 0) {
+  if (item && typeof item === 'object') {
+    const nombre = String(
+      item.nombre ||
+      item.name ||
+      item.titulo ||
+      ''
+    ).trim()
+
+    if (!nombre) return null
+
+    return {
+      nombre,
+      color:
+        item.color ||
+        item.accent ||
+        colorKanbanColumnaPorNombre(nombre, index),
+      locked:
+        esKanbanColumnaDefault(nombre) ||
+        Boolean(item.locked),
+    }
+  }
+
+  const nombre = String(item || '').trim()
+  if (!nombre) return null
+
+  return {
+    nombre,
+    color: colorKanbanColumnaPorNombre(nombre, index),
+    locked: esKanbanColumnaDefault(nombre),
+  }
+}
+
+function crearKanbanColumnasDefault() {
+  return KANBAN_ESTADOS.map((nombre, index) =>
+    normalizarKanbanColumna(nombre, index)
+  )
+}
+
+function serializarKanbanColumnas(columnas) {
+  return columnas.map((columna, index) => ({
+    nombre: columna.nombre,
+    color:
+      columna.color ||
+      colorKanbanColumnaPorNombre(columna.nombre, index),
+    locked:
+      esKanbanColumnaDefault(columna.nombre) ||
+      Boolean(columna.locked),
+  }))
+}
+
+function siguienteColorKanbanColumna(columnas = []) {
+  const usados = new Set(
+    columnas
+      .map((columna) => columna?.color)
+      .filter(Boolean)
+  )
+
+  return (
+    KANBAN_COLUMN_ACCENTS.find(
+      (color) => !usados.has(color)
+    ) ||
+    KANBAN_COLUMN_ACCENTS[
+      Math.floor(Math.random() * KANBAN_COLUMN_ACCENTS.length)
+    ]
+  )
+}
+
 
 
 function FolderedProjectList({
@@ -1208,9 +1305,11 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [kanbanGanttProjectId, setKanbanGanttProjectId] = useState('')
   const [shareKanbanUserId, setShareKanbanUserId] = useState('')
   const [kanbanColumnDrawerOpen, setKanbanColumnDrawerOpen] = useState(false)
+  const [kanbanColumnEditando, setKanbanColumnEditando] = useState(null)
   const [nuevaKanbanColumna, setNuevaKanbanColumna] = useState({
     nombre: '',
     despuesDe: 'Por hacer',
+    color: '#00C2FF',
   })
   const [nuevoKanbanProject, setNuevoKanbanProject] = useState({
     nombre: '',
@@ -12780,7 +12879,7 @@ function colorEstadoTarea(tarea) {
         descripcion:
           nuevoKanbanProject.descripcion.trim() || null,
         canvas_bg: '#0b1220',
-        columnas: KANBAN_ESTADOS,
+        columnas: crearKanbanColumnasDefault(),
         archivado: false,
         created_by: session.user.id,
       })
@@ -12842,6 +12941,7 @@ function colorEstadoTarea(tarea) {
     const columnasIntermedias =
       kanbanColumnas.slice(0, -1)
 
+    setKanbanColumnEditando(null)
     setNuevaKanbanColumna({
       nombre: '',
       despuesDe:
@@ -12850,16 +12950,41 @@ function colorEstadoTarea(tarea) {
           : columnasIntermedias[
               columnasIntermedias.length - 1
             ] || 'Por hacer',
+      color:
+        siguienteColorKanbanColumna(
+          kanbanColumnasConfig
+        ),
     })
 
     setKanbanColumnDrawerOpen(true)
   }
 
+  function abrirEditarKanbanColumna(columna) {
+    if (!columna || columna.locked) return
+
+    setKanbanColumnEditando(columna)
+    setNuevaKanbanColumna({
+      nombre: columna.nombre,
+      despuesDe: 'Por hacer',
+      color:
+        columna.color ||
+        siguienteColorKanbanColumna(
+          kanbanColumnasConfig
+        ),
+    })
+    setKanbanColumnDrawerOpen(true)
+  }
+
   function cerrarKanbanColumnDrawer() {
     setKanbanColumnDrawerOpen(false)
+    setKanbanColumnEditando(null)
     setNuevaKanbanColumna({
       nombre: '',
       despuesDe: 'Por hacer',
+      color:
+        siguienteColorKanbanColumna(
+          kanbanColumnasConfig
+        ),
     })
   }
 
@@ -12874,69 +12999,131 @@ function colorEstadoTarea(tarea) {
       return
     }
 
-    if (kanbanColumnas.length >= 5) {
-      alert('El tablero admite hasta 5 columnas.')
+    if (esKanbanColumnaDefault(nombre) && !kanbanColumnEditando) {
+      alert('Ese nombre está reservado para una columna default.')
       return
     }
 
     const nombreNormalizado =
       nombre.toLocaleLowerCase('es')
 
-    if (
-      kanbanColumnas.some(
-        (columna) =>
-          columna.toLocaleLowerCase('es') ===
-          nombreNormalizado
-      )
-    ) {
+    const nombreOriginal =
+      kanbanColumnEditando?.nombre || ''
+
+    const duplicada = kanbanColumnas.some(
+      (columna) =>
+        columna.toLocaleLowerCase('es') ===
+          nombreNormalizado &&
+        columna !== nombreOriginal
+    )
+
+    if (duplicada) {
       alert('Ya existe una columna con ese nombre.')
       return
     }
 
-    const columnasActuales = [
-      ...kanbanColumnas,
-    ]
+    let columnasNuevas = []
 
-    const indiceBase =
-      columnasActuales.indexOf(
-        nuevaKanbanColumna.despuesDe
+    if (kanbanColumnEditando) {
+      if (kanbanColumnEditando.locked) {
+        alert('Las columnas default no se pueden editar.')
+        return
+      }
+
+      columnasNuevas = kanbanColumnasConfig.map((columna) =>
+        columna.nombre === nombreOriginal
+          ? {
+              ...columna,
+              nombre,
+              color:
+                columna.color ||
+                nuevaKanbanColumna.color,
+            }
+          : columna
       )
+    } else {
+      if (kanbanColumnas.length >= 5) {
+        alert('El tablero admite hasta 5 columnas.')
+        return
+      }
 
-    const indiceInsertar =
-      indiceBase >= 0
-        ? indiceBase + 1
-        : Math.max(
-            1,
-            columnasActuales.length - 1
-          )
+      const columnasActuales = [
+        ...kanbanColumnasConfig,
+      ]
 
-    // Listo siempre queda última.
-    const columnasNuevas = [
-      ...columnasActuales,
-    ]
+      const indiceBase =
+        columnasActuales.findIndex(
+          (columna) =>
+            columna.nombre ===
+            nuevaKanbanColumna.despuesDe
+        )
 
-    columnasNuevas.splice(
-      Math.min(
-        indiceInsertar,
-        columnasNuevas.length - 1
-      ),
-      0,
-      nombre
-    )
+      const indiceInsertar =
+        indiceBase >= 0
+          ? indiceBase + 1
+          : Math.max(
+              1,
+              columnasActuales.length - 1
+            )
+
+      columnasNuevas = [
+        ...columnasActuales,
+      ]
+
+      columnasNuevas.splice(
+        Math.min(
+          indiceInsertar,
+          columnasNuevas.length - 1
+        ),
+        0,
+        {
+          nombre,
+          color:
+            nuevaKanbanColumna.color ||
+            siguienteColorKanbanColumna(
+              columnasActuales
+            ),
+          locked: false,
+        }
+      )
+    }
+
+    const columnasSerializadas =
+      serializarKanbanColumnas(columnasNuevas)
 
     const { error } = await supabase
       .from('kanban_projects')
       .update({
-        columnas: columnasNuevas,
+        columnas: columnasSerializadas,
         updated_at: new Date().toISOString(),
       })
       .eq('id', kanbanProjectId)
 
     if (error) {
       alert(
-        `No se pudo crear la columna: ${error.message}`
+        `No se pudo guardar la columna: ${error.message}`
       )
       return
+    }
+
+    if (
+      kanbanColumnEditando &&
+      nombreOriginal !== nombre
+    ) {
+      const { error: cardsError } = await supabase
+        .from('kanban_cards')
+        .update({
+          estado: nombre,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('kanban_project_id', kanbanProjectId)
+        .eq('estado', nombreOriginal)
+
+      if (cardsError) {
+        alert(
+          `La columna se guardó, pero no se pudieron mover las tarjetas: ${cardsError.message}`
+        )
+      }
     }
 
     setKanbanProjects((actual) =>
@@ -12944,13 +13131,89 @@ function colorEstadoTarea(tarea) {
         project.id === kanbanProjectId
           ? {
               ...project,
-              columnas: columnasNuevas,
+              columnas: columnasSerializadas,
             }
           : project
       )
     )
 
+    await cargarKanbanCards(kanbanProjectId)
     cerrarKanbanColumnDrawer()
+    mostrarToast(
+      kanbanColumnEditando
+        ? 'Columna actualizada'
+        : 'Columna creada'
+    )
+  }
+
+  async function eliminarKanbanColumna() {
+    if (!kanbanColumnEditando) return
+
+    if (kanbanColumnEditando.locked) {
+      alert('Las columnas default no se pueden eliminar.')
+      return
+    }
+
+    const confirmar = window.confirm(
+      `¿Eliminar la columna "${kanbanColumnEditando.nombre}"? Las tarjetas se moverán a Por hacer.`
+    )
+
+    if (!confirmar) return
+
+    const columnasNuevas =
+      kanbanColumnasConfig.filter(
+        (columna) =>
+          columna.nombre !==
+          kanbanColumnEditando.nombre
+      )
+
+    const columnasSerializadas =
+      serializarKanbanColumnas(columnasNuevas)
+
+    const { error } = await supabase
+      .from('kanban_projects')
+      .update({
+        columnas: columnasSerializadas,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', kanbanProjectId)
+
+    if (error) {
+      alert(
+        `No se pudo eliminar la columna: ${error.message}`
+      )
+      return
+    }
+
+    const { error: cardsError } = await supabase
+      .from('kanban_cards')
+      .update({
+        estado: 'Por hacer',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('kanban_project_id', kanbanProjectId)
+      .eq('estado', kanbanColumnEditando.nombre)
+
+    if (cardsError) {
+      alert(
+        `La columna se eliminó, pero no se pudieron mover las tarjetas: ${cardsError.message}`
+      )
+    }
+
+    setKanbanProjects((actual) =>
+      actual.map((project) =>
+        project.id === kanbanProjectId
+          ? {
+              ...project,
+              columnas: columnasSerializadas,
+            }
+          : project
+      )
+    )
+
+    await cargarKanbanCards(kanbanProjectId)
+    cerrarKanbanColumnDrawer()
+    mostrarToast('Columna eliminada')
   }
 
   async function actualizarKanbanBg(color) {
@@ -13962,27 +14225,54 @@ function colorEstadoTarea(tarea) {
   const kanbanColumnBgActual =
     kanbanProject?.column_bg || '#16212a'
 
-  const kanbanColumnas = useMemo(() => {
+  const kanbanColumnasConfig = useMemo(() => {
     const columnas = Array.isArray(kanbanProject?.columnas)
       ? kanbanProject.columnas
-      : KANBAN_ESTADOS
+      : crearKanbanColumnasDefault()
 
-    const limpias = columnas
-      .map((item) => String(item || '').trim())
+    const normalizadas = columnas
+      .map((item, index) =>
+        normalizarKanbanColumna(item, index)
+      )
       .filter(Boolean)
 
-    const sinExtremos = limpias.filter(
+    const porHacer =
+      normalizadas.find(
+        (item) => item.nombre === 'Por hacer'
+      ) || normalizarKanbanColumna('Por hacer', 0)
+
+    const enCurso =
+      normalizadas.find(
+        (item) => item.nombre === 'En curso'
+      ) || normalizarKanbanColumna('En curso', 1)
+
+    const listo =
+      normalizadas.find(
+        (item) => item.nombre === 'Listo'
+      ) || normalizarKanbanColumna('Listo', 2)
+
+    const intermedias = normalizadas.filter(
       (item) =>
-        item !== 'Por hacer' &&
-        item !== 'Listo'
+        item.nombre !== 'Por hacer' &&
+        item.nombre !== 'En curso' &&
+        item.nombre !== 'Listo'
     )
 
     return [
-      'Por hacer',
-      ...sinExtremos.slice(0, 3),
-      'Listo',
+      porHacer,
+      enCurso,
+      ...intermedias.slice(0, 2),
+      listo,
     ]
   }, [kanbanProject?.columnas])
+
+  const kanbanColumnas = useMemo(
+    () =>
+      kanbanColumnasConfig.map(
+        (columna) => columna.nombre
+      ),
+    [kanbanColumnasConfig]
+  )
 
   if (loading) {
     return (
@@ -18465,20 +18755,33 @@ function colorEstadoTarea(tarea) {
                         kanbanColumnas.length,
                     }}
                   >
-                    {kanbanColumnas.map((estado) => {
+                    {kanbanColumnasConfig.map((columnaConfig) => {
+                      const estado = columnaConfig.nombre
                       const tarjetas = kanbanCardsFiltradas.filter(
                         (card) => card.estado === estado
                       )
+                      const textoColumna =
+                        colorTextoContraste(kanbanColumnBgActual)
 
                       return (
                         <section
                           key={estado}
                           className={`kanban-column state-${uiStateSlug(
                             estado
-                          )}`}
+                          )} ${
+                            columnaConfig.locked
+                              ? 'default-column'
+                              : 'custom-column'
+                          }`}
                           style={{
+                            '--kanban-column-bg':
+                              kanbanColumnBgActual,
+                            '--kanban-column-text':
+                              textoColumna,
+                            '--kanban-state-color':
+                              columnaConfig.color,
                             backgroundColor: kanbanColumnBgActual,
-                            color: colorTextoContraste(kanbanColumnBgActual),
+                            color: textoColumna,
                           }}
                           onDragOver={(event) =>
                             event.preventDefault()
@@ -18493,7 +18796,19 @@ function colorEstadoTarea(tarea) {
                             }
                           }}
                         >
-                          <div className="kanban-column-header">
+                          <div
+                            className="kanban-column-header"
+                            onDoubleClick={() =>
+                              abrirEditarKanbanColumna(
+                                columnaConfig
+                              )
+                            }
+                            title={
+                              columnaConfig.locked
+                                ? 'Columna default'
+                                : 'Doble click para editar columna'
+                            }
+                          >
                             <strong>{estado}</strong>
                             <span>{tarjetas.length}</span>
                           </div>
@@ -20287,7 +20602,11 @@ function colorEstadoTarea(tarea) {
               <div className="card-modal-heading">
                 <div>
                   <span>Kanban</span>
-                  <h3>Nueva columna</h3>
+                  <h3>
+                    {kanbanColumnEditando
+                      ? 'Editar columna'
+                      : 'Nueva columna'}
+                  </h3>
                 </div>
 
                 <button
@@ -20304,7 +20623,9 @@ function colorEstadoTarea(tarea) {
                 </strong>
 
                 <span>
-                  Por hacer siempre queda primera y Listo siempre queda última.
+                  {kanbanColumnEditando
+                    ? 'Las columnas default no se pueden editar ni eliminar.'
+                    : 'Por hacer siempre queda primera y Listo siempre queda última.'}
                 </span>
               </div>
 
@@ -20326,6 +20647,7 @@ function colorEstadoTarea(tarea) {
                 />
               </div>
 
+              {!kanbanColumnEditando && (
               <div className="form-group">
                 <label>Ubicación</label>
 
@@ -20357,7 +20679,19 @@ function colorEstadoTarea(tarea) {
                 </small>
               </div>
 
+              )}
+
               <div className="connection-drawer-actions">
+                {kanbanColumnEditando && (
+                  <button
+                    type="button"
+                    className="btn-danger-inline"
+                    onClick={eliminarKanbanColumna}
+                  >
+                    Eliminar
+                  </button>
+                )}
+
                 <button
                   type="button"
                   className="btn-secondary"
@@ -20370,7 +20704,9 @@ function colorEstadoTarea(tarea) {
                   type="submit"
                   className="btn-primary"
                 >
-                  Crear columna
+                  {kanbanColumnEditando
+                    ? 'Guardar cambios'
+                    : 'Crear columna'}
                 </button>
               </div>
             </form>
@@ -23232,7 +23568,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.8.3</span>
+        <span>V10.9.0</span>
         <span>01/10/2026</span>
       </footer>
 

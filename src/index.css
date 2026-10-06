@@ -28574,3 +28574,135 @@ body .v10-polish.theme-dark .avatar-image-grid button:hover {
     transition: none !important;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.9.0
+   KANBAN COLUMN EDIT + LIGHT COLORS + MEETING BAR
+========================================================= */
+
+/* White theme: el selector de fondo del tablero ahora se ve sí o sí */
+body .v10-polish .kanban-workspace {
+  background: var(--kanban-bg, #0b1220) !important;
+}
+
+body .v10-polish.theme-light .kanban-workspace {
+  background: var(--kanban-bg, #ffffff) !important;
+}
+
+/* White theme: el color de columna no puede ser pisado por reglas antiguas */
+body .v10-polish .kanban-column,
+body .v10-polish.theme-light .kanban-column,
+body .v10-polish.theme-dark .kanban-column {
+  background: var(--kanban-column-bg, #16212a) !important;
+  background-color: var(--kanban-column-bg, #16212a) !important;
+  color: var(--kanban-column-text, #ffffff) !important;
+  border-top: 0 !important;
+}
+
+body .v10-polish .kanban-column-header {
+  border-top: 4px solid var(--kanban-state-color, #00c2ff) !important;
+  cursor: default;
+}
+
+body .v10-polish .kanban-column.custom-column .kanban-column-header {
+  cursor: pointer;
+}
+
+body .v10-polish .kanban-column.custom-column .kanban-column-header:hover {
+  box-shadow: inset 0 4px 0 color-mix(in srgb, var(--kanban-state-color, #00c2ff) 70%, white) !important;
+}
+
+body .v10-polish .kanban-column-header strong,
+body .v10-polish .kanban-column-header span {
+  color: var(--kanban-column-text, #ffffff) !important;
+  -webkit-text-fill-color: var(--kanban-column-text, #ffffff) !important;
+}
+
+body .v10-polish.theme-light .kanban-column-header {
+  background: color-mix(in srgb, var(--kanban-column-bg, #ffffff) 90%, #000000 10%) !important;
+}
+
+body .v10-polish.theme-dark .kanban-column-header {
+  background: color-mix(in srgb, var(--kanban-column-bg, #16212a) 80%, #000000 20%) !important;
+}
+
+/* Botones de color de Kanban en light: visibles y clickeables */
+body .v10-polish.theme-light .kanban-bg-picker button.kanban-bg-dot,
+body .v10-polish.theme-light .kanban-bg-picker button.kanban-column-color-dot {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+body .v10-polish.theme-light .kanban-bg-picker button.kanban-column-color-dot {
+  background: var(--kanban-column-color) !important;
+  background-color: var(--kanban-column-color) !important;
+}
+
+/* Drawer derecho: +2px aprox en edición */
+body .v10-polish .card-editor-drawer.kanban-drawer,
+body .v10-polish .card-editor-drawer.kanban-card-drawer {
+  font-size: 13px !important;
+}
+
+body .v10-polish .card-editor-drawer.kanban-drawer label,
+body .v10-polish .card-editor-drawer.kanban-card-drawer label {
+  font-size: 11px !important;
+}
+
+body .v10-polish .card-editor-drawer.kanban-drawer input,
+body .v10-polish .card-editor-drawer.kanban-drawer select,
+body .v10-polish .card-editor-drawer.kanban-drawer textarea,
+body .v10-polish .card-editor-drawer.kanban-card-drawer input,
+body .v10-polish .card-editor-drawer.kanban-card-drawer select,
+body .v10-polish .card-editor-drawer.kanban-card-drawer textarea {
+  font-size: 13px !important;
+}
+
+body .v10-polish .card-editor-drawer.kanban-drawer h3,
+body .v10-polish .card-editor-drawer.kanban-card-drawer h3 {
+  font-size: 17px !important;
+}
+
+body .v10-polish .kanban-column-help,
+body .v10-polish .kanban-column-rule span {
+  font-size: 11px !important;
+}
+
+/* Modo reunión Kanban: barra de comandos arriba, a la izquierda de + Tarjeta */
+body .v10-polish.meeting-kanban .kanban-board-header {
+  top: 12px !important;
+  left: 16px !important;
+  right: 16px !important;
+  min-height: 52px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+body .v10-polish.meeting-kanban .kanban-bg-picker {
+  position: fixed !important;
+  top: 20px !important;
+  right: 152px !important;
+  left: auto !important;
+  z-index: 9010 !important;
+  max-width: calc(100vw - 340px) !important;
+  overflow-x: auto !important;
+}
+
+body .v10-polish.meeting-kanban .kanban-board-header .cards-primary-button {
+  margin-left: auto !important;
+}
+
+body .v10-polish.meeting-kanban .kanban-columns {
+  padding-top: 86px !important;
+}
+
+@supports not (color: color-mix(in srgb, red, white)) {
+  body .v10-polish.theme-light .kanban-column-header {
+    background: rgba(0,0,0,.06) !important;
+  }
+  body .v10-polish.theme-dark .kanban-column-header {
+    background: rgba(0,0,0,.20) !important;
+  }
+}
