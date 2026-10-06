@@ -1299,6 +1299,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [kanbanFiltroPrioridad, setKanbanFiltroPrioridad] = useState('Todas')
   const [kanbanFiltroTipo, setKanbanFiltroTipo] = useState('Todos')
   const [kanbanFiltroFecha, setKanbanFiltroFecha] = useState('Todas')
+  const [kanbanFiltroResponsable, setKanbanFiltroResponsable] = useState('Todos')
   const [kanbanCardEditando, setKanbanCardEditando] = useState(null)
   const [kanbanDragId, setKanbanDragId] = useState(null)
   const [kanbanGanttOpen, setKanbanGanttOpen] = useState(false)
@@ -1319,6 +1320,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
     titulo: '',
     responsableAnalista: '',
     responsableDesarrollador: '',
+    responsable2: '',
     fechaInicio: '',
     duracionDias: 1,
     horasEstimadas: 6.5,
@@ -13286,6 +13288,8 @@ function colorEstadoTarea(tarea) {
         card.responsable_analista || '',
       responsableDesarrollador:
         card.responsable_desarrollador || '',
+      responsable2:
+        card.responsable_2 || '',
       fechaInicio: card.fecha_inicio || '',
       duracionDias: Number(card.duracion_dias) || 1,
       horasEstimadas:
@@ -13359,6 +13363,8 @@ function colorEstadoTarea(tarea) {
         formKanbanCard.responsableAnalista || null,
       responsable_desarrollador:
         formKanbanCard.responsableDesarrollador || null,
+      responsable_2:
+        formKanbanCard.responsable2 || null,
       fecha_inicio: formKanbanCard.fechaInicio,
       duracion_dias:
         Number(formKanbanCard.duracionDias) || 1,
@@ -14153,6 +14159,29 @@ function colorEstadoTarea(tarea) {
   )
 
 
+  const kanbanResponsablesAsignados = useMemo(() => {
+    return Array.from(
+      new Set(
+        kanbanCards
+          .flatMap((card) => [
+            card.responsable_desarrollador,
+            card.responsable_2,
+          ])
+          .map((nombre) =>
+            String(nombre || '').trim()
+          )
+          .filter(Boolean)
+      )
+    ).sort((a, b) =>
+      a.localeCompare(
+        b,
+        'es',
+        { sensitivity: 'base' }
+      )
+    )
+  }, [kanbanCards])
+
+
   const kanbanCardsFiltradas = useMemo(() => {
     const hoy = new Date()
     hoy.setHours(0, 0, 0, 0)
@@ -14210,13 +14239,22 @@ function colorEstadoTarea(tarea) {
           card.tipo ===
             kanbanFiltroTipo
         ) &&
-        cumpleFecha(card)
+        cumpleFecha(card) &&
+        (
+          kanbanFiltroResponsable ===
+            'Todos' ||
+          card.responsable_desarrollador ===
+            kanbanFiltroResponsable ||
+          card.responsable_2 ===
+            kanbanFiltroResponsable
+        )
     )
   }, [
     kanbanCards,
     kanbanFiltroPrioridad,
     kanbanFiltroTipo,
     kanbanFiltroFecha,
+    kanbanFiltroResponsable,
   ])
 
   const kanbanCanvasBgActual =
@@ -18729,6 +18767,32 @@ function colorEstadoTarea(tarea) {
                           Vence en 2 días
                         </option>
                       </select>
+
+                      <select
+                        value={kanbanFiltroResponsable}
+                        onChange={(event) =>
+                          setKanbanFiltroResponsable(
+                            event.target.value
+                          )
+                        }
+                        title="Filtrar por responsable"
+                        className="kanban-responsable-filter"
+                      >
+                        <option value="Todos">
+                          Todos los responsables
+                        </option>
+
+                        {kanbanResponsablesAsignados.map(
+                          (responsable) => (
+                            <option
+                              key={responsable}
+                              value={responsable}
+                            >
+                              {responsable}
+                            </option>
+                          )
+                        )}
+                      </select>
                     </div>
                   </div>
 
@@ -18858,10 +18922,9 @@ function colorEstadoTarea(tarea) {
                                   </strong>
 
                                   <div className="kanban-card-meta">
-                                    <span>Responsable</span>
+                                    <span>Responsable Desarrollador</span>
                                     <b>
-                                      {card.responsable_analista ||
-                                        card.responsable_desarrollador ||
+                                      {card.responsable_desarrollador ||
                                         'Sin asignar'}
                                     </b>
                                   </div>
@@ -20834,6 +20897,30 @@ function colorEstadoTarea(tarea) {
                       setFormKanbanCard((actual) => ({
                         ...actual,
                         responsableDesarrollador:
+                          event.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Sin asignar</option>
+                    {perfiles.map((perfil) => (
+                      <option
+                        key={perfil.id}
+                        value={perfil.nombre}
+                      >
+                        {perfil.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Responsable 2</label>
+                  <select
+                    value={formKanbanCard.responsable2}
+                    onChange={(event) =>
+                      setFormKanbanCard((actual) => ({
+                        ...actual,
+                        responsable2:
                           event.target.value,
                       }))
                     }
@@ -23568,7 +23655,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.9.0</span>
+        <span>V10.9.1</span>
         <span>01/10/2026</span>
       </footer>
 

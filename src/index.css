@@ -28706,3 +28706,25 @@ body .v10-polish.meeting-kanban .kanban-columns {
     background: rgba(0,0,0,.20) !important;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.9.1
+   KANBAN — RESPONSABLE 2 + FILTRO RESPONSABLE
+========================================================= */
+
+.v10-polish .kanban-responsable-filter {
+  min-width: 178px !important;
+  max-width: 230px !important;
+}
+
+/*
+  En pantallas más chicas mantenemos la barra utilizable
+  sin comprimir excesivamente los nombres.
+*/
+@media (max-width: 1250px) {
+  .v10-polish .kanban-responsable-filter {
+    min-width: 155px !important;
+    max-width: 190px !important;
+  }
+}
