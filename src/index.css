@@ -28482,3 +28482,95 @@ body .v10-polish.theme-light .avatar-settings-preview:hover {
     transition: none !important;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.8.3
+   AVATAR PICKER — HOVER ZOOM
+========================================================= */
+
+/*
+  Cada avatar de la grilla de selección se agranda al pasar el mouse.
+  El zoom se aplica al botón completo, manteniendo la imagen circular
+  y sin alterar su proporción.
+*/
+body .v10-polish .avatar-image-grid button {
+  position: relative !important;
+  z-index: 1 !important;
+
+  transform-origin: center center !important;
+
+  transition:
+    transform .16s cubic-bezier(.2,.72,.25,1),
+    box-shadow .16s ease,
+    border-color .16s ease,
+    z-index 0s !important;
+
+  overflow: hidden !important;
+  cursor: zoom-in !important;
+}
+
+body .v10-polish .avatar-image-grid button:hover {
+  z-index: 25000 !important;
+
+  transform:
+    scale(2.35)
+    !important;
+
+  border-color:
+    #ffd84d !important;
+
+  box-shadow:
+    0 8px 22px
+    rgba(10,31,43,.24),
+    0 0 0 2px
+    rgba(255,216,77,.95)
+    !important;
+}
+
+/*
+  La imagen no se estira:
+  ocupa el círculo manteniendo la relación de aspecto.
+*/
+body .v10-polish
+.avatar-image-grid
+button > img {
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: cover !important;
+  object-position: center !important;
+
+  aspect-ratio: 1 / 1 !important;
+
+  transform: none !important;
+}
+
+/*
+  El contenedor no recorta el avatar cuando se amplía.
+*/
+body .v10-polish .avatar-settings-block,
+body .v10-polish .avatar-image-grid,
+body .v10-polish .app-settings-menu {
+  overflow: visible !important;
+}
+
+/* El avatar activo conserva el borde amarillo incluso durante hover */
+body .v10-polish .avatar-image-grid button.active,
+body .v10-polish .avatar-image-grid button.active:hover {
+  border-color:
+    #ffd84d !important;
+}
+
+/* Light y Dark usan el mismo efecto */
+body .v10-polish.theme-light .avatar-image-grid button:hover,
+body .v10-polish.theme-dark .avatar-image-grid button:hover {
+  background: #ffffff !important;
+}
+
+/* Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  body .v10-polish .avatar-image-grid button {
+    transition: none !important;
+  }
+}
