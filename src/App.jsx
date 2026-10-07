@@ -32,6 +32,40 @@ import avatar17 from './assets/avatars/avatar-17.png'
 import avatar18 from './assets/avatars/avatar-18.png'
 import avatar19 from './assets/avatars/avatar-19.png'
 import avatar20 from './assets/avatars/avatar-20.png'
+import avatar21 from './assets/avatars/avatar-21.png'
+import avatar22 from './assets/avatars/avatar-22.png'
+import avatar23 from './assets/avatars/avatar-23.png'
+import avatar24 from './assets/avatars/avatar-24.png'
+import avatar25 from './assets/avatars/avatar-25.png'
+import avatar26 from './assets/avatars/avatar-26.png'
+import avatar27 from './assets/avatars/avatar-27.png'
+import avatar28 from './assets/avatars/avatar-28.png'
+import avatar29 from './assets/avatars/avatar-29.png'
+import avatar30 from './assets/avatars/avatar-30.png'
+import avatar31 from './assets/avatars/avatar-31.png'
+import avatar32 from './assets/avatars/avatar-32.png'
+import avatar33 from './assets/avatars/avatar-33.png'
+import avatar34 from './assets/avatars/avatar-34.png'
+import avatar35 from './assets/avatars/avatar-35.png'
+import avatar36 from './assets/avatars/avatar-36.png'
+import avatar37 from './assets/avatars/avatar-37.png'
+import avatar38 from './assets/avatars/avatar-38.png'
+import avatar39 from './assets/avatars/avatar-39.png'
+import avatar40 from './assets/avatars/avatar-40.png'
+import avatar41 from './assets/avatars/avatar-41.png'
+import avatar42 from './assets/avatars/avatar-42.png'
+import avatar43 from './assets/avatars/avatar-43.png'
+import avatar44 from './assets/avatars/avatar-44.png'
+import avatar45 from './assets/avatars/avatar-45.png'
+import avatar46 from './assets/avatars/avatar-46.png'
+import avatar47 from './assets/avatars/avatar-47.png'
+import avatar48 from './assets/avatars/avatar-48.png'
+import avatar49 from './assets/avatars/avatar-49.png'
+import avatar50 from './assets/avatars/avatar-50.png'
+import avatar51 from './assets/avatars/avatar-51.png'
+import avatar52 from './assets/avatars/avatar-52.png'
+import avatar53 from './assets/avatars/avatar-53.png'
+import avatar54 from './assets/avatars/avatar-54.png'
 
 import processTerminatorIcon from './assets/process/process-terminador.png'
 import processReferenceIcon from './assets/process/process-referencia.png'
@@ -241,6 +275,40 @@ const AVATAR_OPTIONS = [
   { id: 'avatar-18', src: avatar18, label: 'Avatar 18' },
   { id: 'avatar-19', src: avatar19, label: 'Avatar 19' },
   { id: 'avatar-20', src: avatar20, label: 'Avatar 20' },
+  { id: 'avatar-21', src: avatar21, label: 'Avatar 21' },
+  { id: 'avatar-22', src: avatar22, label: 'Avatar 22' },
+  { id: 'avatar-23', src: avatar23, label: 'Avatar 23' },
+  { id: 'avatar-24', src: avatar24, label: 'Avatar 24' },
+  { id: 'avatar-25', src: avatar25, label: 'Avatar 25' },
+  { id: 'avatar-26', src: avatar26, label: 'Avatar 26' },
+  { id: 'avatar-27', src: avatar27, label: 'Avatar 27' },
+  { id: 'avatar-28', src: avatar28, label: 'Avatar 28' },
+  { id: 'avatar-29', src: avatar29, label: 'Avatar 29' },
+  { id: 'avatar-30', src: avatar30, label: 'Avatar 30' },
+  { id: 'avatar-31', src: avatar31, label: 'Avatar 31' },
+  { id: 'avatar-32', src: avatar32, label: 'Avatar 32' },
+  { id: 'avatar-33', src: avatar33, label: 'Avatar 33' },
+  { id: 'avatar-34', src: avatar34, label: 'Avatar 34' },
+  { id: 'avatar-35', src: avatar35, label: 'Avatar 35' },
+  { id: 'avatar-36', src: avatar36, label: 'Avatar 36' },
+  { id: 'avatar-37', src: avatar37, label: 'Avatar 37' },
+  { id: 'avatar-38', src: avatar38, label: 'Avatar 38' },
+  { id: 'avatar-39', src: avatar39, label: 'Avatar 39' },
+  { id: 'avatar-40', src: avatar40, label: 'Avatar 40' },
+  { id: 'avatar-41', src: avatar41, label: 'Avatar 41' },
+  { id: 'avatar-42', src: avatar42, label: 'Avatar 42' },
+  { id: 'avatar-43', src: avatar43, label: 'Avatar 43' },
+  { id: 'avatar-44', src: avatar44, label: 'Avatar 44' },
+  { id: 'avatar-45', src: avatar45, label: 'Avatar 45' },
+  { id: 'avatar-46', src: avatar46, label: 'Avatar 46' },
+  { id: 'avatar-47', src: avatar47, label: 'Avatar 47' },
+  { id: 'avatar-48', src: avatar48, label: 'Avatar 48' },
+  { id: 'avatar-49', src: avatar49, label: 'Avatar 49' },
+  { id: 'avatar-50', src: avatar50, label: 'Avatar 50' },
+  { id: 'avatar-51', src: avatar51, label: 'Avatar 51' },
+  { id: 'avatar-52', src: avatar52, label: 'Avatar 52' },
+  { id: 'avatar-53', src: avatar53, label: 'Avatar 53' },
+  { id: 'avatar-54', src: avatar54, label: 'Avatar 54' },
 ]
 
 function randomAvatarId() {
@@ -14845,12 +14913,6 @@ function colorEstadoTarea(tarea) {
       session.user.email
     )
 
-  const otrosConectados =
-    usuariosConectados.filter(
-      (usuario) =>
-        usuario.user_id !==
-        session.user.id
-    )
 
 
   const flowPalette =
@@ -15072,7 +15134,7 @@ function colorEstadoTarea(tarea) {
               <span className="presence-live-dot" />
 
               <span className="presence-avatar-stack">
-                {otrosConectados
+                {usuariosConectados
                   .slice(0, 3)
                   .map(
                     (usuario) => (
@@ -15104,18 +15166,15 @@ function colorEstadoTarea(tarea) {
                     )
                   )}
 
-                {otrosConectados.length > 3 && (
+                {usuariosConectados.length > 3 && (
                   <span className="presence-more-count">
-                    +{otrosConectados.length - 3}
+                    +{usuariosConectados.length - 3}
                   </span>
                 )}
               </span>
 
               <strong className="presence-count-label">
                 {usuariosConectados.length}
-                <span>
-                  {' '}conectado{usuariosConectados.length === 1 ? '' : 's'}
-                </span>
               </strong>
             </button>
 
@@ -18858,21 +18917,6 @@ function colorEstadoTarea(tarea) {
                       <div className="kanban-project-item-actions">
                         <button
                           type="button"
-                          onClick={() =>
-                            archivarKanbanProject(
-                              project
-                            )
-                          }
-                          title="Archivar tablero"
-                        >
-                          <img
-                            src={archiveIcon}
-                            alt=""
-                          />
-                        </button>
-
-                        <button
-                          type="button"
                           className="kanban-project-delete"
                           onClick={() =>
                             abrirConfirmacionBorrado(
@@ -18927,15 +18971,38 @@ function colorEstadoTarea(tarea) {
                       </span>
                     </div>
 
-                    <button
-                      type="button"
-                      className="cards-primary-button compact"
-                      onClick={() =>
-                        abrirNuevaKanbanCard('Por hacer')
-                      }
-                    >
-                      + Tarjeta
-                    </button>
+                    <div className="kanban-board-header-actions">
+                      <button
+                        type="button"
+                        className="cards-primary-button compact"
+                        onClick={() =>
+                          abrirNuevaKanbanCard('Por hacer')
+                        }
+                      >
+                        + Tarjeta
+                      </button>
+
+                      <button
+                        type="button"
+                        className="kanban-archive-project-top-button"
+                        onClick={() => {
+                          if (
+                            kanbanProject
+                          ) {
+                            archivarKanbanProject(
+                              kanbanProject
+                            )
+                          }
+                        }}
+                        title="Archivar proyecto Kanban"
+                        aria-label="Archivar proyecto Kanban"
+                      >
+                        <img
+                          src={archiveIcon}
+                          alt=""
+                        />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="kanban-bg-picker">
@@ -24001,7 +24068,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.10.2</span>
+        <span>V10.10.4</span>
         <span>01/10/2026</span>
       </footer>
 
