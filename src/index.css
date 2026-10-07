@@ -30733,3 +30733,195 @@ body .v10-polish.meeting-kanban
   width: auto !important;
   min-width: max-content !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.7
+   CARDS ALIGNMENT + BOARD COUNT + KANBAN LISTO ARCHIVE
+========================================================= */
+
+/* ---------------------------------------------------------
+   CARDS — MENOS ESPACIO ARRIBA
+   Igual criterio visual que Kanban y Process.
+--------------------------------------------------------- */
+
+body .v10-polish
+.cards-page.module-page-flush {
+  padding-top: 4px !important;
+}
+
+body .v10-polish
+.cards-page > .cards-toolbar {
+  margin-top: 0 !important;
+  margin-bottom: 7px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+
+/* ---------------------------------------------------------
+   CARDS — CANTIDAD DE BOARDS EN CÍRCULO SIN RELLENO
+--------------------------------------------------------- */
+
+body .v10-polish
+.boards-panel-header
+> div:first-child
+> strong {
+  width: 23px !important;
+  min-width: 23px !important;
+  height: 23px !important;
+  min-height: 23px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border-radius: 50% !important;
+  background: transparent !important;
+
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+}
+
+/* Light */
+body .v10-polish.theme-light
+.boards-panel-header
+> div:first-child
+> strong {
+  border: 1.5px solid #17232a !important;
+
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+}
+
+/* Dark */
+body .v10-polish.theme-dark
+.boards-panel-header
+> div:first-child
+> strong {
+  border: 1.5px solid #dbe7ec !important;
+
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+
+/* ---------------------------------------------------------
+   KANBAN — ARCHIVADAS FIJAS EN COLUMNA LISTO
+--------------------------------------------------------- */
+
+body .v10-polish
+.kanban-column-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+body .v10-polish
+.kanban-column-title-group {
+  min-width: 0;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+body .v10-polish
+.kanban-listo-archive-button {
+  position: relative !important;
+
+  width: 30px !important;
+  min-width: 30px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+
+  flex: 0 0 30px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+  margin-left: auto !important;
+
+  border-radius: 8px !important;
+
+  cursor: pointer !important;
+
+  z-index: 4 !important;
+}
+
+body .v10-polish
+.kanban-listo-archive-button img {
+  width: 14px !important;
+  height: 14px !important;
+
+  object-fit: contain !important;
+}
+
+body .v10-polish
+.kanban-listo-archive-button > span {
+  position: absolute !important;
+
+  top: -5px !important;
+  right: -5px !important;
+
+  min-width: 15px !important;
+  height: 15px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 3px !important;
+
+  border-radius: 999px !important;
+
+  background: #ff4d5e !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+
+  font-size: 8px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+}
+
+/* Light */
+body .v10-polish.theme-light
+.kanban-listo-archive-button {
+  background: #ffffff !important;
+  border: 1px solid #aebdc6 !important;
+}
+
+body .v10-polish.theme-light
+.kanban-listo-archive-button img {
+  filter: brightness(.38) saturate(.45) !important;
+}
+
+/* Dark */
+body .v10-polish.theme-dark
+.kanban-listo-archive-button {
+  background: #172731 !important;
+  border: 1px solid #506672 !important;
+}
+
+body .v10-polish.theme-dark
+.kanban-listo-archive-button img {
+  filter: brightness(0) invert(1) !important;
+}
+
+/*
+  La ubicación depende de estado === 'Listo',
+  no de índice de columna.
+  Por eso permanece en Listo aunque se agreguen columnas custom.
+*/
+body .v10-polish
+.kanban-column.state-listo
+.kanban-listo-archive-button {
+  display: inline-flex !important;
+}

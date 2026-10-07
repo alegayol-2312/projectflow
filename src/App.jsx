@@ -19162,22 +19162,6 @@ function colorEstadoTarea(tarea) {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    className="kanban-archive-button"
-                    onClick={() =>
-                      setKanbanArchiveOpen(true)
-                    }
-                    title="Tarjetas archivadas"
-                  >
-                    <img src={archiveIcon} alt="" />
-                    {kanbanArchivedCards.length > 0 && (
-                      <span>
-                        {kanbanArchivedCards.length}
-                      </span>
-                    )}
-                  </button>
-
                   <div
                     className="kanban-columns"
                     style={{
@@ -19239,8 +19223,37 @@ function colorEstadoTarea(tarea) {
                                 : 'Doble click para editar columna'
                             }
                           >
-                            <strong>{estado}</strong>
-                            <span>{tarjetas.length}</span>
+                            <div className="kanban-column-title-group">
+                              <strong>{estado}</strong>
+                              <span>{tarjetas.length}</span>
+                            </div>
+
+                            {estado === 'Listo' && (
+                              <button
+                                type="button"
+                                className="kanban-listo-archive-button"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  setKanbanArchiveOpen(true)
+                                }}
+                                onDoubleClick={(event) =>
+                                  event.stopPropagation()
+                                }
+                                title="Tarjetas archivadas"
+                                aria-label="Tarjetas archivadas"
+                              >
+                                <img
+                                  src={archiveIcon}
+                                  alt=""
+                                />
+
+                                {kanbanArchivedCards.length > 0 && (
+                                  <span>
+                                    {kanbanArchivedCards.length}
+                                  </span>
+                                )}
+                              </button>
+                            )}
                           </div>
 
                           <div className="kanban-column-body">
@@ -24064,7 +24077,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.10.6</span>
+        <span>V10.10.7</span>
         <span>01/10/2026</span>
       </footer>
 
