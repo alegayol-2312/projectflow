@@ -28728,3 +28728,95 @@ body .v10-polish.meeting-kanban .kanban-columns {
     max-width: 190px !important;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.9.2
+   RESPONSABLE 2 — CARDS + GANTT
+========================================================= */
+
+.v10-polish .postit-info {
+  gap: 5px !important;
+}
+
+.v10-polish .postit-info > span {
+  line-height: 1.25 !important;
+}
+
+.v10-polish .postit-info > span > b {
+  margin-right: 4px !important;
+  font-weight: 600 !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.9.3
+   PROCESS — TEXTO COMPLETO EN FLECHAS
+========================================================= */
+
+/*
+  La etiqueta deja de tener un ancho fijo.
+  Puede crecer hasta 280px y, si el texto es más largo,
+  continúa en múltiples líneas sin cortar contenido.
+*/
+.v10-polish .process-link-label {
+  pointer-events: all !important;
+  cursor: pointer;
+}
+
+.v10-polish .process-link-label foreignObject {
+  overflow: visible !important;
+}
+
+.v10-polish .process-link-label-content {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+  padding: 7px 10px;
+
+  border: 1px solid #526775;
+  border-radius: 8px;
+
+  background: #111a22;
+
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+
+  font-family:
+    Inter,
+    "Segoe UI",
+    system-ui,
+    sans-serif !important;
+
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  line-height: 15px !important;
+
+  text-align: center;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+
+  overflow: visible !important;
+}
+
+/* En Light mantiene contraste suficiente sobre cualquier canvas */
+.v10-polish.theme-light
+.process-link-label-content {
+  background: rgba(17,26,34,.95) !important;
+  border-color: #526775 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* En modo reunión también se muestra el contenido completo */
+.v10-polish.meeting-process
+.process-link-label-content {
+  overflow: visible !important;
+}

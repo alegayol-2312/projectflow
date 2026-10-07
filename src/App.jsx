@@ -54,6 +54,7 @@ const formularioVacio = {
   tipo: 'Tarea',
   responsableAnalista: '',
   responsableDesarrollador: '',
+  responsable2: '',
   comentario: '',
   inicio: '',
   duracion: 1,
@@ -1385,6 +1386,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
     tipo: 'Card',
     estado: 'Pendiente',
     responsable: '',
+    responsable2: '',
     fecha_inicio: '',
     fecha_fin: '',
     color: 'yellow',
@@ -2833,6 +2835,9 @@ function navegarVistaPrincipal(destino) {
       responsableDesarrollador:
         tarea.responsable_desarrollador ||
         '',
+      responsable2:
+        tarea.responsable_2 ||
+        '',
       comentario: tarea.comentario || '',
       inicio: tarea.fecha_inicio,
       duracion: tarea.duracion_dias,
@@ -2888,6 +2893,10 @@ function navegarVistaPrincipal(destino) {
           responsable_desarrollador:
             form.tipo === 'Tarea'
               ? form.responsableDesarrollador
+              : null,
+          responsable_2:
+            form.tipo === 'Tarea'
+              ? form.responsable2
               : null,
           comentario: form.comentario.trim(),
           fecha_inicio: form.inicio,
@@ -2967,6 +2976,10 @@ function navegarVistaPrincipal(destino) {
           responsable_desarrollador:
             form.tipo === 'Tarea'
               ? form.responsableDesarrollador
+              : null,
+          responsable_2:
+            form.tipo === 'Tarea'
+              ? form.responsable2
               : null,
           comentario: form.comentario.trim(),
           fecha_inicio: form.inicio,
@@ -9167,6 +9180,64 @@ function desplazarPuntaFlechaProcess(point, side, distancia = 9) {
   }
 }
 
+function processLinkLabelMetrics(value) {
+  const texto = String(value || '').trim()
+
+  const minWidth = 120
+  const maxWidth = 280
+  const charWidth = 6.2
+  const horizontalPadding = 20
+  const lineHeight = 15
+  const verticalPadding = 14
+
+  const anchoIdeal =
+    texto.length * charWidth +
+    horizontalPadding
+
+  const width = Math.max(
+    minWidth,
+    Math.min(
+      maxWidth,
+      Math.ceil(anchoIdeal)
+    )
+  )
+
+  const charsPerLine = Math.max(
+    12,
+    Math.floor(
+      (width - horizontalPadding) /
+        charWidth
+    )
+  )
+
+  const lineas = texto
+    .split(/\r?\n/)
+    .reduce(
+      (total, linea) =>
+        total +
+        Math.max(
+          1,
+          Math.ceil(
+            Math.max(1, linea.length) /
+              charsPerLine
+          )
+        ),
+      0
+    )
+
+  const height = Math.max(
+    30,
+    lineas * lineHeight +
+      verticalPadding
+  )
+
+  return {
+    width,
+    height,
+  }
+}
+
+
 function processLine(link) {
   const source = processNodeById(link.source_node_id)
   const target = processNodeById(link.target_node_id)
@@ -9857,6 +9928,10 @@ async function duplicarCard(card) {
         card.tipo === 'Nota'
           ? null
           : card.responsable || null,
+      responsable_2:
+        card.tipo === 'Nota'
+          ? null
+          : card.responsable_2 || null,
       fecha_inicio:
         card.tipo === 'Nota'
           ? null
@@ -10404,6 +10479,8 @@ async function convertirCardEnGantt(card) {
       responsable_analista:
         card.responsable || null,
       responsable_desarrollador: null,
+      responsable_2:
+        card.responsable_2 || null,
       comentario: card.descripcion || '',
       fecha_inicio: inicio,
       horas_estimadas: Number(duracion) * 6.5,
@@ -10509,6 +10586,7 @@ function abrirEditarCard(card) {
     tipo: card.tipo || 'Card',
     estado: card.estado || 'Pendiente',
     responsable: card.responsable || '',
+    responsable2: card.responsable_2 || '',
     fecha_inicio: card.fecha_inicio || '',
     fecha_fin: card.fecha_fin || '',
     color: card.color || 'yellow',
@@ -10568,6 +10646,10 @@ async function guardarCard(event) {
       esNota
         ? null
         : formCard.responsable || null,
+    responsable_2:
+      esNota
+        ? null
+        : formCard.responsable2 || null,
     fecha_inicio:
       esNota
         ? null
@@ -11219,6 +11301,7 @@ const tareasFiltradas = useMemo(() => {
       filtroResponsable === 'Todos' ||
       tarea.responsable_analista === filtroResponsable ||
       tarea.responsable_desarrollador === filtroResponsable ||
+      tarea.responsable_2 === filtroResponsable ||
       tarea.responsable === filtroResponsable
 
     const cumpleEstado =
@@ -18045,6 +18128,11 @@ function colorEstadoTarea(tarea) {
                           const line = processLine(link)
                           if (!line) return null
 
+                          const labelBox =
+                            processLinkLabelMetrics(
+                              link.etiqueta
+                            )
+
                           return (
                             <g
                               key={link.id}
@@ -18114,19 +18202,27 @@ function colorEstadoTarea(tarea) {
                                     abrirEditarProcessLink(link)
                                   }}
                                 >
-                                  <rect
-                                    x="-52"
-                                    y="-13"
-                                    width="104"
-                                    height="26"
-                                    rx="8"
-                                  />
-                                  <text
-                                    textAnchor="middle"
-                                    dominantBaseline="middle"
+                                  <foreignObject
+                                    x={
+                                      -labelBox.width / 2
+                                    }
+                                    y={
+                                      -labelBox.height / 2
+                                    }
+                                    width={
+                                      labelBox.width
+                                    }
+                                    height={
+                                      labelBox.height
+                                    }
                                   >
-                                    {link.etiqueta}
-                                  </text>
+                                    <div
+                                      xmlns="http://www.w3.org/1999/xhtml"
+                                      className="process-link-label-content"
+                                    >
+                                      {link.etiqueta}
+                                    </div>
+                                  </foreignObject>
                                 </g>
                               )}
                             </g>
@@ -19876,6 +19972,12 @@ function colorEstadoTarea(tarea) {
                             <span>
                               <b>Responsable</b>
                               {card.responsable ||
+                                'Sin asignar'}
+                            </span>
+
+                            <span>
+                              <b>Responsable 2</b>
+                              {card.responsable_2 ||
                                 'Sin asignar'}
                             </span>
 
@@ -22688,6 +22790,36 @@ function colorEstadoTarea(tarea) {
 
                 )}
 
+                {formCard.tipo !== 'Nota' && (
+                  <div className="form-group">
+                  <label>Responsable 2</label>
+
+                  <select
+                    value={formCard.responsable2}
+                    onChange={(e) =>
+                      setFormCard((actual) => ({
+                        ...actual,
+                        responsable2: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">
+                      Sin asignar
+                    </option>
+
+                    {perfiles.map((perfil) => (
+                      <option
+                        key={perfil.id}
+                        value={perfil.nombre}
+                      >
+                        {perfil.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  </div>
+
+                )}
+
                 <div className="form-group">
                   <label>Color</label>
 
@@ -23327,6 +23459,7 @@ function colorEstadoTarea(tarea) {
                         tipo: 'Hito',
                         responsableAnalista: '',
                         responsableDesarrollador: '',
+                        responsable2: '',
                         dependencia: '',
                         hitoPadre: '',
                       }))
@@ -23382,6 +23515,35 @@ function colorEstadoTarea(tarea) {
                   >
                     <option value="">
                       Sin asignar / Backlog
+                    </option>
+
+                    {perfiles.map((perfil) => (
+                      <option
+                        key={perfil.id}
+                        value={perfil.nombre}
+                      >
+                        {perfil.nombre}
+                      </option>
+                    ))}
+                  </select>
+
+                </div>
+                )}
+
+                {form.tipo === 'Tarea' && (
+                <div className="form-group">
+
+                  <label>
+                    Responsable 2
+                  </label>
+
+                  <select
+                    name="responsable2"
+                    value={form.responsable2}
+                    onChange={handleChange}
+                  >
+                    <option value="">
+                      Sin asignar
                     </option>
 
                     {perfiles.map((perfil) => (
@@ -23655,7 +23817,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.9.1</span>
+        <span>V10.9.3</span>
         <span>01/10/2026</span>
       </footer>
 
