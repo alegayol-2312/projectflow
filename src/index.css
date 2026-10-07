@@ -30563,3 +30563,173 @@ body .v10-polish .avatar-settings-heading small {
     min-height: 30px !important;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.5
+   KANBAN — ARCHIVAR COMO BOTÓN DE TEXTO
+========================================================= */
+
+body .v10-polish
+.kanban-board-header
+.kanban-archive-project-top-button {
+  width: auto !important;
+  min-width: 74px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+
+  padding: 0 12px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border-radius: 7px !important;
+
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+
+/* Light */
+body .v10-polish.theme-light
+.kanban-archive-project-top-button {
+  background: #ffffff !important;
+  border: 1px solid #aebdc6 !important;
+
+  color: #243640 !important;
+  -webkit-text-fill-color: #243640 !important;
+
+  box-shadow: none !important;
+}
+
+body .v10-polish.theme-light
+.kanban-archive-project-top-button:hover {
+  background: #f2f6f8 !important;
+  border-color: #82949f !important;
+
+  color: #14232c !important;
+  -webkit-text-fill-color: #14232c !important;
+}
+
+/* Dark — similar al ejemplo */
+body .v10-polish.theme-dark
+.kanban-archive-project-top-button {
+  background: #182934 !important;
+  border: 1px solid #526773 !important;
+
+  color: #f3f7f9 !important;
+  -webkit-text-fill-color: #f3f7f9 !important;
+
+  box-shadow: none !important;
+}
+
+body .v10-polish.theme-dark
+.kanban-archive-project-top-button:hover {
+  background: #223944 !important;
+  border-color: #6b818e !important;
+
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.6
+   KANBAN — + TARJETA Y ARCHIVAR EN LA MISMA LÍNEA
+========================================================= */
+
+body .v10-polish
+.kanban-board-header-actions {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+
+  align-items: center !important;
+  justify-content: flex-end !important;
+
+  gap: 9px !important;
+
+  width: auto !important;
+  min-width: max-content !important;
+
+  margin-left: auto !important;
+
+  white-space: nowrap !important;
+}
+
+body .v10-polish
+.kanban-board-header-actions
+.cards-primary-button,
+body .v10-polish
+.kanban-board-header-actions
+.kanban-archive-project-top-button {
+  flex: 0 0 auto !important;
+
+  width: auto !important;
+  min-width: max-content !important;
+
+  margin: 0 !important;
+}
+
+/* Ambos botones quedan alineados y con la misma altura */
+body .v10-polish
+.kanban-board-header-actions
+.cards-primary-button {
+  height: 36px !important;
+  min-height: 36px !important;
+
+  padding: 0 14px !important;
+
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+body .v10-polish
+.kanban-board-header-actions
+.kanban-archive-project-top-button {
+  height: 36px !important;
+  min-height: 36px !important;
+
+  padding: 0 12px !important;
+
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+}
+
+/*
+  Jerarquía visual:
+  + Tarjeta primero / izquierda.
+  Archivar después / derecha.
+*/
+body .v10-polish
+.kanban-board-header-actions
+.cards-primary-button {
+  order: 1 !important;
+}
+
+body .v10-polish
+.kanban-board-header-actions
+.kanban-archive-project-top-button {
+  order: 2 !important;
+}
+
+/* En modo reunión se mantiene exactamente el mismo orden */
+body .v10-polish.meeting-kanban
+.kanban-board-header-actions {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+
+  align-items: center !important;
+  justify-content: flex-end !important;
+
+  gap: 9px !important;
+
+  width: auto !important;
+  min-width: max-content !important;
+}

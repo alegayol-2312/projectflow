@@ -18995,12 +18995,8 @@ function colorEstadoTarea(tarea) {
                           }
                         }}
                         title="Archivar proyecto Kanban"
-                        aria-label="Archivar proyecto Kanban"
                       >
-                        <img
-                          src={archiveIcon}
-                          alt=""
-                        />
+                        Archivar
                       </button>
                     </div>
                   </div>
@@ -24068,7 +24064,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.10.4</span>
+        <span>V10.10.6</span>
         <span>01/10/2026</span>
       </footer>
 
