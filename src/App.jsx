@@ -1208,6 +1208,11 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processSimulationPreviousNodeId, setProcessSimulationPreviousNodeId] = useState(null)
   const [processSimulationPanelPos, setProcessSimulationPanelPos] = useState({ x: 14, y: 54 })
   const processSimulationPanelDragRef = useRef(null)
+  const [processSelectionToolbarPos, setProcessSelectionToolbarPos] = useState({
+    x: 14,
+    y: 64,
+  })
+  const processSelectionToolbarDragRef = useRef(null)
   const [processMeetingIcons, setProcessMeetingIcons] = useState({})
   const [processValidationMessages, setProcessValidationMessages] = useState([])
   const [processValidationOk, setProcessValidationOk] = useState(false)
@@ -2246,6 +2251,43 @@ useEffect(() => {
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '')
   }
+
+  function boardPinColor(boardId) {
+    const palette = [
+      '#00c2ff',
+      '#9b5de5',
+      '#2dd36f',
+      '#ff4fb3',
+      '#ff8a00',
+      '#7a69ff',
+      '#20c9b4',
+      '#ff5d73',
+      '#4fc3f7',
+      '#f2b134',
+    ]
+
+    const texto =
+      String(boardId || 'board')
+
+    let hash = 0
+
+    for (
+      let index = 0;
+      index < texto.length;
+      index += 1
+    ) {
+      hash =
+        (
+          hash * 31 +
+          texto.charCodeAt(index)
+        ) >>> 0
+    }
+
+    return palette[
+      hash % palette.length
+    ]
+  }
+
 
   function cambiarFlowColorRandom() {
     setFlowPaletteIndex(
@@ -8782,6 +8824,49 @@ function iniciarDragPanelSimulacion(event) {
   event.stopPropagation()
 }
 
+function iniciarDragProcessSelectionToolbar(event) {
+  if (
+    event.button !== 0 ||
+    event.target.closest(
+      'button, input, textarea, select'
+    )
+  ) {
+    return
+  }
+
+  const toolbar =
+    event.currentTarget.closest(
+      '.process-selection-toolbar'
+    )
+
+  const canvas =
+    event.currentTarget.closest(
+      '.process-canvas'
+    )
+
+  if (!toolbar || !canvas) {
+    return
+  }
+
+  const toolbarRect =
+    toolbar.getBoundingClientRect()
+
+  processSelectionToolbarDragRef.current = {
+    canvas,
+    toolbar,
+    offsetX:
+      event.clientX -
+      toolbarRect.left,
+    offsetY:
+      event.clientY -
+      toolbarRect.top,
+  }
+
+  event.preventDefault()
+  event.stopPropagation()
+}
+
+
 function validarProcessActual() {
   /*
     NotaProceso es una anotación visual.
@@ -14067,6 +14152,107 @@ function colorEstadoTarea(tarea) {
     }
   }, [])
 
+  useEffect(() => {
+    function onMoveSelectionToolbar(event) {
+      const drag =
+        processSelectionToolbarDragRef.current
+
+      if (!drag) return
+
+      const canvas =
+        drag.canvas
+
+      const toolbar =
+        drag.toolbar
+
+      const rect =
+        canvas.getBoundingClientRect()
+
+      const toolbarWidth =
+        toolbar.offsetWidth || 0
+
+      const toolbarHeight =
+        toolbar.offsetHeight || 0
+
+      const nextX =
+        event.clientX -
+        rect.left +
+        canvas.scrollLeft -
+        drag.offsetX
+
+      const nextY =
+        event.clientY -
+        rect.top +
+        canvas.scrollTop -
+        drag.offsetY
+
+      const maxX =
+        Math.max(
+          8,
+          canvas.scrollLeft +
+            canvas.clientWidth -
+            toolbarWidth -
+            8
+        )
+
+      const maxY =
+        Math.max(
+          8,
+          canvas.scrollTop +
+            canvas.clientHeight -
+            toolbarHeight -
+            8
+        )
+
+      setProcessSelectionToolbarPos({
+        x:
+          Math.min(
+            maxX,
+            Math.max(
+              canvas.scrollLeft + 8,
+              nextX
+            )
+          ),
+        y:
+          Math.min(
+            maxY,
+            Math.max(
+              canvas.scrollTop + 8,
+              nextY
+            )
+          ),
+      })
+    }
+
+    function onUpSelectionToolbar() {
+      processSelectionToolbarDragRef.current =
+        null
+    }
+
+    window.addEventListener(
+      'mousemove',
+      onMoveSelectionToolbar
+    )
+
+    window.addEventListener(
+      'mouseup',
+      onUpSelectionToolbar
+    )
+
+    return () => {
+      window.removeEventListener(
+        'mousemove',
+        onMoveSelectionToolbar
+      )
+
+      window.removeEventListener(
+        'mouseup',
+        onUpSelectionToolbar
+      )
+    }
+  }, [])
+
+
   const processSeleccionado = processMaps.find(
     (item) => item.id === processSeleccionadoId
   )
@@ -17299,6 +17485,10 @@ function colorEstadoTarea(tarea) {
                       processSelectionRect
                         ? 'selecting'
                         : ''
+                    } ${
+                      processCanvasBgActual === '#ffffff'
+                        ? 'process-canvas-white'
+                        : ''
                     }`}
                     style={{
                       '--process-canvas-bg':
@@ -17555,8 +17745,25 @@ function colorEstadoTarea(tarea) {
 
                     {!processSimulationOpen &&
                       selectedProcessNodeIds.length > 0 && (
-                      <div className="process-selection-toolbar">
-                        <div className="process-selection-summary">
+                      <div
+                        className="process-selection-toolbar"
+                        style={{
+                          left:
+                            `${processSelectionToolbarPos.x}px`,
+                          top:
+                            `${processSelectionToolbarPos.y}px`,
+                        }}
+                        onMouseDown={(event) =>
+                          event.stopPropagation()
+                        }
+                      >
+                        <div
+                          className="process-selection-summary process-selection-drag-handle"
+                          onMouseDown={
+                            iniciarDragProcessSelectionToolbar
+                          }
+                          title="Arrastrá para mover el cuadro"
+                        >
                           <strong>
                             {selectedProcessNodeIds.length}
                             {' '}seleccionados
@@ -19009,7 +19216,11 @@ function colorEstadoTarea(tarea) {
                                     abrirEditarKanbanCard(card)
                                   }
                                 >
-                                  <div className="kanban-card-priority">
+                                  <div
+                                    className={`kanban-card-priority priority-${String(
+                                      card.prioridad || 'Media'
+                                    ).toLowerCase()}`}
+                                  >
                                     {card.prioridad || 'Media'}
                                   </div>
 
@@ -19207,7 +19418,15 @@ function colorEstadoTarea(tarea) {
                           board.nombre
                         }
                       >
-                        <span className="board-list-pin">
+                        <span
+                          className="board-list-pin"
+                          style={{
+                            '--board-pin-color':
+                              boardPinColor(
+                                board.id
+                              ),
+                          }}
+                        >
                           ●
                         </span>
 
@@ -19234,21 +19453,6 @@ function colorEstadoTarea(tarea) {
                           title="Editar board"
                         >
                           ✎
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            archivarBoard(
-                              board
-                            )
-                          }
-                          title="Archivar board"
-                        >
-                          <img
-                            src={archiveIcon}
-                            alt=""
-                          />
                         </button>
 
                         <button
@@ -19354,6 +19558,29 @@ function colorEstadoTarea(tarea) {
                         >
                           Guardar imagen
                         </button>
+
+                        <button
+                          type="button"
+                          className="cards-archive-board-top-button compact"
+                          onClick={() => {
+                            if (
+                              boardSeleccionado
+                            ) {
+                              archivarBoard(
+                                boardSeleccionado
+                              )
+                            }
+                          }}
+                          title="Archivar board"
+                        >
+                          <img
+                            src={archiveIcon}
+                            alt=""
+                          />
+                          <span>
+                            Archivar board
+                          </span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -19368,15 +19595,6 @@ function colorEstadoTarea(tarea) {
                       <span>
                         Arrastrá una seleccionada para moverlas juntas
                       </span>
-
-                      <button
-                        type="button"
-                        onClick={
-                          archivarCardsSeleccionadas
-                        }
-                      >
-                        Archivar
-                      </button>
 
                       <button
                         type="button"
@@ -19495,30 +19713,6 @@ function colorEstadoTarea(tarea) {
 
                   </div>
 
-                    
-                    <button
-                      type="button"
-                      className="board-archive-button"
-                      onClick={() => {
-                        setArchivoOpen(true)
-                        cargarCardsArchivadas(
-                          boardSeleccionadoId
-                        )
-                      }}
-                      title="Cards archivadas"
-                      aria-label="Cards archivadas"
-                    >
-                      <img
-                        src={archiveIcon}
-                        alt=""
-                      />
-
-                      {cardsArchivadas.length > 0 && (
-                        <span>
-                          {cardsArchivadas.length}
-                        </span>
-                      )}
-                    </button>
 
 <div
                       ref={boardCanvasRef}
@@ -23008,16 +23202,6 @@ function colorEstadoTarea(tarea) {
                         Mandar atrás
                       </button>
 
-                      <button
-                        type="button"
-                        className="archive-card-action"
-                        onClick={() =>
-                          archivarCard(cardEditando)
-                        }
-                      >
-                        Archivar
-                      </button>
-
                       {cardEditando.tipo !== 'Nota' && (
                         <button
                           type="button"
@@ -23817,7 +24001,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.9.4</span>
+        <span>V10.10.2</span>
         <span>01/10/2026</span>
       </footer>
 

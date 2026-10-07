@@ -29427,3 +29427,817 @@ body .v10-polish.theme-dark
     max-width: 100vw !important;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.0
+   PROCESS — FINAL POLISH CANDIDATE
+========================================================= */
+
+/* ---------------------------------------------------------
+   1. PALETA DE COMPONENTES: GRIS + TEXTO REGULAR
+--------------------------------------------------------- */
+
+body .v10-polish .process-component-chip,
+body .v10-polish.theme-light .process-component-chip,
+body .v10-polish.theme-dark .process-component-chip {
+  background: #e2e6e9 !important;
+  border-color: #9aa5ad !important;
+  color: #151b1f !important;
+  -webkit-text-fill-color: #151b1f !important;
+
+  box-shadow:
+    0 1px 3px
+    rgba(25,39,48,.08)
+    !important;
+}
+
+body .v10-polish .process-component-chip:hover,
+body .v10-polish.theme-light .process-component-chip:hover,
+body .v10-polish.theme-dark .process-component-chip:hover {
+  background: #d7dde1 !important;
+  border-color: #73818a !important;
+
+  box-shadow:
+    0 2px 6px
+    rgba(25,39,48,.10)
+    !important;
+}
+
+body .v10-polish .process-component-icon,
+body .v10-polish.theme-light .process-component-icon,
+body .v10-polish.theme-dark .process-component-icon {
+  background: #e2e6e9 !important;
+}
+
+body .v10-polish
+.process-components-grid
+.process-icon-fill {
+  background: #d4dade !important;
+  --process-color: #d4dade !important;
+}
+
+/* Decisión también pasa al mismo gris */
+body .v10-polish .decision-palette-diamond {
+  background: #d4dade !important;
+}
+
+/* Título de cada componente: sin negrita */
+body .v10-polish .process-component-chip > span,
+body .v10-polish.theme-light .process-component-chip > span,
+body .v10-polish.theme-dark .process-component-chip > span {
+  color: #151b1f !important;
+  -webkit-text-fill-color: #151b1f !important;
+
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+}
+
+
+/* ---------------------------------------------------------
+   2. PROCESO PREDEFINIDO: SIN LÍNEAS LATERALES EXTRA
+--------------------------------------------------------- */
+
+body .v10-polish
+.process-node-procesopredefinido::before,
+body .v10-polish
+.process-node-procesopredefinido::after,
+body .v10-polish
+.process-component-chip.process-node-procesopredefinido::before,
+body .v10-polish
+.process-component-chip.process-node-procesopredefinido::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+}
+
+
+/* ---------------------------------------------------------
+   3. CARPETAS DARK: AMARILLAS Y RELLENAS
+--------------------------------------------------------- */
+
+body .v10-polish.theme-dark .project-folder-icon {
+  color: #f7c948 !important;
+}
+
+body .v10-polish.theme-dark
+.project-folder-icon::before,
+body .v10-polish.theme-dark
+.project-folder-icon::after {
+  background: #f7c948 !important;
+  border-color: #d5aa25 !important;
+  opacity: 1 !important;
+}
+
+body .v10-polish.theme-dark .folder-create-button {
+  color: #f7c948 !important;
+  border-color: #4d5961 !important;
+}
+
+body .v10-polish.theme-dark
+.folder-create-button .folder-create-svg {
+  color: #f7c948 !important;
+  fill: #f7c948 !important;
+  stroke: #f7c948 !important;
+  opacity: 1 !important;
+}
+
+
+/* ---------------------------------------------------------
+   4. REGLA PROCESS: TRAZO FINO Y LIMPIO
+--------------------------------------------------------- */
+
+body .v10-polish .ruler-shape {
+  width: 17px !important;
+  height: 9px !important;
+
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #465963 !important;
+
+  border-radius: 1px !important;
+}
+
+body .v10-polish .ruler-shape i {
+  top: 0 !important;
+  width: 1px !important;
+
+  background: #465963 !important;
+}
+
+body .v10-polish .ruler-shape i:nth-child(1) {
+  left: 2px !important;
+  height: 4px !important;
+}
+
+body .v10-polish .ruler-shape i:nth-child(2) {
+  left: 5px !important;
+  height: 6px !important;
+}
+
+body .v10-polish .ruler-shape i:nth-child(3) {
+  left: 8px !important;
+  height: 4px !important;
+}
+
+body .v10-polish .ruler-shape i:nth-child(4) {
+  left: 11px !important;
+  height: 6px !important;
+}
+
+body .v10-polish .ruler-shape i:nth-child(5) {
+  left: 14px !important;
+  height: 4px !important;
+}
+
+/* En dark mantenemos la misma finura pero con contraste claro */
+body .v10-polish.theme-dark .ruler-shape {
+  border-color: #edf5f8 !important;
+}
+
+body .v10-polish.theme-dark .ruler-shape i {
+  background: #edf5f8 !important;
+}
+
+
+/* ---------------------------------------------------------
+   5. CUADRO DE SELECCIÓN: MÁS GRANDE + TIPOGRAFÍA LIVIANA
+      + MOVIBLE
+--------------------------------------------------------- */
+
+body .v10-polish .process-selection-toolbar {
+  position: absolute !important;
+
+  margin: 0 !important;
+
+  width: fit-content !important;
+  min-width: 620px !important;
+  max-width: calc(100% - 24px) !important;
+
+  padding: 12px 14px !important;
+
+  column-gap: 12px !important;
+  row-gap: 10px !important;
+
+  z-index: 220 !important;
+}
+
+body .v10-polish .process-selection-summary {
+  min-width: 118px !important;
+}
+
+body .v10-polish
+.process-selection-drag-handle {
+  cursor: move !important;
+  user-select: none !important;
+}
+
+body .v10-polish
+.process-selection-summary strong {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.15 !important;
+}
+
+body .v10-polish
+.process-selection-summary span {
+  font-size: 10.5px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+}
+
+body .v10-polish
+.process-selection-actions button {
+  min-height: 39px !important;
+
+  padding: 0 13px !important;
+
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+body .v10-polish
+.process-text-align-actions
+.process-align-icon {
+  width: 39px !important;
+  min-width: 39px !important;
+  height: 39px !important;
+  min-height: 39px !important;
+}
+
+/* Delete sí conserva jerarquía, pero no bold extremo */
+body .v10-polish
+.process-selection-toolbar
+.selection-delete-all {
+  font-weight: 600 !important;
+}
+
+
+/* ---------------------------------------------------------
+   6. CANVAS BLANCO: SIN SOMBRA RECTANGULAR EN COMPONENTES
+--------------------------------------------------------- */
+
+body .v10-polish
+.process-canvas-white
+.process-node:not(.multi-selected):not(.magnetic-target) {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+body .v10-polish
+.process-canvas-white
+.process-node:not(.multi-selected):not(.magnetic-target):hover {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/*
+  Seleccionado: conserva sólo el halo cyan funcional,
+  sin sombra negra detrás del PNG.
+*/
+body .v10-polish
+.process-canvas-white
+.process-node.multi-selected {
+  box-shadow: none !important;
+
+  filter:
+    drop-shadow(
+      0 0 5px
+      rgba(0,216,234,.76)
+    )
+    !important;
+}
+
+
+/* ---------------------------------------------------------
+   7. SHARE EN WHITE: TEXTO NEGRO, INCLUSO DISABLED
+--------------------------------------------------------- */
+
+body .v10-polish.theme-light
+.card-editor-drawer
+.share-resource-button,
+body .v10-polish.theme-light
+.card-editor-drawer
+.share-resource-button:disabled {
+  color: #172a34 !important;
+  -webkit-text-fill-color: #172a34 !important;
+
+  background: #eafafd !important;
+  border-color: #76cdd5 !important;
+
+  font-weight: 600 !important;
+}
+
+body .v10-polish.theme-light
+.card-editor-drawer
+.share-resource-button:disabled {
+  opacity: .58 !important;
+}
+
+
+/* ---------------------------------------------------------
+   8. MODO REUNIÓN: COMANDOS DENTRO DEL CANVAS
+--------------------------------------------------------- */
+
+body .v10-polish.meeting-process
+.process-canvas {
+  position: relative !important;
+}
+
+body .v10-polish.meeting-process
+.process-canvas-tools {
+  display: inline-flex !important;
+
+  position: sticky !important;
+
+  top: 10px !important;
+  left: 12px !important;
+  right: auto !important;
+  bottom: auto !important;
+
+  margin:
+    10px
+    0
+    -46px
+    12px
+    !important;
+
+  z-index: 10040 !important;
+}
+
+/* No toca el encabezado / título del proceso */
+body .v10-polish.meeting-process
+.process-canvas-header {
+  position: relative !important;
+  z-index: 20 !important;
+}
+
+
+/* ---------------------------------------------------------
+   9. PALETA EN DARK: MISMO GRIS, TEXTO NEGRO LEGIBLE
+--------------------------------------------------------- */
+
+body .v10-polish.theme-dark
+.process-components-panel {
+  color: #dce7ec !important;
+}
+
+body .v10-polish.theme-dark
+.process-component-chip {
+  background: #dce1e4 !important;
+  border-color: #8f9ba3 !important;
+}
+
+body .v10-polish.theme-dark
+.process-component-icon {
+  background: #dce1e4 !important;
+}
+
+body .v10-polish.theme-dark
+.process-component-chip > span {
+  color: #11181c !important;
+  -webkit-text-fill-color: #11181c !important;
+}
+
+
+/* ---------------------------------------------------------
+   NOTEBOOK: CUADRO DE SELECCIÓN SIGUE LEGIBLE
+--------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+  body .v10-polish .process-selection-toolbar {
+    min-width: min(620px, calc(100% - 20px)) !important;
+    max-width: calc(100% - 20px) !important;
+  }
+
+  body .v10-polish
+  .process-selection-actions button {
+    font-size: 11.5px !important;
+  }
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.1
+   KANBAN — FINAL POLISH CANDIDATE 1
+========================================================= */
+
+/* ---------------------------------------------------------
+   1. TARJETAS
+   Sólo título + labels clave se remarcan.
+--------------------------------------------------------- */
+
+body .v10-polish .kanban-card-title {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -.01em !important;
+
+  color:
+    var(--kanban-card-text, #111111)
+    !important;
+}
+
+/* RESPONSABLE DESARROLLADOR / FECHA FIN */
+body .v10-polish .kanban-card-meta span {
+  color:
+    var(--kanban-card-text, #111111)
+    !important;
+
+  font-size: 8.5px !important;
+  font-weight: 650 !important;
+  line-height: 1.2 !important;
+  letter-spacing: .025em !important;
+  text-transform: uppercase !important;
+
+  opacity: .82 !important;
+}
+
+/* Valor: claro y liviano */
+body .v10-polish .kanban-card-meta b {
+  color:
+    var(--kanban-card-text, #111111)
+    !important;
+
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  line-height: 1.3 !important;
+  letter-spacing: 0 !important;
+
+  opacity: .92 !important;
+}
+
+
+/* ---------------------------------------------------------
+   2. PRIORIDADES
+--------------------------------------------------------- */
+
+body .v10-polish .kanban-card-priority {
+  padding: 4px 9px !important;
+
+  border: 0 !important;
+  border-radius: 999px !important;
+
+  font-size: 8.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.15 !important;
+  letter-spacing: .025em !important;
+  text-transform: uppercase !important;
+
+  box-shadow: none !important;
+}
+
+/* ALTA = rojo / blanco */
+body .v10-polish .kanban-card-priority.priority-alta {
+  background: #d93645 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* MEDIA = amarillo / negro */
+body .v10-polish .kanban-card-priority.priority-media {
+  background: #ffd84d !important;
+  color: #111820 !important;
+  -webkit-text-fill-color: #111820 !important;
+}
+
+/* BAJA = celeste / negro */
+body .v10-polish .kanban-card-priority.priority-baja {
+  background: #8eddf0 !important;
+  color: #102129 !important;
+  -webkit-text-fill-color: #102129 !important;
+}
+
+
+/* ---------------------------------------------------------
+   3. WHITE SWATCH EN LIGHT THEME
+   Siempre con borde negro para que no desaparezca.
+--------------------------------------------------------- */
+
+body .v10-polish.theme-light
+.kanban-bg-picker
+button.kanban-bg-dot.white,
+body .v10-polish.theme-light
+.kanban-bg-picker
+button.kanban-column-color-dot[style*="#ffffff"] {
+  border:
+    1.5px solid
+    #151b1f
+    !important;
+}
+
+/* Selección activa del blanco: borde todavía más claro */
+body .v10-polish.theme-light
+.kanban-bg-picker
+button.kanban-bg-dot.white.active,
+body .v10-polish.theme-light
+.kanban-bg-picker
+button.kanban-column-color-dot.active[style*="#ffffff"] {
+  border:
+    2px solid
+    #111111
+    !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(0,184,202,.24)
+    !important;
+}
+
+
+/* ---------------------------------------------------------
+   4. FILTROS
+   Sin bold.
+--------------------------------------------------------- */
+
+body .v10-polish .kanban-filters-v86 select {
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+}
+
+body .v10-polish .kanban-filters-v86 select option {
+  font-weight: 400 !important;
+}
+
+
+/* ---------------------------------------------------------
+   5. LIGHT / DARK
+   Mantener lectura limpia.
+--------------------------------------------------------- */
+
+body .v10-polish.theme-light .kanban-card-meta span,
+body .v10-polish.theme-light .kanban-card-meta b,
+body .v10-polish.theme-light .kanban-card-title {
+  opacity: 1 !important;
+}
+
+body .v10-polish.theme-dark .kanban-card-meta span {
+  opacity: .84 !important;
+}
+
+body .v10-polish.theme-dark .kanban-card-meta b {
+  opacity: .94 !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.2
+   CARDS — FINAL POLISH CANDIDATE 1
+========================================================= */
+
+/* ---------------------------------------------------------
+   1. LISTA DE BOARDS — MÁS AIRE
+--------------------------------------------------------- */
+
+body .v10-polish .boards-list {
+  padding:
+    14px
+    13px
+    16px
+    !important;
+
+  gap:
+    9px
+    !important;
+}
+
+body .v10-polish .board-list-item {
+  min-height:
+    60px !important;
+
+  padding:
+    10px
+    11px
+    !important;
+}
+
+
+/* ---------------------------------------------------------
+   2. PUNTOS DE LOS BOARDS — COLORES VARIADOS
+--------------------------------------------------------- */
+
+body .v10-polish .board-list-pin {
+  color:
+    var(
+      --board-pin-color,
+      #00c2ff
+    )
+    !important;
+
+  -webkit-text-fill-color:
+    var(
+      --board-pin-color,
+      #00c2ff
+    )
+    !important;
+
+  font-size:
+    12px !important;
+
+  text-shadow:
+    0 1px 2px
+    rgba(0,0,0,.18)
+    !important;
+}
+
+
+/* ---------------------------------------------------------
+   3. BOTÓN ARCHIVAR BOARD EN BARRA SUPERIOR
+--------------------------------------------------------- */
+
+body .v10-polish
+.cards-archive-board-top-button {
+  min-height:
+    36px !important;
+
+  display:
+    inline-flex !important;
+
+  align-items:
+    center !important;
+
+  justify-content:
+    center !important;
+
+  gap:
+    7px !important;
+
+  padding:
+    0
+    12px
+    !important;
+
+  border-radius:
+    8px !important;
+
+  font-size:
+    10.5px !important;
+
+  font-weight:
+    500 !important;
+
+  white-space:
+    nowrap !important;
+}
+
+body .v10-polish
+.cards-archive-board-top-button img {
+  width:
+    15px !important;
+
+  height:
+    15px !important;
+
+  object-fit:
+    contain !important;
+}
+
+
+/* ---------------------------------------------------------
+   4. ZOOM — ABAJO A LA DERECHA, IGUAL QUE PROCESS
+--------------------------------------------------------- */
+
+body .v10-polish
+.cards-canvas-shell
+.board-zoom-overlay,
+body .v10-polish
+.meeting-cards
+.board-zoom-overlay {
+  position:
+    fixed !important;
+
+  top:
+    auto !important;
+
+  left:
+    auto !important;
+
+  right:
+    18px !important;
+
+  bottom:
+    18px !important;
+
+  margin:
+    0 !important;
+
+  z-index:
+    10050 !important;
+}
+
+
+/* ---------------------------------------------------------
+   5. + CARD — UN POCO MÁS DE PRESENCIA
+--------------------------------------------------------- */
+
+body .v10-polish
+.card-create-actions
+.cards-primary-button.compact {
+  min-width:
+    88px !important;
+
+  font-size:
+    11.5px !important;
+
+  font-weight:
+    600 !important;
+
+  letter-spacing:
+    0 !important;
+}
+
+
+/* ---------------------------------------------------------
+   6. SELECTOR BLANCO EN LIGHT THEME
+--------------------------------------------------------- */
+
+body .v10-polish.theme-light
+.cards-canvas-bg-picker
+.cards-bg-dot.white {
+  border:
+    1.5px solid
+    #151b1f
+    !important;
+}
+
+/* Si está seleccionado, borde negro más marcado */
+body .v10-polish.theme-light
+.cards-canvas-bg-picker
+.cards-bg-dot.white.active {
+  border:
+    2px solid
+    #111111
+    !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(0,184,202,.24)
+    !important;
+}
+
+
+/* ---------------------------------------------------------
+   7. ARCHIVO DE CARDS
+   Se retiran los accesos de UI.
+   El histórico existente no se borra de Supabase.
+--------------------------------------------------------- */
+
+body .v10-polish .board-archive-button {
+  display:
+    none !important;
+}
+
+
+/* ---------------------------------------------------------
+   8. LIGHT / DARK DEL NUEVO BOTÓN
+--------------------------------------------------------- */
+
+body .v10-polish.theme-light
+.cards-archive-board-top-button {
+  background:
+    #ffffff !important;
+
+  border:
+    1px solid
+    #b9c8d0 !important;
+
+  color:
+    #1d313c !important;
+
+  -webkit-text-fill-color:
+    #1d313c !important;
+}
+
+body .v10-polish.theme-dark
+.cards-archive-board-top-button {
+  background:
+    #14232c !important;
+
+  border:
+    1px solid
+    #405767 !important;
+
+  color:
+    #edf5f8 !important;
+
+  -webkit-text-fill-color:
+    #edf5f8 !important;
+}
+
+body .v10-polish.theme-light
+.cards-archive-board-top-button img {
+  filter:
+    brightness(.45)
+    saturate(.4)
+    !important;
+}
+
+body .v10-polish.theme-dark
+.cards-archive-board-top-button img {
+  filter:
+    brightness(0)
+    invert(1)
+    !important;
+}
