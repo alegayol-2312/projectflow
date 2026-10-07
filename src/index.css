@@ -28820,3 +28820,610 @@ body .v10-polish.meeting-kanban .kanban-columns {
 .process-link-label-content {
   overflow: visible !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.9.4
+   RESTYLING FUERTE DE DRAWERS / PANELES DE EDICIÓN
+   Process + Cards + Kanban (+ Gantt por consistencia)
+========================================================= */
+
+/*
+  Objetivo:
+  - lectura cómoda en monitor y notebook;
+  - menos abuso de bold;
+  - controles más grandes;
+  - jerarquía clara: título > label > contenido > ayuda.
+*/
+
+/* ---------------------------------------------------------
+   PANEL
+--------------------------------------------------------- */
+
+body .v10-polish .card-editor-drawer {
+  width: min(620px, 96vw) !important;
+  padding: 26px 28px 30px !important;
+
+  font-size: 15px !important;
+  line-height: 1.45 !important;
+}
+
+body .v10-polish .card-editor-drawer form {
+  gap: 0 !important;
+}
+
+/* Cabecera sticky más limpia y respirada */
+body .v10-polish
+.card-editor-drawer
+.card-modal-heading {
+  top: -26px !important;
+
+  margin:
+    -26px
+    -28px
+    24px
+    !important;
+
+  padding:
+    24px
+    28px
+    18px
+    !important;
+}
+
+/* Eyebrow / tipo de edición */
+body .v10-polish
+.card-editor-drawer
+.card-modal-heading > span {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: .045em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase;
+}
+
+/* Título principal */
+body .v10-polish
+.card-editor-drawer
+.card-modal-heading h3,
+body .v10-polish
+.card-editor-drawer
+.card-modal-heading h2 {
+  margin:
+    5px
+    0
+    0
+    !important;
+
+  font-size: 23px !important;
+  font-weight: 700 !important;
+  line-height: 1.18 !important;
+  letter-spacing: -.015em !important;
+}
+
+/* Botón cerrar */
+body .v10-polish
+.card-editor-drawer
+.card-modal-heading > button {
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+
+  border-radius: 10px !important;
+
+  font-size: 19px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+}
+
+
+/* ---------------------------------------------------------
+   CAMPOS
+--------------------------------------------------------- */
+
+body .v10-polish
+.card-editor-drawer
+.form-group {
+  margin-bottom: 18px !important;
+}
+
+/* Label: claro, pero no pesado */
+body .v10-polish
+.card-editor-drawer
+.form-group > label,
+body .v10-polish
+.card-editor-drawer
+.form-group label {
+  display: block;
+
+  margin-bottom: 8px !important;
+
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  line-height: 1.3 !important;
+  letter-spacing: 0 !important;
+}
+
+/* Inputs / selects / textarea */
+body .v10-polish
+.card-editor-drawer
+:is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea
+) {
+  min-height: 46px !important;
+
+  padding:
+    0
+    13px
+    !important;
+
+  border-radius: 10px !important;
+
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+}
+
+body .v10-polish
+.card-editor-drawer
+textarea {
+  min-height: 96px !important;
+
+  padding:
+    12px
+    13px
+    !important;
+
+  line-height: 1.5 !important;
+}
+
+/* Placeholder más visible, sin parecer contenido real */
+body .v10-polish
+.card-editor-drawer
+:is(
+  input,
+  textarea
+)::placeholder {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  opacity: .72 !important;
+}
+
+/* Options */
+body .v10-polish
+.card-editor-drawer
+select option {
+  font-size: 15px !important;
+  font-weight: 400 !important;
+}
+
+
+/* ---------------------------------------------------------
+   TEXTOS SECUNDARIOS / AYUDAS
+--------------------------------------------------------- */
+
+body .v10-polish
+.card-editor-drawer
+:is(
+  p,
+  small,
+  .field-help,
+  .connection-type-help,
+  .process-link-drawer-help,
+  .kanban-column-help,
+  .kanban-column-rule span,
+  .project-folder-help,
+  .process-ai-intro,
+  .process-ai-result,
+  .process-text-create-loading,
+  .share-with-help
+) {
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+}
+
+/*
+  Dentro del drawer, <strong> deja de ser automáticamente
+  "negrita extrema". Se usa semibold.
+*/
+body .v10-polish
+.card-editor-drawer
+strong {
+  font-weight: 600 !important;
+}
+
+
+/* ---------------------------------------------------------
+   BOTONES
+--------------------------------------------------------- */
+
+body .v10-polish
+.card-editor-drawer
+:is(
+  button,
+  .btn-primary,
+  .btn-secondary,
+  .cards-primary-button,
+  .cards-secondary-button,
+  .process-secondary-button
+) {
+  min-height: 42px !important;
+
+  padding:
+    0
+    15px
+    !important;
+
+  border-radius: 10px !important;
+
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+}
+
+/* Acciones finales */
+body .v10-polish
+.card-editor-drawer
+.connection-drawer-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+
+  margin-top: 24px !important;
+  padding-top: 18px !important;
+}
+
+/* Botón primario final algo más fuerte, sin 800/900 */
+body .v10-polish
+.card-editor-drawer
+.connection-drawer-actions
+button:last-child {
+  font-weight: 650 !important;
+}
+
+
+/* ---------------------------------------------------------
+   BLOQUES / SECCIONES INTERNAS
+--------------------------------------------------------- */
+
+body .v10-polish
+.card-editor-drawer
+:is(
+  .connection-preview,
+  .connection-type-help,
+  .card-layer-tools,
+  .kanban-column-rule,
+  .process-node-actions,
+  .process-ai-intro,
+  .process-ai-result,
+  .process-text-create-loading,
+  .project-folder-help
+) {
+  padding: 13px 14px !important;
+  border-radius: 10px !important;
+}
+
+/* Tipo readonly */
+body .v10-polish
+.card-editor-drawer
+.card-type-readonly {
+  min-height: 46px !important;
+
+  padding:
+    0
+    13px
+    !important;
+
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  line-height: 1.3 !important;
+}
+
+
+/* ---------------------------------------------------------
+   CHECKBOX / CHECKLIST / SHARE
+--------------------------------------------------------- */
+
+body .v10-polish
+.card-editor-drawer
+input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+}
+
+body .v10-polish
+.card-editor-drawer
+:is(
+  .checklist-row,
+  .share-user-row,
+  .share-with-option
+) {
+  font-size: 13.5px !important;
+  font-weight: 400 !important;
+  line-height: 1.35 !important;
+}
+
+body .v10-polish
+.card-editor-drawer
+:is(
+  .checklist-row,
+  .share-user-row,
+  .share-with-option
+)
+label {
+  font-size: 13.5px !important;
+  font-weight: 400 !important;
+}
+
+
+/* ---------------------------------------------------------
+   COLORES / MINI BOTONES
+--------------------------------------------------------- */
+
+/* Los dots siguen siendo compactos; no heredan el botón grande */
+body .v10-polish
+.card-editor-drawer
+:is(
+  .color-dot,
+  .kanban-card-color-options button,
+  .unified-color-options button,
+  .process-box-color-options button,
+  .process-link-color-options button,
+  .zone-color-options button,
+  .avatar-image-grid button
+) {
+  min-height: unset !important;
+  padding: 0 !important;
+}
+
+
+/* ---------------------------------------------------------
+   PROCESS
+--------------------------------------------------------- */
+
+/* En Process, el panel de edición necesita algo más de aire */
+body .v10-polish
+.card-editor-drawer.process-drawer {
+  width: min(630px, 96vw) !important;
+}
+
+/* Acciones de nodo: texto legible y no ultrabold */
+body .v10-polish
+.card-editor-drawer.process-drawer
+.process-node-actions button {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+
+/* ---------------------------------------------------------
+   CARDS
+--------------------------------------------------------- */
+
+/* Editor principal de Card: títulos y metadatos claros */
+body .v10-polish
+.card-editor-drawer
+.card-type-readonly + .form-group {
+  margin-top: 4px !important;
+}
+
+
+/* ---------------------------------------------------------
+   KANBAN
+--------------------------------------------------------- */
+
+body .v10-polish
+.card-editor-drawer.kanban-drawer,
+body .v10-polish
+.card-editor-drawer.kanban-card-drawer {
+  width: min(620px, 96vw) !important;
+  font-size: 15px !important;
+}
+
+body .v10-polish
+.card-editor-drawer.kanban-drawer h3,
+body .v10-polish
+.card-editor-drawer.kanban-card-drawer h3 {
+  font-size: 23px !important;
+  font-weight: 700 !important;
+}
+
+body .v10-polish
+.card-editor-drawer.kanban-drawer label,
+body .v10-polish
+.card-editor-drawer.kanban-card-drawer label {
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+}
+
+body .v10-polish
+.card-editor-drawer.kanban-drawer
+:is(input, select, textarea),
+body .v10-polish
+.card-editor-drawer.kanban-card-drawer
+:is(input, select, textarea) {
+  font-size: 15px !important;
+  font-weight: 400 !important;
+}
+
+
+/* ---------------------------------------------------------
+   GANTT — MISMO LENGUAJE VISUAL
+--------------------------------------------------------- */
+
+body .v10-polish
+.card-editor-drawer.gantt-task-drawer {
+  width: min(640px, 96vw) !important;
+}
+
+body .v10-polish
+.gantt-task-drawer-header h2 {
+  font-size: 23px !important;
+  font-weight: 700 !important;
+}
+
+body .v10-polish
+.gantt-task-drawer-header p {
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  line-height: 1.45 !important;
+}
+
+
+/* ---------------------------------------------------------
+   LIGHT THEME
+--------------------------------------------------------- */
+
+body .v10-polish.theme-light
+.card-editor-drawer {
+  background: #ffffff !important;
+}
+
+body .v10-polish.theme-light
+.card-editor-drawer
+.form-group label {
+  color: #263943 !important;
+}
+
+body .v10-polish.theme-light
+.card-editor-drawer
+:is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea
+) {
+  background: #ffffff !important;
+  color: #172a34 !important;
+  border-color: #b7c7d0 !important;
+}
+
+body .v10-polish.theme-light
+.card-editor-drawer
+:is(
+  input,
+  textarea
+)::placeholder {
+  color: #687e89 !important;
+}
+
+
+/* ---------------------------------------------------------
+   DARK THEME
+--------------------------------------------------------- */
+
+body .v10-polish.theme-dark
+.card-editor-drawer
+.form-group label {
+  color: #d9e5ea !important;
+}
+
+body .v10-polish.theme-dark
+.card-editor-drawer
+:is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea
+) {
+  background: #081118 !important;
+  color: #f2f7f9 !important;
+  border-color: #405665 !important;
+}
+
+body .v10-polish.theme-dark
+.card-editor-drawer
+:is(
+  input,
+  textarea
+)::placeholder {
+  color: #8ea2ad !important;
+}
+
+
+/* ---------------------------------------------------------
+   NOTEBOOK / PANTALLAS MÁS CHICAS
+--------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  body .v10-polish .card-editor-drawer {
+    width: min(680px, 98vw) !important;
+
+    padding:
+      22px
+      22px
+      28px
+      !important;
+
+    font-size: 15.5px !important;
+  }
+
+  body .v10-polish
+  .card-editor-drawer
+  .card-modal-heading {
+    top: -22px !important;
+
+    margin:
+      -22px
+      -22px
+      22px
+      !important;
+
+    padding:
+      20px
+      22px
+      16px
+      !important;
+  }
+
+  body .v10-polish
+  .card-editor-drawer
+  .card-modal-heading h3,
+  body .v10-polish
+  .card-editor-drawer
+  .card-modal-heading h2 {
+    font-size: 22px !important;
+  }
+
+  body .v10-polish
+  .card-editor-drawer
+  .form-group label {
+    font-size: 14px !important;
+  }
+
+  body .v10-polish
+  .card-editor-drawer
+  :is(
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea
+  ) {
+    font-size: 15.5px !important;
+  }
+
+  body .v10-polish
+  .card-editor-drawer
+  :is(
+    button,
+    .btn-primary,
+    .btn-secondary
+  ) {
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 680px) {
+  body .v10-polish .card-editor-drawer,
+  body .v10-polish .card-editor-drawer.process-drawer,
+  body .v10-polish .card-editor-drawer.kanban-drawer,
+  body .v10-polish .card-editor-drawer.kanban-card-drawer,
+  body .v10-polish .card-editor-drawer.gantt-task-drawer {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+}
