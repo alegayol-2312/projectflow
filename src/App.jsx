@@ -1145,6 +1145,12 @@ function App() {
 
   const [usuariosConectados, setUsuariosConectados] = useState([])
   const [presencePanelOpen, setPresencePanelOpen] = useState(false)
+
+  const [liveObjectUsers, setLiveObjectUsers] = useState({})
+  const liveCollabChannelRef = useRef(null)
+  const liveObjectTimeoutsRef = useRef({})
+  const liveBroadcastAtRef = useRef({})
+
   const [deleteConfirmModal, setDeleteConfirmModal] = useState(null)
   const [deleteConfirmBusy, setDeleteConfirmBusy] = useState(false)
   const [uiToasts, setUiToasts] = useState([])
@@ -1187,6 +1193,10 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
 
   const ganttScrollRef = useRef(null)
 
+  const [ganttTaskPanelWidth, setGanttTaskPanelWidth] =
+    useState(650)
+  const ganttPanelResizeRef = useRef(null)
+
   const finMesActual = new Date(
     hoyReal.getFullYear(),
     hoyReal.getMonth() + 1,
@@ -1227,6 +1237,8 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
 
   const [boards, setBoards] = useState([])
   const [boardSeleccionadoId, setBoardSeleccionadoId] = useState('')
+  const [cardsPanelWidth, setCardsPanelWidth] = useState(245)
+  const cardsPanelResizeRef = useRef(null)
   const [cards, setCards] = useState([])
   const [cardsArchivadas, setCardsArchivadas] = useState([])
   const [archivoOpen, setArchivoOpen] = useState(false)
@@ -1621,6 +1633,94 @@ useEffect(() => {
 
 
   useEffect(() => {
+    function onMovePanelResize(event) {
+      const ganttDrag =
+        ganttPanelResizeRef.current
+
+      if (ganttDrag) {
+        const delta =
+          event.clientX -
+          ganttDrag.startX
+
+        setGanttTaskPanelWidth(
+          Math.min(
+            850,
+            Math.max(
+              650,
+              ganttDrag.startWidth +
+                delta
+            )
+          )
+        )
+      }
+
+      const cardsDrag =
+        cardsPanelResizeRef.current
+
+      if (cardsDrag) {
+        const delta =
+          event.clientX -
+          cardsDrag.startX
+
+        setCardsPanelWidth(
+          Math.min(
+            390,
+            Math.max(
+              245,
+              cardsDrag.startWidth +
+                delta
+            )
+          )
+        )
+      }
+    }
+
+    function onUpPanelResize() {
+      if (
+        ganttPanelResizeRef.current ||
+        cardsPanelResizeRef.current
+      ) {
+        ganttPanelResizeRef.current =
+          null
+        cardsPanelResizeRef.current =
+          null
+
+        document.body.classList.remove(
+          'projectflow-resizing-column'
+        )
+      }
+    }
+
+    window.addEventListener(
+      'mousemove',
+      onMovePanelResize
+    )
+    window.addEventListener(
+      'mouseup',
+      onUpPanelResize
+    )
+
+    return () => {
+      window.removeEventListener(
+        'mousemove',
+        onMovePanelResize
+      )
+      window.removeEventListener(
+        'mouseup',
+        onUpPanelResize
+      )
+
+      document.body.classList.remove(
+        'projectflow-resizing-column'
+      )
+    }
+  }, [
+    ganttTaskPanelWidth,
+    cardsPanelWidth,
+  ])
+
+
+  useEffect(() => {
     if (!session) {
       setUiTooltip(null)
       return
@@ -1660,12 +1760,27 @@ useEffect(() => {
         )
       }
 
+      const variante =
+        target.classList.contains(
+          'task-name-text'
+        )
+          ? 'task-name'
+          : 'default'
+
+      const anchoTooltip =
+        variante === 'task-name'
+          ? 410
+          : 240
+
       setUiTooltip({
         texto,
+        variante,
         x:
           Math.min(
             event.clientX + 14,
-            window.innerWidth - 240
+            window.innerWidth -
+              anchoTooltip -
+              12
           ),
         y:
           Math.min(
@@ -1684,7 +1799,14 @@ useEffect(() => {
                 x:
                   Math.min(
                     event.clientX + 14,
-                    window.innerWidth - 240
+                    window.innerWidth -
+                      (
+                        actual.variante ===
+                        'task-name'
+                          ? 410
+                          : 240
+                      ) -
+                      12
                   ),
                 y:
                   Math.min(
@@ -1890,6 +2012,291 @@ useEffect(() => {
     vistaPrincipal,
     perfiles,
   ])
+
+
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setLiveObjectUsers({})
+      return
+    }
+
+    const channel =
+      supabase.channel(
+        'projectflow-live-collaboration',
+        {
+          config: {
+            broadcast: {
+              self: false,
+              ack: false,
+            },
+          },
+        }
+      )
+
+    liveCollabChannelRef.current =
+      channel
+
+    function limpiarUsuarioObjeto(
+      objectKey,
+      userId
+    ) {
+      setLiveObjectUsers(
+        (actual) => {
+          const grupo =
+            actual[objectKey]
+
+          if (!grupo) return actual
+
+          const siguienteGrupo = {
+            ...grupo,
+          }
+
+          delete siguienteGrupo[
+            userId
+          ]
+
+          const siguiente = {
+            ...actual,
+          }
+
+          if (
+            Object.keys(
+              siguienteGrupo
+            ).length === 0
+          ) {
+            delete siguiente[
+              objectKey
+            ]
+          } else {
+            siguiente[
+              objectKey
+            ] =
+              siguienteGrupo
+          }
+
+          return siguiente
+        }
+      )
+    }
+
+    function programarExpiracion(
+      objectKey,
+      userId,
+      delay = 6500
+    ) {
+      const timeoutKey =
+        `${objectKey}:${userId}`
+
+      window.clearTimeout(
+        liveObjectTimeoutsRef.current[
+          timeoutKey
+        ]
+      )
+
+      liveObjectTimeoutsRef.current[
+        timeoutKey
+      ] =
+        window.setTimeout(
+          () => {
+            limpiarUsuarioObjeto(
+              objectKey,
+              userId
+            )
+
+            delete liveObjectTimeoutsRef
+              .current[
+                timeoutKey
+              ]
+          },
+          delay
+        )
+    }
+
+    channel
+      .on(
+        'broadcast',
+        {
+          event:
+            'object_activity',
+        },
+        ({ payload }) => {
+          if (
+            !payload?.user_id ||
+            payload.user_id ===
+              session.user.id ||
+            !payload.object_id
+          ) {
+            return
+          }
+
+          const objectKey =
+            liveObjectKey(
+              payload.modulo,
+              payload.container_id,
+              payload.object_id
+            )
+
+          if (
+            payload.action ===
+            'release'
+          ) {
+            programarExpiracion(
+              objectKey,
+              payload.user_id,
+              850
+            )
+
+            return
+          }
+
+          setLiveObjectUsers(
+            (actual) => ({
+              ...actual,
+              [objectKey]: {
+                ...(actual[
+                  objectKey
+                ] || {}),
+                [payload.user_id]:
+                  payload,
+              },
+            })
+          )
+
+          programarExpiracion(
+            objectKey,
+            payload.user_id
+          )
+
+          if (
+            payload.modulo ===
+              'cards' &&
+            payload.container_id ===
+              boardSeleccionadoId &&
+            Number.isFinite(
+              Number(payload.x)
+            ) &&
+            Number.isFinite(
+              Number(payload.y)
+            )
+          ) {
+            setCards(
+              (actual) =>
+                actual.map(
+                  (card) =>
+                    card.id ===
+                    payload.object_id
+                      ? {
+                          ...card,
+                          pos_x:
+                            Number(
+                              payload.x
+                            ),
+                          pos_y:
+                            Number(
+                              payload.y
+                            ),
+                        }
+                      : card
+                )
+            )
+          }
+
+          if (
+            payload.modulo ===
+              'process' &&
+            payload.container_id ===
+              processSeleccionadoId &&
+            Number.isFinite(
+              Number(payload.x)
+            ) &&
+            Number.isFinite(
+              Number(payload.y)
+            )
+          ) {
+            setProcessNodes(
+              (actual) =>
+                actual.map(
+                  (node) =>
+                    node.id ===
+                    payload.object_id
+                      ? {
+                          ...node,
+                          pos_x:
+                            Number(
+                              payload.x
+                            ),
+                          pos_y:
+                            Number(
+                              payload.y
+                            ),
+                        }
+                      : node
+                )
+            )
+          }
+
+          if (
+            payload.modulo ===
+              'kanban' &&
+            payload.container_id ===
+              kanbanProjectId &&
+            payload.estado
+          ) {
+            setKanbanCards(
+              (actual) =>
+                actual.map(
+                  (card) =>
+                    card.id ===
+                    payload.object_id
+                      ? {
+                          ...card,
+                          estado:
+                            payload.estado,
+                        }
+                      : card
+                )
+            )
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      if (
+        liveCollabChannelRef.current ===
+        channel
+      ) {
+        liveCollabChannelRef.current =
+          null
+      }
+
+      supabase.removeChannel(
+        channel
+      )
+    }
+  }, [
+    session?.user?.id,
+    boardSeleccionadoId,
+    processSeleccionadoId,
+    kanbanProjectId,
+  ])
+
+
+  useEffect(() => {
+    return () => {
+      Object.values(
+        liveObjectTimeoutsRef.current
+      ).forEach(
+        (timeoutId) =>
+          window.clearTimeout(
+            timeoutId
+          )
+      )
+
+      liveObjectTimeoutsRef.current =
+        {}
+    }
+  }, [])
 
 
   useEffect(() => {
@@ -2276,6 +2683,209 @@ useEffect(() => {
     }
   }
 
+  function liveObjectKey(
+    modulo,
+    containerId,
+    objectId
+  ) {
+    return [
+      modulo,
+      containerId || 'none',
+      objectId || 'none',
+    ].join(':')
+  }
+
+  function nombreUsuarioActualLive() {
+    const perfil =
+      perfiles.find(
+        (item) =>
+          item.id === session?.user?.id
+      )
+
+    return (
+      perfil?.nombre ||
+      session?.user?.email?.split('@')[0] ||
+      'Usuario'
+    )
+  }
+
+  function usuariosEnObjeto(
+    modulo,
+    containerId,
+    objectId
+  ) {
+    const key =
+      liveObjectKey(
+        modulo,
+        containerId,
+        objectId
+      )
+
+    return Object.values(
+      liveObjectUsers[key] || {}
+    )
+  }
+
+  function objetoMovidoEnVivo(
+    modulo,
+    containerId,
+    objectId
+  ) {
+    return usuariosEnObjeto(
+      modulo,
+      containerId,
+      objectId
+    ).some(
+      (item) =>
+        item.action === 'dragging'
+    )
+  }
+
+  function renderLiveObjectAvatars(
+    modulo,
+    containerId,
+    objectId
+  ) {
+    const usuarios =
+      usuariosEnObjeto(
+        modulo,
+        containerId,
+        objectId
+      )
+
+    if (usuarios.length === 0) {
+      return null
+    }
+
+    return (
+      <div className="live-object-presence">
+        {usuarios
+          .slice(0, 3)
+          .map((usuario) => (
+            <span
+              key={usuario.user_id}
+              className="live-object-avatar"
+              title={`${usuario.nombre || usuario.email || 'Usuario'} · ${
+                usuario.action === 'editing'
+                  ? 'Editando'
+                  : usuario.action === 'dragging'
+                    ? 'Moviendo'
+                    : 'Trabajando'
+              }`}
+            >
+              {avatarExists(
+                usuario.avatar_id
+              ) ? (
+                <img
+                  src={avatarSrcById(
+                    usuario.avatar_id
+                  )}
+                  alt=""
+                />
+              ) : (
+                <span className="avatar-fallback">
+                  {initialsFromName(
+                    usuario.nombre,
+                    usuario.email
+                  )}
+                </span>
+              )}
+            </span>
+          ))}
+
+        {usuarios.length > 3 && (
+          <span className="live-object-more">
+            +{usuarios.length - 3}
+          </span>
+        )}
+      </div>
+    )
+  }
+
+  function emitirColaboracionEnVivo({
+    modulo,
+    containerId,
+    objectId,
+    action,
+    x = null,
+    y = null,
+    estado = null,
+    force = false,
+  }) {
+    const channel =
+      liveCollabChannelRef.current
+
+    if (
+      !channel ||
+      !session?.user?.id ||
+      !objectId
+    ) {
+      return
+    }
+
+    const throttleKey =
+      `${modulo}:${containerId}:${objectId}:${action}`
+
+    const ahora =
+      Date.now()
+
+    const ultimo =
+      liveBroadcastAtRef.current[
+        throttleKey
+      ] || 0
+
+    if (
+      !force &&
+      ahora - ultimo < 55
+    ) {
+      return
+    }
+
+    liveBroadcastAtRef.current[
+      throttleKey
+    ] = ahora
+
+    channel.send({
+      type: 'broadcast',
+      event: 'object_activity',
+      payload: {
+        modulo,
+        container_id:
+          containerId || null,
+        object_id: objectId,
+        action,
+        x,
+        y,
+        estado,
+        user_id:
+          session.user.id,
+        nombre:
+          nombreUsuarioActualLive(),
+        email:
+          session.user.email,
+        avatar_id:
+          avatarId,
+        sent_at:
+          new Date().toISOString(),
+      },
+    })
+  }
+
+  function liberarColaboracionEnVivo(
+    modulo,
+    containerId,
+    objectId
+  ) {
+    emitirColaboracionEnVivo({
+      modulo,
+      containerId,
+      objectId,
+      action: 'release',
+      force: true,
+    })
+  }
+
+
   function mostrarToast(
     mensaje,
     tipo = 'success'
@@ -2319,6 +2929,37 @@ useEffect(() => {
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '')
   }
+
+  function iniciarResizeGanttPanel(event) {
+    if (event.button !== 0) return
+
+    ganttPanelResizeRef.current = {
+      startX: event.clientX,
+      startWidth: ganttTaskPanelWidth,
+    }
+
+    document.body.classList.add(
+      'projectflow-resizing-column'
+    )
+
+    event.preventDefault()
+  }
+
+  function iniciarResizeCardsPanel(event) {
+    if (event.button !== 0) return
+
+    cardsPanelResizeRef.current = {
+      startX: event.clientX,
+      startWidth: cardsPanelWidth,
+    }
+
+    document.body.classList.add(
+      'projectflow-resizing-column'
+    )
+
+    event.preventDefault()
+  }
+
 
   function boardPinColor(boardId) {
     const palette = [
@@ -6083,6 +6724,15 @@ function abrirNuevoProcessNode(tipo) {
 }
 
 function abrirEditarProcessNode(node) {
+  emitirColaboracionEnVivo({
+    modulo: 'process',
+    containerId:
+      processSeleccionadoId,
+    objectId: node.id,
+    action: 'editing',
+    force: true,
+  })
+
   setShareProcessUserId('')
   setProcessNodeEditando(node)
   setFormProcessNode({
@@ -6099,6 +6749,14 @@ function abrirEditarProcessNode(node) {
 }
 
 function cerrarProcessNodeDrawer() {
+  if (processNodeEditando?.id) {
+    liberarColaboracionEnVivo(
+      'process',
+      processSeleccionadoId,
+      processNodeEditando.id
+    )
+  }
+
   setProcessNodeDrawerOpen(false)
   setProcessNodeEditando(null)
   setFormProcessNode({
@@ -7402,6 +8060,20 @@ function iniciarDragProcessNode(event, node) {
     offsetY:
       clickWorldY - nodeY,
   })
+
+  posiciones.forEach(
+    (item) =>
+      emitirColaboracionEnVivo({
+        modulo: 'process',
+        containerId:
+          processSeleccionadoId,
+        objectId: item.id,
+        action: 'dragging',
+        x: item.pos_x,
+        y: item.pos_y,
+        force: true,
+      })
+  )
 }
 
 function moverProcessNode(event) {
@@ -7519,56 +8191,86 @@ function moverProcessNode(event) {
       y -
       processGroupDragInfo.anchorY
 
-    setProcessNodes((actual) =>
-      actual.map((node) => {
-        if (
-          !processGroupDragInfo.selectedIds.includes(
-            node.id
-          )
-        ) {
-          return node
-        }
-
-        const origen =
-          processGroupDragInfo.posiciones.find(
-            (item) =>
-              item.id === node.id
-          )
-
-        if (!origen) return node
-
-        return {
-          ...node,
+    const posicionesEnVivo =
+      processGroupDragInfo.posiciones
+        .map((item) => ({
+          id: item.id,
           pos_x:
             Math.max(
               20,
-              origen.pos_x + deltaX
+              item.pos_x + deltaX
             ),
           pos_y:
             Math.max(
               20,
-              origen.pos_y + deltaY
+              item.pos_y + deltaY
             ),
-        }
+        }))
+
+    setProcessNodes((actual) =>
+      actual.map((node) => {
+        const posicion =
+          posicionesEnVivo.find(
+            (item) =>
+              item.id === node.id
+          )
+
+        return posicion
+          ? {
+              ...node,
+              pos_x:
+                posicion.pos_x,
+              pos_y:
+                posicion.pos_y,
+            }
+          : node
       })
+    )
+
+    posicionesEnVivo.forEach(
+      (item) =>
+        emitirColaboracionEnVivo({
+          modulo: 'process',
+          containerId:
+            processSeleccionadoId,
+          objectId: item.id,
+          action: 'dragging',
+          x: item.pos_x,
+          y: item.pos_y,
+        })
     )
 
     return
   }
+
+  const liveX =
+    Math.max(20, x)
+
+  const liveY =
+    Math.max(20, y)
 
   setProcessNodes((actual) =>
     actual.map((node) =>
       node.id === processDragInfo.id
         ? {
             ...node,
-            pos_x:
-              Math.max(20, x),
-            pos_y:
-              Math.max(20, y),
+            pos_x: liveX,
+            pos_y: liveY,
           }
         : node
     )
   )
+
+  emitirColaboracionEnVivo({
+    modulo: 'process',
+    containerId:
+      processSeleccionadoId,
+    objectId:
+      processDragInfo.id,
+    action: 'dragging',
+    x: liveX,
+    y: liveY,
+  })
 }
 
 async function terminarDragProcessNode() {
@@ -7658,6 +8360,15 @@ async function terminarDragProcessNode() {
           idsSet.has(node.id)
       )
   }
+
+  ids.forEach(
+    (id) =>
+      liberarColaboracionEnVivo(
+        'process',
+        processSeleccionadoId,
+        id
+      )
+  )
 
   setProcessDragInfo(null)
   setProcessGroupDragInfo(null)
@@ -10730,6 +11441,15 @@ function abrirNuevaCard(tipo = 'Card') {
 }
 
 function abrirEditarCard(card) {
+  emitirColaboracionEnVivo({
+    modulo: 'cards',
+    containerId:
+      boardSeleccionadoId,
+    objectId: card.id,
+    action: 'editing',
+    force: true,
+  })
+
   setShareCardUserId('')
   setCardEditando(card)
 
@@ -10760,6 +11480,14 @@ function abrirEditarCard(card) {
 }
 
 function cerrarModalCard() {
+  if (cardEditando?.id) {
+    liberarColaboracionEnVivo(
+      'cards',
+      boardSeleccionadoId,
+      cardEditando.id
+    )
+  }
+
   setModalCardOpen(false)
   setCardEditando(null)
   setFormCard(cardVacia)
@@ -10943,6 +11671,20 @@ function iniciarDragCard(event, card) {
     posicionesGrupo,
   })
 
+  posicionesGrupo.forEach(
+    (item) =>
+      emitirColaboracionEnVivo({
+        modulo: 'cards',
+        containerId:
+          boardSeleccionadoId,
+        objectId: item.id,
+        action: 'dragging',
+        x: item.pos_x,
+        y: item.pos_y,
+        force: true,
+      })
+  )
+
   event.preventDefault()
 }
 
@@ -10988,31 +11730,58 @@ function moverCardEnCanvas(event) {
   const selectedIds =
     dragInfo.selectedIds || [dragInfo.id]
 
+  const posicionesEnVivo =
+    (dragInfo.posicionesGrupo || [])
+      .filter((item) =>
+        selectedIds.includes(item.id)
+      )
+      .map((item) => ({
+        id: item.id,
+        pos_x:
+          Math.max(
+            12,
+            item.pos_x + deltaX
+          ),
+        pos_y:
+          Math.max(
+            12,
+            item.pos_y + deltaY
+          ),
+      }))
+
   setCards((actual) =>
     actual.map((card) => {
-      if (!selectedIds.includes(card.id)) {
+      const nuevaPosicion =
+        posicionesEnVivo.find(
+          (item) =>
+            item.id === card.id
+        )
+
+      if (!nuevaPosicion) {
         return card
       }
 
-      const origen =
-        dragInfo.posicionesGrupo?.find(
-          (item) => item.id === card.id
-        )
-
-      if (!origen) return card
-
       return {
         ...card,
-        pos_x: Math.max(
-          12,
-          origen.pos_x + deltaX
-        ),
-        pos_y: Math.max(
-          12,
-          origen.pos_y + deltaY
-        ),
+        pos_x:
+          nuevaPosicion.pos_x,
+        pos_y:
+          nuevaPosicion.pos_y,
       }
     })
+  )
+
+  posicionesEnVivo.forEach(
+    (item) =>
+      emitirColaboracionEnVivo({
+        modulo: 'cards',
+        containerId:
+          boardSeleccionadoId,
+        objectId: item.id,
+        action: 'dragging',
+        x: item.pos_x,
+        y: item.pos_y,
+      })
   )
 }
 
@@ -11028,6 +11797,15 @@ async function terminarDragCard() {
     )
 
   setDragInfo(null)
+
+  selectedIds.forEach(
+    (id) =>
+      liberarColaboracionEnVivo(
+        'cards',
+        boardSeleccionadoId,
+        id
+      )
+  )
 
   if (cardsMovidas.length === 0) return
 
@@ -12162,13 +12940,13 @@ function colorEstadoTarea(tarea) {
         asignaciones,
         rowHeight:
           Math.max(
-            72,
-            28 +
+            78,
+            30 +
               Math.max(
                 1,
                 finCarriles.length
               ) *
-                24
+                28
           ),
       }
     })
@@ -13516,6 +14294,15 @@ function colorEstadoTarea(tarea) {
   }
 
   function abrirEditarKanbanCard(card) {
+    emitirColaboracionEnVivo({
+      modulo: 'kanban',
+      containerId:
+        kanbanProjectId,
+      objectId: card.id,
+      action: 'editing',
+      force: true,
+    })
+
   setShareKanbanUserId('')
     setKanbanCardEditando(card)
     setFormKanbanCard({
@@ -13545,6 +14332,14 @@ function colorEstadoTarea(tarea) {
   }
 
   function cerrarKanbanCardDrawer() {
+    if (kanbanCardEditando?.id) {
+      liberarColaboracionEnVivo(
+        'kanban',
+        kanbanProjectId,
+        kanbanCardEditando.id
+      )
+    }
+
     setKanbanCardDrawerOpen(false)
     setKanbanCardEditando(null)
     setFormKanbanCard(kanbanCardVacia)
@@ -13672,6 +14467,31 @@ function colorEstadoTarea(tarea) {
     )
   }
 
+  function iniciarDragKanbanCard(card) {
+    setKanbanDragId(card.id)
+
+    emitirColaboracionEnVivo({
+      modulo: 'kanban',
+      containerId:
+        kanbanProjectId,
+      objectId: card.id,
+      action: 'dragging',
+      estado:
+        card.estado,
+      force: true,
+    })
+  }
+
+  function terminarDragKanbanCard(card) {
+    setKanbanDragId(null)
+
+    liberarColaboracionEnVivo(
+      'kanban',
+      kanbanProjectId,
+      card.id
+    )
+  }
+
   async function moverKanbanCard(cardId, nuevoEstado) {
     const card = kanbanCards.find((item) => item.id === cardId)
     if (!card || card.estado === nuevoEstado) return
@@ -13685,6 +14505,17 @@ function colorEstadoTarea(tarea) {
           : item
       )
     )
+
+    emitirColaboracionEnVivo({
+      modulo: 'kanban',
+      containerId:
+        kanbanProjectId,
+      objectId: cardId,
+      action: 'dragging',
+      estado:
+        nuevoEstado,
+      force: true,
+    })
 
     const { error } = await supabase
       .from('kanban_cards')
@@ -14967,7 +15798,11 @@ function colorEstadoTarea(tarea) {
 
       {uiTooltip && (
         <div
-          className="ui-global-tooltip"
+          className={`ui-global-tooltip ${
+            uiTooltip.variante === 'task-name'
+              ? 'task-name-tooltip'
+              : ''
+          }`}
           style={{
             left: uiTooltip.x,
             top: uiTooltip.y,
@@ -15953,7 +16788,13 @@ function colorEstadoTarea(tarea) {
             </div>
           </section>
 
-          <main className="workspace gantt-workspace">
+          <main
+            className="workspace gantt-workspace"
+            style={{
+              '--gantt-task-panel-width':
+                `${ganttTaskPanelWidth}px`,
+            }}
+          >
 
             <section className="task-panel">
 
@@ -16155,6 +16996,15 @@ function colorEstadoTarea(tarea) {
               ))}
 
             </section>
+
+            <div
+              className="gantt-panel-resizer"
+              onMouseDown={iniciarResizeGanttPanel}
+              title="Arrastrá para ampliar el panel de tareas"
+              aria-label="Redimensionar panel de tareas"
+            >
+              <span />
+            </div>
 
             <section className="gantt-panel dynamic-gantt">
               <div className="gantt-title-row">
@@ -16608,7 +17458,7 @@ function colorEstadoTarea(tarea) {
 
 
       {vista === 'heatmap' && (
-        <section className="planning-section">
+        <section className="planning-section heatmap-section">
           <div className="planning-toolbar">
             <div>
               <span className="planning-eyebrow">
@@ -16679,7 +17529,11 @@ function colorEstadoTarea(tarea) {
 
                   {dev.semanas.map((semana) => (
                     <div
-                      className="heatmap-cell"
+                      className={`heatmap-cell ${
+                        semana.porcentaje >= 80
+                          ? 'heatmap-high-contrast'
+                          : ''
+                      }`}
                       key={`${dev.nombre}-${semana.etiqueta}`}
                       style={{
                         background: colorHeatmap(
@@ -16718,7 +17572,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       {vista === 'backlog' && (
-        <section className="planning-section">
+        <section className="planning-section backlog-section">
           <div className="planning-toolbar">
             <div>
               <span className="planning-eyebrow">
@@ -16834,7 +17688,7 @@ function colorEstadoTarea(tarea) {
       )}
 
       {vista === 'semana' && (
-        <section className="planning-section">
+        <section className="planning-section week-section">
           <div className="planning-toolbar">
             <div>
               <span className="planning-eyebrow">
@@ -17199,8 +18053,8 @@ function colorEstadoTarea(tarea) {
                                     left: `${posicion.left}px`,
                                     width: `${posicion.width}px`,
                                     top: `${
-                                      10 +
-                                      carril * 24
+                                      11 +
+                                      carril * 28
                                     }px`,
                                   }}
                                   title={`${tarea.nombre} · ${nombreProyectoDeTarea(
@@ -17270,7 +18124,6 @@ function colorEstadoTarea(tarea) {
                 <div className="process-list-header">
                   <div>
                     <span>Procesos</span>
-                    <strong>{processMaps.length}</strong>
                   </div>
 
                   <div className="process-list-header-actions">
@@ -18511,6 +19364,14 @@ function colorEstadoTarea(tarea) {
                           key={node.id}
                           data-process-node-id={node.id}
                           className={`process-node ${
+                            objetoMovidoEnVivo(
+                              'process',
+                              processSeleccionadoId,
+                              node.id
+                            )
+                              ? 'live-remote-moving'
+                              : ''
+                          } ${
                             processConnectSource?.id === node.id
                               ? 'connecting'
                               : ''
@@ -18592,6 +19453,12 @@ function colorEstadoTarea(tarea) {
                             )
                           }
                         >
+                          {renderLiveObjectAvatars(
+                            'process',
+                            processSeleccionadoId,
+                            node.id
+                          )}
+
                           <div className="process-node-visual">
                             {!(
                               meetingMode &&
@@ -18803,7 +19670,6 @@ function colorEstadoTarea(tarea) {
               <div className="kanban-project-header">
                 <div>
                   <span>Proyectos</span>
-                  <strong>{kanbanProjects.length}</strong>
                 </div>
 
                 <div className="list-header-actions-v86">
@@ -19225,7 +20091,9 @@ function colorEstadoTarea(tarea) {
                           >
                             <div className="kanban-column-title-group">
                               <strong>{estado}</strong>
-                              <span>{tarjetas.length}</span>
+                              <span className="kanban-column-count">
+                                {tarjetas.length}
+                              </span>
                             </div>
 
                             {estado === 'Listo' && (
@@ -19242,13 +20110,13 @@ function colorEstadoTarea(tarea) {
                                 title="Tarjetas archivadas"
                                 aria-label="Tarjetas archivadas"
                               >
-                                <img
-                                  src={archiveIcon}
-                                  alt=""
+                                <span
+                                  className="kanban-listo-archive-glyph"
+                                  aria-hidden="true"
                                 />
 
                                 {kanbanArchivedCards.length > 0 && (
-                                  <span>
+                                  <span className="kanban-archive-count">
                                     {kanbanArchivedCards.length}
                                   </span>
                                 )}
@@ -19268,7 +20136,15 @@ function colorEstadoTarea(tarea) {
                               return (
                                 <article
                                   key={card.id}
-                                  className="kanban-card"
+                                  className={`kanban-card ${
+                                    objetoMovidoEnVivo(
+                                      'kanban',
+                                      kanbanProjectId,
+                                      card.id
+                                    )
+                                      ? 'live-remote-moving'
+                                      : ''
+                                  }`}
                                   style={{
                                     backgroundColor:
                                       card.color || '#FFD60A',
@@ -19283,15 +20159,21 @@ function colorEstadoTarea(tarea) {
                                   }}
                                   draggable
                                   onDragStart={() =>
-                                    setKanbanDragId(card.id)
+                                    iniciarDragKanbanCard(card)
                                   }
                                   onDragEnd={() =>
-                                    setKanbanDragId(null)
+                                    terminarDragKanbanCard(card)
                                   }
                                   onDoubleClick={() =>
                                     abrirEditarKanbanCard(card)
                                   }
                                 >
+                                  {renderLiveObjectAvatars(
+                                    'kanban',
+                                    kanbanProjectId,
+                                    card.id
+                                  )}
+
                                   <div
                                     className={`kanban-card-priority priority-${String(
                                       card.prioridad || 'Media'
@@ -19381,14 +20263,17 @@ function colorEstadoTarea(tarea) {
             </div>
           </div>
 
-          <div className="cards-layout">
+          <div
+            className="cards-layout"
+            style={{
+              '--cards-panel-width':
+                `${cardsPanelWidth}px`,
+            }}
+          >
             <aside className="boards-panel">
               <div className="boards-panel-header">
                 <div>
                   <span>Mis boards</span>
-                  <strong>
-                    {boards.length}
-                  </strong>
                 </div>
 
                 <div className="list-header-actions-v86">
@@ -19550,6 +20435,15 @@ function colorEstadoTarea(tarea) {
                 />
               </div>
             </aside>
+
+            <div
+              className="cards-panel-resizer"
+              onMouseDown={iniciarResizeCardsPanel}
+              title="Arrastrá para ampliar la lista de boards"
+              aria-label="Redimensionar lista de boards"
+            >
+              <span />
+            </div>
 
             <div className="cards-board-area">
               {!boardSeleccionadoId ? (
@@ -20124,6 +21018,14 @@ function colorEstadoTarea(tarea) {
                           selectedCardIds.includes(card.id)
                             ? 'multi-selected'
                             : ''
+                        } ${
+                          objetoMovidoEnVivo(
+                            'cards',
+                            boardSeleccionadoId,
+                            card.id
+                          )
+                            ? 'live-remote-moving'
+                            : ''
                         }`}
                         style={{
                           left: `${Number(card.pos_x) || 80}px`,
@@ -20144,6 +21046,12 @@ function colorEstadoTarea(tarea) {
                         }
                         title="Arrastrá para mover · Doble click para editar"
                       >
+                        {renderLiveObjectAvatars(
+                          'cards',
+                          boardSeleccionadoId,
+                          card.id
+                        )}
+
                         <div className="postit-pin">
                           <span />
                         </div>
@@ -24077,7 +24985,6 @@ function colorEstadoTarea(tarea) {
       )}
 
       <footer className="projectflow-footer">
-        <span>V10.10.7</span>
         <span>01/10/2026</span>
       </footer>
 
