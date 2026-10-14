@@ -33042,3 +33042,53 @@ body .v10-polish
 .process-link-selection-color-dot {
   cursor: pointer !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.17
+   GANTT — MOVER TAREAS / HITOS ENTRE PROYECTOS
+========================================================= */
+
+body .v10-polish
+.card-editor-drawer
+.task-project-field {
+  margin-bottom: 20px !important;
+}
+
+body .v10-polish
+.card-editor-drawer
+.task-project-move-help {
+  display: block;
+
+  margin-top: 8px !important;
+
+  padding: 9px 11px !important;
+
+  border-radius: 9px !important;
+
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 1.45 !important;
+}
+
+/* Light */
+body .v10-polish.theme-light
+.card-editor-drawer
+.task-project-move-help {
+  background: #eef9fb !important;
+  border: 1px solid #a8dce2 !important;
+
+  color: #18343d !important;
+  -webkit-text-fill-color: #18343d !important;
+}
+
+/* Dark */
+body .v10-polish.theme-dark
+.card-editor-drawer
+.task-project-move-help {
+  background: #10242b !important;
+  border: 1px solid #315b66 !important;
+
+  color: #e7f5f7 !important;
+  -webkit-text-fill-color: #e7f5f7 !important;
+}

@@ -86,6 +86,7 @@ import html2canvas from 'html2canvas'
 const formularioVacio = {
   nombre: '',
   tipo: 'Tarea',
+  proyectoId: '',
   responsableAnalista: '',
   responsableDesarrollador: '',
   responsable2: '',
@@ -3571,9 +3572,66 @@ function navegarVistaPrincipal(destino) {
     }))
   }
 
+  function handleTaskProjectChange(event) {
+    const nuevoProyectoId =
+      event.target.value
+
+    setForm((actual) => {
+      if (
+        nuevoProyectoId ===
+        actual.proyectoId
+      ) {
+        return actual
+      }
+
+      return {
+        ...actual,
+        proyectoId:
+          nuevoProyectoId,
+
+        // Los vínculos son propios de un proyecto.
+        // Al mover una tarea evitamos referencias cruzadas.
+        dependencia:
+          actual.tipo === 'Tarea'
+            ? ''
+            : actual.dependencia,
+
+        hitoPadre:
+          actual.tipo === 'Tarea'
+            ? ''
+            : actual.hitoPadre,
+      }
+    })
+  }
+
+  function tareasDisponiblesFormulario() {
+    const projectId =
+      form.proyectoId ||
+      proyectoSeleccionadoId ||
+      proyecto?.id
+
+    if (!projectId) {
+      return []
+    }
+
+    return todasLasTareas.filter(
+      (tarea) =>
+        tarea.project_id ===
+        projectId
+    )
+  }
+
   function abrirNuevaTarea() {
     setTareaEditando(null)
-    setForm(formularioVacio)
+
+    setForm({
+      ...formularioVacio,
+      proyectoId:
+        proyectoSeleccionadoId ||
+        proyecto?.id ||
+        '',
+    })
+
     setModalOpen(true)
   }
 
@@ -3583,6 +3641,10 @@ function navegarVistaPrincipal(destino) {
     setForm({
       nombre: tarea.nombre,
       tipo: tarea.es_hito ? 'Hito' : 'Tarea',
+      proyectoId:
+        tarea.project_id ||
+        proyectoSeleccionadoId ||
+        '',
       responsableAnalista:
         tarea.responsable_analista ||
         tarea.responsable ||
@@ -3617,8 +3679,19 @@ function navegarVistaPrincipal(destino) {
   async function guardarTarea(event) {
     event.preventDefault()
 
-    if (!form.nombre || !form.inicio) {
-      alert('Completá nombre y fecha de inicio.')
+    const proyectoDestinoId =
+      form.proyectoId ||
+      proyectoSeleccionadoId ||
+      proyecto?.id
+
+    if (
+      !form.nombre ||
+      !form.inicio ||
+      !proyectoDestinoId
+    ) {
+      alert(
+        'Completá proyecto, nombre y fecha de inicio.'
+      )
       return
     }
 
@@ -3632,10 +3705,37 @@ function navegarVistaPrincipal(destino) {
       return
     }
 
+    const eraEdicion =
+      Boolean(tareaEditando)
+
+    const proyectoOrigenId =
+      tareaEditando?.project_id ||
+      proyectoSeleccionadoId ||
+      proyecto?.id
+
+    const cambioProyecto =
+      Boolean(
+        tareaEditando &&
+        proyectoOrigenId &&
+        proyectoDestinoId !==
+          proyectoOrigenId
+      )
+
+    const mueveHitoConTareas =
+      Boolean(
+        tareaEditando?.es_hito &&
+        form.tipo === 'Hito' &&
+        cambioProyecto
+      )
+
     if (tareaEditando) {
       const { error } = await supabase
         .from('tasks')
         .update({
+          project_id:
+            mueveHitoConTareas
+              ? proyectoOrigenId
+              : proyectoDestinoId,
           nombre: form.nombre,
           responsable:
             form.tipo === 'Tarea'
@@ -3692,6 +3792,35 @@ function navegarVistaPrincipal(destino) {
         return
       }
 
+      if (mueveHitoConTareas) {
+        const {
+          error: moveHitoError,
+        } = await supabase.rpc(
+          'move_gantt_hito_project',
+          {
+            p_hito_id:
+              tareaEditando.id,
+            p_project_id:
+              proyectoDestinoId,
+          }
+        )
+
+        if (moveHitoError) {
+          alert(
+            `Los cambios del hito se guardaron, pero no se pudo mover el hito y sus tareas: ${moveHitoError.message}`
+          )
+
+          await Promise.all([
+            cargarTareas(
+              proyectoOrigenId
+            ),
+            cargarTodasLasTareas(),
+          ])
+
+          return
+        }
+      }
+
       await supabase
         .from('task_dependencies')
         .delete()
@@ -3712,13 +3841,17 @@ function navegarVistaPrincipal(destino) {
           task_id: tareaEditando.id,
           user_id: session.user.id,
           accion: 'Tarea modificada',
-          detalle: `Se modificó la tarea "${form.nombre}"`,
+          detalle:
+            cambioProyecto
+              ? `Se modificó "${form.nombre}" y se movió de proyecto`
+              : `Se modificó la tarea "${form.nombre}"`,
         })
     } else {
       const { data: nuevaTarea, error } = await supabase
         .from('tasks')
         .insert({
-          project_id: proyecto.id,
+          project_id:
+            proyectoDestinoId,
           nombre: form.nombre,
           responsable:
             form.tipo === 'Tarea'
@@ -3793,24 +3926,66 @@ function navegarVistaPrincipal(destino) {
 
     await registrarActividad({
       modulo: 'Gantt',
-      accion: tareaEditando ? 'editó' : 'creó',
-      detalle: `${tareaEditando ? 'Editó' : 'Creó'} "${form.nombre}"`,
-      recursoTipo: form.tipo === 'Hito' ? 'gantt_hito' : 'gantt_task',
-      recursoId: tareaEditando?.id || null,
-      recursoNombre: form.nombre,
+      accion:
+        eraEdicion
+          ? 'editó'
+          : 'creó',
+      detalle:
+        cambioProyecto
+          ? `Movió "${form.nombre}" a otro proyecto`
+          : `${eraEdicion ? 'Editó' : 'Creó'} "${form.nombre}"`,
+      recursoTipo:
+        form.tipo === 'Hito'
+          ? 'gantt_hito'
+          : 'gantt_task',
+      recursoId:
+        tareaEditando?.id ||
+        null,
+      recursoNombre:
+        form.nombre,
     })
+
+    const proyectoDestino =
+      proyectos.find(
+        (item) =>
+          item.id ===
+          proyectoDestinoId
+      )
 
     cerrarModal()
 
+    if (
+      proyectoDestino &&
+      proyectoDestinoId !==
+        proyectoSeleccionadoId
+    ) {
+      setProyectoSeleccionadoId(
+        proyectoDestinoId
+      )
+      setProyecto(
+        proyectoDestino
+      )
+    }
+
     await Promise.all([
-      cargarTareas(proyecto.id),
+      cargarTareas(
+        proyectoDestinoId
+      ),
       cargarTodasLasTareas(),
     ])
 
     mostrarToast(
-      tareaEditando
-        ? 'Tarea actualizada'
-        : 'Tarea creada'
+      cambioProyecto
+        ? (
+            mueveHitoConTareas
+              ? 'Hito y tareas movidos de proyecto'
+              : 'Tarea movida de proyecto'
+          )
+        : (
+            eraEdicion
+              ? 'Tarea actualizada'
+              : 'Tarea creada'
+          )
     )
   }
 async function crearProyecto(event) {
@@ -24793,6 +24968,57 @@ function colorEstadoTarea(tarea) {
                 </div>
               </div>
 
+              <div className="form-group full task-project-field">
+
+                <label>
+                  Proyecto
+                </label>
+
+                <select
+                  name="proyectoId"
+                  value={
+                    form.proyectoId ||
+                    ''
+                  }
+                  onChange={
+                    handleTaskProjectChange
+                  }
+                >
+                  <option value="">
+                    Seleccionar proyecto
+                  </option>
+
+                  {proyectos.map(
+                    (projectItem) => (
+                      <option
+                        key={
+                          projectItem.id
+                        }
+                        value={
+                          projectItem.id
+                        }
+                      >
+                        {
+                          projectItem.nombre
+                        }
+                      </option>
+                    )
+                  )}
+                </select>
+
+                {tareaEditando &&
+                  form.proyectoId !==
+                    tareaEditando.project_id && (
+                  <small className="task-project-move-help">
+                    {tareaEditando.es_hito &&
+                    form.tipo === 'Hito'
+                      ? 'Al guardar, el hito y todas sus tareas vinculadas se moverán al proyecto seleccionado.'
+                      : 'Al guardar, la tarea se moverá al proyecto seleccionado. Los vínculos Hito/Épica y Dependencia se reinician al cambiar de proyecto.'}
+                  </small>
+                )}
+
+              </div>
+
               <div className="form-grid">
 
                 {form.tipo === 'Tarea' && (
@@ -24995,7 +25221,7 @@ function colorEstadoTarea(tarea) {
                       Sin dependencia
                     </option>
 
-                    {tareas
+                    {tareasDisponiblesFormulario()
                       .filter(
                         (tarea) =>
                           tarea.id !== tareaEditando?.id
@@ -25029,7 +25255,7 @@ function colorEstadoTarea(tarea) {
                         Sin hito
                       </option>
 
-                      {tareas
+                      {tareasDisponiblesFormulario()
                         .filter(
                           (tarea) =>
                             tarea.es_hito &&
