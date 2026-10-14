@@ -33007,3 +33007,38 @@ body .v10-polish.gantt-scroll-mode
     min-height: 42px !important;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.16
+   PROCESS — FIX COMMAND BAR DE FLECHA
+========================================================= */
+
+/*
+  El toolbar de flecha debe capturar mouse/click por encima del canvas.
+  Así los botones de color, Delete y Cancelar no disparan la selección
+  rectangular del canvas.
+*/
+body .v10-polish
+.process-link-selection-toolbar {
+  pointer-events: auto !important;
+}
+
+body .v10-polish
+.process-link-selection-toolbar
+button {
+  pointer-events: auto !important;
+}
+
+/* Feedback visual claro al interactuar */
+body .v10-polish
+.process-link-selection-toolbar
+button:not(.process-link-selection-color-dot) {
+  cursor: pointer !important;
+}
+
+body .v10-polish
+.process-link-selection-toolbar
+.process-link-selection-color-dot {
+  cursor: pointer !important;
+}

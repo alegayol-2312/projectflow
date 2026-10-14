@@ -7476,7 +7476,7 @@ function iniciarSeleccionProcess(event) {
   */
   if (
     event.target.closest(
-      '.process-node, .process-box, .process-link-group, .process-canvas-tools, .process-selection-toolbar'
+      '.process-node, .process-box, .process-link-group, .process-canvas-tools, .process-selection-toolbar, .process-link-selection-toolbar'
     )
   ) {
     return
@@ -18989,7 +18989,15 @@ function colorEstadoTarea(tarea) {
                     {!processSimulationOpen &&
                       selectedProcessLinkId &&
                       selectedProcessNodeIds.length === 0 && (
-                        <div className="process-link-selection-toolbar">
+                        <div
+                          className="process-link-selection-toolbar"
+                          onMouseDown={(event) =>
+                            event.stopPropagation()
+                          }
+                          onClick={(event) =>
+                            event.stopPropagation()
+                          }
+                        >
                           <div className="process-link-selection-summary">
                             <strong>
                               Flecha seleccionada
