@@ -1193,6 +1193,10 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
 
   const ganttScrollRef = useRef(null)
 
+  const ganttTaskRowsViewportRef = useRef(null)
+  const [ganttVerticalOffset, setGanttVerticalOffset] =
+    useState(0)
+
   const [ganttTaskPanelWidth, setGanttTaskPanelWidth] =
     useState(650)
   const ganttPanelResizeRef = useRef(null)
@@ -12127,6 +12131,72 @@ function posicionHoy() {
   )
 }
 
+const GANTT_ROW_HEIGHT = 58
+
+function maxGanttVerticalOffset() {
+  const viewportHeight =
+    ganttTaskRowsViewportRef.current?.clientHeight ||
+    GANTT_ROW_HEIGHT * 6
+
+  return Math.max(
+    0,
+    tareasVisualesGantt.length *
+      GANTT_ROW_HEIGHT -
+      viewportHeight
+  )
+}
+
+function moverListaGantt(direccion) {
+  const maximo =
+    maxGanttVerticalOffset()
+
+  const salto =
+    GANTT_ROW_HEIGHT * 3
+
+  setGanttVerticalOffset(
+    (actual) =>
+      Math.min(
+        maximo,
+        Math.max(
+          0,
+          actual +
+            (
+              direccion === 'abajo'
+                ? salto
+                : -salto
+            )
+        )
+      )
+  )
+}
+
+function manejarWheelListaGantt(event) {
+  if (
+    Math.abs(event.deltaY) <=
+    Math.abs(event.deltaX)
+  ) {
+    return
+  }
+
+  event.preventDefault()
+
+  const maximo =
+    maxGanttVerticalOffset()
+
+  setGanttVerticalOffset(
+    (actual) =>
+      Math.min(
+        maximo,
+        Math.max(
+          0,
+          actual +
+            event.deltaY
+        )
+      )
+  )
+}
+
+
 function moverGantt(direccion) {
   const contenedor = ganttScrollRef.current
 
@@ -12557,6 +12627,28 @@ function colorEstadoTarea(tarea) {
       return hoy <= limite
     })
   }, [tareasVisuales])
+
+  useEffect(() => {
+    setGanttVerticalOffset(
+      (actual) =>
+        Math.min(
+          actual,
+          maxGanttVerticalOffset()
+        )
+    )
+  }, [
+    tareasVisualesGantt.length,
+    ganttTaskPanelWidth,
+  ])
+
+  useEffect(() => {
+    setGanttVerticalOffset(0)
+  }, [
+    proyectoSeleccionadoId,
+    filtroResponsable,
+    filtroEstado,
+    filtroPrioridad,
+  ])
 
   const HORAS_DIA_CAPACITY = 6.5
   const ANCHO_DIA_CAPACITY = 38
@@ -15760,6 +15852,12 @@ function colorEstadoTarea(tarea) {
         meetingMode
           ? `meeting-mode meeting-${vistaPrincipal}`
           : ''
+      } ${
+        vistaPrincipal === 'gantt' &&
+        proyectoSeleccionadoId !== '__all__' &&
+        vista === 'gantt'
+          ? 'gantt-scroll-mode'
+          : ''
       }`}
       style={{
         '--flow-c1': flowPalette.c1,
@@ -16793,17 +16891,53 @@ function colorEstadoTarea(tarea) {
             style={{
               '--gantt-task-panel-width':
                 `${ganttTaskPanelWidth}px`,
+              '--gantt-vertical-offset':
+                `${ganttVerticalOffset}px`,
             }}
           >
 
             <section className="task-panel">
 
               <div className="section-title">
-                <h2>Tareas</h2>
+                <div className="gantt-task-title-copy">
+                  <h2>Tareas</h2>
 
-                <span>
-                  {tareasVisualesGantt.length} visibles · {tareas.length} totales
-                </span>
+                  <span>
+                    {tareasVisualesGantt.length} visibles · {tareas.length} totales
+                  </span>
+                </div>
+
+                <div
+                  className="gantt-task-scroll-controls"
+                  aria-label="Desplazar lista de tareas"
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      moverListaGantt('arriba')
+                    }
+                    disabled={
+                      ganttVerticalOffset <= 0
+                    }
+                    title="Subir lista de tareas"
+                  >
+                    ↑
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      moverListaGantt('abajo')
+                    }
+                    disabled={
+                      ganttVerticalOffset >=
+                      maxGanttVerticalOffset()
+                    }
+                    title="Bajar lista de tareas"
+                  >
+                    ↓
+                  </button>
+                </div>
               </div>
 
               <div className="table-header task-grid">
@@ -16817,6 +16951,12 @@ function colorEstadoTarea(tarea) {
 
               </div>
 
+              <div
+                className="gantt-task-rows-viewport"
+                ref={ganttTaskRowsViewportRef}
+                onWheel={manejarWheelListaGantt}
+              >
+                <div className="gantt-task-rows-track">
               {tareasVisualesGantt.map((tarea) => (
 
                 <div
@@ -16994,6 +17134,8 @@ function colorEstadoTarea(tarea) {
                 </div>
 
               ))}
+                </div>
+              </div>
 
             </section>
 
@@ -17113,6 +17255,10 @@ function colorEstadoTarea(tarea) {
                   </div>
 
                   <div
+                    className="gantt-rows-viewport"
+                    onWheel={manejarWheelListaGantt}
+                  >
+                  <div
                     className="dynamic-gantt-body"
                     style={{
                       width: `${anchoGanttAnio}px`,
@@ -17217,6 +17363,7 @@ function colorEstadoTarea(tarea) {
                         </div>
                       )
                     })}
+                  </div>
                   </div>
                 </div>
               </div>
