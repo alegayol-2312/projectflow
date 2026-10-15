@@ -33092,3 +33092,218 @@ body .v10-polish.theme-dark
   color: #e7f5f7 !important;
   -webkit-text-fill-color: #e7f5f7 !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.18
+   GANTT — KPI COLOR TOUCH ANIMATION
+========================================================= */
+
+body .v10-polish
+.kpis
+.kpi,
+body .v10-polish
+.global-kpis
+.kpi {
+  position: relative !important;
+  overflow: hidden !important;
+
+  cursor: pointer !important;
+
+  transform-origin: center center;
+
+  --kpi-pop-1: rgba(255,255,255,.72);
+  --kpi-pop-2: rgba(0,216,255,.48);
+}
+
+/* Color propio de cada tarjeta */
+body .v10-polish
+.kpis
+.kpi.green,
+body .v10-polish
+.global-kpis
+.kpi.green {
+  --kpi-pop-2: rgba(69,245,156,.70);
+}
+
+body .v10-polish
+.kpis
+.kpi.purple,
+body .v10-polish
+.global-kpis
+.kpi.purple {
+  --kpi-pop-2: rgba(175,123,255,.72);
+}
+
+body .v10-polish
+.kpis
+.kpi.orange,
+body .v10-polish
+.global-kpis
+.kpi.orange {
+  --kpi-pop-2: rgba(255,155,66,.75);
+}
+
+body .v10-polish
+.kpis
+.kpi.pink,
+body .v10-polish
+.global-kpis
+.kpi.pink {
+  --kpi-pop-2: rgba(255,82,200,.72);
+}
+
+/*
+  Halo que nace exactamente en el punto tocado.
+  Sirve igual con mouse o touch/pointer.
+*/
+body .v10-polish
+.kpis
+.kpi::after,
+body .v10-polish
+.global-kpis
+.kpi::after {
+  content: "";
+
+  position: absolute;
+  inset: -45%;
+
+  pointer-events: none;
+
+  opacity: 0;
+
+  background:
+    radial-gradient(
+      circle at
+      var(--kpi-touch-x, 50%)
+      var(--kpi-touch-y, 50%),
+      var(--kpi-pop-1) 0%,
+      var(--kpi-pop-2) 14%,
+      rgba(255,255,255,.18) 28%,
+      transparent 58%
+    );
+
+  transform:
+    scale(.32);
+
+  border-radius: 50%;
+}
+
+/* Toque: leve rebote + barrido de color */
+body .v10-polish
+.kpis
+.kpi.kpi-color-pop,
+body .v10-polish
+.global-kpis
+.kpi.kpi-color-pop {
+  animation:
+    pf-kpi-card-pop
+    .70s
+    cubic-bezier(.2,.8,.2,1)
+    both
+    !important;
+}
+
+body .v10-polish
+.kpis
+.kpi.kpi-color-pop::after,
+body .v10-polish
+.global-kpis
+.kpi.kpi-color-pop::after {
+  animation:
+    pf-kpi-color-wave
+    .70s
+    ease-out
+    both;
+}
+
+/* El contenido queda siempre por encima del efecto */
+body .v10-polish
+.kpis
+.kpi > *,
+body .v10-polish
+.global-kpis
+.kpi > * {
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes pf-kpi-color-wave {
+  0% {
+    opacity: 0;
+    transform: scale(.18);
+  }
+
+  16% {
+    opacity: .95;
+  }
+
+  68% {
+    opacity: .38;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.28);
+  }
+}
+
+@keyframes pf-kpi-card-pop {
+  0% {
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+  18% {
+    transform:
+      translateY(-2px)
+      scale(1.018);
+  }
+
+  44% {
+    transform:
+      translateY(1px)
+      scale(.995);
+  }
+
+  100% {
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* Feedback suave también al pasar el mouse */
+@media (hover: hover) {
+  body .v10-polish
+  .kpis
+  .kpi:hover,
+  body .v10-polish
+  .global-kpis
+  .kpi:hover {
+    transform:
+      translateY(-1px);
+
+    filter:
+      brightness(1.045);
+  }
+}
+
+/* Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  body .v10-polish
+  .kpis
+  .kpi.kpi-color-pop,
+  body .v10-polish
+  .global-kpis
+  .kpi.kpi-color-pop,
+  body .v10-polish
+  .kpis
+  .kpi.kpi-color-pop::after,
+  body .v10-polish
+  .global-kpis
+  .kpi.kpi-color-pop::after {
+    animation: none !important;
+  }
+}

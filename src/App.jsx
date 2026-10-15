@@ -2891,6 +2891,63 @@ useEffect(() => {
   }
 
 
+  function animarKpiDashboard(event) {
+    const card =
+      event.currentTarget
+
+    if (!card) return
+
+    const rect =
+      card.getBoundingClientRect()
+
+    const x =
+      ((event.clientX - rect.left) /
+        rect.width) *
+      100
+
+    const y =
+      ((event.clientY - rect.top) /
+        rect.height) *
+      100
+
+    card.style.setProperty(
+      '--kpi-touch-x',
+      `${Math.max(
+        0,
+        Math.min(100, x)
+      )}%`
+    )
+
+    card.style.setProperty(
+      '--kpi-touch-y',
+      `${Math.max(
+        0,
+        Math.min(100, y)
+      )}%`
+    )
+
+    card.classList.remove(
+      'kpi-color-pop'
+    )
+
+    // Fuerza reflow para que la animación pueda repetirse
+    // incluso tocando varias veces la misma tarjeta.
+    void card.offsetWidth
+
+    card.classList.add(
+      'kpi-color-pop'
+    )
+
+    window.setTimeout(
+      () =>
+        card.classList.remove(
+          'kpi-color-pop'
+        ),
+      720
+    )
+  }
+
+
   function mostrarToast(
     mensaje,
     tipo = 'success'
@@ -16732,31 +16789,46 @@ function colorEstadoTarea(tarea) {
 
       {proyectoSeleccionadoId === '__all__' ? (
         <section className="kpis global-kpis">
-          <div className="kpi">
+          <div
+            className="kpi"
+            onPointerDown={animarKpiDashboard}
+          >
             <span>Proyectos</span>
             <strong>{metricasGlobales.totalProyectos}</strong>
             <small>{metricasGlobales.activos} activos</small>
           </div>
 
-          <div className="kpi green">
+          <div
+            className="kpi green"
+            onPointerDown={animarKpiDashboard}
+          >
             <span>Total tareas</span>
             <strong>{metricasGlobales.totalTareas}</strong>
             <small>Todos los proyectos</small>
           </div>
 
-          <div className="kpi orange">
+          <div
+            className="kpi orange"
+            onPointerDown={animarKpiDashboard}
+          >
             <span>Vencidas</span>
             <strong>{metricasGlobales.vencidas}</strong>
             <small>Requieren seguimiento</small>
           </div>
 
-          <div className="kpi purple">
+          <div
+            className="kpi purple"
+            onPointerDown={animarKpiDashboard}
+          >
             <span>Bloqueadas</span>
             <strong>{metricasGlobales.bloqueadas}</strong>
             <small>Con impedimentos</small>
           </div>
 
-          <div className="kpi pink">
+          <div
+            className="kpi pink"
+            onPointerDown={animarKpiDashboard}
+          >
             <span>Avance promedio</span>
             <strong>{metricasGlobales.avancePromedio}%</strong>
             <small>Cartera completa</small>
@@ -16765,31 +16837,46 @@ function colorEstadoTarea(tarea) {
       ) : (
       <section className="kpis">
 
-        <div className="kpi">
+        <div
+            className="kpi"
+            onPointerDown={animarKpiDashboard}
+          >
           <span>Total tareas</span>
           <strong>{metricas.total}</strong>
           <small>Todas las tareas</small>
         </div>
 
-        <div className="kpi green">
+        <div
+            className="kpi green"
+            onPointerDown={animarKpiDashboard}
+          >
           <span>Finalizadas</span>
           <strong>{metricas.finalizadas}</strong>
           <small>Tareas terminadas</small>
         </div>
 
-        <div className="kpi purple">
+        <div
+            className="kpi purple"
+            onPointerDown={animarKpiDashboard}
+          >
           <span>En curso</span>
           <strong>{metricas.enCurso}</strong>
           <small>Tareas activas</small>
         </div>
 
-        <div className="kpi orange">
+        <div
+            className="kpi orange"
+            onPointerDown={animarKpiDashboard}
+          >
           <span>Atrasadas</span>
           <strong>{metricas.atrasadas}</strong>
           <small>Fuera de fecha</small>
         </div>
 
-        <div className="kpi pink">
+        <div
+            className="kpi pink"
+            onPointerDown={animarKpiDashboard}
+          >
           <span>Avance proyecto</span>
           <strong>{metricas.promedio}%</strong>
           <small>Avance automático</small>
