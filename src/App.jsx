@@ -7876,6 +7876,526 @@ async function guardarPosicionesProcessNodes(nodes) {
   }
 }
 
+async function alinearComponenteSeleccionProcess() {
+  if (
+    selectedProcessNodeIds.length === 0
+  ) {
+    mostrarToast(
+      'Seleccioná uno o más componentes',
+      'warning'
+    )
+    return
+  }
+
+  const seleccionIds =
+    new Set(
+      selectedProcessNodeIds
+    )
+
+  const seleccionados =
+    processNodes.filter(
+      (node) =>
+        seleccionIds.has(node.id)
+    )
+
+  if (seleccionados.length === 0) {
+    return
+  }
+
+  function centroNodo(node) {
+    const width =
+      Number(node.ancho) || 120
+
+    const height =
+      Number(node.alto) || 90
+
+    return {
+      x:
+        Number(node.pos_x) +
+        width / 2,
+      y:
+        Number(node.pos_y) +
+        height / 2,
+      width,
+      height,
+    }
+  }
+
+  /*
+    Importante:
+    calculamos todos los ajustes usando las posiciones originales.
+    Así una selección múltiple se resuelve de una sola vez y
+    no "arrastra" el cálculo de los componentes siguientes.
+  */
+  const nodesOriginales =
+    new Map(
+      processNodes.map(
+        (node) => [
+          node.id,
+          node,
+        ]
+      )
+    )
+
+  function candidatosPara(nodeId) {
+    const conectadosIds =
+      new Set()
+
+    processLinks.forEach(
+      (link) => {
+        if (
+          link.source_node_id === nodeId
+        ) {
+          conectadosIds.add(
+            link.target_node_id
+          )
+        }
+
+        if (
+          link.target_node_id === nodeId
+        ) {
+          conectadosIds.add(
+            link.source_node_id
+          )
+        }
+      }
+    )
+
+    const conectados =
+      processNodes.filter(
+        (node) =>
+          conectadosIds.has(node.id)
+      )
+
+    /*
+      Preferencia:
+      1. componente conectado NO seleccionado;
+      2. cualquier componente conectado;
+      3. componente no seleccionado más cercano;
+      4. cualquier otro componente.
+    */
+    const conectadosExternos =
+      conectados.filter(
+        (node) =>
+          !seleccionIds.has(node.id)
+      )
+
+    if (
+      conectadosExternos.length > 0
+    ) {
+      return conectadosExternos
+    }
+
+    if (conectados.length > 0) {
+      return conectados
+    }
+
+    const externos =
+      processNodes.filter(
+        (node) =>
+          node.id !== nodeId &&
+          !seleccionIds.has(node.id)
+      )
+
+    if (externos.length > 0) {
+      return externos
+    }
+
+    return processNodes.filter(
+      (node) =>
+        node.id !== nodeId
+    )
+  }
+
+  const ajustes =
+    seleccionados
+      .map((seleccionado) => {
+        const centroSeleccionado =
+          centroNodo(
+            nodesOriginales.get(
+              seleccionado.id
+            ) ||
+            seleccionado
+          )
+
+        const candidatos =
+          candidatosPara(
+            seleccionado.id
+          )
+
+        if (
+          candidatos.length === 0
+        ) {
+          return null
+        }
+
+        const referencia =
+          candidatos
+            .map((node) => {
+              const centro =
+                centroNodo(
+                  nodesOriginales.get(
+                    node.id
+                  ) ||
+                  node
+                )
+
+              return {
+                node,
+                centro,
+                distancia:
+                  Math.hypot(
+                    centro.x -
+                      centroSeleccionado.x,
+                    centro.y -
+                      centroSeleccionado.y
+                  ),
+              }
+            })
+            .sort(
+              (a, b) =>
+                a.distancia -
+                b.distancia
+            )[0]
+
+        if (!referencia) {
+          return null
+        }
+
+        const dx =
+          referencia.centro.x -
+          centroSeleccionado.x
+
+        const dy =
+          referencia.centro.y -
+          centroSeleccionado.y
+
+        const alineaHorizontal =
+          Math.abs(dx) >=
+          Math.abs(dy)
+
+        const nuevoX =
+          alineaHorizontal
+            ? Number(
+                seleccionado.pos_x
+              )
+            : Math.max(
+                20,
+                referencia.centro.x -
+                  centroSeleccionado.width /
+                    2
+              )
+
+        const nuevoY =
+          alineaHorizontal
+            ? Math.max(
+                20,
+                referencia.centro.y -
+                  centroSeleccionado.height /
+                    2
+              )
+            : Number(
+                seleccionado.pos_y
+              )
+
+        const posX =
+          Math.round(
+            nuevoX * 10
+          ) / 10
+
+        const posY =
+          Math.round(
+            nuevoY * 10
+          ) / 10
+
+        const movio =
+          Math.abs(
+            posX -
+              Number(
+                seleccionado.pos_x
+              )
+          ) >= .5 ||
+          Math.abs(
+            posY -
+              Number(
+                seleccionado.pos_y
+              )
+          ) >= .5
+
+        return {
+          id: seleccionado.id,
+          pos_x: posX,
+          pos_y: posY,
+          movio,
+          alineaHorizontal,
+          guia:
+            alineaHorizontal
+              ? {
+                  x: null,
+                  y:
+                    referencia.centro.y,
+                }
+              : {
+                  x:
+                    referencia.centro.x,
+                  y: null,
+                },
+        }
+      })
+      .filter(Boolean)
+
+  const ajustesMovidos =
+    ajustes.filter(
+      (item) =>
+        item.movio
+    )
+
+  if (
+    ajustesMovidos.length === 0
+  ) {
+    mostrarToast(
+      selectedProcessNodeIds.length === 1
+        ? 'El componente ya está alineado'
+        : 'Los componentes seleccionados ya están alineados'
+    )
+    return
+  }
+
+  pushProcessUndo()
+
+  const ajustesMap =
+    new Map(
+      ajustesMovidos.map(
+        (item) => [
+          item.id,
+          item,
+        ]
+      )
+    )
+
+  const nodesActualizados =
+    processNodes.map(
+      (node) => {
+        const ajuste =
+          ajustesMap.get(
+            node.id
+          )
+
+        return ajuste
+          ? {
+              ...node,
+              pos_x:
+                ajuste.pos_x,
+              pos_y:
+                ajuste.pos_y,
+            }
+          : node
+      }
+    )
+
+  const nodeMap =
+    new Map(
+      nodesActualizados.map(
+        (node) => [
+          node.id,
+          node,
+        ]
+      )
+    )
+
+  /*
+    Recalculamos TODAS las conexiones que tocan alguno de los
+    componentes seleccionados que realmente se movieron.
+  */
+  const idsMovidos =
+    new Set(
+      ajustesMovidos.map(
+        (item) =>
+          item.id
+      )
+    )
+
+  const linksActualizados =
+    processLinks.map(
+      (link) => {
+        const conectado =
+          idsMovidos.has(
+            link.source_node_id
+          ) ||
+          idsMovidos.has(
+            link.target_node_id
+          )
+
+        if (!conectado) {
+          return link
+        }
+
+        const source =
+          nodeMap.get(
+            link.source_node_id
+          )
+
+        const target =
+          nodeMap.get(
+            link.target_node_id
+          )
+
+        if (
+          !source ||
+          !target
+        ) {
+          return link
+        }
+
+        const lados =
+          ladoConexionAuto(
+            source,
+            target
+          )
+
+        return {
+          ...link,
+          source_side:
+            lados.sourceSide,
+          target_side:
+            lados.targetSide,
+          manual_offset: 0,
+        }
+      }
+    )
+
+  setProcessNodes(
+    nodesActualizados
+  )
+
+  setProcessLinks(
+    linksActualizados
+  )
+
+  /*
+    Con un único componente mostramos la guía exacta.
+    En selección múltiple evitamos llenar el canvas de líneas guía.
+  */
+  if (
+    ajustesMovidos.length === 1
+  ) {
+    setProcessGuides(
+      ajustesMovidos[0].guia
+    )
+  } else {
+    setProcessGuides({
+      x: null,
+      y: null,
+    })
+  }
+
+  ajustesMovidos.forEach(
+    (item) =>
+      emitirColaboracionEnVivo({
+        modulo: 'process',
+        containerId:
+          processSeleccionadoId,
+        objectId: item.id,
+        action: 'dragging',
+        x: item.pos_x,
+        y: item.pos_y,
+        force: true,
+      })
+  )
+
+  const linksModificados =
+    linksActualizados.filter(
+      (link) =>
+        idsMovidos.has(
+          link.source_node_id
+        ) ||
+        idsMovidos.has(
+          link.target_node_id
+        )
+    )
+
+  const resultadosLinks =
+    await Promise.all(
+      linksModificados.map(
+        (link) =>
+          supabase
+            .from(
+              'process_links'
+            )
+            .update({
+              source_side:
+                link.source_side,
+              target_side:
+                link.target_side,
+              manual_offset: 0,
+            })
+            .eq(
+              'id',
+              link.id
+            )
+      )
+    )
+
+  const nodesMovidos =
+    nodesActualizados.filter(
+      (node) =>
+        idsMovidos.has(
+          node.id
+        )
+    )
+
+  await guardarPosicionesProcessNodes(
+    nodesMovidos
+  )
+
+  ajustesMovidos.forEach(
+    (item) =>
+      liberarColaboracionEnVivo(
+        'process',
+        processSeleccionadoId,
+        item.id
+      )
+  )
+
+  if (
+    ajustesMovidos.length === 1
+  ) {
+    window.setTimeout(
+      () =>
+        setProcessGuides({
+          x: null,
+          y: null,
+        }),
+      650
+    )
+  }
+
+  const linkError =
+    resultadosLinks.find(
+      (item) =>
+        item.error
+    )?.error
+
+  if (linkError) {
+    alert(
+      `Los componentes se alinearon, pero no se pudieron actualizar todas las conexiones: ${linkError.message}`
+    )
+
+    cargarProcessCanvas(
+      processSeleccionadoId
+    )
+
+    return
+  }
+
+  mostrarToast(
+    ajustesMovidos.length === 1
+      ? 'Componente alineado'
+      : `${ajustesMovidos.length} componentes alineados`
+  )
+}
+
+
 async function aplicarSnapSeleccionProcess() {
   if (selectedProcessNodeIds.length === 0) return
 
@@ -19130,6 +19650,21 @@ function colorEstadoTarea(tarea) {
                             onClick={aplicarSnapSeleccionProcess}
                           >
                             Snap
+                          </button>
+
+                          <button
+                            type="button"
+                            className="process-align-action"
+                            onClick={
+                              alinearComponenteSeleccionProcess
+                            }
+                            title={
+                              selectedProcessNodeIds.length === 1
+                                ? 'Alinear automáticamente el componente seleccionado'
+                                : `Alinear automáticamente ${selectedProcessNodeIds.length} componentes seleccionados`
+                            }
+                          >
+                            Align
                           </button>
 
                           <button

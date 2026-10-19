@@ -33307,3 +33307,123 @@ body .v10-polish
     animation: none !important;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.19
+   PROCESS — ALIGN COMPONENT
+========================================================= */
+
+/*
+  Align es una acción por componente.
+  Se ubica al lado de Snap dentro del toolbar de selección.
+*/
+body .v10-polish
+.process-selection-toolbar
+.process-align-action {
+  border-color:
+    #3fbac6
+    !important;
+
+  background:
+    rgba(
+      31,
+      190,
+      204,
+      .10
+    )
+    !important;
+
+  color:
+    inherit
+    !important;
+
+  -webkit-text-fill-color:
+    currentColor
+    !important;
+
+  font-weight:
+    500
+    !important;
+}
+
+body .v10-polish
+.process-selection-toolbar
+.process-align-action:hover:not(:disabled) {
+  border-color:
+    #18d0df
+    !important;
+
+  background:
+    rgba(
+      31,
+      190,
+      204,
+      .18
+    )
+    !important;
+}
+
+body .v10-polish.theme-light
+.process-selection-toolbar
+.process-align-action {
+  color:
+    #17404a
+    !important;
+
+  -webkit-text-fill-color:
+    #17404a
+    !important;
+}
+
+body .v10-polish.theme-dark
+.process-selection-toolbar
+.process-align-action {
+  color:
+    #e9fcff
+    !important;
+
+  -webkit-text-fill-color:
+    #e9fcff
+    !important;
+}
+
+body .v10-polish
+.process-selection-toolbar
+.process-align-action:disabled {
+  opacity:
+    .36
+    !important;
+
+  cursor:
+    default
+    !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.20
+   PROCESS — ALIGN MULTISELECCIÓN
+========================================================= */
+
+/*
+  Align queda habilitado con cualquier selección de 1 o más componentes.
+*/
+body .v10-polish
+.process-selection-toolbar
+.process-align-action {
+  opacity: 1 !important;
+  cursor: pointer !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.21
+   PROCESS — ALIGN FIX process_links
+========================================================= */
+
+/*
+  Sin cambios visuales.
+  Hotfix funcional: Align deja de intentar actualizar
+  una columna updated_at que no existe en process_links.
+*/
