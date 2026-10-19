@@ -1343,6 +1343,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processLinkColor, setProcessLinkColor] = useState('#b9c5cf')
   const [selectedProcessLinkId, setSelectedProcessLinkId] = useState(null)
   const [processLinkMoveInfo, setProcessLinkMoveInfo] = useState(null)
+  const [processLinkLabelMoveInfo, setProcessLinkLabelMoveInfo] = useState(null)
   const [shareProcessUserId, setShareProcessUserId] = useState('')
   const [processArchiveOpen, setProcessArchiveOpen] = useState(false)
   const [processMapsArchivados, setProcessMapsArchivados] = useState([])
@@ -10859,40 +10860,374 @@ function processLinkLabelMetrics(value) {
 
 
 function processLine(link) {
-  const source = processNodeById(link.source_node_id)
-  const target = processNodeById(link.target_node_id)
+  const source =
+    processNodeById(
+      link.source_node_id
+    )
 
-  if (!source || !target) return null
+  const target =
+    processNodeById(
+      link.target_node_id
+    )
 
-  const sourceSide = link.source_side || 'right'
-  const targetSide = link.target_side || 'left'
-  const manualOffset = Number(link.manual_offset) || 0
+  if (
+    !source ||
+    !target
+  ) {
+    return null
+  }
 
-  const p1 = puntoConectorProcess(
-    source,
-    sourceSide
-  )
+  const sourceSide =
+    link.source_side ||
+    'right'
 
-  const p2Borde = puntoConectorProcess(
-    target,
-    targetSide
-  )
+  const targetSide =
+    link.target_side ||
+    'left'
 
-  // La punta queda apenas afuera del componente para que no
-  // se esconda debajo de la capa del nodo.
+  const manualOffset =
+    Number(
+      link.manual_offset
+    ) ||
+    0
+
+  const labelPositionRaw =
+    Number(
+      link.label_position
+    )
+
+  const labelPosition =
+    Number.isFinite(
+      labelPositionRaw
+    )
+      ? Math.max(
+          0.01,
+          Math.min(
+            0.99,
+            labelPositionRaw
+          )
+        )
+      : 0.5
+
+  const p1 =
+    puntoConectorProcess(
+      source,
+      sourceSide
+    )
+
+  const p2Borde =
+    puntoConectorProcess(
+      target,
+      targetSide
+    )
+
   const distanciaPunta =
     targetSide === 'left' ||
     targetSide === 'right'
       ? 7
       : 1.5
 
-  const p2 = desplazarPuntaFlechaProcess(
-    p2Borde,
-    targetSide,
-    distanciaPunta
-  )
+  const p2 =
+    desplazarPuntaFlechaProcess(
+      p2Borde,
+      targetSide,
+      distanciaPunta
+    )
 
-  if (processArrowMode === 'curved') {
+  function cubicPoint(
+    start,
+    control1,
+    control2,
+    end,
+    t
+  ) {
+    const inv =
+      1 - t
+
+    const inv2 =
+      inv * inv
+
+    const t2 =
+      t * t
+
+    return {
+      x:
+        inv2 * inv * start.x +
+        3 * inv2 * t * control1.x +
+        3 * inv * t2 * control2.x +
+        t2 * t * end.x,
+
+      y:
+        inv2 * inv * start.y +
+        3 * inv2 * t * control1.y +
+        3 * inv * t2 * control2.y +
+        t2 * t * end.y,
+    }
+  }
+
+  function pointOnPolyline(
+    points,
+    progress
+  ) {
+    if (
+      !Array.isArray(points) ||
+      points.length === 0
+    ) {
+      return {
+        x: 0,
+        y: 0,
+      }
+    }
+
+    if (points.length === 1) {
+      return points[0]
+    }
+
+    const segments = []
+    let totalLength = 0
+
+    for (
+      let index = 0;
+      index < points.length - 1;
+      index += 1
+    ) {
+      const a =
+        points[index]
+
+      const b =
+        points[index + 1]
+
+      const length =
+        Math.hypot(
+          b.x - a.x,
+          b.y - a.y
+        )
+
+      segments.push({
+        a,
+        b,
+        length,
+        start:
+          totalLength,
+      })
+
+      totalLength +=
+        length
+    }
+
+    if (
+      totalLength <= 0
+    ) {
+      return points[0]
+    }
+
+    const targetLength =
+      Math.max(
+        0,
+        Math.min(
+          1,
+          progress
+        )
+      ) *
+      totalLength
+
+    const segment =
+      segments.find(
+        (item) =>
+          targetLength <=
+          item.start +
+            item.length
+      ) ||
+      segments[
+        segments.length - 1
+      ]
+
+    if (
+      !segment ||
+      segment.length <= 0
+    ) {
+      return (
+        segment?.b ||
+        points[
+          points.length - 1
+        ]
+      )
+    }
+
+    const local =
+      Math.max(
+        0,
+        Math.min(
+          1,
+          (
+            targetLength -
+            segment.start
+          ) /
+            segment.length
+        )
+      )
+
+    return {
+      x:
+        segment.a.x +
+        (
+          segment.b.x -
+          segment.a.x
+        ) *
+          local,
+
+      y:
+        segment.a.y +
+        (
+          segment.b.y -
+          segment.a.y
+        ) *
+          local,
+    }
+  }
+
+  function nearestPolylineProgress(
+    points,
+    x,
+    y
+  ) {
+    if (
+      !Array.isArray(points) ||
+      points.length < 2
+    ) {
+      return 0.5
+    }
+
+    const segments = []
+    let totalLength = 0
+
+    for (
+      let index = 0;
+      index < points.length - 1;
+      index += 1
+    ) {
+      const a =
+        points[index]
+
+      const b =
+        points[index + 1]
+
+      const dx =
+        b.x - a.x
+
+      const dy =
+        b.y - a.y
+
+      const length =
+        Math.hypot(
+          dx,
+          dy
+        )
+
+      segments.push({
+        a,
+        b,
+        dx,
+        dy,
+        length,
+        start:
+          totalLength,
+      })
+
+      totalLength +=
+        length
+    }
+
+    if (
+      totalLength <= 0
+    ) {
+      return 0.5
+    }
+
+    let bestDistance =
+      Number.POSITIVE_INFINITY
+
+    let bestLength =
+      totalLength / 2
+
+    segments.forEach(
+      (segment) => {
+        if (
+          segment.length <= 0
+        ) {
+          return
+        }
+
+        const length2 =
+          segment.length *
+          segment.length
+
+        const projection =
+          Math.max(
+            0,
+            Math.min(
+              1,
+              (
+                (
+                  x -
+                  segment.a.x
+                ) *
+                  segment.dx +
+                (
+                  y -
+                  segment.a.y
+                ) *
+                  segment.dy
+              ) /
+                length2
+            )
+          )
+
+        const px =
+          segment.a.x +
+          segment.dx *
+            projection
+
+        const py =
+          segment.a.y +
+          segment.dy *
+            projection
+
+        const distance =
+          Math.hypot(
+            x - px,
+            y - py
+          )
+
+        if (
+          distance <
+          bestDistance
+        ) {
+          bestDistance =
+            distance
+
+          bestLength =
+            segment.start +
+            segment.length *
+              projection
+        }
+      }
+    )
+
+    return Math.max(
+      0.01,
+      Math.min(
+        0.99,
+        bestLength /
+          totalLength
+      )
+    )
+  }
+
+  if (
+    processArrowMode ===
+    'curved'
+  ) {
     const sourceHorizontal =
       sourceSide === 'left' ||
       sourceSide === 'right'
@@ -10902,12 +11237,23 @@ function processLine(link) {
       targetSide === 'right'
 
     let d
+    let control1
+    let control2
+    let moveAxis
 
-    if (sourceHorizontal && targetHorizontal) {
-      const control = Math.max(
-        55,
-        Math.abs(p2.x - p1.x) * 0.38
-      )
+    if (
+      sourceHorizontal &&
+      targetHorizontal
+    ) {
+      const control =
+        Math.max(
+          55,
+          Math.abs(
+            p2.x -
+            p1.x
+          ) *
+            0.38
+        )
 
       const dir1 =
         sourceSide === 'left'
@@ -10919,16 +11265,35 @@ function processLine(link) {
           ? -1
           : 1
 
-      d =
-        `M ${p1.x} ${p1.y} ` +
-        `C ${p1.x + control * dir1} ${p1.y}, ` +
-        `${p2.x + control * dir2} ${p2.y + manualOffset}, ` +
-        `${p2.x} ${p2.y}`
+      control1 = {
+        x:
+          p1.x +
+          control * dir1,
+        y:
+          p1.y,
+      }
+
+      control2 = {
+        x:
+          p2.x +
+          control * dir2,
+        y:
+          p2.y +
+          manualOffset,
+      }
+
+      moveAxis =
+        'y'
     } else {
-      const control = Math.max(
-        55,
-        Math.abs(p2.y - p1.y) * 0.38
-      )
+      const control =
+        Math.max(
+          55,
+          Math.abs(
+            p2.y -
+            p1.y
+          ) *
+            0.38
+        )
 
       const dir1 =
         sourceSide === 'top'
@@ -10940,50 +11305,259 @@ function processLine(link) {
           ? -1
           : 1
 
-      d =
-        `M ${p1.x} ${p1.y} ` +
-        `C ${p1.x} ${p1.y + control * dir1}, ` +
-        `${p2.x + manualOffset} ${p2.y + control * dir2}, ` +
-        `${p2.x} ${p2.y}`
+      control1 = {
+        x:
+          p1.x,
+        y:
+          p1.y +
+          control * dir1,
+      }
+
+      control2 = {
+        x:
+          p2.x +
+          manualOffset,
+        y:
+          p2.y +
+          control * dir2,
+      }
+
+      moveAxis =
+        'x'
     }
 
-    const horizontalDominante =
-      Math.abs(p2.x - p1.x) >=
-      Math.abs(p2.y - p1.y)
+    d =
+      `M ${p1.x} ${p1.y} ` +
+      `C ${control1.x} ${control1.y}, ` +
+      `${control2.x} ${control2.y}, ` +
+      `${p2.x} ${p2.y}`
+
+    const moveHandle =
+      cubicPoint(
+        p1,
+        control1,
+        control2,
+        p2,
+        0.5
+      )
+
+    const labelPoint =
+      cubicPoint(
+        p1,
+        control1,
+        control2,
+        p2,
+        labelPosition
+      )
+
+    function nearestLabelPosition(
+      x,
+      y
+    ) {
+      /*
+        Primera pasada: buscamos el punto de curva más cercano.
+        Segunda pasada: refinamos alrededor del mejor resultado.
+      */
+      const STEPS =
+        90
+
+      let bestProgress =
+        labelPosition
+
+      let bestDistance =
+        Number.POSITIVE_INFINITY
+
+      for (
+        let index = 0;
+        index <= STEPS;
+        index += 1
+      ) {
+        const progress =
+          index /
+          STEPS
+
+        const point =
+          cubicPoint(
+            p1,
+            control1,
+            control2,
+            p2,
+            progress
+          )
+
+        const distance =
+          Math.hypot(
+            x - point.x,
+            y - point.y
+          )
+
+        if (
+          distance <
+          bestDistance
+        ) {
+          bestDistance =
+            distance
+          bestProgress =
+            progress
+        }
+      }
+
+      let radius =
+        1 /
+        STEPS
+
+      for (
+        let round = 0;
+        round < 3;
+        round += 1
+      ) {
+        const from =
+          Math.max(
+            0,
+            bestProgress -
+              radius
+          )
+
+        const to =
+          Math.min(
+            1,
+            bestProgress +
+              radius
+          )
+
+        for (
+          let index = 0;
+          index <= 12;
+          index += 1
+        ) {
+          const progress =
+            from +
+            (
+              to - from
+            ) *
+              (
+                index /
+                12
+              )
+
+          const point =
+            cubicPoint(
+              p1,
+              control1,
+              control2,
+              p2,
+              progress
+            )
+
+          const distance =
+            Math.hypot(
+              x - point.x,
+              y - point.y
+            )
+
+          if (
+            distance <
+            bestDistance
+          ) {
+            bestDistance =
+              distance
+            bestProgress =
+              progress
+          }
+        }
+
+        radius /=
+          4
+      }
+
+      return Math.max(
+        0.01,
+        Math.min(
+          0.99,
+          bestProgress
+        )
+      )
+    }
 
     return {
       d,
       midX:
-        (p1.x + p2.x) / 2 +
-        (horizontalDominante ? 0 : manualOffset),
+        moveHandle.x,
       midY:
-        (p1.y + p2.y) / 2 +
-        (horizontalDominante ? manualOffset : 0),
-      moveAxis:
-        horizontalDominante ? 'y' : 'x',
+        moveHandle.y,
+      labelX:
+        labelPoint.x,
+      labelY:
+        labelPoint.y,
+      labelPosition,
+      moveAxis,
+      nearestLabelPosition,
     }
   }
 
-  const OFFSET = 12
+  const OFFSET =
+    12
 
-  function salida(point, side) {
-    if (side === 'left') {
-      return { x: point.x - OFFSET, y: point.y }
+  function salida(
+    point,
+    side
+  ) {
+    if (
+      side === 'left'
+    ) {
+      return {
+        x:
+          point.x -
+          OFFSET,
+        y:
+          point.y,
+      }
     }
 
-    if (side === 'right') {
-      return { x: point.x + OFFSET, y: point.y }
+    if (
+      side === 'right'
+    ) {
+      return {
+        x:
+          point.x +
+          OFFSET,
+        y:
+          point.y,
+      }
     }
 
-    if (side === 'top') {
-      return { x: point.x, y: point.y - OFFSET }
+    if (
+      side === 'top'
+    ) {
+      return {
+        x:
+          point.x,
+        y:
+          point.y -
+          OFFSET,
+      }
     }
 
-    return { x: point.x, y: point.y + OFFSET }
+    return {
+      x:
+        point.x,
+      y:
+        point.y +
+        OFFSET,
+    }
   }
 
-  const s = salida(p1, sourceSide)
-  const t = salida(p2, targetSide)
+  const s =
+    salida(
+      p1,
+      sourceSide
+    )
+
+  const t =
+    salida(
+      p2,
+      targetSide
+    )
 
   const sourceHorizontal =
     sourceSide === 'left' ||
@@ -10993,57 +11567,231 @@ function processLine(link) {
     targetSide === 'left' ||
     targetSide === 'right'
 
-  let d = `M ${p1.x} ${p1.y} L ${s.x} ${s.y}`
+  let pathPoints = [
+    p1,
+    s,
+  ]
 
-  if (sourceHorizontal && targetHorizontal) {
-    const midX = (s.x + t.x) / 2 + manualOffset
+  let moveHandleX
+  let moveHandleY
+  let moveAxis
 
-    d +=
-      ` L ${midX} ${s.y}` +
-      ` L ${midX} ${t.y}` +
-      ` L ${t.x} ${t.y}`
+  if (
+    sourceHorizontal &&
+    targetHorizontal
+  ) {
+    const midX =
+      (
+        s.x +
+        t.x
+      ) /
+        2 +
+      manualOffset
+
+    const bend1 = {
+      x:
+        midX,
+      y:
+        s.y,
+    }
+
+    const bend2 = {
+      x:
+        midX,
+      y:
+        t.y,
+    }
+
+    pathPoints = [
+      p1,
+      s,
+      bend1,
+      bend2,
+      t,
+      p2,
+    ]
+
+    moveHandleX =
+      midX
+
+    moveHandleY =
+      (
+        s.y +
+        t.y
+      ) /
+      2
+
+    moveAxis =
+      'x'
   } else if (
     !sourceHorizontal &&
     !targetHorizontal
   ) {
-    const midY = (s.y + t.y) / 2 + manualOffset
+    const midY =
+      (
+        s.y +
+        t.y
+      ) /
+        2 +
+      manualOffset
 
-    d +=
-      ` L ${s.x} ${midY}` +
-      ` L ${t.x} ${midY}` +
-      ` L ${t.x} ${t.y}`
-  } else {
-    if (sourceHorizontal) {
-      const movedY = s.y + manualOffset
-      d +=
-        ` L ${s.x} ${movedY}` +
-        ` L ${t.x} ${movedY}` +
-        ` L ${t.x} ${t.y}`
-    } else {
-      const movedX = s.x + manualOffset
-      d +=
-        ` L ${movedX} ${s.y}` +
-        ` L ${movedX} ${t.y}` +
-        ` L ${t.x} ${t.y}`
+    const bend1 = {
+      x:
+        s.x,
+      y:
+        midY,
     }
+
+    const bend2 = {
+      x:
+        t.x,
+      y:
+        midY,
+    }
+
+    pathPoints = [
+      p1,
+      s,
+      bend1,
+      bend2,
+      t,
+      p2,
+    ]
+
+    moveHandleX =
+      (
+        s.x +
+        t.x
+      ) /
+      2
+
+    moveHandleY =
+      midY
+
+    moveAxis =
+      'y'
+  } else if (
+    sourceHorizontal
+  ) {
+    const movedY =
+      s.y +
+      manualOffset
+
+    const bend1 = {
+      x:
+        s.x,
+      y:
+        movedY,
+    }
+
+    const bend2 = {
+      x:
+        t.x,
+      y:
+        movedY,
+    }
+
+    pathPoints = [
+      p1,
+      s,
+      bend1,
+      bend2,
+      t,
+      p2,
+    ]
+
+    moveHandleX =
+      (
+        s.x +
+        t.x
+      ) /
+      2
+
+    moveHandleY =
+      movedY
+
+    moveAxis =
+      'y'
+  } else {
+    const movedX =
+      s.x +
+      manualOffset
+
+    const bend1 = {
+      x:
+        movedX,
+      y:
+        s.y,
+    }
+
+    const bend2 = {
+      x:
+        movedX,
+      y:
+        t.y,
+    }
+
+    pathPoints = [
+      p1,
+      s,
+      bend1,
+      bend2,
+      t,
+      p2,
+    ]
+
+    moveHandleX =
+      movedX
+
+    moveHandleY =
+      (
+        s.y +
+        t.y
+      ) /
+      2
+
+    moveAxis =
+      'x'
   }
 
-  d += ` L ${p2.x} ${p2.y}`
+  const d =
+    pathPoints
+      .map(
+        (point, index) =>
+          `${
+            index === 0
+              ? 'M'
+              : 'L'
+          } ${point.x} ${point.y}`
+      )
+      .join(' ')
 
-  const horizontalDominante =
-    Math.abs(p2.x - p1.x) >=
-    Math.abs(p2.y - p1.y)
+  const labelPoint =
+    pointOnPolyline(
+      pathPoints,
+      labelPosition
+    )
 
   return {
     d,
     midX:
-      (p1.x + p2.x) / 2 +
-      (horizontalDominante ? 0 : manualOffset),
+      moveHandleX,
     midY:
-      (p1.y + p2.y) / 2 +
-      (horizontalDominante ? manualOffset : 0),
-    moveAxis:
-      horizontalDominante ? 'y' : 'x',
+      moveHandleY,
+    labelX:
+      labelPoint.x,
+    labelY:
+      labelPoint.y,
+    labelPosition,
+    moveAxis,
+
+    nearestLabelPosition:
+      (x, y) =>
+        nearestPolylineProgress(
+          pathPoints,
+          x,
+          y
+        ),
   }
 }
 
@@ -11107,6 +11855,183 @@ async function terminarMoverProcessLink() {
     cargarProcessCanvas(processSeleccionadoId)
   }
 }
+
+function iniciarMoverProcessLinkLabel(
+  event,
+  link
+) {
+  if (
+    event.button !== 0
+  ) {
+    return
+  }
+
+  event.preventDefault()
+  event.stopPropagation()
+
+  pushProcessUndo()
+
+  setSelectedProcessNodeIds([])
+  setSelectedProcessBoxId(null)
+  setSelectedProcessLinkId(
+    link.id
+  )
+
+  setProcessLinkLabelMoveInfo({
+    id:
+      link.id,
+    currentPosition:
+      Number.isFinite(
+        Number(
+          link.label_position
+        )
+      )
+        ? Number(
+            link.label_position
+          )
+        : 0.5,
+  })
+}
+
+function moverProcessLinkLabel(
+  event
+) {
+  if (
+    !processLinkLabelMoveInfo
+  ) {
+    return
+  }
+
+  const world =
+    processCanvasPrintRef.current
+
+  if (!world) return
+
+  const link =
+    processLinks.find(
+      (item) =>
+        item.id ===
+        processLinkLabelMoveInfo.id
+    )
+
+  if (!link) return
+
+  const line =
+    processLine(link)
+
+  if (
+    !line ||
+    typeof line.nearestLabelPosition !==
+      'function'
+  ) {
+    return
+  }
+
+  const worldRect =
+    world.getBoundingClientRect()
+
+  const worldX =
+    (
+      event.clientX -
+      worldRect.left
+    ) /
+    processZoom
+
+  const worldY =
+    (
+      event.clientY -
+      worldRect.top
+    ) /
+    processZoom
+
+  const position =
+    line.nearestLabelPosition(
+      worldX,
+      worldY
+    )
+
+  setProcessLinks(
+    (actual) =>
+      actual.map(
+        (item) =>
+          item.id ===
+          link.id
+            ? {
+                ...item,
+                label_position:
+                  position,
+              }
+            : item
+      )
+  )
+
+  setProcessLinkLabelMoveInfo(
+    (actual) =>
+      actual
+        ? {
+            ...actual,
+            currentPosition:
+              position,
+          }
+        : actual
+  )
+}
+
+async function terminarMoverProcessLinkLabel() {
+  if (
+    !processLinkLabelMoveInfo
+  ) {
+    return
+  }
+
+  const {
+    id,
+    currentPosition,
+  } =
+    processLinkLabelMoveInfo
+
+  setProcessLinkLabelMoveInfo(
+    null
+  )
+
+  const position =
+    Math.max(
+      0.01,
+      Math.min(
+        0.99,
+        Number(
+          currentPosition
+        ) ||
+          0.5
+      )
+    )
+
+  const { error } =
+    await supabase
+      .from(
+        'process_links'
+      )
+      .update({
+        label_position:
+          position,
+      })
+      .eq(
+        'id',
+        id
+      )
+
+  if (error) {
+    console.error(
+      'No se pudo mover el comentario de la conexión:',
+      error
+    )
+
+    cargarProcessCanvas(
+      processSeleccionadoId
+    )
+  }
+}
+
 
 async function cargarCardLinks(boardId) {
   if (!boardId) {
@@ -19348,6 +20273,7 @@ function colorEstadoTarea(tarea) {
                       moverResizeProcessBox(event)
                       moverConexionProcess(event)
                       moverProcessLink(event)
+                      moverProcessLinkLabel(event)
                     }}
                     onMouseUp={(event) => {
                       terminarSeleccionProcess(event)
@@ -19356,6 +20282,7 @@ function colorEstadoTarea(tarea) {
                       terminarDragProcessBox()
                       terminarResizeProcessBox()
                       terminarMoverProcessLink()
+                      terminarMoverProcessLinkLabel()
 
                       if (
                         processLinkDraft &&
@@ -19397,6 +20324,8 @@ function colorEstadoTarea(tarea) {
                       terminarResizeProcessNode()
                       terminarDragProcessBox()
                       terminarResizeProcessBox()
+                      terminarMoverProcessLink()
+                      terminarMoverProcessLinkLabel()
                     }}
                     onDragOver={(event) =>
                       event.preventDefault()
@@ -20266,12 +21195,29 @@ function colorEstadoTarea(tarea) {
 
                               {link.etiqueta && (
                                 <g
-                                  className="process-link-label"
-                                  transform={`translate(${line.midX} ${line.midY})`}
+                                  className={`process-link-label process-link-label-anchored ${
+                                    processLinkLabelMoveInfo?.id === link.id
+                                      ? 'dragging-label'
+                                      : ''
+                                  }`}
+                                  transform={`translate(${line.labelX ?? line.midX} ${line.labelY ?? line.midY})`}
+                                  onMouseDown={(event) =>
+                                    iniciarMoverProcessLinkLabel(
+                                      event,
+                                      link
+                                    )
+                                  }
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+                                    setSelectedProcessNodeIds([])
+                                    setSelectedProcessBoxId(null)
+                                    setSelectedProcessLinkId(link.id)
+                                  }}
                                   onDoubleClick={(event) => {
                                     event.stopPropagation()
                                     abrirEditarProcessLink(link)
                                   }}
+                                  title="Arrastrá el comentario para moverlo a lo largo de la flecha"
                                 >
                                   <foreignObject
                                     x={

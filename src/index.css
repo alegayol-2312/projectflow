@@ -33427,3 +33427,64 @@ body .v10-polish
   Hotfix funcional: Align deja de intentar actualizar
   una columna updated_at que no existe en process_links.
 */
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.22
+   PROCESS — TEXTO ANCLADO A LA FLECHA
+========================================================= */
+
+/*
+  La posición ya se calcula desde la geometría real de la conexión.
+  Este bloque evita transiciones o transformaciones independientes
+  que hagan que el texto parezca quedar atrás durante el movimiento.
+*/
+body .v10-polish
+.process-link-label-anchored {
+  transition: none !important;
+  will-change: transform;
+}
+
+body .v10-polish
+.process-link-label-anchored
+.process-link-label-content {
+  transform: translateZ(0);
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.23
+   PROCESS — COMENTARIO DESPLAZABLE SOBRE LA FLECHA
+========================================================= */
+
+body .v10-polish
+.process-link-label-anchored {
+  cursor: grab !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  touch-action: none;
+}
+
+body .v10-polish
+.process-link-label-anchored.dragging-label {
+  cursor: grabbing !important;
+}
+
+body .v10-polish
+.process-link-label-anchored
+.process-link-label-content {
+  cursor: inherit !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Leve indicación visual mientras se arrastra */
+body .v10-polish
+.process-link-label-anchored.dragging-label
+.process-link-label-content {
+  box-shadow:
+    0 0 0 2px
+    rgba(34, 211, 197, .42),
+    0 6px 18px
+    rgba(0, 0, 0, .22) !important;
+}
