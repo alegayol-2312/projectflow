@@ -33488,3 +33488,783 @@ body .v10-polish
     0 6px 18px
     rgba(0, 0, 0, .22) !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.24
+   BOARDS — SHAPES LIBRARY + LOCAL IMAGE OBJECTS
+========================================================= */
+
+/* ---------- Toolbar ---------- */
+
+body .v10-polish
+.cards-image-button {
+  border-color:
+    rgba(150, 112, 255, .72)
+    !important;
+
+  background:
+    rgba(137, 92, 246, .12)
+    !important;
+
+  color:
+    inherit
+    !important;
+}
+
+body .v10-polish
+.cards-image-button:hover:not(:disabled) {
+  border-color:
+    #a987ff
+    !important;
+
+  background:
+    rgba(137, 92, 246, .20)
+    !important;
+}
+
+body .v10-polish
+.cards-image-button:disabled {
+  opacity:
+    .52
+    !important;
+
+  cursor:
+    wait
+    !important;
+}
+
+body .v10-polish
+.board-image-file-input {
+  display:
+    none
+    !important;
+}
+
+
+/* ---------- Shape selector: use the full drawer width ---------- */
+
+body .v10-polish
+.shape-editor-drawer {
+  width:
+    min(620px, 96vw)
+    !important;
+}
+
+body .v10-polish
+.shape-type-options {
+  display:
+    grid
+    !important;
+
+  grid-template-columns:
+    repeat(
+      5,
+      minmax(0, 1fr)
+    )
+    !important;
+
+  gap:
+    8px
+    !important;
+
+  width:
+    100%
+    !important;
+}
+
+body .v10-polish
+.shape-type-options
+button {
+  width:
+    100%
+    !important;
+
+  min-width:
+    0
+    !important;
+
+  min-height:
+    72px
+    !important;
+
+  padding:
+    7px 5px 6px
+    !important;
+
+  display:
+    flex
+    !important;
+
+  flex-direction:
+    column
+    !important;
+
+  align-items:
+    center
+    !important;
+
+  justify-content:
+    center
+    !important;
+
+  gap:
+    3px
+    !important;
+
+  border-radius:
+    9px
+    !important;
+}
+
+body .v10-polish
+.shape-type-options
+button
+img {
+  width:
+    42px
+    !important;
+
+  height:
+    42px
+    !important;
+
+  object-fit:
+    contain
+    !important;
+}
+
+body .v10-polish
+.shape-type-options
+button
+span {
+  width:
+    100%;
+
+  overflow:
+    hidden;
+
+  font-size:
+    9px
+    !important;
+
+  font-weight:
+    500
+    !important;
+
+  line-height:
+    1.1;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+body .v10-polish.theme-light
+.shape-type-options
+button {
+  background:
+    #f5f8fa
+    !important;
+
+  border:
+    1px solid
+    #c7d2d9
+    !important;
+
+  color:
+    #19272f
+    !important;
+}
+
+body .v10-polish.theme-light
+.shape-type-options
+button
+img {
+  filter:
+    none
+    !important;
+}
+
+body .v10-polish.theme-light
+.shape-type-options
+button:hover,
+body .v10-polish.theme-light
+.shape-type-options
+button.active {
+  border-color:
+    #00aebe
+    !important;
+
+  box-shadow:
+    0 0 0 1px
+    rgba(0, 174, 190, .18)
+    !important;
+}
+
+body .v10-polish.theme-dark
+.shape-type-options
+button {
+  background:
+    #12212a
+    !important;
+
+  border:
+    1px solid
+    #3b5260
+    !important;
+
+  color:
+    #edf8fb
+    !important;
+}
+
+body .v10-polish.theme-dark
+.shape-type-options
+button
+img {
+  filter:
+    invert(1)
+    brightness(1.35)
+    !important;
+}
+
+body .v10-polish.theme-dark
+.shape-type-options
+button:hover,
+body .v10-polish.theme-dark
+.shape-type-options
+button.active {
+  border-color:
+    #21d7e5
+    !important;
+
+  box-shadow:
+    0 0 0 1px
+    rgba(33, 215, 229, .20)
+    !important;
+}
+
+
+/* Vector shapes use their mask color on canvas, not a second dark image */
+body .v10-polish
+.board-shape-vector
+.board-shape-visual
+img {
+  opacity:
+    0
+    !important;
+}
+
+
+/* ---------- Uploaded image object ---------- */
+
+body .v10-polish
+.board-shape-image {
+  overflow:
+    visible
+    !important;
+
+  border-radius:
+    10px;
+}
+
+body .v10-polish
+.board-uploaded-image-frame {
+  position:
+    absolute;
+
+  inset:
+    0;
+
+  overflow:
+    hidden;
+
+  border-radius:
+    9px;
+
+  background:
+    rgba(255,255,255,.035);
+
+  box-shadow:
+    0 3px 14px
+    rgba(0,0,0,.22);
+
+  pointer-events:
+    none;
+}
+
+body .v10-polish
+.board-uploaded-image {
+  display:
+    block;
+
+  width:
+    100%;
+
+  height:
+    100%;
+
+  object-fit:
+    contain;
+
+  user-select:
+    none;
+
+  pointer-events:
+    none;
+}
+
+body .v10-polish
+.board-uploaded-image-loading {
+  width:
+    100%;
+
+  height:
+    100%;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  font-size:
+    11px;
+
+  font-weight:
+    500;
+
+  opacity:
+    .6;
+}
+
+body .v10-polish
+.board-shape-image.selected
+.board-uploaded-image-frame {
+  outline:
+    2px solid
+    #20d4e2;
+
+  outline-offset:
+    3px;
+}
+
+body .v10-polish
+.board-shape-image:hover
+.board-image-thread-pin {
+  transform:
+    scale(1.08);
+}
+
+body .v10-polish
+.board-image-thread-pin {
+  opacity:
+    .88;
+}
+
+body .v10-polish
+.board-shape-image:hover
+.board-image-thread-pin,
+body .v10-polish
+.board-shape-image.selected
+.board-image-thread-pin {
+  opacity:
+    1;
+}
+
+
+/* ---------- Image drawer ---------- */
+
+body .v10-polish
+.board-image-editor-info {
+  display:
+    grid;
+
+  grid-template-columns:
+    150px minmax(0, 1fr);
+
+  gap:
+    16px;
+
+  align-items:
+    center;
+
+  padding:
+    14px;
+
+  border-radius:
+    12px;
+
+  margin:
+    4px 0 18px;
+}
+
+body .v10-polish.theme-light
+.board-image-editor-info {
+  background:
+    #f4f7f9;
+
+  border:
+    1px solid
+    #cbd6dc;
+}
+
+body .v10-polish.theme-dark
+.board-image-editor-info {
+  background:
+    #101c23;
+
+  border:
+    1px solid
+    #334b58;
+}
+
+body .v10-polish
+.board-image-editor-preview {
+  height:
+    110px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  overflow:
+    hidden;
+
+  border-radius:
+    9px;
+
+  background:
+    rgba(127, 145, 156, .10);
+}
+
+body .v10-polish
+.board-image-editor-preview
+img {
+  width:
+    100%;
+
+  height:
+    100%;
+
+  object-fit:
+    contain;
+}
+
+body .v10-polish
+.board-image-editor-copy {
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    6px;
+
+  min-width:
+    0;
+}
+
+body .v10-polish
+.board-image-editor-copy
+strong {
+  overflow:
+    hidden;
+
+  font-size:
+    14px;
+
+  font-weight:
+    650;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+body .v10-polish
+.board-image-editor-copy
+span,
+body .v10-polish
+.board-image-editor-copy
+small {
+  font-size:
+    12px;
+
+  font-weight:
+    400;
+
+  line-height:
+    1.42;
+
+  opacity:
+    .76;
+}
+
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 720px) {
+  body .v10-polish
+  .shape-type-options {
+    grid-template-columns:
+      repeat(
+        4,
+        minmax(0, 1fr)
+      )
+      !important;
+  }
+
+  body .v10-polish
+  .board-image-editor-info {
+    grid-template-columns:
+      1fr;
+  }
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.10.25
+   BOARDS — SHAPE STROKES + BOTÓN IMAGEN
+========================================================= */
+
+/* ---------------------------------------------------------
+   SHAPES ORIGINALES
+   Círculo / Proceso / Texto / Nota ahora son SVG con el
+   mismo peso visual que los nuevos dibujos.
+--------------------------------------------------------- */
+
+/* El globo nuevo ya contiene su propia cola en el SVG. */
+body .v10-polish
+.board-shape-callout::after {
+  display: none !important;
+}
+
+/*
+  Todos los SVG de Shapes se renderizan con la misma presencia
+  tanto en selector como en canvas.
+*/
+body .v10-polish
+.shape-type-options
+button
+img {
+  opacity: 1 !important;
+}
+
+body .v10-polish.theme-dark
+.shape-type-options
+button
+img {
+  filter:
+    invert(1)
+    brightness(1.28)
+    !important;
+}
+
+body .v10-polish.theme-light
+.shape-type-options
+button
+img {
+  filter:
+    none
+    !important;
+}
+
+
+/* ---------------------------------------------------------
+   + IMAGEN
+   Misma geometría y lenguaje visual que + Shapes.
+--------------------------------------------------------- */
+
+body .v10-polish
+.cards-board-meta-actions
+.cards-image-button {
+  min-width:
+    78px
+    !important;
+
+  height:
+    36px
+    !important;
+
+  min-height:
+    36px
+    !important;
+
+  padding:
+    0 12px
+    !important;
+
+  border:
+    1px solid
+    #5a7890
+    !important;
+
+  border-radius:
+    8px
+    !important;
+
+  background:
+    #1a2b37
+    !important;
+
+  color:
+    #dff5ff
+    !important;
+
+  -webkit-text-fill-color:
+    #dff5ff
+    !important;
+
+  font-size:
+    10px
+    !important;
+
+  font-weight:
+    850
+    !important;
+
+  line-height:
+    1
+    !important;
+
+  white-space:
+    nowrap
+    !important;
+
+  box-shadow:
+    none
+    !important;
+
+  cursor:
+    pointer
+    !important;
+
+  appearance:
+    none;
+
+  -webkit-appearance:
+    none;
+}
+
+body .v10-polish
+.cards-board-meta-actions
+.cards-image-button:hover:not(:disabled) {
+  border-color:
+    #00d8ea
+    !important;
+
+  background:
+    #203744
+    !important;
+
+  color:
+    #7af5ff
+    !important;
+
+  -webkit-text-fill-color:
+    #7af5ff
+    !important;
+
+  filter:
+    none
+    !important;
+}
+
+body .v10-polish
+.cards-board-meta-actions
+.cards-image-button:disabled {
+  opacity:
+    .52
+    !important;
+
+  cursor:
+    wait
+    !important;
+}
+
+
+/* Light mode: exactamente la familia visual del resto del toolbar */
+body .v10-polish.theme-light
+.cards-board-meta-actions
+.cards-image-button {
+  background:
+    #ffffff
+    !important;
+
+  color:
+    #183041
+    !important;
+
+  -webkit-text-fill-color:
+    #183041
+    !important;
+
+  border:
+    1px solid
+    #bfd0d8
+    !important;
+}
+
+body .v10-polish.theme-light
+.cards-board-meta-actions
+.cards-image-button:hover:not(:disabled) {
+  background:
+    #eff7fa
+    !important;
+
+  color:
+    #0b6775
+    !important;
+
+  -webkit-text-fill-color:
+    #0b6775
+    !important;
+
+  border-color:
+    #63bcc6
+    !important;
+}
+
+
+/*
+  En la versión Light general los botones del toolbar se agrandan.
+  Incluimos Imagen explícitamente para que no quede desparejo.
+*/
+body .v10-polish.theme-light
+.cards-board-meta-actions
+.cards-image-button.compact {
+  min-height:
+    40px
+    !important;
+
+  height:
+    40px
+    !important;
+
+  padding:
+    0 14px
+    !important;
+
+  font-size:
+    14px
+    !important;
+
+  font-weight:
+    800
+    !important;
+}

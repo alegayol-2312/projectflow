@@ -375,6 +375,153 @@ function plantillaProceso(tipo) {
   )
 }
 
+const CARD_SHAPE_VECTOR_SVGS = {
+  /*
+    Shapes originales redibujados como SVG.
+    Usan un trazo de 7px para quedar visualmente parejos
+    con la nueva biblioteca de íconos.
+  */
+  circle: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="39" fill="none" stroke="#111"
+        stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `,
+  rectangle: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 90">
+      <rect x="8" y="10" width="124" height="70" rx="9"
+        fill="none" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
+    </svg>
+  `,
+  square: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <rect x="12" y="12" width="76" height="76" rx="3"
+        fill="none" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
+    </svg>
+  `,
+  callout: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 100">
+      <path d="M13 11h114a8 8 0 0 1 8 8v55a8 8 0 0 1-8 8H58L40 95l4-13H13a8 8 0 0 1-8-8V19a8 8 0 0 1 8-8Z"
+        fill="none" stroke="#111" stroke-width="7"
+        stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `,
+  smile: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="none" stroke="#111" stroke-width="6"/>
+      <circle cx="35" cy="39" r="4.5" fill="#111"/>
+      <circle cx="65" cy="39" r="4.5" fill="#111"/>
+      <path d="M28 58 Q50 79 72 58" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+    </svg>
+  `,
+  sad: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="none" stroke="#111" stroke-width="6"/>
+      <circle cx="35" cy="39" r="4.5" fill="#111"/>
+      <circle cx="65" cy="39" r="4.5" fill="#111"/>
+      <path d="M29 71 Q50 50 71 71" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+    </svg>
+  `,
+  star: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <path d="M50 7 61.7 36.5 94 38.8 69.2 59.5 77 91 50 73.6 23 91 30.8 59.5 6 38.8 38.3 36.5Z"
+        fill="none" stroke="#111" stroke-width="5" stroke-linejoin="round"/>
+    </svg>
+  `,
+  check: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <path d="M19 53 39 73 82 22" fill="none" stroke="#111" stroke-width="9"
+        stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `,
+  cross: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <path d="M22 22 78 78 M78 22 22 78" fill="none" stroke="#111" stroke-width="8"
+        stroke-linecap="round"/>
+    </svg>
+  `,
+  person: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <circle cx="50" cy="27" r="15" fill="none" stroke="#111" stroke-width="5"/>
+      <path d="M25 91V69c0-12 10-21 22-21h6c12 0 22 9 22 21v22Z"
+        fill="none" stroke="#111" stroke-width="5" stroke-linejoin="round"/>
+    </svg>
+  `,
+  diamond: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <path d="M50 7 93 50 50 93 7 50Z" fill="none" stroke="#111" stroke-width="6"/>
+    </svg>
+  `,
+  triangle: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <path d="M50 9 94 88H6Z" fill="none" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
+    </svg>
+  `,
+  hexagon: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <path d="M27 9h46l23 41-23 41H27L4 50Z" fill="none" stroke="#111" stroke-width="6"/>
+    </svg>
+  `,
+  arrow: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <path d="M11 39h49V21l29 29-29 29V61H11Z" fill="none" stroke="#111" stroke-width="6"
+        stroke-linejoin="round"/>
+    </svg>
+  `,
+  cloud: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <path d="M27 77h48c12 0 20-8 20-19 0-10-7-18-17-19C74 23 63 15 50 15
+        34 15 23 27 21 42 10 44 5 51 5 60c0 10 8 17 22 17Z"
+        fill="none" stroke="#111" stroke-width="5" stroke-linejoin="round"/>
+    </svg>
+  `,
+  warning: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <path d="M50 8 94 88H6Z" fill="none" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M50 32v27" stroke="#111" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="50" cy="73" r="4" fill="#111"/>
+    </svg>
+  `,
+  heart: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <path d="M50 87 14 52C-5 33 7 11 27 11c10 0 18 5 23 13 5-8 13-13 23-13
+        20 0 32 22 13 41Z" fill="none" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
+    </svg>
+  `,
+  flag: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <path d="M24 91V9M27 15h49l-10 18 10 18H27" fill="none" stroke="#111"
+        stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>
+  `,
+  bulb: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <path d="M50 8c-19 0-34 14-34 32 0 12 7 22 17 28v8h34v-8c10-6 17-16 17-28
+        C84 22 69 8 50 8Z" fill="none" stroke="#111" stroke-width="5"/>
+      <path d="M35 85h30M40 93h20" stroke="#111" stroke-width="5" stroke-linecap="round"/>
+    </svg>
+  `,
+  target: `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="41" fill="none" stroke="#111" stroke-width="5"/>
+      <circle cx="50" cy="50" r="25" fill="none" stroke="#111" stroke-width="5"/>
+      <circle cx="50" cy="50" r="8" fill="#111"/>
+    </svg>
+  `,
+}
+
+function svgDataUriCardShape(svg) {
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+    svg.replace(/\\s+/g, ' ').trim()
+  )}`
+}
+
+function esCardShapeVector(tipo) {
+  return Boolean(
+    CARD_SHAPE_VECTOR_SVGS[tipo]
+  )
+}
+
 function iconoCardShape(tipo) {
   const mapa = {
     circle: processReferenceIcon,
@@ -383,7 +530,72 @@ function iconoCardShape(tipo) {
     callout: processNoteIcon,
   }
 
+  if (CARD_SHAPE_VECTOR_SVGS[tipo]) {
+    return svgDataUriCardShape(
+      CARD_SHAPE_VECTOR_SVGS[tipo]
+    )
+  }
+
   return mapa[tipo] || processActivityIcon
+}
+
+function dimensionesCardShape(tipo) {
+  const compactas = new Set([
+    'circle',
+    'square',
+    'smile',
+    'sad',
+    'star',
+    'check',
+    'cross',
+    'person',
+    'diamond',
+    'triangle',
+    'hexagon',
+    'warning',
+    'heart',
+    'bulb',
+    'target',
+  ])
+
+  if (tipo === 'rectangle') {
+    return {
+      ancho: 180,
+      alto: 90,
+    }
+  }
+
+  if (
+    tipo === 'callout' ||
+    tipo === 'cloud'
+  ) {
+    return {
+      ancho: 180,
+      alto: 110,
+    }
+  }
+
+  if (
+    tipo === 'arrow' ||
+    tipo === 'flag'
+  ) {
+    return {
+      ancho: 160,
+      alto: 100,
+    }
+  }
+
+  if (compactas.has(tipo)) {
+    return {
+      ancho: 120,
+      alto: 120,
+    }
+  }
+
+  return {
+    ancho: 150,
+    alto: 110,
+  }
 }
 
 function etiquetaTipoProceso(tipo) {
@@ -1455,6 +1667,9 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [cardGanttProjectId, setCardGanttProjectId] = useState('')
   const [shareCardUserId, setShareCardUserId] = useState('')
   const [boardShapes, setBoardShapes] = useState([])
+  const [boardImageUrls, setBoardImageUrls] = useState({})
+  const [subiendoBoardImage, setSubiendoBoardImage] = useState(false)
+  const boardImageInputRef = useRef(null)
   const [shapeDrawerOpen, setShapeDrawerOpen] = useState(false)
   const [shapeEditando, setShapeEditando] = useState(null)
   const [shapeDragInfo, setShapeDragInfo] = useState(null)
@@ -4689,6 +4904,7 @@ async function cargarBoardZones(boardId) {
 async function cargarBoardShapes(boardId) {
   if (!boardId) {
     setBoardShapes([])
+    setBoardImageUrls({})
     return
   }
 
@@ -4704,8 +4920,501 @@ async function cargarBoardShapes(boardId) {
     return
   }
 
-  setBoardShapes(data || [])
+  const lista =
+    data || []
+
+  setBoardShapes(lista)
+
+  const imagenes =
+    lista.filter(
+      (item) =>
+        item.tipo === 'image' &&
+        item.asset_path
+    )
+
+  if (imagenes.length === 0) {
+    setBoardImageUrls({})
+    return
+  }
+
+  const pares =
+    await Promise.all(
+      imagenes.map(
+        async (item) => {
+          const {
+            data: signedData,
+            error: signedError,
+          } =
+            await supabase.storage
+              .from('board-images')
+              .createSignedUrl(
+                item.asset_path,
+                21600
+              )
+
+          if (signedError) {
+            console.error(
+              'No se pudo firmar una imagen del Board:',
+              signedError
+            )
+
+            return [
+              item.id,
+              '',
+            ]
+          }
+
+          return [
+            item.id,
+            signedData?.signedUrl || '',
+          ]
+        }
+      )
+    )
+
+  setBoardImageUrls(
+    Object.fromEntries(
+      pares
+    )
+  )
 }
+
+async function optimizarImagenBoard(file) {
+  if (
+    !file ||
+    !file.type?.startsWith('image/')
+  ) {
+    throw new Error(
+      'Seleccioná un archivo de imagen válido.'
+    )
+  }
+
+  if (
+    file.size >
+    15 * 1024 * 1024
+  ) {
+    throw new Error(
+      'La imagen original supera 15 MB. Elegí una imagen más liviana.'
+    )
+  }
+
+  const objectUrl =
+    URL.createObjectURL(file)
+
+  try {
+    const imagen =
+      await new Promise(
+        (resolve, reject) => {
+          const img =
+            new Image()
+
+          img.onload = () =>
+            resolve(img)
+
+          img.onerror = () =>
+            reject(
+              new Error(
+                'No se pudo leer la imagen.'
+              )
+            )
+
+          img.src =
+            objectUrl
+        }
+      )
+
+    const naturalWidth =
+      imagen.naturalWidth ||
+      imagen.width
+
+    const naturalHeight =
+      imagen.naturalHeight ||
+      imagen.height
+
+    const MAX_SIDE =
+      1400
+
+    const scale =
+      Math.min(
+        1,
+        MAX_SIDE /
+          Math.max(
+            naturalWidth,
+            naturalHeight
+          )
+      )
+
+    const width =
+      Math.max(
+        1,
+        Math.round(
+          naturalWidth * scale
+        )
+      )
+
+    const height =
+      Math.max(
+        1,
+        Math.round(
+          naturalHeight * scale
+        )
+      )
+
+    const canvas =
+      document.createElement(
+        'canvas'
+      )
+
+    canvas.width =
+      width
+
+    canvas.height =
+      height
+
+    const ctx =
+      canvas.getContext('2d', {
+        alpha: true,
+      })
+
+    if (!ctx) {
+      throw new Error(
+        'No se pudo optimizar la imagen.'
+      )
+    }
+
+    ctx.imageSmoothingEnabled =
+      true
+
+    ctx.imageSmoothingQuality =
+      'high'
+
+    ctx.drawImage(
+      imagen,
+      0,
+      0,
+      width,
+      height
+    )
+
+    async function generarBlob(
+      mime,
+      quality
+    ) {
+      return new Promise(
+        (resolve) =>
+          canvas.toBlob(
+            resolve,
+            mime,
+            quality
+          )
+      )
+    }
+
+    let blob =
+      await generarBlob(
+        'image/webp',
+        0.82
+      )
+
+    if (
+      !blob
+    ) {
+      blob =
+        await generarBlob(
+          'image/jpeg',
+          0.82
+        )
+    }
+
+    if (!blob) {
+      throw new Error(
+        'No se pudo comprimir la imagen.'
+      )
+    }
+
+    /*
+      Segunda pasada más agresiva si todavía quedó pesada.
+      La base del board no necesita resolución de fotografía original.
+    */
+    if (
+      blob.size >
+      1.5 * 1024 * 1024
+    ) {
+      blob =
+        (
+          await generarBlob(
+            'image/webp',
+            0.68
+          )
+        ) ||
+        blob
+    }
+
+    if (
+      blob.size >
+      2 * 1024 * 1024
+    ) {
+      throw new Error(
+        'La imagen sigue siendo demasiado pesada después de optimizarla. Probá con otra de menor tamaño.'
+      )
+    }
+
+    const DISPLAY_MAX_W =
+      360
+
+    const DISPLAY_MAX_H =
+      280
+
+    const displayScale =
+      Math.min(
+        1,
+        DISPLAY_MAX_W / width,
+        DISPLAY_MAX_H / height
+      )
+
+    return {
+      blob,
+      width,
+      height,
+      displayWidth:
+        Math.max(
+          90,
+          Math.round(
+            width *
+            displayScale
+          )
+        ),
+      displayHeight:
+        Math.max(
+          70,
+          Math.round(
+            height *
+            displayScale
+          )
+        ),
+      mime:
+        blob.type ||
+        'image/webp',
+    }
+  } finally {
+    URL.revokeObjectURL(
+      objectUrl
+    )
+  }
+}
+
+async function subirImagenBoardDesdePC(
+  event
+) {
+  const input =
+    event.target
+
+  const file =
+    input.files?.[0]
+
+  input.value = ''
+
+  if (!file) return
+
+  if (!boardSeleccionadoId) {
+    alert(
+      'Primero seleccioná un board.'
+    )
+    return
+  }
+
+  if (!session?.user?.id) {
+    alert(
+      'No se pudo identificar al usuario.'
+    )
+    return
+  }
+
+  setSubiendoBoardImage(
+    true
+  )
+
+  try {
+    const optimizada =
+      await optimizarImagenBoard(
+        file
+      )
+
+    const extension =
+      optimizada.mime ===
+      'image/jpeg'
+        ? 'jpg'
+        : 'webp'
+
+    const fileId =
+      typeof crypto !==
+        'undefined' &&
+      typeof crypto.randomUUID ===
+        'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random()
+            .toString(16)
+            .slice(2)}`
+
+    const assetPath =
+      `${session.user.id}/` +
+      `${boardSeleccionadoId}/` +
+      `${fileId}.${extension}`
+
+    const {
+      error: uploadError,
+    } =
+      await supabase.storage
+        .from(
+          'board-images'
+        )
+        .upload(
+          assetPath,
+          optimizada.blob,
+          {
+            contentType:
+              optimizada.mime,
+            upsert: false,
+            cacheControl:
+              '3600',
+          }
+        )
+
+    if (uploadError) {
+      throw uploadError
+    }
+
+    const maxZ =
+      Math.max(
+        12,
+        ...boardShapes.map(
+          (item) =>
+            Number(
+              item.z_index
+            ) ||
+            12
+        )
+      ) +
+      1
+
+    const canvas =
+      boardCanvasRef.current
+
+    const canvasLeft =
+      canvas
+        ? (
+            canvas.scrollLeft +
+            canvas.clientWidth / 2
+          ) /
+          boardZoom
+        : 320
+
+    const canvasTop =
+      canvas
+        ? (
+            canvas.scrollTop +
+            canvas.clientHeight / 2
+          ) /
+          boardZoom
+        : 240
+
+    const payload = {
+      board_id:
+        boardSeleccionadoId,
+      tipo:
+        'image',
+      texto:
+        '',
+      color:
+        '#ffffff',
+      pos_x:
+        Math.max(
+          20,
+          canvasLeft -
+            optimizada.displayWidth /
+              2
+        ),
+      pos_y:
+        Math.max(
+          20,
+          canvasTop -
+            optimizada.displayHeight /
+              2
+        ),
+      ancho:
+        optimizada.displayWidth,
+      alto:
+        optimizada.displayHeight,
+      z_index:
+        maxZ,
+      asset_path:
+        assetPath,
+      asset_name:
+        file.name,
+      asset_mime:
+        optimizada.mime,
+      asset_bytes:
+        optimizada.blob.size,
+      updated_at:
+        new Date().toISOString(),
+    }
+
+    const {
+      data: shapeCreada,
+      error: insertError,
+    } =
+      await supabase
+        .from(
+          'card_shapes'
+        )
+        .insert(payload)
+        .select()
+        .single()
+
+    if (insertError) {
+      await supabase.storage
+        .from(
+          'board-images'
+        )
+        .remove([
+          assetPath,
+        ])
+
+      throw insertError
+    }
+
+    await cargarBoardShapes(
+      boardSeleccionadoId
+    )
+
+    if (shapeCreada?.id) {
+      setSelectedShapeId(
+        shapeCreada.id
+      )
+    }
+
+    mostrarToast(
+      'Imagen agregada al board'
+    )
+  } catch (error) {
+    console.error(
+      'No se pudo subir la imagen al Board:',
+      error
+    )
+
+    alert(
+      `No se pudo agregar la imagen: ${
+        error?.message ||
+        'error desconocido'
+      }`
+    )
+  } finally {
+    setSubiendoBoardImage(
+      false
+    )
+  }
+}
+
 
 function abrirNuevaShape() {
   if (!boardSeleccionadoId) {
@@ -4991,7 +5700,41 @@ async function guardarShape(event) {
 }
 
 async function eliminarShape(shape) {
-  pushCardUndo()
+  /*
+    Los Shapes comunes siguen entrando en Undo.
+    Una imagen no, porque al borrarla también eliminamos
+    el archivo físico del Storage y no sería posible
+    restaurarlo correctamente desde el snapshot local.
+  */
+  if (
+    shape.tipo !== 'image'
+  ) {
+    pushCardUndo()
+  }
+
+  if (
+    shape.tipo === 'image'
+  ) {
+    const {
+      error: linkDeleteError,
+    } =
+      await supabase
+        .from(
+          'card_links'
+        )
+        .delete()
+        .or(
+          `source_object_id.eq.${shape.id},target_object_id.eq.${shape.id}`
+        )
+
+    if (linkDeleteError) {
+      alert(
+        `No se pudieron eliminar las conexiones de la imagen: ${linkDeleteError.message}`
+      )
+      return
+    }
+  }
+
   const { error } = await supabase
     .from('card_shapes')
     .delete()
@@ -5002,8 +5745,39 @@ async function eliminarShape(shape) {
     return
   }
 
+  if (
+    shape.tipo === 'image' &&
+    shape.asset_path
+  ) {
+    const {
+      error: storageError,
+    } =
+      await supabase.storage
+        .from(
+          'board-images'
+        )
+        .remove([
+          shape.asset_path,
+        ])
+
+    if (storageError) {
+      console.error(
+        'La imagen se eliminó del Board, pero no del Storage:',
+        storageError
+      )
+    }
+  }
+
   cerrarShapeDrawer()
-  await cargarBoardShapes(boardSeleccionadoId)
+
+  await Promise.all([
+    cargarBoardShapes(
+      boardSeleccionadoId
+    ),
+    cargarCardLinks(
+      boardSeleccionadoId
+    ),
+  ])
 }
 
 function iniciarDragShape(event, shape) {
@@ -5067,10 +5841,14 @@ function iniciarResizeShape(event, shape) {
 
   setShapeResizeInfo({
     id: shape.id,
+    tipo: shape.tipo,
     startX: event.clientX,
     startY: event.clientY,
     startWidth: Number(shape.ancho) || 150,
     startHeight: Number(shape.alto) || 110,
+    aspectRatio:
+      (Number(shape.ancho) || 150) /
+      (Number(shape.alto) || 110),
   })
 }
 
@@ -5088,21 +5866,85 @@ function moverResizeShape(event) {
     boardZoom
 
   setBoardShapes((actual) =>
-    actual.map((shape) =>
-      shape.id === shapeResizeInfo.id
-        ? {
-            ...shape,
-            ancho: Math.max(
-              70,
-              shapeResizeInfo.startWidth + dx
+    actual.map((shape) => {
+      if (
+        shape.id !==
+        shapeResizeInfo.id
+      ) {
+        return shape
+      }
+
+      if (
+        shapeResizeInfo.tipo ===
+        'image'
+      ) {
+        const relativeX =
+          Math.abs(
+            dx /
+            Math.max(
+              1,
+              shapeResizeInfo.startWidth
+            )
+          )
+
+        const relativeY =
+          Math.abs(
+            dy /
+            Math.max(
+              1,
+              shapeResizeInfo.startHeight
+            )
+          )
+
+        const scale =
+          relativeX >=
+          relativeY
+            ? (
+                shapeResizeInfo.startWidth +
+                dx
+              ) /
+              shapeResizeInfo.startWidth
+            : (
+                shapeResizeInfo.startHeight +
+                dy
+              ) /
+              shapeResizeInfo.startHeight
+
+        const safeScale =
+          Math.max(
+            0.22,
+            scale
+          )
+
+        return {
+          ...shape,
+          ancho:
+            Math.max(
+              80,
+              shapeResizeInfo.startWidth *
+                safeScale
             ),
-            alto: Math.max(
-              55,
-              shapeResizeInfo.startHeight + dy
+          alto:
+            Math.max(
+              60,
+              shapeResizeInfo.startHeight *
+                safeScale
             ),
-          }
-        : shape
-    )
+        }
+      }
+
+      return {
+        ...shape,
+        ancho: Math.max(
+          70,
+          shapeResizeInfo.startWidth + dx
+        ),
+        alto: Math.max(
+          55,
+          shapeResizeInfo.startHeight + dy
+        ),
+      }
+    })
   )
 }
 
@@ -12571,7 +13413,97 @@ async function moverCardCapa(card, direccion) {
   )
 }
 
-function iniciarConexion(event, card) {
+function boardObjectById(
+  objectType,
+  objectId
+) {
+  if (
+    objectType === 'image' ||
+    objectType === 'shape'
+  ) {
+    return boardShapes.find(
+      (shape) =>
+        shape.id === objectId
+    )
+  }
+
+  return cards.find(
+    (card) =>
+      card.id === objectId
+  )
+}
+
+function boardObjectLabel(
+  objectType,
+  objectId
+) {
+  const item =
+    boardObjectById(
+      objectType,
+      objectId
+    )
+
+  if (!item) {
+    return (
+      objectType === 'image'
+        ? 'Imagen'
+        : 'Card'
+    )
+  }
+
+  if (
+    objectType === 'image'
+  ) {
+    return (
+      item.asset_name ||
+      'Imagen'
+    )
+  }
+
+  if (
+    objectType === 'shape'
+  ) {
+    return (
+      item.texto ||
+      'Shape'
+    )
+  }
+
+  return (
+    item.titulo ||
+    'Card'
+  )
+}
+
+function normalizarEndpointLink(
+  link,
+  prefijo
+) {
+  const objectType =
+    link[
+      `${prefijo}_object_type`
+    ] ||
+    'card'
+
+  const objectId =
+    link[
+      `${prefijo}_object_id`
+    ] ||
+    link[
+      `${prefijo}_card_id`
+    ]
+
+  return {
+    objectType,
+    objectId,
+  }
+}
+
+function iniciarConexion(
+  event,
+  objeto,
+  objectType = 'card'
+) {
   event.stopPropagation()
   event.preventDefault()
 
@@ -12586,14 +13518,44 @@ function iniciarConexion(event, card) {
   const scrollTop =
     boardCanvasRef.current.scrollTop || 0
 
+  const ancho =
+    Number(
+      objeto.ancho
+    ) ||
+    (
+      objectType === 'card'
+        ? 250
+        : 150
+    )
+
+  const alto =
+    Number(
+      objeto.alto
+    ) ||
+    (
+      objectType === 'card'
+        ? 190
+        : 110
+    )
+
   setLinkDraft({
-    sourceCardId: card.id,
+    sourceObjectType:
+      objectType,
+    sourceObjectId:
+      objeto.id,
     x1:
-      Number(card.pos_x || 0) +
-      Number(card.ancho || 250),
+      Number(
+        objeto.pos_x ||
+        0
+      ) +
+      ancho,
     y1:
-      Number(card.pos_y || 0) +
-      Number(card.alto || 190) / 2,
+      Number(
+        objeto.pos_y ||
+        0
+      ) +
+      alto /
+        2,
     x2:
       (
         event.clientX -
@@ -12640,52 +13602,135 @@ function moverConexion(event) {
   }))
 }
 
-function terminarConexion(event, targetCard) {
+function terminarConexion(
+  event,
+  targetObject,
+  targetObjectType = 'card'
+) {
   event.stopPropagation()
   event.preventDefault()
 
   if (!linkDraft) return
 
-  const sourceCardId = linkDraft.sourceCardId
+  const sourceObjectType =
+    linkDraft.sourceObjectType ||
+    'card'
 
-  if (sourceCardId === targetCard.id) {
+  const sourceObjectId =
+    linkDraft.sourceObjectId
+
+  const targetObjectId =
+    targetObject.id
+
+  if (
+    sourceObjectType ===
+      targetObjectType &&
+    sourceObjectId ===
+      targetObjectId
+  ) {
     setLinkDraft(null)
     return
   }
 
-  const duplicada = cardLinks.some(
-    (link) =>
-      link.source_card_id === sourceCardId &&
-      link.target_card_id === targetCard.id
-  )
+  const duplicada =
+    cardLinks.some(
+      (link) => {
+        const source =
+          normalizarEndpointLink(
+            link,
+            'source'
+          )
+
+        const target =
+          normalizarEndpointLink(
+            link,
+            'target'
+          )
+
+        return (
+          source.objectType ===
+            sourceObjectType &&
+          source.objectId ===
+            sourceObjectId &&
+          target.objectType ===
+            targetObjectType &&
+          target.objectId ===
+            targetObjectId
+        )
+      }
+    )
 
   if (duplicada) {
     setLinkDraft(null)
-    alert('Estas cards ya están conectadas.')
+    alert(
+      'Estos elementos ya están conectados.'
+    )
     return
   }
 
   setConexionPendiente({
-    sourceCardId,
-    targetCardId: targetCard.id,
+    sourceObjectType,
+    sourceObjectId,
+    targetObjectType,
+    targetObjectId,
   })
 
-  setTipoConexion('Relacionada')
+  setTipoConexion(
+    'Relacionada'
+  )
+
   setLinkDraft(null)
 }
 
 async function guardarConexion() {
   if (!conexionPendiente) return
 
+  const sourceEsCard =
+    conexionPendiente
+      .sourceObjectType ===
+    'card'
+
+  const targetEsCard =
+    conexionPendiente
+      .targetObjectType ===
+    'card'
+
   const { error } = await supabase
     .from('card_links')
     .insert({
-      board_id: boardSeleccionadoId,
+      board_id:
+        boardSeleccionadoId,
+
       source_card_id:
-        conexionPendiente.sourceCardId,
+        sourceEsCard
+          ? conexionPendiente
+              .sourceObjectId
+          : null,
+
       target_card_id:
-        conexionPendiente.targetCardId,
-      tipo_relacion: tipoConexion,
+        targetEsCard
+          ? conexionPendiente
+              .targetObjectId
+          : null,
+
+      source_object_type:
+        conexionPendiente
+          .sourceObjectType,
+
+      source_object_id:
+        conexionPendiente
+          .sourceObjectId,
+
+      target_object_type:
+        conexionPendiente
+          .targetObjectType,
+
+      target_object_id:
+        conexionPendiente
+          .targetObjectId,
+
+      tipo_relacion:
+        tipoConexion,
     })
 
   if (error) {
@@ -12698,7 +13743,9 @@ async function guardarConexion() {
   setConexionPendiente(null)
   setTipoConexion('Relacionada')
 
-  await cargarCardLinks(boardSeleccionadoId)
+  await cargarCardLinks(
+    boardSeleccionadoId
+  )
 }
 
 async function eliminarConexion(link) {
@@ -12797,28 +13844,104 @@ function cardPorId(id) {
 }
 
 function geometriaLink(link) {
-  const source = cardPorId(link.source_card_id)
-  const target = cardPorId(link.target_card_id)
+  const sourceEndpoint =
+    normalizarEndpointLink(
+      link,
+      'source'
+    )
 
-  if (!source || !target) return null
+  const targetEndpoint =
+    normalizarEndpointLink(
+      link,
+      'target'
+    )
+
+  const source =
+    boardObjectById(
+      sourceEndpoint.objectType,
+      sourceEndpoint.objectId
+    )
+
+  const target =
+    boardObjectById(
+      targetEndpoint.objectType,
+      targetEndpoint.objectId
+    )
+
+  if (!source || !target) {
+    return null
+  }
+
+  const sourceWidth =
+    Number(
+      source.ancho
+    ) ||
+    (
+      sourceEndpoint.objectType ===
+        'card'
+        ? 250
+        : 150
+    )
+
+  const sourceHeight =
+    Number(
+      source.alto
+    ) ||
+    (
+      sourceEndpoint.objectType ===
+        'card'
+        ? 190
+        : 110
+    )
+
+  const targetHeight =
+    Number(
+      target.alto
+    ) ||
+    (
+      targetEndpoint.objectType ===
+        'card'
+        ? 190
+        : 110
+    )
 
   const x1 =
-    Number(source.pos_x || 0) +
-    Number(source.ancho || 250)
+    Number(
+      source.pos_x ||
+      0
+    ) +
+    sourceWidth
 
   const y1 =
-    Number(source.pos_y || 0) +
-    Number(source.alto || 190) / 2
+    Number(
+      source.pos_y ||
+      0
+    ) +
+    sourceHeight /
+      2
 
   const x2 =
-    Number(target.pos_x || 0)
+    Number(
+      target.pos_x ||
+      0
+    )
 
   const y2 =
-    Number(target.pos_y || 0) +
-    Number(target.alto || 190) / 2
+    Number(
+      target.pos_y ||
+      0
+    ) +
+    targetHeight /
+      2
 
   const curvatura =
-    Math.max(80, Math.abs(x2 - x1) * 0.45)
+    Math.max(
+      80,
+      Math.abs(
+        x2 - x1
+      ) *
+        0.45
+    )
 
   return {
     x1,
@@ -22403,6 +23526,28 @@ function colorEstadoTarea(tarea) {
 
                         <button
                           type="button"
+                          className="cards-shape-button cards-image-button compact"
+                          onClick={() =>
+                            boardImageInputRef.current?.click()
+                          }
+                          disabled={subiendoBoardImage}
+                          title="Subir una imagen optimizada desde la PC"
+                        >
+                          {subiendoBoardImage
+                            ? 'Subiendo…'
+                            : '+ Imagen'}
+                        </button>
+
+                        <input
+                          ref={boardImageInputRef}
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          className="board-image-file-input"
+                          onChange={subirImagenBoardDesdePC}
+                        />
+
+                        <button
+                          type="button"
                           className="cards-note-button compact"
                           onClick={() =>
                             abrirNuevaCard('Nota')
@@ -22731,6 +23876,10 @@ function colorEstadoTarea(tarea) {
                       <div
                         key={shape.id}
                         className={`board-shape board-shape-${shape.tipo} ${
+                          esCardShapeVector(shape.tipo)
+                            ? 'board-shape-vector'
+                            : ''
+                        } ${
                           selectedShapeId === shape.id
                             ? 'selected'
                             : ''
@@ -22748,7 +23897,9 @@ function colorEstadoTarea(tarea) {
                           '--shape-color':
                             shape.color || '#00c2ff',
                           '--shape-icon':
-                            `url(${iconoCardShape(shape.tipo)})`,
+                            shape.tipo === 'image'
+                              ? 'none'
+                              : `url(${iconoCardShape(shape.tipo)})`,
                         }}
                         onMouseDown={(event) =>
                           iniciarDragShape(event, shape)
@@ -22756,20 +23907,80 @@ function colorEstadoTarea(tarea) {
                         onDoubleClick={() =>
                           abrirEditarShape(shape)
                         }
-                        title="Arrastrá para mover · Doble click para editar"
+                        title={
+                          shape.tipo === 'image'
+                            ? 'Arrastrá para mover · Usá los conectores laterales para crear líneas · Doble click para opciones'
+                            : 'Arrastrá para mover · Doble click para editar'
+                        }
                       >
-                        <div className="board-shape-visual">
-                          <div className="board-shape-fill" />
-                          <img
-                            src={iconoCardShape(shape.tipo)}
-                            alt=""
-                            draggable="false"
-                          />
-                        </div>
+                        {shape.tipo === 'image' ? (
+                          <>
+                            <div className="board-uploaded-image-frame">
+                              {boardImageUrls[shape.id] ? (
+                                <img
+                                  src={boardImageUrls[shape.id]}
+                                  alt={
+                                    shape.asset_name ||
+                                    'Imagen del board'
+                                  }
+                                  className="board-uploaded-image"
+                                  draggable="false"
+                                  crossOrigin="anonymous"
+                                />
+                              ) : (
+                                <div className="board-uploaded-image-loading">
+                                  Imagen
+                                </div>
+                              )}
+                            </div>
 
-                        <span className="board-shape-text">
-                          {shape.texto}
-                        </span>
+                            <button
+                              type="button"
+                              className="card-thread-pin card-thread-pin-left board-image-thread-pin"
+                              onMouseDown={(event) =>
+                                event.stopPropagation()
+                              }
+                              onMouseUp={(event) =>
+                                terminarConexion(
+                                  event,
+                                  shape,
+                                  'image'
+                                )
+                              }
+                              title="Soltar aquí una conexión"
+                              aria-label="Recibir conexión"
+                            />
+
+                            <button
+                              type="button"
+                              className="card-thread-pin card-thread-pin-right board-image-thread-pin"
+                              onMouseDown={(event) =>
+                                iniciarConexion(
+                                  event,
+                                  shape,
+                                  'image'
+                                )
+                              }
+                              title="Arrastrar hilo desde esta imagen"
+                              aria-label="Crear conexión"
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <div className="board-shape-visual">
+                              <div className="board-shape-fill" />
+                              <img
+                                src={iconoCardShape(shape.tipo)}
+                                alt=""
+                                draggable="false"
+                              />
+                            </div>
+
+                            <span className="board-shape-text">
+                              {shape.texto}
+                            </span>
+                          </>
+                        )}
 
                         {selectedShapeId === shape.id && (
                           <button
@@ -22781,7 +23992,11 @@ function colorEstadoTarea(tarea) {
                                 shape
                               )
                             }
-                            title="Cambiar tamaño"
+                            title={
+                              shape.tipo === 'image'
+                                ? 'Cambiar tamaño manteniendo proporción'
+                                : 'Cambiar tamaño'
+                            }
                           />
                         )}
                       </div>
@@ -23163,9 +24378,10 @@ function colorEstadoTarea(tarea) {
               <div>
                 <span>Origen</span>
                 <strong>
-                  {cardPorId(
-                    conexionPendiente.sourceCardId
-                  )?.titulo || 'Card'}
+                  {boardObjectLabel(
+                    conexionPendiente.sourceObjectType,
+                    conexionPendiente.sourceObjectId
+                  )}
                 </strong>
               </div>
 
@@ -23176,9 +24392,10 @@ function colorEstadoTarea(tarea) {
               <div>
                 <span>Destino</span>
                 <strong>
-                  {cardPorId(
-                    conexionPendiente.targetCardId
-                  )?.titulo || 'Card'}
+                  {boardObjectLabel(
+                    conexionPendiente.targetObjectType,
+                    conexionPendiente.targetObjectId
+                  )}
                 </strong>
               </div>
             </div>
@@ -23211,13 +24428,13 @@ function colorEstadoTarea(tarea) {
             <div className="connection-type-help">
               {tipoConexion === 'Relacionada' && (
                 <span>
-                  Hilo amarillo: relación visual entre ambas cards.
+                  Hilo amarillo: relación visual entre ambos elementos.
                 </span>
               )}
 
               {tipoConexion === 'Depende de' && (
                 <span>
-                  Hilo azul con flecha: la card destino depende de la card origen.
+                  Hilo azul con flecha: el elemento destino depende del elemento origen.
                 </span>
               )}
 
@@ -25600,81 +26817,155 @@ function colorEstadoTarea(tarea) {
             <form onSubmit={guardarShape}>
               <div className="card-modal-heading">
                 <div>
-                  <span>Board Shape</span>
-                  <h3>{shapeEditando ? 'Editar Shape' : 'Nuevo Shape'}</h3>
+                  <span>
+                    {formShape.tipo === 'image'
+                      ? 'Board Image'
+                      : 'Board Shape'}
+                  </span>
+                  <h3>
+                    {formShape.tipo === 'image'
+                      ? 'Imagen'
+                      : shapeEditando
+                        ? 'Editar Shape'
+                        : 'Nuevo Shape'}
+                  </h3>
                 </div>
                 <button type="button" onClick={cerrarShapeDrawer}>×</button>
               </div>
 
-              <div className="form-group">
-                <label>Forma</label>
-                <div className="shape-type-options">
-                  {[
-                    { value: 'circle', label: 'Círculo' },
-                    { value: 'rectangle', label: 'Proceso' },
-                    { value: 'square', label: 'Texto' },
-                    { value: 'callout', label: 'Nota' },
-                  ].map((item) => (
-                    <button
-                      key={item.value}
-                      type="button"
-                      className={
-                        formShape.tipo === item.value
-                          ? 'active'
-                          : ''
-                      }
-                      onClick={() =>
-                        setFormShape((actual) => ({
-                          ...actual,
-                          tipo: item.value,
-                          ancho:
-                            item.value === 'rectangle' ||
-                            item.value === 'callout'
-                              ? 180
-                              : 120,
-                          alto:
-                            item.value === 'rectangle'
-                              ? 90
-                              : item.value === 'callout'
-                                ? 110
-                                : 120,
-                        }))
-                      }
-                      title={item.label}
-                    >
+              {formShape.tipo === 'image' ? (
+                <div className="board-image-editor-info">
+                  <div className="board-image-editor-preview">
+                    {shapeEditando &&
+                    boardImageUrls[shapeEditando.id] ? (
                       <img
-                        src={iconoCardShape(item.value)}
-                        alt={item.label}
+                        src={boardImageUrls[shapeEditando.id]}
+                        alt={
+                          shapeEditando.asset_name ||
+                          'Imagen'
+                        }
                       />
-                    </button>
-                  ))}
+                    ) : (
+                      <span>Imagen</span>
+                    )}
+                  </div>
+
+                  <div className="board-image-editor-copy">
+                    <strong>
+                      {shapeEditando?.asset_name ||
+                        'Imagen del board'}
+                    </strong>
+
+                    <span>
+                      La imagen está optimizada para el Board.
+                      Podés moverla, cambiar su tamaño y conectarla
+                      con Cards u otras imágenes.
+                    </span>
+
+                    {shapeEditando?.asset_bytes && (
+                      <small>
+                        {Math.max(
+                          1,
+                          Math.round(
+                            Number(shapeEditando.asset_bytes) /
+                            1024
+                          )
+                        )}{' '}
+                        KB
+                      </small>
+                    )}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="form-group">
+                    <label>Forma</label>
 
-              <div className="form-group">
-                <label>Texto</label>
-                <input
-                  type="text"
-                  value={formShape.texto}
-                  onChange={(event) => setFormShape((actual) => ({ ...actual, texto: event.target.value }))}
-                  placeholder="Texto dentro del shape"
-                />
-              </div>
+                    <div className="shape-type-options">
+                      {[
+                        { value: 'circle', label: 'Círculo' },
+                        { value: 'rectangle', label: 'Proceso' },
+                        { value: 'square', label: 'Texto' },
+                        { value: 'callout', label: 'Nota' },
+                        { value: 'smile', label: 'Positivo' },
+                        { value: 'sad', label: 'Negativo' },
+                        { value: 'star', label: 'Estrella' },
+                        { value: 'check', label: 'Check' },
+                        { value: 'cross', label: 'X' },
+                        { value: 'person', label: 'Persona' },
+                        { value: 'diamond', label: 'Rombo' },
+                        { value: 'triangle', label: 'Triángulo' },
+                        { value: 'hexagon', label: 'Hexágono' },
+                        { value: 'arrow', label: 'Flecha' },
+                        { value: 'cloud', label: 'Nube' },
+                        { value: 'warning', label: 'Alerta' },
+                        { value: 'heart', label: 'Corazón' },
+                        { value: 'flag', label: 'Bandera' },
+                        { value: 'bulb', label: 'Idea' },
+                        { value: 'target', label: 'Objetivo' },
+                      ].map((item) => (
+                        <button
+                          key={item.value}
+                          type="button"
+                          className={
+                            formShape.tipo === item.value
+                              ? 'active'
+                              : ''
+                          }
+                          onClick={() => {
+                            const dimensiones =
+                              dimensionesCardShape(
+                                item.value
+                              )
 
-              <div className="form-group">
-                <label>Color</label>
-                <div className="unified-color-options">
-                  {['#00c2ff','#ffd60a','#2dd36f','#ff4d5e','#9b5de5','#ff8a00','#ffffff','#5d6670'].map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      className={formShape.color === color ? 'active' : ''}
-                      style={{ backgroundColor: color }}
-                      onClick={() => setFormShape((actual) => ({ ...actual, color }))}
+                            setFormShape((actual) => ({
+                              ...actual,
+                              tipo: item.value,
+                              ...dimensiones,
+                            }))
+                          }}
+                          title={item.label}
+                          aria-label={item.label}
+                        >
+                          <img
+                            src={iconoCardShape(item.value)}
+                            alt=""
+                          />
+
+                          <span>
+                            {item.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Texto</label>
+                    <input
+                      type="text"
+                      value={formShape.texto}
+                      onChange={(event) => setFormShape((actual) => ({ ...actual, texto: event.target.value }))}
+                      placeholder="Texto dentro del shape"
                     />
-                  ))}
-                </div>
-              </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Color</label>
+                    <div className="unified-color-options">
+                      {['#00c2ff','#ffd60a','#2dd36f','#ff4d5e','#9b5de5','#ff8a00','#ffffff','#5d6670'].map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          className={formShape.color === color ? 'active' : ''}
+                          style={{ backgroundColor: color }}
+                          onClick={() => setFormShape((actual) => ({ ...actual, color }))}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div className="connection-drawer-actions">
                 {shapeEditando && (
@@ -25682,8 +26973,15 @@ function colorEstadoTarea(tarea) {
                     Eliminar
                   </button>
                 )}
-                <button type="button" className="btn-secondary" onClick={cerrarShapeDrawer}>Cancelar</button>
-                <button type="submit" className="btn-primary">Guardar</button>
+                <button type="button" className="btn-secondary" onClick={cerrarShapeDrawer}>
+                  {formShape.tipo === 'image' ? 'Cerrar' : 'Cancelar'}
+                </button>
+
+                {formShape.tipo !== 'image' && (
+                  <button type="submit" className="btn-primary">
+                    Guardar
+                  </button>
+                )}
               </div>
             </form>
           </aside>
