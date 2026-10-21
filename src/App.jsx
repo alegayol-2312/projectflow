@@ -376,95 +376,101 @@ function plantillaProceso(tipo) {
 }
 
 const CARD_SHAPE_VECTOR_SVGS = {
-  /*
-    Shapes originales redibujados como SVG.
-    Usan un trazo de 7px para quedar visualmente parejos
-    con la nueva biblioteca de íconos.
-  */
   circle: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="39" fill="none" stroke="#111"
-        stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="50" cy="50" r="39"
+        fill="none" stroke="#111"
+        stroke-width="7"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
     </svg>
   `,
   rectangle: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 90">
       <rect x="8" y="10" width="124" height="70" rx="9"
-        fill="none" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
+        fill="none" stroke="#111"
+        stroke-width="7"
+        stroke-linejoin="round"/>
     </svg>
   `,
   square: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
       <rect x="12" y="12" width="76" height="76" rx="3"
-        fill="none" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
+        fill="none" stroke="#111"
+        stroke-width="7"
+        stroke-linejoin="round"/>
     </svg>
   `,
   callout: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 100">
-      <path d="M13 11h114a8 8 0 0 1 8 8v55a8 8 0 0 1-8 8H58L40 95l4-13H13a8 8 0 0 1-8-8V19a8 8 0 0 1 8-8Z"
-        fill="none" stroke="#111" stroke-width="7"
-        stroke-linecap="round" stroke-linejoin="round"/>
+      <path
+        d="M13 11h114a8 8 0 0 1 8 8v55a8 8 0 0 1-8 8H58L40 95l4-13H13a8 8 0 0 1-8-8V19a8 8 0 0 1 8-8Z"
+        fill="none" stroke="#111"
+        stroke-width="7"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
     </svg>
   `,
+
   smile: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="40" fill="none" stroke="#111" stroke-width="6"/>
+      <circle cx="50" cy="50" r="40" fill="none" stroke="#111" stroke-width="7"/>
       <circle cx="35" cy="39" r="4.5" fill="#111"/>
       <circle cx="65" cy="39" r="4.5" fill="#111"/>
-      <path d="M28 58 Q50 79 72 58" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+      <path d="M28 58 Q50 79 72 58" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>
     </svg>
   `,
   sad: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="40" fill="none" stroke="#111" stroke-width="6"/>
+      <circle cx="50" cy="50" r="40" fill="none" stroke="#111" stroke-width="7"/>
       <circle cx="35" cy="39" r="4.5" fill="#111"/>
       <circle cx="65" cy="39" r="4.5" fill="#111"/>
-      <path d="M29 71 Q50 50 71 71" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+      <path d="M29 71 Q50 50 71 71" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>
     </svg>
   `,
   star: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
       <path d="M50 7 61.7 36.5 94 38.8 69.2 59.5 77 91 50 73.6 23 91 30.8 59.5 6 38.8 38.3 36.5Z"
-        fill="none" stroke="#111" stroke-width="5" stroke-linejoin="round"/>
+        fill="none" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
     </svg>
   `,
   check: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <path d="M19 53 39 73 82 22" fill="none" stroke="#111" stroke-width="9"
+      <path d="M19 53 39 73 82 22" fill="none" stroke="#111" stroke-width="7"
         stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   `,
   cross: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <path d="M22 22 78 78 M78 22 22 78" fill="none" stroke="#111" stroke-width="8"
+      <path d="M22 22 78 78 M78 22 22 78" fill="none" stroke="#111" stroke-width="7"
         stroke-linecap="round"/>
     </svg>
   `,
   person: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <circle cx="50" cy="27" r="15" fill="none" stroke="#111" stroke-width="5"/>
+      <circle cx="50" cy="27" r="15" fill="none" stroke="#111" stroke-width="7"/>
       <path d="M25 91V69c0-12 10-21 22-21h6c12 0 22 9 22 21v22Z"
-        fill="none" stroke="#111" stroke-width="5" stroke-linejoin="round"/>
+        fill="none" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
     </svg>
   `,
   diamond: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <path d="M50 7 93 50 50 93 7 50Z" fill="none" stroke="#111" stroke-width="6"/>
+      <path d="M50 7 93 50 50 93 7 50Z" fill="none" stroke="#111" stroke-width="7"/>
     </svg>
   `,
   triangle: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <path d="M50 9 94 88H6Z" fill="none" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M50 9 94 88H6Z" fill="none" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
     </svg>
   `,
   hexagon: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <path d="M27 9h46l23 41-23 41H27L4 50Z" fill="none" stroke="#111" stroke-width="6"/>
+      <path d="M27 9h46l23 41-23 41H27L4 50Z" fill="none" stroke="#111" stroke-width="7"/>
     </svg>
   `,
   arrow: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <path d="M11 39h49V21l29 29-29 29V61H11Z" fill="none" stroke="#111" stroke-width="6"
+      <path d="M11 39h49V21l29 29-29 29V61H11Z" fill="none" stroke="#111" stroke-width="7"
         stroke-linejoin="round"/>
     </svg>
   `,
@@ -472,12 +478,12 @@ const CARD_SHAPE_VECTOR_SVGS = {
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
       <path d="M27 77h48c12 0 20-8 20-19 0-10-7-18-17-19C74 23 63 15 50 15
         34 15 23 27 21 42 10 44 5 51 5 60c0 10 8 17 22 17Z"
-        fill="none" stroke="#111" stroke-width="5" stroke-linejoin="round"/>
+        fill="none" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
     </svg>
   `,
   warning: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <path d="M50 8 94 88H6Z" fill="none" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M50 8 94 88H6Z" fill="none" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
       <path d="M50 32v27" stroke="#111" stroke-width="7" stroke-linecap="round"/>
       <circle cx="50" cy="73" r="4" fill="#111"/>
     </svg>
@@ -485,26 +491,26 @@ const CARD_SHAPE_VECTOR_SVGS = {
   heart: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
       <path d="M50 87 14 52C-5 33 7 11 27 11c10 0 18 5 23 13 5-8 13-13 23-13
-        20 0 32 22 13 41Z" fill="none" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
+        20 0 32 22 13 41Z" fill="none" stroke="#111" stroke-width="7" stroke-linejoin="round"/>
     </svg>
   `,
   flag: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
       <path d="M24 91V9M27 15h49l-10 18 10 18H27" fill="none" stroke="#111"
-        stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
     </svg>
   `,
   bulb: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
       <path d="M50 8c-19 0-34 14-34 32 0 12 7 22 17 28v8h34v-8c10-6 17-16 17-28
-        C84 22 69 8 50 8Z" fill="none" stroke="#111" stroke-width="5"/>
-      <path d="M35 85h30M40 93h20" stroke="#111" stroke-width="5" stroke-linecap="round"/>
+        C84 22 69 8 50 8Z" fill="none" stroke="#111" stroke-width="7"/>
+      <path d="M35 85h30M40 93h20" stroke="#111" stroke-width="7" stroke-linecap="round"/>
     </svg>
   `,
   target: `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="41" fill="none" stroke="#111" stroke-width="5"/>
-      <circle cx="50" cy="50" r="25" fill="none" stroke="#111" stroke-width="5"/>
+      <circle cx="50" cy="50" r="41" fill="none" stroke="#111" stroke-width="7"/>
+      <circle cx="50" cy="50" r="25" fill="none" stroke="#111" stroke-width="7"/>
       <circle cx="50" cy="50" r="8" fill="#111"/>
     </svg>
   `,
@@ -537,6 +543,43 @@ function iconoCardShape(tipo) {
   }
 
   return mapa[tipo] || processActivityIcon
+}
+
+const PROCESS_VISUAL_SHAPE_OPTIONS = [
+  { value: 'circle', label: 'Círculo' },
+  { value: 'rectangle', label: 'Proceso' },
+  { value: 'square', label: 'Texto' },
+  { value: 'callout', label: 'Nota' },
+  { value: 'smile', label: 'Positivo' },
+  { value: 'sad', label: 'Negativo' },
+  { value: 'star', label: 'Estrella' },
+  { value: 'check', label: 'Check' },
+  { value: 'cross', label: 'X' },
+  { value: 'person', label: 'Persona' },
+  { value: 'diamond', label: 'Rombo' },
+  { value: 'triangle', label: 'Triángulo' },
+  { value: 'hexagon', label: 'Hexágono' },
+  { value: 'arrow', label: 'Flecha' },
+  { value: 'cloud', label: 'Nube' },
+  { value: 'warning', label: 'Alerta' },
+  { value: 'heart', label: 'Corazón' },
+  { value: 'flag', label: 'Bandera' },
+  { value: 'bulb', label: 'Idea' },
+  { value: 'target', label: 'Objetivo' },
+]
+
+function esProcessShapeVisual(tipo) {
+  return PROCESS_VISUAL_SHAPE_OPTIONS.some(
+    (item) => item.value === tipo
+  )
+}
+
+function esProcessImageVisual(tipo) {
+  return tipo === 'image'
+}
+
+function esProcessVisualNode(tipo) {
+  return esProcessShapeVisual(tipo) || esProcessImageVisual(tipo)
 }
 
 function dimensionesCardShape(tipo) {
@@ -1559,6 +1602,20 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [shareProcessUserId, setShareProcessUserId] = useState('')
   const [processArchiveOpen, setProcessArchiveOpen] = useState(false)
   const [processMapsArchivados, setProcessMapsArchivados] = useState([])
+  const [processVisualDrawerOpen, setProcessVisualDrawerOpen] = useState(false)
+  const [processVisualEditando, setProcessVisualEditando] = useState(null)
+  const [subiendoProcessImage, setSubiendoProcessImage] = useState(false)
+  const [processImageUrls, setProcessImageUrls] = useState({})
+  const [formProcessVisual, setFormProcessVisual] = useState({
+    tipo: 'circle',
+    texto: '',
+    color: '#00c2ff',
+    pos_x: 180,
+    pos_y: 180,
+    ancho: 150,
+    alto: 110,
+    z_index: 12,
+  })
   const [selectedProcessBoxId, setSelectedProcessBoxId] = useState(null)
   const processUndoRef = useRef([])
   const processSelectionRef = useRef(null)
@@ -6421,9 +6478,53 @@ async function cargarProcessCanvas(processId) {
   if (linksError) console.error('Error cargando enlaces:', linksError)
   if (boxesError) console.error('Error cargando cajas:', boxesError)
 
-  setProcessNodes(nodes || [])
+  const listaNodos = nodes || []
+
+  setProcessNodes(listaNodos)
   setProcessLinks(links || [])
   setProcessBoxes(boxes || [])
+
+  const imagenes = listaNodos.filter(
+    (item) =>
+      item.tipo === 'image' &&
+      item.asset_path
+  )
+
+  if (imagenes.length === 0) {
+    setProcessImageUrls({})
+  } else {
+    const pares = await Promise.all(
+      imagenes.map(async (item) => {
+        const {
+          data: signedData,
+          error: signedError,
+        } = await supabase.storage
+          .from('board-images')
+          .createSignedUrl(
+            item.asset_path,
+            21600
+          )
+
+        if (signedError) {
+          console.error(
+            'No se pudo firmar una imagen de Process:',
+            signedError
+          )
+
+          return [item.id, '']
+        }
+
+        return [
+          item.id,
+          signedData?.signedUrl || '',
+        ]
+      })
+    )
+
+    setProcessImageUrls(
+      Object.fromEntries(pares)
+    )
+  }
 }
 
 function abrirNuevoProcessMap() {
@@ -8169,6 +8270,287 @@ async function pegarSeleccionProcess() {
     (data || []).map((node) => node.id)
   )
   await cargarProcessCanvas(processSeleccionadoId)
+}
+
+
+function dimensionesProcessVisual(tipo) {
+  if (esProcessShapeVisual(tipo)) {
+    return dimensionesCardShape(tipo)
+  }
+
+  if (tipo === 'image') {
+    return {
+      ancho: 220,
+      alto: 160,
+    }
+  }
+
+  return dimensionesProcessNode(tipo)
+}
+
+async function optimizarImagenProcess(file) {
+  return optimizarImagenBoard(file)
+}
+
+
+function cerrarProcessVisualDrawer() {
+  setProcessVisualDrawerOpen(false)
+  setProcessVisualEditando(null)
+  setFormProcessVisual({
+    tipo: 'circle',
+    texto: '',
+    color: '#00c2ff',
+    pos_x: 180,
+    pos_y: 180,
+    ancho: 150,
+    alto: 110,
+    z_index: 12,
+  })
+}
+
+function abrirNuevoProcessShape() {
+  if (!processSeleccionadoId) {
+    alert('Primero seleccioná un proceso.')
+    return
+  }
+
+  const dims = dimensionesProcessVisual('circle')
+  const maxZ = Math.max(
+    10,
+    ...processNodes.map(
+      (item) => Number(item.z_index) || 10
+    )
+  ) + 1
+
+  setProcessVisualEditando(null)
+  setFormProcessVisual({
+    tipo: 'circle',
+    texto: '',
+    color: '#00c2ff',
+    pos_x: 180,
+    pos_y: 180,
+    ancho: dims.ancho,
+    alto: dims.alto,
+    z_index: maxZ,
+  })
+  setProcessVisualDrawerOpen(true)
+}
+
+function abrirEditarProcessVisual(node) {
+  setSelectedProcessNodeIds([node.id])
+  setProcessVisualEditando(node)
+  setFormProcessVisual({
+    tipo: node.tipo || 'circle',
+    texto: node.titulo || '',
+    color: node.color || '#00c2ff',
+    pos_x: Number(node.pos_x) || 180,
+    pos_y: Number(node.pos_y) || 180,
+    ancho: Number(node.ancho) || 150,
+    alto: Number(node.alto) || 110,
+    z_index: Number(node.z_index) || 12,
+  })
+  setProcessVisualDrawerOpen(true)
+}
+
+async function guardarProcessVisual(event) {
+  event.preventDefault()
+
+  if (!processSeleccionadoId) {
+    alert('Primero seleccioná un proceso.')
+    return
+  }
+
+  pushProcessUndo()
+
+  const payload = {
+    tipo: formProcessVisual.tipo,
+    titulo:
+      formProcessVisual.tipo === 'image'
+        ? (processVisualEditando?.titulo || processVisualEditando?.asset_name || '')
+        : (formProcessVisual.texto || '').trim(),
+    color:
+      formProcessVisual.tipo === 'image'
+        ? '#ffffff'
+        : (formProcessVisual.color || '#00c2ff'),
+    pos_x: Number(formProcessVisual.pos_x) || 180,
+    pos_y: Number(formProcessVisual.pos_y) || 180,
+    ancho: Number(formProcessVisual.ancho) || 150,
+    alto: Number(formProcessVisual.alto) || 110,
+    z_index: Number(formProcessVisual.z_index) || 12,
+    rotacion: 0,
+    text_align: 'center',
+    updated_at: new Date().toISOString(),
+  }
+
+  if (processVisualEditando) {
+    const { error } = await supabase
+      .from('process_nodes')
+      .update(payload)
+      .eq('id', processVisualEditando.id)
+
+    if (error) {
+      alert(`No se pudo actualizar: ${error.message}`)
+      return
+    }
+  } else {
+    const { error } = await supabase
+      .from('process_nodes')
+      .insert({
+        process_id: processSeleccionadoId,
+        ...payload,
+      })
+
+    if (error) {
+      alert(`No se pudo crear: ${error.message}`)
+      return
+    }
+  }
+
+  cerrarProcessVisualDrawer()
+  await cargarProcessCanvas(processSeleccionadoId)
+  mostrarToast(
+    processVisualEditando
+      ? 'Shape actualizado'
+      : 'Shape agregado al proceso'
+  )
+}
+
+async function eliminarProcessVisual(node) {
+  if (!node?.id) return
+
+  if (!window.confirm('¿Desea borrar el componente visual del proceso?')) {
+    return
+  }
+
+  if (node.tipo === 'image' && node.asset_path) {
+    await supabase.storage
+      .from('board-images')
+      .remove([node.asset_path])
+  }
+
+  const { error } = await supabase
+    .from('process_nodes')
+    .delete()
+    .eq('id', node.id)
+
+  if (error) {
+    alert(`No se pudo eliminar: ${error.message}`)
+    return
+  }
+
+  cerrarProcessVisualDrawer()
+  await cargarProcessCanvas(processSeleccionadoId)
+  mostrarToast('Elemento eliminado')
+}
+
+async function subirImagenProcessDesdePC(event) {
+  const input = event.target
+  const file = input.files?.[0]
+
+  input.value = ''
+
+  if (!file) return
+
+  if (!processSeleccionadoId) {
+    alert('Primero seleccioná un proceso.')
+    return
+  }
+
+  if (!session?.user?.id) {
+    alert('No se pudo identificar al usuario.')
+    return
+  }
+
+  setSubiendoProcessImage(true)
+
+  try {
+    const optimizada = await optimizarImagenProcess(file)
+    const extension =
+      optimizada.mime === 'image/jpeg'
+        ? 'jpg'
+        : 'webp'
+
+    const fileId =
+      typeof crypto !== 'undefined' &&
+      typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+    const assetPath =
+      `${session.user.id}/process/` +
+      `${processSeleccionadoId}/` +
+      `${fileId}.${extension}`
+
+    const { error: uploadError } =
+      await supabase.storage
+        .from('board-images')
+        .upload(
+          assetPath,
+          optimizada.blob,
+          {
+            contentType: optimizada.mime,
+            upsert: false,
+            cacheControl: '3600',
+          }
+        )
+
+    if (uploadError) {
+      throw uploadError
+    }
+
+    const maxZ = Math.max(
+      10,
+      ...processNodes.map(
+        (item) => Number(item.z_index) || 10
+      )
+    ) + 1
+
+    const payload = {
+      process_id: processSeleccionadoId,
+      tipo: 'image',
+      titulo: file.name,
+      color: '#ffffff',
+      pos_x: 180,
+      pos_y: 180,
+      ancho: optimizada.displayWidth,
+      alto: optimizada.displayHeight,
+      z_index: maxZ,
+      rotacion: 0,
+      text_align: 'center',
+      asset_path: assetPath,
+      asset_name: file.name,
+      asset_mime: optimizada.mime,
+      asset_bytes: optimizada.blob.size,
+      updated_at: new Date().toISOString(),
+    }
+
+    const { data, error: insertError } =
+      await supabase
+        .from('process_nodes')
+        .insert(payload)
+        .select()
+        .single()
+
+    if (insertError) {
+      await supabase.storage
+        .from('board-images')
+        .remove([assetPath])
+      throw insertError
+    }
+
+    await cargarProcessCanvas(processSeleccionadoId)
+
+    if (data?.id) {
+      setSelectedProcessNodeIds([data.id])
+    }
+
+    mostrarToast('Imagen agregada al proceso')
+  } catch (error) {
+    console.error('No se pudo agregar la imagen al proceso:', error)
+    alert(`No se pudo agregar la imagen: ${error?.message || 'error desconocido'}`)
+  } finally {
+    setSubiendoProcessImage(false)
+  }
 }
 
 
@@ -21553,6 +21935,33 @@ function colorEstadoTarea(tarea) {
 
                       <button
                         type="button"
+                        className="process-extra-tool-button"
+                        onClick={abrirNuevoProcessShape}
+                        title="Agregar shape"
+                      >
+                        + Shapes
+                      </button>
+
+                      <label
+                        className={`process-extra-tool-button ${
+                          subiendoProcessImage
+                            ? 'disabled'
+                            : ''
+                        }`}
+                        title="Subir imagen"
+                      >
+                        + Imagen
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={subirImagenProcessDesdePC}
+                          disabled={subiendoProcessImage}
+                          hidden
+                        />
+                      </label>
+
+                      <button
+                        type="button"
                         className={`process-superposition-tool ${
                           processSuperpuestosVisible
                             ? 'active'
@@ -22385,6 +22794,14 @@ function colorEstadoTarea(tarea) {
                           key={node.id}
                           data-process-node-id={node.id}
                           className={`process-node ${
+                            esProcessImageVisual(node.tipo)
+                              ? 'process-node-image'
+                              : ''
+                          } ${
+                            esProcessShapeVisual(node.tipo)
+                              ? 'process-node-visual-shape'
+                              : ''
+                          } ${
                             objetoMovidoEnVivo(
                               'process',
                               processSeleccionadoId,
@@ -22465,7 +22882,9 @@ function colorEstadoTarea(tarea) {
                             )
                           }}
                           onDoubleClick={() =>
-                            abrirEditarProcessNode(node)
+                            esProcessVisualNode(node.tipo)
+                              ? abrirEditarProcessVisual(node)
+                              : abrirEditarProcessNode(node)
                           }
                           onMouseUp={(event) =>
                             finalizarConexionSobreNodo(
@@ -22480,67 +22899,124 @@ function colorEstadoTarea(tarea) {
                             node.id
                           )}
 
-                          <div className="process-node-visual">
-                            {!(
-                              meetingMode &&
-                              processMeetingIcons[
-                                node.id
-                              ]
-                            ) && (
-                              <div className="process-icon-fill" />
-                            )}
+                          {esProcessImageVisual(node.tipo) ? (
+                            <div className="process-node-image-wrap">
+                              <div className="board-uploaded-image-frame process-uploaded-image-frame">
+                                {processImageUrls[node.id] ? (
+                                  <img
+                                    src={processImageUrls[node.id]}
+                                    alt={
+                                      node.asset_name ||
+                                      node.titulo ||
+                                      'Imagen'
+                                    }
+                                    className="board-uploaded-image"
+                                    draggable="false"
+                                    crossOrigin="anonymous"
+                                  />
+                                ) : (
+                                  <div className="board-uploaded-image-loading">
+                                    Imagen
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : esProcessShapeVisual(node.tipo) ? (
+                            <>
+                              <div className="process-node-visual process-node-shape-visual">
+                                <div className="process-icon-fill" />
+                                <img
+                                  src={iconoCardShape(node.tipo)}
+                                  alt=""
+                                  draggable="false"
+                                />
+                              </div>
 
-                            <img
-                              src={
-                                meetingMode &&
-                                processMeetingIcons[
-                                  node.id
-                                ]
-                                  ? processMeetingIcons[
+                              <div
+                                className="process-node-copy process-node-shape-copy"
+                                data-text-align={node.text_align || 'center'}
+                                style={{
+                                  transform: `rotate(${-(
+                                    Number(node.rotacion) || 0
+                                  )}deg)`,
+                                  justifyContent:
+                                    (node.text_align || 'center') === 'top'
+                                      ? 'flex-start'
+                                      : (node.text_align || 'center') === 'bottom'
+                                        ? 'flex-end'
+                                        : 'center',
+                                }}
+                              >
+                                <strong title={node.titulo}>
+                                  {node.titulo}
+                                </strong>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="process-node-visual">
+                                {!(
+                                  meetingMode &&
+                                  processMeetingIcons[
+                                    node.id
+                                  ]
+                                ) && (
+                                  <div className="process-icon-fill" />
+                                )}
+
+                                <img
+                                  src={
+                                    meetingMode &&
+                                    processMeetingIcons[
                                       node.id
                                     ]
-                                  : plantillaProceso(
-                                      node.tipo
-                                    )?.icon
-                              }
-                              className={
-                                meetingMode &&
-                                processMeetingIcons[
-                                  node.id
-                                ]
-                                  ? 'process-meeting-raster'
-                                  : ''
-                              }
-                              alt=""
-                              draggable="false"
-                            />
-                          </div>
+                                      ? processMeetingIcons[
+                                          node.id
+                                        ]
+                                      : plantillaProceso(
+                                          node.tipo
+                                        )?.icon
+                                  }
+                                  className={
+                                    meetingMode &&
+                                    processMeetingIcons[
+                                      node.id
+                                    ]
+                                      ? 'process-meeting-raster'
+                                      : ''
+                                  }
+                                  alt=""
+                                  draggable="false"
+                                />
+                              </div>
 
-                          <div
-                            className="process-node-copy"
-                            data-text-align={
-                              node.tipo === 'NotaProceso'
-                                ? 'top'
-                                : node.text_align || 'center'
-                            }
-                            style={{
-                              transform: `rotate(${-(
-                                Number(node.rotacion) || 0
-                              )}deg)`,
-                              justifyContent:
-                                node.tipo === 'NotaProceso'
-                                  ? 'flex-start'
-                                  : (node.text_align || 'center') === 'top'
-                                    ? 'flex-start'
-                                    : (node.text_align || 'center') === 'bottom'
-                                      ? 'flex-end'
-                                      : 'center',
-                            }}
-                          >
-                            <strong title={node.titulo}>
-                              {node.titulo}
-                            </strong>
-                          </div>
+                              <div
+                                className="process-node-copy"
+                                data-text-align={
+                                  node.tipo === 'NotaProceso'
+                                    ? 'top'
+                                    : node.text_align || 'center'
+                                }
+                                style={{
+                                  transform: `rotate(${-(
+                                    Number(node.rotacion) || 0
+                                  )}deg)`,
+                                  justifyContent:
+                                    node.tipo === 'NotaProceso'
+                                      ? 'flex-start'
+                                      : (node.text_align || 'center') === 'top'
+                                        ? 'flex-start'
+                                        : (node.text_align || 'center') === 'bottom'
+                                          ? 'flex-end'
+                                          : 'center',
+                                }}
+                              >
+                                <strong title={node.titulo}>
+                                  {node.titulo}
+                                </strong>
+                              </div>
+                            </>
+                          )}
 
                           {['top', 'right', 'bottom', 'left'].map(
                             (lado) => (
@@ -26978,6 +27454,151 @@ function colorEstadoTarea(tarea) {
                 </button>
 
                 {formShape.tipo !== 'image' && (
+                  <button type="submit" className="btn-primary">
+                    Guardar
+                  </button>
+                )}
+              </div>
+            </form>
+          </aside>
+        </div>
+      )}
+
+      {processVisualDrawerOpen && (
+        <div className="card-drawer-overlay">
+          <aside className="card-editor-drawer shape-editor-drawer">
+            <form onSubmit={guardarProcessVisual}>
+              <div className="card-modal-heading">
+                <div>
+                  <span>
+                    {formProcessVisual.tipo === 'image'
+                      ? 'Process Image'
+                      : 'Process Shape'}
+                  </span>
+                  <h3>
+                    {formProcessVisual.tipo === 'image'
+                      ? 'Imagen'
+                      : processVisualEditando
+                        ? 'Editar Shape'
+                        : 'Nuevo Shape'}
+                  </h3>
+                </div>
+                <button type="button" onClick={cerrarProcessVisualDrawer}>×</button>
+              </div>
+
+              {formProcessVisual.tipo === 'image' ? (
+                <div className="board-image-editor-info">
+                  <div className="board-image-editor-preview">
+                    {processVisualEditando &&
+                    processImageUrls[processVisualEditando.id] ? (
+                      <img
+                        src={processImageUrls[processVisualEditando.id]}
+                        alt={processVisualEditando.asset_name || 'Imagen'}
+                      />
+                    ) : (
+                      <span>Imagen</span>
+                    )}
+                  </div>
+
+                  <div className="board-image-editor-copy">
+                    <strong>
+                      {processVisualEditando?.asset_name || 'Imagen del proceso'}
+                    </strong>
+                    <span>
+                      La imagen se puede mover por el canvas de Process y también puede conectarse con líneas.
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="form-group">
+                    <label>Forma</label>
+                    <div className="shape-type-options">
+                      {PROCESS_VISUAL_SHAPE_OPTIONS.map((item) => (
+                        <button
+                          key={item.value}
+                          type="button"
+                          className={
+                            formProcessVisual.tipo === item.value
+                              ? 'active'
+                              : ''
+                          }
+                          onClick={() => {
+                            const dimensiones = dimensionesProcessVisual(item.value)
+                            setFormProcessVisual((actual) => ({
+                              ...actual,
+                              tipo: item.value,
+                              ...dimensiones,
+                            }))
+                          }}
+                          title={item.label}
+                          aria-label={item.label}
+                        >
+                          <img
+                            src={iconoCardShape(item.value)}
+                            alt=""
+                          />
+                          <span>{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Texto</label>
+                    <input
+                      type="text"
+                      value={formProcessVisual.texto}
+                      onChange={(event) =>
+                        setFormProcessVisual((actual) => ({
+                          ...actual,
+                          texto: event.target.value,
+                        }))
+                      }
+                      placeholder="Texto dentro del shape"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Color</label>
+                    <div className="unified-color-options">
+                      {['#00c2ff','#ffd60a','#2dd36f','#ff4d5e','#9b5de5','#ff8a00','#ffffff','#5d6670'].map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          className={
+                            formProcessVisual.color === color
+                              ? 'active'
+                              : ''
+                          }
+                          style={{ backgroundColor: color }}
+                          onClick={() =>
+                            setFormProcessVisual((actual) => ({
+                              ...actual,
+                              color,
+                            }))
+                          }
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="connection-drawer-actions">
+                {processVisualEditando && (
+                  <button
+                    type="button"
+                    className="btn-delete-task"
+                    onClick={() => eliminarProcessVisual(processVisualEditando)}
+                  >
+                    Eliminar
+                  </button>
+                )}
+                <button type="button" className="btn-secondary" onClick={cerrarProcessVisualDrawer}>
+                  Cancelar
+                </button>
+                {formProcessVisual.tipo !== 'image' && (
                   <button type="submit" className="btn-primary">
                     Guardar
                   </button>
