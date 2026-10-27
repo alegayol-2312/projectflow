@@ -1401,6 +1401,15 @@ function App() {
 
   const [usuariosConectados, setUsuariosConectados] = useState([])
   const [presencePanelOpen, setPresencePanelOpen] = useState(false)
+  const [globalSearchText, setGlobalSearchText] = useState('')
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false)
+  const [globalSearchLoading, setGlobalSearchLoading] = useState(false)
+  const [globalSearchResults, setGlobalSearchResults] = useState([])
+  const [globalSearchActiveIndex, setGlobalSearchActiveIndex] = useState(0)
+  const [pendingGlobalTarget, setPendingGlobalTarget] = useState(null)
+  const globalSearchRequestRef = useRef(0)
+  const globalSearchInputRef = useRef(null)
+
 
   const [liveObjectUsers, setLiveObjectUsers] = useState({})
   const liveCollabChannelRef = useRef(null)
@@ -1770,6 +1779,26 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   )
   const [sharedNotifications, setSharedNotifications] = useState([])
   const [pendingSharedOpen, setPendingSharedOpen] = useState(null)
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatMessages, setChatMessages] = useState([])
+  const [chatActiveChannelKey, setChatActiveChannelKey] = useState('general')
+  const [chatActivePartnerId, setChatActivePartnerId] = useState(null)
+  const [chatUnreadCount, setChatUnreadCount] = useState(0)
+  const [chatUnreadByChannel, setChatUnreadByChannel] = useState({})
+  const [chatLoading, setChatLoading] = useState(false)
+  const [chatSending, setChatSending] = useState(false)
+  const [chatText, setChatText] = useState('')
+  const [chatPendingRefs, setChatPendingRefs] = useState([])
+  const [chatSuggestionMode, setChatSuggestionMode] = useState(null)
+  const [chatSuggestionQuery, setChatSuggestionQuery] = useState('')
+  const [chatSuggestionItems, setChatSuggestionItems] = useState([])
+  const [chatSuggestionRange, setChatSuggestionRange] = useState(null)
+  const [chatSuggestionActiveIndex, setChatSuggestionActiveIndex] = useState(0)
+  const [chatSuggestionLoading, setChatSuggestionLoading] = useState(false)
+  const chatTextareaRef = useRef(null)
+  const chatMessagesEndRef = useRef(null)
+  const chatSearchRequestRef = useRef(0)
+
 
     useEffect(() => {
     let cancelled = false
@@ -3508,6 +3537,302 @@ useEffect(() => {
     }
   }
 
+
+  useEffect(() => {
+    const texto =
+      globalSearchText.trim()
+
+    if (texto.length < 2) {
+      setGlobalSearchResults([])
+      setGlobalSearchLoading(false)
+      return undefined
+    }
+
+    const timer =
+      window.setTimeout(() => {
+        buscarGlobalProjectFlow(
+          texto
+        )
+      }, 180)
+
+    return () =>
+      window.clearTimeout(timer)
+  }, [globalSearchText])
+
+  useEffect(() => {
+    function abrirBuscadorConAtajo(
+      event
+    ) {
+      if (
+        (event.ctrlKey ||
+          event.metaKey) &&
+        String(event.key)
+          .toLowerCase() === 'k'
+      ) {
+        event.preventDefault()
+        setGlobalSearchOpen(true)
+
+        window.setTimeout(
+          () =>
+            globalSearchInputRef.current?.focus(),
+          0
+        )
+      }
+    }
+
+    window.addEventListener(
+      'keydown',
+      abrirBuscadorConAtajo
+    )
+
+    return () =>
+      window.removeEventListener(
+        'keydown',
+        abrirBuscadorConAtajo
+      )
+  }, [])
+
+  useEffect(() => {
+    if (!pendingGlobalTarget) {
+      return
+    }
+
+    const item =
+      pendingGlobalTarget
+
+    const listo =
+      (
+        item.type === 'task' &&
+        vistaPrincipal === 'gantt' &&
+        proyectoSeleccionadoId ===
+          item.parentId
+      ) ||
+      (
+        item.type === 'card' &&
+        vistaPrincipal === 'cards' &&
+        boardSeleccionadoId ===
+          item.parentId
+      ) ||
+      (
+        item.type === 'process_node' &&
+        vistaPrincipal === 'process' &&
+        processSeleccionadoId ===
+          item.parentId
+      ) ||
+      (
+        item.type === 'kanban_card' &&
+        vistaPrincipal === 'kanban' &&
+        kanbanProjectId ===
+          item.parentId
+      )
+
+    if (!listo) return
+
+    setPendingGlobalTarget(null)
+
+    window.setTimeout(() => {
+      if (item.type === 'task') {
+        abrirEditar(item.row)
+        return
+      }
+
+      if (item.type === 'card') {
+        setSelectedCardIds([
+          item.id,
+        ])
+        abrirEditarCard(item.row)
+        return
+      }
+
+      if (
+        item.type ===
+        'process_node'
+      ) {
+        setSelectedProcessNodeIds([
+          item.id,
+        ])
+
+        if (
+          esProcessVisualNode(
+            item.row?.tipo
+          )
+        ) {
+          abrirEditarProcessVisual(
+            item.row
+          )
+        } else {
+          abrirEditarProcessNode(
+            item.row
+          )
+        }
+
+        return
+      }
+
+      if (
+        item.type ===
+        'kanban_card'
+      ) {
+        abrirEditarKanbanCard(
+          item.row
+        )
+      }
+    }, 130)
+  }, [
+    pendingGlobalTarget,
+    vistaPrincipal,
+    proyectoSeleccionadoId,
+    boardSeleccionadoId,
+    processSeleccionadoId,
+    kanbanProjectId,
+  ])
+
+
+  useEffect(() => {
+    if (
+      !session?.user?.id
+    ) {
+      return undefined
+    }
+
+    cargarChatNoLeidos()
+
+    return undefined
+  }, [session?.user?.id])
+
+  useEffect(() => {
+    if (
+      chatSuggestionMode !==
+      'reference'
+    ) {
+      return undefined
+    }
+
+    const timer =
+      window.setTimeout(
+        () =>
+          buscarReferenciasChat(
+            chatSuggestionQuery
+          ),
+        140
+      )
+
+    return () =>
+      window.clearTimeout(
+        timer
+      )
+  }, [
+    chatSuggestionMode,
+    chatSuggestionQuery,
+  ])
+
+  useEffect(() => {
+    if (
+      !session?.user?.id
+    ) {
+      return undefined
+    }
+
+    const channel =
+      supabase
+        .channel(
+          `projectflow-chat-${session.user.id}-${chatOpen ? 'open' : 'closed'}-${chatActiveChannelKey}`
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table:
+              'projectflow_messages',
+          },
+          async (payload) => {
+            const nuevo =
+              payload.new
+
+            if (!nuevo) return
+
+            const esCanalActivo =
+              nuevo.channel_key ===
+              chatActiveChannelKey
+
+            if (
+              esCanalActivo
+            ) {
+              await cargarChatMensajes(
+                chatActiveChannelKey
+              )
+            }
+
+            if (
+              nuevo.user_id ===
+              session.user.id
+            ) {
+              return
+            }
+
+            if (
+              chatOpen &&
+              esCanalActivo
+            ) {
+              await marcarChatLeido(
+                chatActiveChannelKey
+              )
+              return
+            }
+
+            setChatUnreadByChannel(
+              (actual) => {
+                const siguiente = {
+                  ...actual,
+                  [nuevo.channel_key]:
+                    (
+                      actual[
+                        nuevo.channel_key
+                      ] || 0
+                    ) + 1,
+                }
+
+                setChatUnreadCount(
+                  totalNoLeidosChat(
+                    siguiente
+                  )
+                )
+
+                return siguiente
+              }
+            )
+          }
+        )
+        .subscribe()
+
+    return () => {
+      supabase.removeChannel(
+        channel
+      )
+    }
+  }, [
+    session?.user?.id,
+    chatOpen,
+    chatActiveChannelKey,
+  ])
+
+  useEffect(() => {
+    if (!chatOpen) return
+
+    window.setTimeout(
+      () =>
+        chatMessagesEndRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'end',
+        }),
+      30
+    )
+  }, [
+    chatMessages,
+    chatOpen,
+  ])
+
   async function logout() {
     await supabase.auth.signOut()
 
@@ -3530,6 +3855,1905 @@ function navegarVistaPrincipal(destino) {
   window.setTimeout(() => {
     setNavTransitionVisible(false)
   }, 430)
+}
+
+
+
+function canalPrivadoChat(userA, userB) {
+  if (!userA || !userB) {
+    return 'general'
+  }
+
+  const ids =
+    [
+      String(userA),
+      String(userB),
+    ].sort()
+
+  return `dm:${ids[0]}:${ids[1]}`
+}
+
+function chatCanalEsPrivado(channelKey) {
+  return String(
+    channelKey || ''
+  ).startsWith('dm:')
+}
+
+function chatPartnerName() {
+  if (!chatActivePartnerId) {
+    return 'General'
+  }
+
+  return (
+    perfilChatPorId(
+      chatActivePartnerId
+    )?.nombre ||
+    'Conversación privada'
+  )
+}
+
+function chatParticipantes() {
+  return perfiles
+    .filter(
+      (perfil) =>
+        perfil.id !==
+        session?.user?.id
+    )
+    .sort(
+      (a, b) =>
+        String(
+          a.nombre || ''
+        ).localeCompare(
+          String(
+            b.nombre || ''
+          ),
+          'es-AR'
+        )
+    )
+}
+
+function chatUsuarioConectado(userId) {
+  return usuariosConectados.some(
+    (usuario) =>
+      usuario.user_id === userId
+  )
+}
+
+function totalNoLeidosChat(mapa) {
+  return Object.values(
+    mapa || {}
+  ).reduce(
+    (total, valor) =>
+      total +
+      (Number(valor) || 0),
+    0
+  )
+}
+
+async function seleccionarCanalChat(
+  partnerId = null
+) {
+  if (!session?.user?.id) {
+    return
+  }
+
+  const channelKey =
+    partnerId
+      ? canalPrivadoChat(
+          session.user.id,
+          partnerId
+        )
+      : 'general'
+
+  setChatActivePartnerId(
+    partnerId
+  )
+
+  setChatActiveChannelKey(
+    channelKey
+  )
+
+  setChatText('')
+  setChatPendingRefs([])
+  setChatSuggestionMode(null)
+  setChatSuggestionQuery('')
+  setChatSuggestionItems([])
+  setChatSuggestionRange(null)
+
+  await cargarChatMensajes(
+    channelKey
+  )
+
+  await marcarChatLeido(
+    channelKey
+  )
+
+  window.setTimeout(
+    () => {
+      chatMessagesEndRef.current?.scrollIntoView({
+        block: 'end',
+      })
+
+      chatTextareaRef.current?.focus()
+    },
+    70
+  )
+}
+
+function perfilChatPorId(userId) {
+  return perfiles.find(
+    (perfil) =>
+      perfil.id === userId
+  )
+}
+
+function nombreChatUsuario(userId) {
+  const perfil =
+    perfilChatPorId(userId)
+
+  if (
+    userId ===
+    session?.user?.id
+  ) {
+    return (
+      perfil?.nombre ||
+      session?.user?.email?.split('@')[0] ||
+      'Vos'
+    )
+  }
+
+  return (
+    perfil?.nombre ||
+    'Usuario'
+  )
+}
+
+function avatarChatUsuario(userId) {
+  if (
+    userId ===
+    session?.user?.id
+  ) {
+    return avatarId
+  }
+
+  return (
+    usuariosConectados.find(
+      (usuario) =>
+        usuario.user_id ===
+        userId
+    )?.avatar_id ||
+    null
+  )
+}
+
+function horaChat(fecha) {
+  if (!fecha) return ''
+
+  return new Date(
+    fecha
+  ).toLocaleTimeString(
+    'es-AR',
+    {
+      hour: '2-digit',
+      minute: '2-digit',
+    }
+  )
+}
+
+function fechaChat(fecha) {
+  if (!fecha) return ''
+
+  const date =
+    new Date(fecha)
+
+  const hoy =
+    new Date()
+
+  const ayer =
+    new Date()
+
+  ayer.setDate(
+    ayer.getDate() - 1
+  )
+
+  const mismoDia = (
+    a,
+    b
+  ) =>
+    a.getFullYear() ===
+      b.getFullYear() &&
+    a.getMonth() ===
+      b.getMonth() &&
+    a.getDate() ===
+      b.getDate()
+
+  if (
+    mismoDia(
+      date,
+      hoy
+    )
+  ) {
+    return 'Hoy'
+  }
+
+  if (
+    mismoDia(
+      date,
+      ayer
+    )
+  ) {
+    return 'Ayer'
+  }
+
+  return date.toLocaleDateString(
+    'es-AR',
+    {
+      day: '2-digit',
+      month: 'short',
+    }
+  )
+}
+
+function normalizarRefChat(item) {
+  return {
+    ref_type:
+      item.type,
+    ref_id:
+      item.id,
+    parent_id:
+      item.parentId ||
+      null,
+    module:
+      item.module,
+    module_key:
+      item.moduleKey,
+    title:
+      item.title,
+    subtitle:
+      item.subtitle ||
+      '',
+    meta:
+      item.meta ||
+      '',
+  }
+}
+
+function referenciaChatKey(ref) {
+  return `${ref.ref_type}:${ref.ref_id}`
+}
+
+async function cargarChatMensajes(
+  channelKey = chatActiveChannelKey
+) {
+  if (!session?.user?.id) {
+    setChatMessages([])
+    return
+  }
+
+  setChatLoading(true)
+
+  try {
+    const {
+      data,
+      error,
+    } = await supabase
+      .from('projectflow_messages')
+      .select(`
+        *,
+        projectflow_message_refs (
+          id,
+          ref_type,
+          ref_id,
+          parent_id,
+          module,
+          module_key,
+          title,
+          subtitle,
+          meta
+        )
+      `)
+      .eq(
+        'channel_key',
+        channelKey
+      )
+      .order(
+        'created_at',
+        {
+          ascending: false,
+        }
+      )
+      .limit(80)
+
+    if (error) {
+      console.error(
+        'Error cargando chat:',
+        error
+      )
+      return
+    }
+
+    setChatMessages(
+      [...(data || [])]
+        .reverse()
+    )
+  } finally {
+    setChatLoading(false)
+  }
+}
+
+async function cargarChatNoLeidos() {
+  if (!session?.user?.id) {
+    setChatUnreadCount(0)
+    setChatUnreadByChannel({})
+    return
+  }
+
+  const [
+    { data: lecturas, error: lecturasError },
+    { data: mensajes, error: mensajesError },
+  ] = await Promise.all([
+    supabase
+      .from('projectflow_chat_reads')
+      .select('channel_key,last_read_at')
+      .eq(
+        'user_id',
+        session.user.id
+      ),
+
+    supabase
+      .from('projectflow_messages')
+      .select('id,channel_key,user_id,created_at')
+      .neq(
+        'user_id',
+        session.user.id
+      )
+      .order(
+        'created_at',
+        {
+          ascending: false,
+        }
+      )
+      .limit(1000),
+  ])
+
+  if (
+    lecturasError ||
+    mensajesError
+  ) {
+    console.error(
+      'Error calculando mensajes sin leer:',
+      lecturasError ||
+      mensajesError
+    )
+    return
+  }
+
+  const readMap =
+    Object.fromEntries(
+      (lecturas || []).map(
+        (item) => [
+          item.channel_key,
+          item.last_read_at
+            ? new Date(
+                item.last_read_at
+              ).getTime()
+            : 0,
+        ]
+      )
+    )
+
+  const unreadMap = {}
+
+  for (
+    const message
+    of mensajes || []
+  ) {
+    const channelKey =
+      message.channel_key
+
+    const created =
+      new Date(
+        message.created_at
+      ).getTime()
+
+    const lastRead =
+      readMap[
+        channelKey
+      ] || 0
+
+    if (
+      created >
+      lastRead
+    ) {
+      unreadMap[
+        channelKey
+      ] =
+        (
+          unreadMap[
+            channelKey
+          ] || 0
+        ) + 1
+    }
+  }
+
+  setChatUnreadByChannel(
+    unreadMap
+  )
+
+  setChatUnreadCount(
+    totalNoLeidosChat(
+      unreadMap
+    )
+  )
+}
+
+async function marcarChatLeido(
+  channelKey = chatActiveChannelKey
+) {
+  if (!session?.user?.id) {
+    return
+  }
+
+  setChatUnreadByChannel(
+    (actual) => {
+      const siguiente = {
+        ...actual,
+        [channelKey]: 0,
+      }
+
+      setChatUnreadCount(
+        totalNoLeidosChat(
+          siguiente
+        )
+      )
+
+      return siguiente
+    }
+  )
+
+  const { error } =
+    await supabase
+      .from(
+        'projectflow_chat_reads'
+      )
+      .upsert(
+        {
+          user_id:
+            session.user.id,
+          channel_key:
+            channelKey,
+          last_read_at:
+            new Date().toISOString(),
+        },
+        {
+          onConflict:
+            'user_id,channel_key',
+        }
+      )
+
+  if (error) {
+    console.error(
+      'No se pudo marcar el chat como leído:',
+      error
+    )
+  }
+}
+
+async function abrirChatProjectFlow() {
+  const abrir =
+    !chatOpen
+
+  setChatOpen(
+    abrir
+  )
+
+  if (!abrir) return
+
+  setActivityOpen(false)
+  setPresencePanelOpen(false)
+  setSettingsMenuOpen(false)
+
+  await cargarChatMensajes(
+    chatActiveChannelKey
+  )
+
+  await marcarChatLeido(
+    chatActiveChannelKey
+  )
+
+  window.setTimeout(
+    () => {
+      chatMessagesEndRef.current?.scrollIntoView({
+        block: 'end',
+      })
+
+      chatTextareaRef.current?.focus()
+    },
+    90
+  )
+}
+
+async function buscarReferenciasChat(
+  termino
+) {
+  const query =
+    String(
+      termino || ''
+    ).trim()
+
+  const requestId =
+    chatSearchRequestRef.current + 1
+
+  chatSearchRequestRef.current =
+    requestId
+
+  setChatSuggestionLoading(true)
+
+  try {
+    const patron =
+      query
+        ? `%${query}%`
+        : '%'
+
+    const [
+      tareasRes,
+      boardsRes,
+      cardsRes,
+      processMapsRes,
+      processNodesRes,
+      kanbanProjectsRes,
+      kanbanCardsRes,
+    ] = await Promise.all([
+      supabase
+        .from('tasks')
+        .select('*')
+        .ilike('nombre', patron)
+        .limit(3),
+
+      supabase
+        .from('card_boards')
+        .select('id,nombre,descripcion,archivado')
+        .eq('archivado', false)
+        .ilike('nombre', patron)
+        .limit(3),
+
+      supabase
+        .from('cards')
+        .select('*')
+        .eq('archivada', false)
+        .ilike('titulo', patron)
+        .limit(4),
+
+      supabase
+        .from('process_maps')
+        .select('id,nombre,descripcion,archivado')
+        .eq('archivado', false)
+        .ilike('nombre', patron)
+        .limit(3),
+
+      supabase
+        .from('process_nodes')
+        .select('*')
+        .ilike('titulo', patron)
+        .limit(4),
+
+      supabase
+        .from('kanban_projects')
+        .select('id,nombre,descripcion,archivado')
+        .eq('archivado', false)
+        .ilike('nombre', patron)
+        .limit(3),
+
+      supabase
+        .from('kanban_cards')
+        .select('*')
+        .eq('archivada', false)
+        .ilike('titulo', patron)
+        .limit(4),
+    ])
+
+    if (
+      requestId !==
+      chatSearchRequestRef.current
+    ) {
+      return
+    }
+
+    const items = [
+      ...(tareasRes.data || []).map(
+        (item) => ({
+          key:
+            `task:${item.id}`,
+          type:
+            'task',
+          id:
+            item.id,
+          parentId:
+            item.project_id,
+          module:
+            'Gantt',
+          moduleKey:
+            'gantt',
+          title:
+            item.nombre,
+          subtitle:
+            nombrePadreBusquedaGlobal(
+              'task',
+              item.project_id
+            ),
+          meta:
+            item.es_hito
+              ? 'Hito'
+              : item.estado ||
+                'Tarea',
+          row:
+            item,
+        })
+      ),
+
+      ...(boardsRes.data || []).map(
+        (item) => ({
+          key:
+            `board:${item.id}`,
+          type:
+            'board',
+          id:
+            item.id,
+          parentId:
+            item.id,
+          module:
+            'Cards',
+          moduleKey:
+            'cards',
+          title:
+            item.nombre,
+          subtitle:
+            item.descripcion ||
+            'Board',
+          meta:
+            'Board',
+          row:
+            item,
+        })
+      ),
+
+      ...(cardsRes.data || []).map(
+        (item) => ({
+          key:
+            `card:${item.id}`,
+          type:
+            'card',
+          id:
+            item.id,
+          parentId:
+            item.board_id,
+          module:
+            'Cards',
+          moduleKey:
+            'cards',
+          title:
+            item.titulo,
+          subtitle:
+            nombrePadreBusquedaGlobal(
+              'card',
+              item.board_id
+            ),
+          meta:
+            item.estado ||
+            item.tipo ||
+            'Card',
+          row:
+            item,
+        })
+      ),
+
+      ...(processMapsRes.data || []).map(
+        (item) => ({
+          key:
+            `process_map:${item.id}`,
+          type:
+            'process_map',
+          id:
+            item.id,
+          parentId:
+            item.id,
+          module:
+            'Process',
+          moduleKey:
+            'process',
+          title:
+            item.nombre,
+          subtitle:
+            item.descripcion ||
+            'Process',
+          meta:
+            'Process',
+          row:
+            item,
+        })
+      ),
+
+      ...(processNodesRes.data || []).map(
+        (item) => ({
+          key:
+            `process_node:${item.id}`,
+          type:
+            'process_node',
+          id:
+            item.id,
+          parentId:
+            item.process_id,
+          module:
+            'Process',
+          moduleKey:
+            'process',
+          title:
+            item.titulo ||
+            etiquetaTipoProceso(
+              item.tipo
+            ),
+          subtitle:
+            nombrePadreBusquedaGlobal(
+              'process_node',
+              item.process_id
+            ),
+          meta:
+            esProcessVisualNode(
+              item.tipo
+            )
+              ? item.tipo ===
+                  'image'
+                ? 'Imagen'
+                : 'Shape'
+              : etiquetaTipoProceso(
+                  item.tipo
+                ),
+          row:
+            item,
+        })
+      ),
+
+      ...(kanbanProjectsRes.data || []).map(
+        (item) => ({
+          key:
+            `kanban_project:${item.id}`,
+          type:
+            'kanban_project',
+          id:
+            item.id,
+          parentId:
+            item.id,
+          module:
+            'Kanban',
+          moduleKey:
+            'kanban',
+          title:
+            item.nombre,
+          subtitle:
+            item.descripcion ||
+            'Kanban',
+          meta:
+            'Kanban',
+          row:
+            item,
+        })
+      ),
+
+      ...(kanbanCardsRes.data || []).map(
+        (item) => ({
+          key:
+            `kanban_card:${item.id}`,
+          type:
+            'kanban_card',
+          id:
+            item.id,
+          parentId:
+            item.kanban_project_id,
+          module:
+            'Kanban',
+          moduleKey:
+            'kanban',
+          title:
+            item.titulo,
+          subtitle:
+            nombrePadreBusquedaGlobal(
+              'kanban_card',
+              item.kanban_project_id
+            ),
+          meta:
+            item.estado ||
+            item.tipo ||
+            'Tarjeta',
+          row:
+            item,
+        })
+      ),
+    ]
+
+    const ordenados =
+      query
+        ? ordenarResultadosGlobales(
+            items,
+            query
+          )
+        : items
+
+    setChatSuggestionItems(
+      ordenados.slice(
+        0,
+        10
+      )
+    )
+
+    setChatSuggestionActiveIndex(0)
+  } catch (error) {
+    console.error(
+      'Error buscando referencias para chat:',
+      error
+    )
+
+    if (
+      requestId ===
+      chatSearchRequestRef.current
+    ) {
+      setChatSuggestionItems([])
+    }
+  } finally {
+    if (
+      requestId ===
+      chatSearchRequestRef.current
+    ) {
+      setChatSuggestionLoading(false)
+    }
+  }
+}
+
+function actualizarAtajoChat(
+  valor,
+  cursorPos
+) {
+  const cursor =
+    Number.isFinite(cursorPos)
+      ? cursorPos
+      : valor.length
+
+  const previo =
+    valor.slice(
+      0,
+      cursor
+    )
+
+  const match =
+    previo.match(
+      /(^|\s)([#@])([^\s#@]*)$/
+    )
+
+  if (!match) {
+    setChatSuggestionMode(null)
+    setChatSuggestionQuery('')
+    setChatSuggestionItems([])
+    setChatSuggestionRange(null)
+    return
+  }
+
+  const simbolo =
+    match[2]
+
+  const query =
+    match[3] || ''
+
+  const tokenLength =
+    simbolo.length +
+    query.length
+
+  setChatSuggestionMode(
+    simbolo === '#'
+      ? 'reference'
+      : 'mention'
+  )
+
+  setChatSuggestionQuery(
+    query
+  )
+
+  setChatSuggestionRange({
+    start:
+      cursor -
+      tokenLength,
+    end:
+      cursor,
+  })
+
+  setChatSuggestionActiveIndex(0)
+
+  if (
+    simbolo === '@'
+  ) {
+    const normalizada =
+      normalizarBusquedaGlobal(
+        query
+      )
+
+    const items =
+      perfiles
+        .filter(
+          (perfil) => {
+            if (
+              perfil.id ===
+              session?.user?.id
+            ) {
+              return false
+            }
+
+            if (!normalizada) {
+              return true
+            }
+
+            return normalizarBusquedaGlobal(
+              perfil.nombre ||
+              ''
+            ).includes(
+              normalizada
+            )
+          }
+        )
+        .slice(0, 8)
+        .map(
+          (perfil) => ({
+            key:
+              `user:${perfil.id}`,
+            type:
+              'mention',
+            id:
+              perfil.id,
+            title:
+              perfil.nombre ||
+              'Usuario',
+            subtitle:
+              'Participante',
+          })
+        )
+
+    setChatSuggestionItems(
+      items
+    )
+
+    setChatSuggestionLoading(false)
+  }
+}
+
+function seleccionarSugerenciaChat(
+  item
+) {
+  if (
+    !chatSuggestionRange
+  ) {
+    return
+  }
+
+  const before =
+    chatText.slice(
+      0,
+      chatSuggestionRange.start
+    )
+
+  const after =
+    chatText.slice(
+      chatSuggestionRange.end
+    )
+
+  if (
+    chatSuggestionMode ===
+    'mention'
+  ) {
+    const insert =
+      `@${item.title} `
+
+    const nuevo =
+      `${before}${insert}${after}`
+
+    setChatText(nuevo)
+    setChatSuggestionMode(null)
+    setChatSuggestionItems([])
+    setChatSuggestionQuery('')
+    setChatSuggestionRange(null)
+
+    window.setTimeout(
+      () => {
+        const pos =
+          before.length +
+          insert.length
+
+        chatTextareaRef.current?.focus()
+        chatTextareaRef.current?.setSelectionRange(
+          pos,
+          pos
+        )
+      },
+      0
+    )
+
+    return
+  }
+
+  const ref =
+    normalizarRefChat(
+      item
+    )
+
+  const insert =
+    `#${item.title} `
+
+  const nuevo =
+    `${before}${insert}${after}`
+
+  setChatText(nuevo)
+
+  setChatPendingRefs(
+    (actual) => {
+      const key =
+        referenciaChatKey(
+          ref
+        )
+
+      if (
+        actual.some(
+          (itemActual) =>
+            referenciaChatKey(
+              itemActual
+            ) === key
+        )
+      ) {
+        return actual
+      }
+
+      return [
+        ...actual,
+        ref,
+      ]
+    }
+  )
+
+  setChatSuggestionMode(null)
+  setChatSuggestionItems([])
+  setChatSuggestionQuery('')
+  setChatSuggestionRange(null)
+
+  window.setTimeout(
+    () => {
+      const pos =
+        before.length +
+        insert.length
+
+      chatTextareaRef.current?.focus()
+      chatTextareaRef.current?.setSelectionRange(
+        pos,
+        pos
+      )
+    },
+    0
+  )
+}
+
+function quitarReferenciaChat(
+  ref
+) {
+  const key =
+    referenciaChatKey(ref)
+
+  setChatPendingRefs(
+    (actual) =>
+      actual.filter(
+        (item) =>
+          referenciaChatKey(
+            item
+          ) !== key
+      )
+  )
+}
+
+async function enviarMensajeChat() {
+  const mensaje =
+    chatText.trim()
+
+  if (
+    !mensaje ||
+    chatSending ||
+    !session?.user?.id
+  ) {
+    return
+  }
+
+  setChatSending(true)
+
+  try {
+    const {
+      data: messageData,
+      error: messageError,
+    } = await supabase
+      .from('projectflow_messages')
+      .insert({
+        channel_key:
+          chatActiveChannelKey,
+        user_id:
+          session.user.id,
+        message:
+          mensaje,
+      })
+      .select()
+      .single()
+
+    if (messageError) {
+      throw messageError
+    }
+
+    if (
+      messageData?.id &&
+      chatPendingRefs.length > 0
+    ) {
+      const refsPayload =
+        chatPendingRefs.map(
+          (ref) => ({
+            message_id:
+              messageData.id,
+            ...ref,
+          })
+        )
+
+      const {
+        error: refsError,
+      } = await supabase
+        .from(
+          'projectflow_message_refs'
+        )
+        .insert(
+          refsPayload
+        )
+
+      if (refsError) {
+        console.error(
+          'El mensaje se envió, pero fallaron algunas referencias:',
+          refsError
+        )
+      }
+    }
+
+    setChatText('')
+    setChatPendingRefs([])
+    setChatSuggestionMode(null)
+    setChatSuggestionItems([])
+    setChatSuggestionQuery('')
+    setChatSuggestionRange(null)
+
+    await cargarChatMensajes(
+      chatActiveChannelKey
+    )
+    await marcarChatLeido(
+      chatActiveChannelKey
+    )
+
+    window.setTimeout(
+      () =>
+        chatMessagesEndRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'end',
+        }),
+      40
+    )
+  } catch (error) {
+    console.error(
+      'No se pudo enviar el mensaje:',
+      error
+    )
+
+    alert(
+      `No se pudo enviar el mensaje: ${
+        error?.message ||
+        'error desconocido'
+      }`
+    )
+  } finally {
+    setChatSending(false)
+  }
+}
+
+function manejarTecladoChat(
+  event
+) {
+  if (
+    chatSuggestionMode &&
+    chatSuggestionItems.length > 0
+  ) {
+    if (
+      event.key ===
+      'ArrowDown'
+    ) {
+      event.preventDefault()
+
+      setChatSuggestionActiveIndex(
+        (actual) =>
+          Math.min(
+            actual + 1,
+            chatSuggestionItems.length - 1
+          )
+      )
+
+      return
+    }
+
+    if (
+      event.key ===
+      'ArrowUp'
+    ) {
+      event.preventDefault()
+
+      setChatSuggestionActiveIndex(
+        (actual) =>
+          Math.max(
+            actual - 1,
+            0
+          )
+      )
+
+      return
+    }
+
+    if (
+      event.key ===
+      'Enter' &&
+      !event.shiftKey
+    ) {
+      event.preventDefault()
+
+      seleccionarSugerenciaChat(
+        chatSuggestionItems[
+          chatSuggestionActiveIndex
+        ]
+      )
+
+      return
+    }
+
+    if (
+      event.key ===
+      'Escape'
+    ) {
+      event.preventDefault()
+
+      setChatSuggestionMode(null)
+      setChatSuggestionItems([])
+      setChatSuggestionRange(null)
+
+      return
+    }
+  }
+
+  if (
+    event.key ===
+      'Enter' &&
+    !event.shiftKey
+  ) {
+    event.preventDefault()
+    enviarMensajeChat()
+  }
+}
+
+async function navegarReferenciaChat(
+  ref
+) {
+  if (!ref) return
+
+  const itemBase = {
+    type:
+      ref.ref_type,
+    id:
+      ref.ref_id,
+    parentId:
+      ref.parent_id,
+    module:
+      ref.module,
+    moduleKey:
+      ref.module_key,
+    title:
+      ref.title,
+    subtitle:
+      ref.subtitle,
+    meta:
+      ref.meta,
+  }
+
+  if (
+    ['project', 'board', 'process_map', 'kanban_project']
+      .includes(
+        ref.ref_type
+      )
+  ) {
+    navegarResultadoGlobal(
+      itemBase
+    )
+    return
+  }
+
+  const tablaPorTipo = {
+    task:
+      'tasks',
+    card:
+      'cards',
+    process_node:
+      'process_nodes',
+    kanban_card:
+      'kanban_cards',
+  }
+
+  const tabla =
+    tablaPorTipo[
+      ref.ref_type
+    ]
+
+  if (!tabla) {
+    navegarResultadoGlobal(
+      itemBase
+    )
+    return
+  }
+
+  const {
+    data,
+    error,
+  } = await supabase
+    .from(tabla)
+    .select('*')
+    .eq(
+      'id',
+      ref.ref_id
+    )
+    .maybeSingle()
+
+  if (error) {
+    console.error(
+      'No se pudo abrir la referencia del chat:',
+      error
+    )
+  }
+
+  navegarResultadoGlobal({
+    ...itemBase,
+    row:
+      data ||
+      null,
+  })
+}
+
+function normalizarBusquedaGlobal(valor) {
+  return String(valor || '')
+    .trim()
+    .toLocaleLowerCase('es-AR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+function nombrePadreBusquedaGlobal(tipo, parentId) {
+  if (!parentId) return ''
+
+  if (tipo === 'task') {
+    return (
+      proyectos.find(
+        (item) => item.id === parentId
+      )?.nombre || 'Proyecto Gantt'
+    )
+  }
+
+  if (tipo === 'card') {
+    return (
+      boards.find(
+        (item) => item.id === parentId
+      )?.nombre || 'Board'
+    )
+  }
+
+  if (tipo === 'process_node') {
+    return (
+      processMaps.find(
+        (item) => item.id === parentId
+      )?.nombre || 'Process'
+    )
+  }
+
+  if (tipo === 'kanban_card') {
+    return (
+      kanbanProjects.find(
+        (item) => item.id === parentId
+      )?.nombre || 'Kanban'
+    )
+  }
+
+  return ''
+}
+
+function ordenarResultadosGlobales(lista, termino) {
+  const query =
+    normalizarBusquedaGlobal(termino)
+
+  return [...lista]
+    .sort((a, b) => {
+      const aText =
+        normalizarBusquedaGlobal(a.title)
+      const bText =
+        normalizarBusquedaGlobal(b.title)
+
+      const aExact =
+        aText === query
+          ? 0
+          : aText.startsWith(query)
+            ? 1
+            : aText.includes(query)
+              ? 2
+              : 3
+
+      const bExact =
+        bText === query
+          ? 0
+          : bText.startsWith(query)
+            ? 1
+            : bText.includes(query)
+              ? 2
+              : 3
+
+      if (aExact !== bExact) {
+        return aExact - bExact
+      }
+
+      return (
+        aText.length -
+        bText.length
+      )
+    })
+    .slice(0, 18)
+}
+
+async function buscarGlobalProjectFlow(texto) {
+  const query =
+    String(texto || '').trim()
+
+  if (query.length < 2) {
+    setGlobalSearchResults([])
+    setGlobalSearchLoading(false)
+    return
+  }
+
+  const requestId =
+    globalSearchRequestRef.current + 1
+
+  globalSearchRequestRef.current =
+    requestId
+
+  setGlobalSearchLoading(true)
+
+  try {
+    const patron =
+      `%${query}%`
+
+    const [
+      proyectosRes,
+      tareasRes,
+      boardsRes,
+      cardsRes,
+      processMapsRes,
+      processNodesRes,
+      kanbanProjectsRes,
+      kanbanCardsRes,
+    ] = await Promise.all([
+      supabase
+        .from('projects')
+        .select('id,nombre,descripcion')
+        .ilike('nombre', patron)
+        .limit(5),
+
+      supabase
+        .from('tasks')
+        .select('*')
+        .ilike('nombre', patron)
+        .limit(7),
+
+      supabase
+        .from('card_boards')
+        .select('id,nombre,descripcion,archivado')
+        .eq('archivado', false)
+        .ilike('nombre', patron)
+        .limit(5),
+
+      supabase
+        .from('cards')
+        .select('*')
+        .eq('archivada', false)
+        .ilike('titulo', patron)
+        .limit(7),
+
+      supabase
+        .from('process_maps')
+        .select('id,nombre,descripcion,archivado')
+        .eq('archivado', false)
+        .ilike('nombre', patron)
+        .limit(5),
+
+      supabase
+        .from('process_nodes')
+        .select('*')
+        .ilike('titulo', patron)
+        .limit(7),
+
+      supabase
+        .from('kanban_projects')
+        .select('id,nombre,descripcion,archivado')
+        .eq('archivado', false)
+        .ilike('nombre', patron)
+        .limit(5),
+
+      supabase
+        .from('kanban_cards')
+        .select('*')
+        .eq('archivada', false)
+        .ilike('titulo', patron)
+        .limit(7),
+    ])
+
+    if (
+      requestId !==
+      globalSearchRequestRef.current
+    ) {
+      return
+    }
+
+    const errores = [
+      proyectosRes.error,
+      tareasRes.error,
+      boardsRes.error,
+      cardsRes.error,
+      processMapsRes.error,
+      processNodesRes.error,
+      kanbanProjectsRes.error,
+      kanbanCardsRes.error,
+    ].filter(Boolean)
+
+    if (errores.length > 0) {
+      console.error(
+        'Alguna fuente del buscador global no respondió:',
+        errores
+      )
+    }
+
+    const resultados = [
+      ...(proyectosRes.data || []).map(
+        (item) => ({
+          key: `project:${item.id}`,
+          type: 'project',
+          module: 'Gantt',
+          moduleKey: 'gantt',
+          id: item.id,
+          parentId: item.id,
+          title: item.nombre,
+          subtitle:
+            item.descripcion ||
+            'Proyecto',
+          row: item,
+        })
+      ),
+
+      ...(tareasRes.data || []).map(
+        (item) => ({
+          key: `task:${item.id}`,
+          type: 'task',
+          module: 'Gantt',
+          moduleKey: 'gantt',
+          id: item.id,
+          parentId:
+            item.project_id,
+          title: item.nombre,
+          subtitle:
+            nombrePadreBusquedaGlobal(
+              'task',
+              item.project_id
+            ),
+          meta:
+            item.es_hito
+              ? 'Hito'
+              : item.estado || 'Tarea',
+          row: item,
+        })
+      ),
+
+      ...(boardsRes.data || []).map(
+        (item) => ({
+          key: `board:${item.id}`,
+          type: 'board',
+          module: 'Cards',
+          moduleKey: 'cards',
+          id: item.id,
+          parentId: item.id,
+          title: item.nombre,
+          subtitle:
+            item.descripcion ||
+            'Board',
+          row: item,
+        })
+      ),
+
+      ...(cardsRes.data || []).map(
+        (item) => ({
+          key: `card:${item.id}`,
+          type: 'card',
+          module: 'Cards',
+          moduleKey: 'cards',
+          id: item.id,
+          parentId:
+            item.board_id,
+          title: item.titulo,
+          subtitle:
+            nombrePadreBusquedaGlobal(
+              'card',
+              item.board_id
+            ),
+          meta:
+            item.tipo ||
+            item.estado ||
+            'Card',
+          row: item,
+        })
+      ),
+
+      ...(processMapsRes.data || []).map(
+        (item) => ({
+          key: `process_map:${item.id}`,
+          type: 'process_map',
+          module: 'Process',
+          moduleKey: 'process',
+          id: item.id,
+          parentId: item.id,
+          title: item.nombre,
+          subtitle:
+            item.descripcion ||
+            'Process',
+          row: item,
+        })
+      ),
+
+      ...(processNodesRes.data || []).map(
+        (item) => ({
+          key: `process_node:${item.id}`,
+          type: 'process_node',
+          module: 'Process',
+          moduleKey: 'process',
+          id: item.id,
+          parentId:
+            item.process_id,
+          title:
+            item.titulo ||
+            etiquetaTipoProceso(
+              item.tipo
+            ),
+          subtitle:
+            nombrePadreBusquedaGlobal(
+              'process_node',
+              item.process_id
+            ),
+          meta:
+            esProcessVisualNode(
+              item.tipo
+            )
+              ? item.tipo === 'image'
+                ? 'Imagen'
+                : 'Shape'
+              : etiquetaTipoProceso(
+                  item.tipo
+                ),
+          row: item,
+        })
+      ),
+
+      ...(kanbanProjectsRes.data || []).map(
+        (item) => ({
+          key: `kanban_project:${item.id}`,
+          type: 'kanban_project',
+          module: 'Kanban',
+          moduleKey: 'kanban',
+          id: item.id,
+          parentId: item.id,
+          title: item.nombre,
+          subtitle:
+            item.descripcion ||
+            'Tablero Kanban',
+          row: item,
+        })
+      ),
+
+      ...(kanbanCardsRes.data || []).map(
+        (item) => ({
+          key: `kanban_card:${item.id}`,
+          type: 'kanban_card',
+          module: 'Kanban',
+          moduleKey: 'kanban',
+          id: item.id,
+          parentId:
+            item.kanban_project_id,
+          title: item.titulo,
+          subtitle:
+            nombrePadreBusquedaGlobal(
+              'kanban_card',
+              item.kanban_project_id
+            ),
+          meta:
+            item.estado ||
+            item.tipo ||
+            'Tarjeta',
+          row: item,
+        })
+      ),
+    ]
+
+    setGlobalSearchResults(
+      ordenarResultadosGlobales(
+        resultados,
+        query
+      )
+    )
+
+    setGlobalSearchActiveIndex(0)
+  } catch (error) {
+    console.error(
+      'Error en buscador global:',
+      error
+    )
+
+    if (
+      requestId ===
+      globalSearchRequestRef.current
+    ) {
+      setGlobalSearchResults([])
+    }
+  } finally {
+    if (
+      requestId ===
+      globalSearchRequestRef.current
+    ) {
+      setGlobalSearchLoading(false)
+    }
+  }
+}
+
+function cerrarBusquedaGlobal() {
+  setGlobalSearchOpen(false)
+  setGlobalSearchActiveIndex(0)
+}
+
+function navegarResultadoGlobal(item) {
+  if (!item) return
+
+  cerrarBusquedaGlobal()
+  setGlobalSearchText('')
+
+  if (item.type === 'project') {
+    navegarVistaPrincipal('gantt')
+    setProyectoSeleccionadoId(
+      item.id
+    )
+    return
+  }
+
+  if (item.type === 'board') {
+    navegarVistaPrincipal('cards')
+    setBoardSeleccionadoId(
+      item.id
+    )
+    return
+  }
+
+  if (item.type === 'process_map') {
+    navegarVistaPrincipal('process')
+    setProcessSeleccionadoId(
+      item.id
+    )
+    return
+  }
+
+  if (item.type === 'kanban_project') {
+    navegarVistaPrincipal('kanban')
+    setKanbanProjectId(
+      item.id
+    )
+    return
+  }
+
+  setPendingGlobalTarget(item)
+
+  if (item.moduleKey === 'gantt') {
+    navegarVistaPrincipal('gantt')
+    setProyectoSeleccionadoId(
+      item.parentId
+    )
+    return
+  }
+
+  if (item.moduleKey === 'cards') {
+    navegarVistaPrincipal('cards')
+    setBoardSeleccionadoId(
+      item.parentId
+    )
+    return
+  }
+
+  if (item.moduleKey === 'process') {
+    navegarVistaPrincipal('process')
+    setProcessSeleccionadoId(
+      item.parentId
+    )
+    return
+  }
+
+  if (item.moduleKey === 'kanban') {
+    navegarVistaPrincipal('kanban')
+    setKanbanProjectId(
+      item.parentId
+    )
+  }
+}
+
+function manejarTecladoBusquedaGlobal(
+  event
+) {
+  if (
+    event.key === 'Escape'
+  ) {
+    event.preventDefault()
+    cerrarBusquedaGlobal()
+    globalSearchInputRef.current?.blur()
+    return
+  }
+
+  if (
+    globalSearchResults.length === 0
+  ) {
+    return
+  }
+
+  if (
+    event.key === 'ArrowDown'
+  ) {
+    event.preventDefault()
+    setGlobalSearchActiveIndex(
+      (actual) =>
+        Math.min(
+          actual + 1,
+          globalSearchResults.length - 1
+        )
+    )
+    return
+  }
+
+  if (
+    event.key === 'ArrowUp'
+  ) {
+    event.preventDefault()
+    setGlobalSearchActiveIndex(
+      (actual) =>
+        Math.max(
+          actual - 1,
+          0
+        )
+    )
+    return
+  }
+
+  if (
+    event.key === 'Enter'
+  ) {
+    event.preventDefault()
+
+    navegarResultadoGlobal(
+      globalSearchResults[
+        globalSearchActiveIndex
+      ]
+    )
+  }
 }
 
   async function cargarProyectos() {
@@ -19235,6 +21459,165 @@ function colorEstadoTarea(tarea) {
 
         <div className="top-actions">
 
+          <div
+            className={`global-search-wrap ${
+              globalSearchOpen
+                ? 'open'
+                : ''
+            }`}
+          >
+            <div className="global-search-input-shell">
+              <span className="global-search-icon">
+                ⌕
+              </span>
+
+              <input
+                ref={globalSearchInputRef}
+                type="search"
+                value={globalSearchText}
+                onFocus={() =>
+                  setGlobalSearchOpen(true)
+                }
+                onBlur={() =>
+                  window.setTimeout(
+                    () =>
+                      setGlobalSearchOpen(false),
+                    120
+                  )
+                }
+                onChange={(event) => {
+                  setGlobalSearchText(
+                    event.target.value
+                  )
+                  setGlobalSearchOpen(true)
+                }}
+                onKeyDown={
+                  manejarTecladoBusquedaGlobal
+                }
+                placeholder="Buscar en ProjectFlow..."
+                aria-label="Buscar en ProjectFlow"
+                autoComplete="off"
+              />
+
+              {globalSearchText && (
+                <button
+                  type="button"
+                  className="global-search-clear"
+                  onMouseDown={(event) =>
+                    event.preventDefault()
+                  }
+                  onClick={() => {
+                    setGlobalSearchText('')
+                    setGlobalSearchResults([])
+                    globalSearchInputRef.current?.focus()
+                  }}
+                  title="Limpiar búsqueda"
+                >
+                  ×
+                </button>
+              )}
+
+              {!globalSearchText && (
+                <span className="global-search-shortcut">
+                  Ctrl K
+                </span>
+              )}
+            </div>
+
+            {globalSearchOpen && (
+              <div
+                className="global-search-panel"
+                onMouseDown={(event) =>
+                  event.preventDefault()
+                }
+              >
+                {globalSearchText.trim().length < 2 ? (
+                  <div className="global-search-hint">
+                    <strong>Buscar en todo ProjectFlow</strong>
+                    <span>
+                      Escribí al menos 2 caracteres para encontrar proyectos,
+                      tareas, Cards, Process y Kanban.
+                    </span>
+                  </div>
+                ) : globalSearchLoading ? (
+                  <div className="global-search-loading">
+                    <span className="global-search-spinner" />
+                    Buscando…
+                  </div>
+                ) : globalSearchResults.length === 0 ? (
+                  <div className="global-search-empty">
+                    <strong>Sin coincidencias</strong>
+                    <span>
+                      Probá con otra palabra.
+                    </span>
+                  </div>
+                ) : (
+                  <div className="global-search-results">
+                    {globalSearchResults.map(
+                      (item, index) => (
+                        <button
+                          key={item.key}
+                          type="button"
+                          className={`global-search-result ${
+                            globalSearchActiveIndex === index
+                              ? 'active'
+                              : ''
+                          }`}
+                          onMouseEnter={() =>
+                            setGlobalSearchActiveIndex(index)
+                          }
+                          onClick={() =>
+                            navegarResultadoGlobal(item)
+                          }
+                        >
+                          <span
+                            className={`global-search-module-dot ${item.moduleKey}`}
+                          >
+                            {item.module === 'Gantt'
+                              ? 'G'
+                              : item.module === 'Cards'
+                                ? 'C'
+                                : item.module === 'Process'
+                                  ? 'P'
+                                  : 'K'}
+                          </span>
+
+                          <span className="global-search-result-copy">
+                            <span className="global-search-result-top">
+                              <strong>
+                                {item.title}
+                              </strong>
+
+                              <small>
+                                {item.module}
+                              </small>
+                            </span>
+
+                            <span className="global-search-result-bottom">
+                              <span>
+                                {item.subtitle}
+                              </span>
+
+                              {item.meta && (
+                                <em>
+                                  {item.meta}
+                                </em>
+                              )}
+                            </span>
+                          </span>
+
+                          <span className="global-search-open-arrow">
+                            ↗
+                          </span>
+                        </button>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="presence-wrap">
             <button
               type="button"
@@ -19534,6 +21917,36 @@ function colorEstadoTarea(tarea) {
               </div>
             )}
           </div>
+
+          <button
+            type="button"
+            className={`projectflow-chat-button ${
+              chatOpen
+                ? 'active'
+                : ''
+            } ${
+              chatUnreadCount > 0
+                ? 'unread'
+                : ''
+            }`}
+            onClick={abrirChatProjectFlow}
+            title={
+              chatUnreadCount > 0
+                ? `${chatUnreadCount} mensaje${chatUnreadCount === 1 ? '' : 's'} sin leer`
+                : 'Chat ProjectFlow'
+            }
+            aria-label="Chat ProjectFlow"
+          >
+            <span className="projectflow-chat-glyph" />
+
+            {chatUnreadCount > 0 && (
+              <span className="projectflow-chat-badge">
+                {chatUnreadCount > 99
+                  ? '99+'
+                  : chatUnreadCount}
+              </span>
+            )}
+          </button>
 
           <button
             type="button"
@@ -25041,6 +27454,549 @@ function colorEstadoTarea(tarea) {
       )}
 
 
+
+      {chatOpen && (
+        <aside className="projectflow-chat-drawer">
+          <div className="projectflow-chat-heading">
+            <div>
+              <span>
+                {chatActivePartnerId
+                  ? 'Conversación privada'
+                  : 'Colaboración'}
+              </span>
+              <h3>
+                {chatActivePartnerId
+                  ? chatPartnerName()
+                  : 'Chat ProjectFlow'}
+              </h3>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                setChatOpen(false)
+              }
+              title="Cerrar chat"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="projectflow-chat-tabs-wrap">
+            <div className="projectflow-chat-tabs">
+              <button
+                type="button"
+                className={`projectflow-chat-tab ${
+                  chatActiveChannelKey === 'general'
+                    ? 'active'
+                    : ''
+                }`}
+                onClick={() =>
+                  seleccionarCanalChat(null)
+                }
+              >
+                <span className="projectflow-chat-tab-avatar general">
+                  PF
+                </span>
+
+                <span>
+                  General
+                </span>
+
+                {(chatUnreadByChannel.general || 0) > 0 && (
+                  <b>
+                    {chatUnreadByChannel.general > 99
+                      ? '99+'
+                      : chatUnreadByChannel.general}
+                  </b>
+                )}
+              </button>
+
+              {chatParticipantes().map(
+                (perfil) => {
+                  const channelKey =
+                    canalPrivadoChat(
+                      session?.user?.id,
+                      perfil.id
+                    )
+
+                  const unread =
+                    chatUnreadByChannel[
+                      channelKey
+                    ] || 0
+
+                  const conectado =
+                    chatUsuarioConectado(
+                      perfil.id
+                    )
+
+                  return (
+                    <button
+                      key={perfil.id}
+                      type="button"
+                      className={`projectflow-chat-tab ${
+                        chatActivePartnerId === perfil.id
+                          ? 'active'
+                          : ''
+                      }`}
+                      onClick={() =>
+                        seleccionarCanalChat(
+                          perfil.id
+                        )
+                      }
+                      title={`Chat privado con ${perfil.nombre || 'usuario'}`}
+                    >
+                      <span className="projectflow-chat-tab-avatar">
+                        {initialsFromName(
+                          perfil.nombre ||
+                          'U'
+                        )}
+
+                        {conectado && (
+                          <i />
+                        )}
+                      </span>
+
+                      <span>
+                        {String(
+                          perfil.nombre ||
+                          'Usuario'
+                        ).split(' ')[0]}
+                      </span>
+
+                      {unread > 0 && (
+                        <b>
+                          {unread > 99
+                            ? '99+'
+                            : unread}
+                        </b>
+                      )}
+                    </button>
+                  )
+                }
+              )}
+            </div>
+          </div>
+
+          <div className="projectflow-chat-subheading">
+            {chatActivePartnerId ? (
+              <>
+                <span className={`presence-live-dot ${
+                  chatUsuarioConectado(chatActivePartnerId)
+                    ? ''
+                    : 'offline'
+                }`} />
+                <strong>
+                  {chatPartnerName()}
+                </strong>
+                <span>
+                  {chatUsuarioConectado(chatActivePartnerId)
+                    ? 'en línea'
+                    : 'chat privado'}
+                </span>
+                <i />
+                <span>
+                  Solo ustedes dos pueden ver esta conversación.
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="presence-live-dot" />
+                <strong>
+                  {usuariosConectados.length}
+                </strong>
+                <span>
+                  conectado{usuariosConectados.length === 1 ? '' : 's'}
+                </span>
+                <i />
+                <span>
+                  Usá <b>@</b> para personas y <b>#</b> para vincular trabajo.
+                </span>
+              </>
+            )}
+          </div>
+
+          <div className="projectflow-chat-messages">
+            {chatLoading && (
+              <div className="projectflow-chat-loading">
+                <span className="global-search-spinner" />
+                Cargando conversación…
+              </div>
+            )}
+
+            {!chatLoading &&
+              chatMessages.length === 0 && (
+                <div className="projectflow-chat-empty">
+                  <span className="projectflow-chat-empty-icon">
+                    <i />
+                  </span>
+
+                  <strong>
+                    Empezá la conversación
+                  </strong>
+
+                  <span>
+                    {chatActivePartnerId
+                      ? `Chat privado con ${chatPartnerName()}. Podés usar # para vincular trabajo de ProjectFlow.`
+                      : 'Escribí un mensaje y usá # para vincular Cards, Process, Kanban o tareas.'}
+                  </span>
+                </div>
+              )}
+
+            {chatMessages.map(
+              (message, index) => {
+                const anterior =
+                  chatMessages[
+                    index - 1
+                  ]
+
+                const mostrarFecha =
+                  !anterior ||
+                  fechaChat(
+                    anterior.created_at
+                  ) !==
+                    fechaChat(
+                      message.created_at
+                    )
+
+                const propio =
+                  message.user_id ===
+                  session?.user?.id
+
+                const avatar =
+                  avatarChatUsuario(
+                    message.user_id
+                  )
+
+                const nombre =
+                  nombreChatUsuario(
+                    message.user_id
+                  )
+
+                return (
+                  <div
+                    key={message.id}
+                    className="projectflow-chat-message-block"
+                  >
+                    {mostrarFecha && (
+                      <div className="projectflow-chat-date">
+                        <span>
+                          {fechaChat(
+                            message.created_at
+                          )}
+                        </span>
+                      </div>
+                    )}
+
+                    <div
+                      className={`projectflow-chat-message ${
+                        propio
+                          ? 'own'
+                          : ''
+                      }`}
+                    >
+                      <span className="projectflow-chat-avatar">
+                        {avatarExists(
+                          avatar
+                        ) ? (
+                          <img
+                            src={avatarSrcById(
+                              avatar
+                            )}
+                            alt=""
+                          />
+                        ) : (
+                          <span>
+                            {initialsFromName(
+                              nombre
+                            )}
+                          </span>
+                        )}
+                      </span>
+
+                      <div className="projectflow-chat-message-main">
+                        <div className="projectflow-chat-message-meta">
+                          <strong>
+                            {propio
+                              ? 'Vos'
+                              : nombre}
+                          </strong>
+
+                          <span>
+                            {horaChat(
+                              message.created_at
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="projectflow-chat-bubble">
+                          <p>
+                            {message.message}
+                          </p>
+
+                          {message.projectflow_message_refs?.length > 0 && (
+                            <div className="projectflow-chat-message-refs">
+                              {message.projectflow_message_refs.map(
+                                (ref) => (
+                                  <button
+                                    key={ref.id}
+                                    type="button"
+                                    className={`projectflow-chat-ref ${ref.module_key || ''}`}
+                                    onClick={() =>
+                                      navegarReferenciaChat(
+                                        ref
+                                      )
+                                    }
+                                    title="Abrir en ProjectFlow"
+                                  >
+                                    <span className="projectflow-chat-ref-module">
+                                      {ref.module === 'Gantt'
+                                        ? 'G'
+                                        : ref.module === 'Cards'
+                                          ? 'C'
+                                          : ref.module === 'Process'
+                                            ? 'P'
+                                            : 'K'}
+                                    </span>
+
+                                    <span className="projectflow-chat-ref-copy">
+                                      <strong>
+                                        {ref.title}
+                                      </strong>
+
+                                      <small>
+                                        {ref.subtitle ||
+                                          ref.module}
+                                      </small>
+                                    </span>
+
+                                    <span className="projectflow-chat-ref-arrow">
+                                      ↗
+                                    </span>
+                                  </button>
+                                )
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+            )}
+
+            <div
+              ref={chatMessagesEndRef}
+            />
+          </div>
+
+          <div className="projectflow-chat-composer-wrap">
+            {chatSuggestionMode && (
+              <div className="projectflow-chat-suggestions">
+                <div className="projectflow-chat-suggestion-heading">
+                  <strong>
+                    {chatSuggestionMode === 'mention'
+                      ? 'Mencionar persona'
+                      : 'Vincular a ProjectFlow'}
+                  </strong>
+
+                  <span>
+                    {chatSuggestionMode === 'mention'
+                      ? '@'
+                      : '#'}
+                    {chatSuggestionQuery}
+                  </span>
+                </div>
+
+                {chatSuggestionLoading ? (
+                  <div className="projectflow-chat-suggestion-loading">
+                    Buscando…
+                  </div>
+                ) : chatSuggestionItems.length === 0 ? (
+                  <div className="projectflow-chat-suggestion-empty">
+                    Sin coincidencias.
+                  </div>
+                ) : (
+                  <div className="projectflow-chat-suggestion-list">
+                    {chatSuggestionItems.map(
+                      (item, index) => (
+                        <button
+                          key={item.key}
+                          type="button"
+                          className={`projectflow-chat-suggestion ${
+                            chatSuggestionActiveIndex === index
+                              ? 'active'
+                              : ''
+                          }`}
+                          onMouseEnter={() =>
+                            setChatSuggestionActiveIndex(index)
+                          }
+                          onClick={() =>
+                            seleccionarSugerenciaChat(item)
+                          }
+                        >
+                          {chatSuggestionMode === 'mention' ? (
+                            <span className="projectflow-chat-suggestion-avatar">
+                              {initialsFromName(
+                                item.title
+                              )}
+                            </span>
+                          ) : (
+                            <span
+                              className={`global-search-module-dot ${item.moduleKey}`}
+                            >
+                              {item.module === 'Gantt'
+                                ? 'G'
+                                : item.module === 'Cards'
+                                  ? 'C'
+                                  : item.module === 'Process'
+                                    ? 'P'
+                                    : 'K'}
+                            </span>
+                          )}
+
+                          <span className="projectflow-chat-suggestion-copy">
+                            <strong>
+                              {item.title}
+                            </strong>
+                            <small>
+                              {item.subtitle}
+                            </small>
+                          </span>
+
+                          {item.meta && (
+                            <em>
+                              {item.meta}
+                            </em>
+                          )}
+                        </button>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {chatPendingRefs.length > 0 && (
+              <div className="projectflow-chat-pending-refs">
+                {chatPendingRefs.map(
+                  (ref) => (
+                    <span
+                      key={referenciaChatKey(ref)}
+                      className={`projectflow-chat-pending-ref ${ref.module_key || ''}`}
+                    >
+                      <b>
+                        {ref.module === 'Gantt'
+                          ? 'G'
+                          : ref.module === 'Cards'
+                            ? 'C'
+                            : ref.module === 'Process'
+                              ? 'P'
+                              : 'K'}
+                      </b>
+
+                      <span>
+                        {ref.title}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          quitarReferenciaChat(ref)
+                        }
+                        title="Quitar referencia"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )
+                )}
+              </div>
+            )}
+
+            <div className="projectflow-chat-composer">
+              <textarea
+                ref={chatTextareaRef}
+                value={chatText}
+                onChange={(event) => {
+                  const valor =
+                    event.target.value
+
+                  setChatText(
+                    valor
+                  )
+
+                  actualizarAtajoChat(
+                    valor,
+                    event.target.selectionStart
+                  )
+                }}
+                onClick={(event) =>
+                  actualizarAtajoChat(
+                    event.currentTarget.value,
+                    event.currentTarget.selectionStart
+                  )
+                }
+                onKeyUp={(event) => {
+                  if (
+                    [
+                      'ArrowDown',
+                      'ArrowUp',
+                      'Enter',
+                      'Escape',
+                    ].includes(
+                      event.key
+                    )
+                  ) {
+                    return
+                  }
+
+                  actualizarAtajoChat(
+                    event.currentTarget.value,
+                    event.currentTarget.selectionStart
+                  )
+                }}
+                onKeyDown={
+                  manejarTecladoChat
+                }
+                placeholder={
+                  chatActivePartnerId
+                    ? `Mensaje privado a ${chatPartnerName()}…  #objeto`
+                    : 'Escribí un mensaje…  @persona  #objeto'
+                }
+                rows={2}
+                maxLength={4000}
+              />
+
+              <button
+                type="button"
+                className="projectflow-chat-send"
+                onClick={enviarMensajeChat}
+                disabled={
+                  !chatText.trim() ||
+                  chatSending
+                }
+                title="Enviar mensaje"
+              >
+                {chatSending
+                  ? '…'
+                  : '➤'}
+              </button>
+            </div>
+
+            <div className="projectflow-chat-composer-help">
+              <span>
+                Enter envía · Shift+Enter nueva línea
+              </span>
+
+              <span>
+                @ persona · # trabajo
+              </span>
+            </div>
+          </div>
+        </aside>
+      )}
 
       {activityOpen && (
         <div
