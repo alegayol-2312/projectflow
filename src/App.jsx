@@ -1543,6 +1543,14 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [processGridVisible, setProcessGridVisible] = useState(false)
   const [processSnapEnabled, setProcessSnapEnabled] = useState(true)
   const [processZoom, setProcessZoom] = useState(1)
+  const [processMinimapView, setProcessMinimapView] = useState({
+    scrollLeft: 0,
+    scrollTop: 0,
+    width: 0,
+    height: 0,
+  })
+  const [processMinimapDragging, setProcessMinimapDragging] = useState(false)
+
   const [processIconGeometry, setProcessIconGeometry] = useState({})
   const [processGuides, setProcessGuides] = useState({
     x: null,
@@ -1652,6 +1660,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   })
   const [expandedFolderIds, setExpandedFolderIds] = useState({})
   const processCanvasPrintRef = useRef(null)
+  const processCanvasRef = useRef(null)
   const processNodeTextRef = useRef(null)
   const cardTitleRef = useRef(null)
 
@@ -1714,6 +1723,14 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [resizeInfo, setResizeInfo] = useState(null)
 
   const [boardZoom, setBoardZoom] = useState(0.8)
+  const [boardMinimapView, setBoardMinimapView] = useState({
+    scrollLeft: 0,
+    scrollTop: 0,
+    width: 0,
+    height: 0,
+  })
+  const [boardMinimapDragging, setBoardMinimapDragging] = useState(false)
+
   const cardUndoRef = useRef([])
   const [panInfo, setPanInfo] = useState(null)
 
@@ -1785,6 +1802,16 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const [chatActivePartnerId, setChatActivePartnerId] = useState(null)
   const [chatUnreadCount, setChatUnreadCount] = useState(0)
   const [chatUnreadByChannel, setChatUnreadByChannel] = useState({})
+  const [versionsOpen, setVersionsOpen] = useState(false)
+  const [versionsResourceType, setVersionsResourceType] = useState(null)
+  const [versionsResourceId, setVersionsResourceId] = useState(null)
+  const [versionsList, setVersionsList] = useState([])
+  const [versionsLoading, setVersionsLoading] = useState(false)
+  const [versionsSaving, setVersionsSaving] = useState(false)
+  const [versionsRestoringId, setVersionsRestoringId] = useState(null)
+  const versionAutoStateRef = useRef(null)
+  const chatTabsRef = useRef(null)
+
   const [chatLoading, setChatLoading] = useState(false)
   const [chatSending, setChatSending] = useState(false)
   const [chatText, setChatText] = useState('')
@@ -3951,6 +3978,20 @@ async function seleccionarCanalChat(
 
   setChatActiveChannelKey(
     channelKey
+  )
+
+  window.setTimeout(
+    () => {
+      if (
+        chatTabsRef.current
+      ) {
+        chatTabsRef.current.scrollTo({
+          left: 0,
+          behavior: 'smooth',
+        })
+      }
+    },
+    0
   )
 
   setChatText('')
@@ -8030,22 +8071,29 @@ async function eliminarShape(shape) {
     shape.tipo === 'image' &&
     shape.asset_path
   ) {
-    const {
-      error: storageError,
-    } =
-      await supabase.storage
-        .from(
-          'board-images'
-        )
-        .remove([
-          shape.asset_path,
-        ])
-
-    if (storageError) {
-      console.error(
-        'La imagen se eliminó del Board, pero no del Storage:',
-        storageError
+    const protegida =
+      await versionAssetProtegido(
+        shape.asset_path
       )
+
+    if (!protegida) {
+      const {
+        error: storageError,
+      } =
+        await supabase.storage
+          .from(
+            'board-images'
+          )
+          .remove([
+            shape.asset_path,
+          ])
+
+      if (storageError) {
+        console.error(
+          'La imagen se eliminó del Board, pero no del Storage:',
+          storageError
+        )
+      }
     }
   }
 
@@ -9351,6 +9399,1214 @@ async function confirmarBorradoSeleccionado() {
   }
 }
 
+
+function limpiarFilaVersion(row) {
+  if (
+    !row ||
+    typeof row !== 'object'
+  ) {
+    return row
+  }
+
+  const {
+    created_at,
+    updated_at,
+    ...rest
+  } = row
+
+  return rest
+}
+
+function normalizarVersionValor(valor) {
+  if (Array.isArray(valor)) {
+    return valor.map(
+      normalizarVersionValor
+    )
+  }
+
+  if (
+    valor &&
+    typeof valor === 'object'
+  ) {
+    return Object.keys(valor)
+      .sort()
+      .reduce(
+        (acc, key) => {
+          acc[key] =
+            normalizarVersionValor(
+              valor[key]
+            )
+          return acc
+        },
+        {}
+      )
+  }
+
+  return valor
+}
+
+function fingerprintVersion(snapshot) {
+  return JSON.stringify(
+    normalizarVersionValor(
+      snapshot
+    )
+  )
+}
+
+function bytesVersion(snapshot) {
+  try {
+    return new Blob([
+      JSON.stringify(snapshot),
+    ]).size
+  } catch {
+    return 0
+  }
+}
+
+function assetsVersion(snapshot) {
+  const paths = []
+
+  const pushPath =
+    (item) => {
+      if (
+        item?.asset_path
+      ) {
+        paths.push(
+          item.asset_path
+        )
+      }
+    }
+
+  ;(
+    snapshot?.shapes ||
+    []
+  ).forEach(pushPath)
+
+  ;(
+    snapshot?.nodes ||
+    []
+  ).forEach(pushPath)
+
+  return Array.from(
+    new Set(paths)
+  )
+}
+
+function snapshotBoardDesdeEstado(
+  context
+) {
+  return {
+    schema_version: 1,
+    resource_type: 'board',
+    board: {
+      nombre:
+        context.board?.nombre ||
+        '',
+      descripcion:
+        context.board?.descripcion ||
+        '',
+      canvas_bg:
+        context.board?.canvas_bg ||
+        '#5d6670',
+    },
+    cards:
+      (context.cards || []).map(
+        limpiarFilaVersion
+      ),
+    links:
+      (context.cardLinks || []).map(
+        limpiarFilaVersion
+      ),
+    zones:
+      (context.boardZones || []).map(
+        limpiarFilaVersion
+      ),
+    shapes:
+      (context.boardShapes || []).map(
+        limpiarFilaVersion
+      ),
+  }
+}
+
+function snapshotProcessDesdeEstado(
+  context
+) {
+  return {
+    schema_version: 1,
+    resource_type: 'process',
+    process: {
+      nombre:
+        context.process?.nombre ||
+        '',
+      descripcion:
+        context.process?.descripcion ||
+        '',
+      canvas_bg:
+        context.process?.canvas_bg ||
+        '#0b1220',
+      arrow_mode:
+        context.process?.arrow_mode ||
+        'orthogonal',
+    },
+    nodes:
+      (context.processNodes || []).map(
+        limpiarFilaVersion
+      ),
+    links:
+      (context.processLinks || []).map(
+        limpiarFilaVersion
+      ),
+    boxes:
+      (context.processBoxes || []).map(
+        limpiarFilaVersion
+      ),
+  }
+}
+
+function snapshotVersionActual(
+  resourceType
+) {
+  if (
+    resourceType === 'board'
+  ) {
+    return snapshotBoardDesdeEstado({
+      board:
+        boardSeleccionado,
+      cards,
+      cardLinks,
+      boardZones,
+      boardShapes,
+    })
+  }
+
+  if (
+    resourceType === 'process'
+  ) {
+    return snapshotProcessDesdeEstado({
+      process:
+        processSeleccionado,
+      processNodes,
+      processLinks,
+      processBoxes,
+    })
+  }
+
+  return null
+}
+
+function cantidadObjetosVersion(
+  snapshot
+) {
+  if (
+    snapshot?.resource_type ===
+    'board'
+  ) {
+    return (
+      (snapshot.cards?.length || 0) +
+      (snapshot.shapes?.length || 0) +
+      (snapshot.zones?.length || 0)
+    )
+  }
+
+  return (
+    (snapshot?.nodes?.length || 0) +
+    (snapshot?.boxes?.length || 0)
+  )
+}
+
+function nombreTipoVersion(kind) {
+  if (kind === 'manual') {
+    return 'Guardada manualmente'
+  }
+
+  if (
+    kind === 'pre_restore'
+  ) {
+    return 'Antes de restaurar'
+  }
+
+  return 'Automática'
+}
+
+function iconoTipoVersion(kind) {
+  if (kind === 'manual') {
+    return '★'
+  }
+
+  if (
+    kind === 'pre_restore'
+  ) {
+    return '↶'
+  }
+
+  return '◷'
+}
+
+function nombreAutorVersion(
+  userId
+) {
+  if (!userId) {
+    return 'ProjectFlow'
+  }
+
+  if (
+    userId ===
+    session?.user?.id
+  ) {
+    return 'Vos'
+  }
+
+  return (
+    perfiles.find(
+      (perfil) =>
+        perfil.id === userId
+    )?.nombre ||
+    'Usuario'
+  )
+}
+
+function fechaVersion(fecha) {
+  if (!fecha) return ''
+
+  return new Date(
+    fecha
+  ).toLocaleString(
+    'es-AR',
+    {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }
+  )
+}
+
+function pesoVersion(bytes) {
+  const value =
+    Number(bytes) || 0
+
+  if (value < 1024) {
+    return `${value} B`
+  }
+
+  if (
+    value <
+    1024 * 1024
+  ) {
+    return `${Math.max(
+      1,
+      Math.round(
+        value / 1024
+      )
+    )} KB`
+  }
+
+  return `${(
+    value /
+    1024 /
+    1024
+  ).toFixed(1)} MB`
+}
+
+async function cargarVersiones(
+  resourceType,
+  resourceId
+) {
+  if (
+    !resourceType ||
+    !resourceId
+  ) {
+    setVersionsList([])
+    return
+  }
+
+  setVersionsLoading(true)
+
+  try {
+    const {
+      data,
+      error,
+    } = await supabase
+      .from(
+        'projectflow_versions'
+      )
+      .select('*')
+      .eq(
+        'resource_type',
+        resourceType
+      )
+      .eq(
+        'resource_id',
+        resourceId
+      )
+      .order(
+        'created_at',
+        {
+          ascending: false,
+        }
+      )
+      .limit(8)
+
+    if (error) {
+      console.error(
+        'No se pudieron cargar las versiones:',
+        error
+      )
+      return
+    }
+
+    setVersionsList(
+      data || []
+    )
+  } finally {
+    setVersionsLoading(false)
+  }
+}
+
+async function limpiarVersionesAntiguas(
+  resourceType,
+  resourceId
+) {
+  const {
+    data,
+    error,
+  } = await supabase
+    .from(
+      'projectflow_versions'
+    )
+    .select(
+      'id,asset_paths'
+    )
+    .eq(
+      'resource_type',
+      resourceType
+    )
+    .eq(
+      'resource_id',
+      resourceId
+    )
+    .order(
+      'created_at',
+      {
+        ascending: false,
+      }
+    )
+
+  if (error) {
+    console.error(
+      'No se pudo revisar el límite de versiones:',
+      error
+    )
+    return
+  }
+
+  const sobrantes =
+    (data || []).slice(8)
+
+  if (
+    sobrantes.length === 0
+  ) {
+    return
+  }
+
+  const ids =
+    sobrantes.map(
+      (item) => item.id
+    )
+
+  const {
+    error: deleteError,
+  } = await supabase
+    .from(
+      'projectflow_versions'
+    )
+    .delete()
+    .in(
+      'id',
+      ids
+    )
+
+  if (deleteError) {
+    console.error(
+      'No se pudieron eliminar versiones antiguas:',
+      deleteError
+    )
+  }
+}
+
+async function guardarSnapshotVersion({
+  resourceType,
+  resourceId,
+  snapshot,
+  kind = 'manual',
+  silent = false,
+  cleanup = true,
+}) {
+  if (
+    !resourceType ||
+    !resourceId ||
+    !snapshot ||
+    !session?.user?.id
+  ) {
+    return null
+  }
+
+  const payload = {
+    resource_type:
+      resourceType,
+    resource_id:
+      resourceId,
+    version_kind:
+      kind,
+    created_by:
+      session.user.id,
+    object_count:
+      cantidadObjetosVersion(
+        snapshot
+      ),
+    size_bytes:
+      bytesVersion(
+        snapshot
+      ),
+    asset_paths:
+      assetsVersion(
+        snapshot
+      ),
+    snapshot,
+  }
+
+  const {
+    data,
+    error,
+  } = await supabase
+    .from(
+      'projectflow_versions'
+    )
+    .insert(payload)
+    .select()
+    .single()
+
+  if (error) {
+    console.error(
+      'No se pudo guardar la versión:',
+      error
+    )
+
+    if (!silent) {
+      alert(
+        `No se pudo guardar la versión: ${error.message}`
+      )
+    }
+
+    return null
+  }
+
+  if (cleanup) {
+    await limpiarVersionesAntiguas(
+      resourceType,
+      resourceId
+    )
+  }
+
+  if (!silent) {
+    mostrarToast(
+      kind === 'manual'
+        ? 'Versión guardada'
+        : 'Versión creada'
+    )
+  }
+
+  if (
+    versionsOpen &&
+    versionsResourceType ===
+      resourceType &&
+    versionsResourceId ===
+      resourceId
+  ) {
+    await cargarVersiones(
+      resourceType,
+      resourceId
+    )
+  }
+
+  return data
+}
+
+async function abrirVersiones(
+  resourceType
+) {
+  const resourceId =
+    resourceType === 'board'
+      ? boardSeleccionadoId
+      : processSeleccionadoId
+
+  if (!resourceId) return
+
+  setVersionsResourceType(
+    resourceType
+  )
+
+  setVersionsResourceId(
+    resourceId
+  )
+
+  setVersionsOpen(true)
+
+  setChatOpen(false)
+  setActivityOpen(false)
+  setPresencePanelOpen(false)
+  setSettingsMenuOpen(false)
+
+  await cargarVersiones(
+    resourceType,
+    resourceId
+  )
+}
+
+async function guardarVersionManual() {
+  if (
+    !versionsResourceType ||
+    !versionsResourceId ||
+    versionsSaving
+  ) {
+    return
+  }
+
+  const snapshot =
+    snapshotVersionActual(
+      versionsResourceType
+    )
+
+  if (!snapshot) return
+
+  setVersionsSaving(true)
+
+  try {
+    await guardarSnapshotVersion({
+      resourceType:
+        versionsResourceType,
+      resourceId:
+        versionsResourceId,
+      snapshot,
+      kind:
+        'manual',
+    })
+  } finally {
+    setVersionsSaving(false)
+  }
+}
+
+async function versionAssetProtegido(
+  assetPath
+) {
+  if (!assetPath) {
+    return false
+  }
+
+  const {
+    count,
+    error,
+  } = await supabase
+    .from(
+      'projectflow_versions'
+    )
+    .select(
+      'id',
+      {
+        count: 'exact',
+        head: true,
+      }
+    )
+    .contains(
+      'asset_paths',
+      [
+        assetPath,
+      ]
+    )
+
+  if (error) {
+    console.error(
+      'No se pudo verificar si la imagen está protegida por versiones:',
+      error
+    )
+    return true
+  }
+
+  return (
+    Number(count) > 0
+  )
+}
+
+async function restaurarBoardDesdeVersion(
+  version
+) {
+  const snapshot =
+    version?.snapshot
+
+  if (
+    !snapshot ||
+    !boardSeleccionadoId
+  ) {
+    return
+  }
+
+  const boardId =
+    boardSeleccionadoId
+
+  const snapshotCardIds =
+    new Set(
+      (snapshot.cards || []).map(
+        (item) => item.id
+      )
+    )
+
+  const extras =
+    cards.filter(
+      (item) =>
+        !snapshotCardIds.has(
+          item.id
+        )
+    )
+
+  for (
+    const card
+    of extras
+  ) {
+    const {
+      error,
+    } = await supabase
+      .from('cards')
+      .update({
+        archivada: true,
+        updated_at:
+          new Date().toISOString(),
+      })
+      .eq(
+        'id',
+        card.id
+      )
+
+    if (error) {
+      throw error
+    }
+  }
+
+  const {
+    error: linksDeleteError,
+  } = await supabase
+    .from('card_links')
+    .delete()
+    .eq(
+      'board_id',
+      boardId
+    )
+
+  if (linksDeleteError) {
+    throw linksDeleteError
+  }
+
+  const [
+    shapesDelete,
+    zonesDelete,
+  ] = await Promise.all([
+    supabase
+      .from('card_shapes')
+      .delete()
+      .eq(
+        'board_id',
+        boardId
+      ),
+    supabase
+      .from('board_zones')
+      .delete()
+      .eq(
+        'board_id',
+        boardId
+      ),
+  ])
+
+  const deleteError =
+    shapesDelete.error ||
+    zonesDelete.error
+
+  if (deleteError) {
+    throw deleteError
+  }
+
+  if (
+    snapshot.cards?.length
+  ) {
+    const {
+      error,
+    } = await supabase
+      .from('cards')
+      .upsert(
+        snapshot.cards.map(
+          (item) => ({
+            ...item,
+            board_id:
+              boardId,
+            archivada: false,
+          })
+        ),
+        {
+          onConflict: 'id',
+        }
+      )
+
+    if (error) throw error
+  }
+
+  if (
+    snapshot.zones?.length
+  ) {
+    const {
+      error,
+    } = await supabase
+      .from('board_zones')
+      .insert(
+        snapshot.zones.map(
+          (item) => ({
+            ...item,
+            board_id:
+              boardId,
+          })
+        )
+      )
+
+    if (error) throw error
+  }
+
+  if (
+    snapshot.shapes?.length
+  ) {
+    const {
+      error,
+    } = await supabase
+      .from('card_shapes')
+      .insert(
+        snapshot.shapes.map(
+          (item) => ({
+            ...item,
+            board_id:
+              boardId,
+          })
+        )
+      )
+
+    if (error) throw error
+  }
+
+  if (
+    snapshot.links?.length
+  ) {
+    const {
+      error,
+    } = await supabase
+      .from('card_links')
+      .insert(
+        snapshot.links.map(
+          (item) => ({
+            ...item,
+            board_id:
+              boardId,
+          })
+        )
+      )
+
+    if (error) throw error
+  }
+
+  const {
+    error: boardError,
+  } = await supabase
+    .from('card_boards')
+    .update({
+      nombre:
+        snapshot.board?.nombre ||
+        boardSeleccionado?.nombre ||
+        'Board',
+      descripcion:
+        snapshot.board?.descripcion ||
+        '',
+      canvas_bg:
+        snapshot.board?.canvas_bg ||
+        '#5d6670',
+      updated_at:
+        new Date().toISOString(),
+    })
+    .eq(
+      'id',
+      boardId
+    )
+
+  if (boardError) {
+    throw boardError
+  }
+
+  await Promise.all([
+    cargarBoards(),
+    cargarCards(boardId),
+    cargarCardLinks(boardId),
+    cargarBoardZones(boardId),
+    cargarBoardShapes(boardId),
+  ])
+}
+
+async function restaurarProcessDesdeVersion(
+  version
+) {
+  const snapshot =
+    version?.snapshot
+
+  if (
+    !snapshot ||
+    !processSeleccionadoId
+  ) {
+    return
+  }
+
+  const processId =
+    processSeleccionadoId
+
+  const {
+    error: linksDeleteError,
+  } = await supabase
+    .from('process_links')
+    .delete()
+    .eq(
+      'process_id',
+      processId
+    )
+
+  if (linksDeleteError) {
+    throw linksDeleteError
+  }
+
+  const [
+    nodesDelete,
+    boxesDelete,
+  ] = await Promise.all([
+    supabase
+      .from('process_nodes')
+      .delete()
+      .eq(
+        'process_id',
+        processId
+      ),
+    supabase
+      .from('process_boxes')
+      .delete()
+      .eq(
+        'process_id',
+        processId
+      ),
+  ])
+
+  const deleteError =
+    nodesDelete.error ||
+    boxesDelete.error
+
+  if (deleteError) {
+    throw deleteError
+  }
+
+  if (
+    snapshot.boxes?.length
+  ) {
+    const {
+      error,
+    } = await supabase
+      .from('process_boxes')
+      .insert(
+        snapshot.boxes.map(
+          (item) => ({
+            ...item,
+            process_id:
+              processId,
+          })
+        )
+      )
+
+    if (error) throw error
+  }
+
+  if (
+    snapshot.nodes?.length
+  ) {
+    const {
+      error,
+    } = await supabase
+      .from('process_nodes')
+      .insert(
+        snapshot.nodes.map(
+          (item) => ({
+            ...item,
+            process_id:
+              processId,
+          })
+        )
+      )
+
+    if (error) throw error
+  }
+
+  if (
+    snapshot.links?.length
+  ) {
+    const {
+      error,
+    } = await supabase
+      .from('process_links')
+      .insert(
+        snapshot.links.map(
+          (item) => ({
+            ...item,
+            process_id:
+              processId,
+          })
+        )
+      )
+
+    if (error) throw error
+  }
+
+  const {
+    error: mapError,
+  } = await supabase
+    .from('process_maps')
+    .update({
+      nombre:
+        snapshot.process?.nombre ||
+        processSeleccionado?.nombre ||
+        'Proceso',
+      descripcion:
+        snapshot.process?.descripcion ||
+        '',
+      canvas_bg:
+        snapshot.process?.canvas_bg ||
+        '#0b1220',
+      arrow_mode:
+        snapshot.process?.arrow_mode ||
+        'orthogonal',
+      updated_at:
+        new Date().toISOString(),
+    })
+    .eq(
+      'id',
+      processId
+    )
+
+  if (mapError) {
+    throw mapError
+  }
+
+  await Promise.all([
+    cargarProcessMaps(),
+    cargarProcessCanvas(
+      processId
+    ),
+  ])
+}
+
+async function restaurarVersion(
+  version
+) {
+  if (
+    !version ||
+    versionsRestoringId
+  ) {
+    return
+  }
+
+  const confirmar =
+    window.confirm(
+      '¿Restaurar esta versión? El estado actual se guardará antes de volver atrás.'
+    )
+
+  if (!confirmar) return
+
+  setVersionsRestoringId(
+    version.id
+  )
+
+  try {
+    const actual =
+      snapshotVersionActual(
+        versionsResourceType
+      )
+
+    if (actual) {
+      await guardarSnapshotVersion({
+        resourceType:
+          versionsResourceType,
+        resourceId:
+          versionsResourceId,
+        snapshot:
+          actual,
+        kind:
+          'pre_restore',
+        silent:
+          true,
+        cleanup:
+          false,
+      })
+    }
+
+    if (
+      versionsResourceType ===
+      'board'
+    ) {
+      await restaurarBoardDesdeVersion(
+        version
+      )
+    } else {
+      await restaurarProcessDesdeVersion(
+        version
+      )
+    }
+
+    await limpiarVersionesAntiguas(
+      versionsResourceType,
+      versionsResourceId
+    )
+
+    await cargarVersiones(
+      versionsResourceType,
+      versionsResourceId
+    )
+
+    mostrarToast(
+      'Versión restaurada'
+    )
+  } catch (error) {
+    console.error(
+      'No se pudo restaurar la versión:',
+      error
+    )
+
+    alert(
+      `No se pudo restaurar la versión: ${
+        error?.message ||
+        'error desconocido'
+      }`
+    )
+  } finally {
+    setVersionsRestoringId(
+      null
+    )
+  }
+}
+
+async function guardarVersionAutomaticaDesdeRef() {
+  const context =
+    versionAutoStateRef.current
+
+  if (
+    !context ||
+    !session?.user?.id
+  ) {
+    return
+  }
+
+  let resourceType = null
+  let resourceId = null
+  let snapshot = null
+
+  if (
+    context.vistaPrincipal ===
+      'cards' &&
+    context.boardId
+  ) {
+    resourceType = 'board'
+    resourceId =
+      context.boardId
+    snapshot =
+      snapshotBoardDesdeEstado(
+        context
+      )
+  }
+
+  if (
+    context.vistaPrincipal ===
+      'process' &&
+    context.processId
+  ) {
+    resourceType = 'process'
+    resourceId =
+      context.processId
+    snapshot =
+      snapshotProcessDesdeEstado(
+        context
+      )
+  }
+
+  if (
+    !resourceType ||
+    !resourceId ||
+    !snapshot
+  ) {
+    return
+  }
+
+  const {
+    data: latest,
+    error,
+  } = await supabase
+    .from(
+      'projectflow_versions'
+    )
+    .select(
+      'snapshot'
+    )
+    .eq(
+      'resource_type',
+      resourceType
+    )
+    .eq(
+      'resource_id',
+      resourceId
+    )
+    .order(
+      'created_at',
+      {
+        ascending: false,
+      }
+    )
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    console.error(
+      'No se pudo verificar la versión automática:',
+      error
+    )
+    return
+  }
+
+  if (
+    latest?.snapshot &&
+    fingerprintVersion(
+      latest.snapshot
+    ) ===
+      fingerprintVersion(
+        snapshot
+      )
+  ) {
+    return
+  }
+
+  await guardarSnapshotVersion({
+    resourceType,
+    resourceId,
+    snapshot,
+    kind:
+      'automatic',
+    silent:
+      true,
+  })
+}
+
 async function archivarProcessMap(process) {
 
   const { error } = await supabase
@@ -10646,10 +11902,22 @@ async function eliminarProcessVisual(node) {
     return
   }
 
-  if (node.tipo === 'image' && node.asset_path) {
-    await supabase.storage
-      .from('board-images')
-      .remove([node.asset_path])
+  if (
+    node.tipo === 'image' &&
+    node.asset_path
+  ) {
+    const protegida =
+      await versionAssetProtegido(
+        node.asset_path
+      )
+
+    if (!protegida) {
+      await supabase.storage
+        .from('board-images')
+        .remove([
+          node.asset_path,
+        ])
+    }
   }
 
   const { error } = await supabase
@@ -11325,6 +12593,344 @@ async function guardarPosicionesProcessNodes(nodes) {
   }
 }
 
+
+function calcularLayoutObjetos(
+  objetos,
+  accion
+) {
+  if (!Array.isArray(objetos)) {
+    return []
+  }
+
+  const lista =
+    objetos.map(
+      (objeto) => ({
+        ...objeto,
+        x:
+          Number(objeto.x) || 0,
+        y:
+          Number(objeto.y) || 0,
+        width:
+          Number(objeto.width) || 0,
+        height:
+          Number(objeto.height) || 0,
+      })
+    )
+
+  if (lista.length < 2) {
+    return lista
+  }
+
+  const left =
+    Math.min(
+      ...lista.map(
+        (item) => item.x
+      )
+    )
+
+  const right =
+    Math.max(
+      ...lista.map(
+        (item) =>
+          item.x +
+          item.width
+      )
+    )
+
+  const top =
+    Math.min(
+      ...lista.map(
+        (item) => item.y
+      )
+    )
+
+  const bottom =
+    Math.max(
+      ...lista.map(
+        (item) =>
+          item.y +
+          item.height
+      )
+    )
+
+  const centerX =
+    (left + right) / 2
+
+  const centerY =
+    (top + bottom) / 2
+
+  if (
+    accion === 'left'
+  ) {
+    return lista.map(
+      (item) => ({
+        ...item,
+        x: left,
+      })
+    )
+  }
+
+  if (
+    accion === 'centerH'
+  ) {
+    return lista.map(
+      (item) => ({
+        ...item,
+        x:
+          centerX -
+          item.width / 2,
+      })
+    )
+  }
+
+  if (
+    accion === 'right'
+  ) {
+    return lista.map(
+      (item) => ({
+        ...item,
+        x:
+          right -
+          item.width,
+      })
+    )
+  }
+
+  if (
+    accion === 'top'
+  ) {
+    return lista.map(
+      (item) => ({
+        ...item,
+        y: top,
+      })
+    )
+  }
+
+  if (
+    accion === 'centerV'
+  ) {
+    return lista.map(
+      (item) => ({
+        ...item,
+        y:
+          centerY -
+          item.height / 2,
+      })
+    )
+  }
+
+  if (
+    accion === 'bottom'
+  ) {
+    return lista.map(
+      (item) => ({
+        ...item,
+        y:
+          bottom -
+          item.height,
+      })
+    )
+  }
+
+  if (
+    accion === 'distributeH'
+  ) {
+    if (
+      lista.length < 3
+    ) {
+      return lista
+    }
+
+    const ordenados =
+      [...lista].sort(
+        (a, b) =>
+          a.x - b.x
+      )
+
+    const first =
+      ordenados[0]
+
+    const last =
+      ordenados[
+        ordenados.length - 1
+      ]
+
+    const occupied =
+      ordenados.reduce(
+        (total, item) =>
+          total +
+          item.width,
+        0
+      )
+
+    const span =
+      (
+        last.x +
+        last.width
+      ) -
+      first.x
+
+    const gap =
+      (
+        span -
+        occupied
+      ) /
+      (
+        ordenados.length -
+        1
+      )
+
+    let cursor =
+      first.x
+
+    return ordenados.map(
+      (item, index) => {
+        if (
+          index === 0
+        ) {
+          cursor =
+            item.x +
+            item.width
+
+          return item
+        }
+
+        if (
+          index ===
+          ordenados.length - 1
+        ) {
+          return item
+        }
+
+        const siguiente = {
+          ...item,
+          x:
+            cursor +
+            gap,
+        }
+
+        cursor =
+          siguiente.x +
+          siguiente.width
+
+        return siguiente
+      }
+    )
+  }
+
+  if (
+    accion === 'distributeV'
+  ) {
+    if (
+      lista.length < 3
+    ) {
+      return lista
+    }
+
+    const ordenados =
+      [...lista].sort(
+        (a, b) =>
+          a.y - b.y
+      )
+
+    const first =
+      ordenados[0]
+
+    const last =
+      ordenados[
+        ordenados.length - 1
+      ]
+
+    const occupied =
+      ordenados.reduce(
+        (total, item) =>
+          total +
+          item.height,
+        0
+      )
+
+    const span =
+      (
+        last.y +
+        last.height
+      ) -
+      first.y
+
+    const gap =
+      (
+        span -
+        occupied
+      ) /
+      (
+        ordenados.length -
+        1
+      )
+
+    let cursor =
+      first.y
+
+    return ordenados.map(
+      (item, index) => {
+        if (
+          index === 0
+        ) {
+          cursor =
+            item.y +
+            item.height
+
+          return item
+        }
+
+        if (
+          index ===
+          ordenados.length - 1
+        ) {
+          return item
+        }
+
+        const siguiente = {
+          ...item,
+          y:
+            cursor +
+            gap,
+        }
+
+        cursor =
+          siguiente.y +
+          siguiente.height
+
+        return siguiente
+      }
+    )
+  }
+
+  return lista
+}
+
+function etiquetaAccionLayout(
+  accion
+) {
+  return {
+    left:
+      'Alinear izquierda',
+    centerH:
+      'Centrar horizontalmente',
+    right:
+      'Alinear derecha',
+    top:
+      'Alinear arriba',
+    centerV:
+      'Centrar verticalmente',
+    bottom:
+      'Alinear abajo',
+    distributeH:
+      'Distribuir horizontalmente',
+    distributeV:
+      'Distribuir verticalmente',
+  }[accion] || 'Organizar'
+}
+
 async function alinearComponenteSeleccionProcess() {
   if (
     selectedProcessNodeIds.length === 0
@@ -11844,6 +13450,130 @@ async function alinearComponenteSeleccionProcess() {
   )
 }
 
+
+
+async function organizarSeleccionProcess(
+  accion
+) {
+  const seleccionados =
+    processNodes.filter(
+      (node) =>
+        selectedProcessNodeIds.includes(
+          node.id
+        )
+    )
+
+  const minimo =
+    accion.startsWith(
+      'distribute'
+    )
+      ? 3
+      : 2
+
+  if (
+    seleccionados.length <
+    minimo
+  ) {
+    mostrarToast(
+      accion.startsWith('distribute')
+        ? 'Seleccioná al menos 3 objetos'
+        : 'Seleccioná al menos 2 objetos',
+      'warning'
+    )
+    return
+  }
+
+  pushProcessUndo()
+
+  const layout =
+    calcularLayoutObjetos(
+      seleccionados.map(
+        (node) => ({
+          id:
+            node.id,
+          x:
+            Number(
+              node.pos_x
+            ) || 0,
+          y:
+            Number(
+              node.pos_y
+            ) || 0,
+          width:
+            Number(
+              node.ancho
+            ) || 120,
+          height:
+            Number(
+              node.alto
+            ) || 90,
+        })
+      ),
+      accion
+    )
+
+  const porId =
+    new Map(
+      layout.map(
+        (item) => [
+          item.id,
+          item,
+        ]
+      )
+    )
+
+  const actualizados =
+    processNodes.map(
+      (node) => {
+        const item =
+          porId.get(
+            node.id
+          )
+
+        if (!item) {
+          return node
+        }
+
+        return {
+          ...node,
+          pos_x:
+            Math.max(
+              10,
+              Math.round(
+                item.x * 10
+              ) / 10
+            ),
+          pos_y:
+            Math.max(
+              10,
+              Math.round(
+                item.y * 10
+              ) / 10
+            ),
+        }
+      }
+    )
+
+  setProcessNodes(
+    actualizados
+  )
+
+  const movidos =
+    actualizados.filter(
+      (node) =>
+        porId.has(node.id)
+    )
+
+  await guardarPosicionesProcessNodes(
+    movidos
+  )
+
+  mostrarToast(
+    etiquetaAccionLayout(
+      accion
+    )
+  )
+}
 
 async function aplicarSnapSeleccionProcess() {
   if (selectedProcessNodeIds.length === 0) return
@@ -15742,6 +17472,199 @@ async function guardarCardsComoImagen() {
   }
 }
 
+
+function actualizarBoardMinimapView() {
+  const canvas =
+    boardCanvasRef.current
+
+  if (!canvas) return
+
+  setBoardMinimapView({
+    scrollLeft:
+      canvas.scrollLeft || 0,
+    scrollTop:
+      canvas.scrollTop || 0,
+    width:
+      canvas.clientWidth || 0,
+    height:
+      canvas.clientHeight || 0,
+  })
+}
+
+function actualizarProcessMinimapView() {
+  const canvas =
+    processCanvasRef.current
+
+  if (!canvas) return
+
+  setProcessMinimapView({
+    scrollLeft:
+      canvas.scrollLeft || 0,
+    scrollTop:
+      canvas.scrollTop || 0,
+    width:
+      canvas.clientWidth || 0,
+    height:
+      canvas.clientHeight || 0,
+  })
+}
+
+function navegarMinimapaBoard(event) {
+  const canvas =
+    boardCanvasRef.current
+
+  if (!canvas) return
+
+  const minimapWorld =
+    event.currentTarget.querySelector?.(
+      '.projectflow-minimap-world'
+    ) ||
+    event.currentTarget
+
+  const rect =
+    minimapWorld.getBoundingClientRect()
+
+  const x =
+    Math.max(
+      0,
+      Math.min(
+        rect.width,
+        event.clientX -
+          rect.left
+      )
+    )
+
+  const y =
+    Math.max(
+      0,
+      Math.min(
+        rect.height,
+        event.clientY -
+          rect.top
+      )
+    )
+
+  const worldX =
+    (x / rect.width) *
+    2400
+
+  const worldY =
+    (y / rect.height) *
+    1600
+
+  canvas.scrollLeft =
+    Math.max(
+      0,
+      worldX *
+        boardZoom -
+        canvas.clientWidth / 2
+    )
+
+  canvas.scrollTop =
+    Math.max(
+      0,
+      worldY *
+        boardZoom -
+        canvas.clientHeight / 2
+    )
+
+  actualizarBoardMinimapView()
+}
+
+function navegarMinimapaProcess(event) {
+  const canvas =
+    processCanvasRef.current
+
+  if (!canvas) return
+
+  const minimapWorld =
+    event.currentTarget.querySelector?.(
+      '.projectflow-minimap-world'
+    ) ||
+    event.currentTarget
+
+  const rect =
+    minimapWorld.getBoundingClientRect()
+
+  const x =
+    Math.max(
+      0,
+      Math.min(
+        rect.width,
+        event.clientX -
+          rect.left
+      )
+    )
+
+  const y =
+    Math.max(
+      0,
+      Math.min(
+        rect.height,
+        event.clientY -
+          rect.top
+      )
+    )
+
+  const worldX =
+    (x / rect.width) *
+    processWorldSize.width
+
+  const worldY =
+    (y / rect.height) *
+    processWorldSize.height
+
+  canvas.scrollLeft =
+    Math.max(
+      0,
+      worldX *
+        processZoom -
+        canvas.clientWidth / 2
+    )
+
+  canvas.scrollTop =
+    Math.max(
+      0,
+      worldY *
+        processZoom -
+        canvas.clientHeight / 2
+    )
+
+  actualizarProcessMinimapView()
+}
+
+function porcentajeMinimap(
+  value,
+  total
+) {
+  if (!total) return 0
+
+  return Math.max(
+    0,
+    Math.min(
+      100,
+      (
+        Number(value) /
+        Number(total)
+      ) * 100
+    )
+  )
+}
+
+function tamanoMinimap(
+  value,
+  total,
+  minimo = 1.5
+) {
+  return Math.max(
+    minimo,
+    porcentajeMinimap(
+      value,
+      total
+    )
+  )
+}
+
 function cambiarProcessZoom(delta) {
   setProcessZoom((actual) =>
     Math.min(
@@ -17243,6 +19166,169 @@ async function terminarDragCard() {
   }
 }
 
+
+
+async function organizarSeleccionCards(
+  accion
+) {
+  const seleccionadas =
+    cards.filter(
+      (card) =>
+        selectedCardIds.includes(
+          card.id
+        )
+    )
+
+  const minimo =
+    accion.startsWith(
+      'distribute'
+    )
+      ? 3
+      : 2
+
+  if (
+    seleccionadas.length <
+    minimo
+  ) {
+    mostrarToast(
+      accion.startsWith('distribute')
+        ? 'Seleccioná al menos 3 Cards'
+        : 'Seleccioná al menos 2 Cards',
+      'warning'
+    )
+    return
+  }
+
+  pushCardUndo()
+
+  const layout =
+    calcularLayoutObjetos(
+      seleccionadas.map(
+        (card) => ({
+          id:
+            card.id,
+          x:
+            Number(
+              card.pos_x
+            ) || 0,
+          y:
+            Number(
+              card.pos_y
+            ) || 0,
+          width:
+            Number(
+              card.ancho
+            ) || 250,
+          height:
+            Number(
+              card.alto
+            ) || 190,
+        })
+      ),
+      accion
+    )
+
+  const porId =
+    new Map(
+      layout.map(
+        (item) => [
+          item.id,
+          item,
+        ]
+      )
+    )
+
+  const actualizadas =
+    cards.map(
+      (card) => {
+        const item =
+          porId.get(
+            card.id
+          )
+
+        if (!item) {
+          return card
+        }
+
+        return {
+          ...card,
+          pos_x:
+            Math.max(
+              10,
+              Math.round(
+                item.x * 10
+              ) / 10
+            ),
+          pos_y:
+            Math.max(
+              10,
+              Math.round(
+                item.y * 10
+              ) / 10
+            ),
+        }
+      }
+    )
+
+  setCards(
+    actualizadas
+  )
+
+  const movidas =
+    actualizadas.filter(
+      (card) =>
+        porId.has(card.id)
+    )
+
+  const resultados =
+    await Promise.all(
+      movidas.map(
+        (card) =>
+          supabase
+            .from('cards')
+            .update({
+              pos_x:
+                Number(
+                  card.pos_x
+                ),
+              pos_y:
+                Number(
+                  card.pos_y
+                ),
+              updated_at:
+                new Date().toISOString(),
+            })
+            .eq(
+              'id',
+              card.id
+            )
+      )
+    )
+
+  const error =
+    resultados.find(
+      (item) =>
+        item.error
+    )?.error
+
+  if (error) {
+    alert(
+      `No se pudo organizar toda la selección: ${error.message}`
+    )
+
+    await cargarCards(
+      boardSeleccionadoId
+    )
+
+    return
+  }
+
+  mostrarToast(
+    etiquetaAccionLayout(
+      accion
+    )
+  )
+}
 
 async function eliminarCardsSeleccionadas() {
   if (selectedCardIds.length === 0) return
@@ -20805,6 +22891,46 @@ function colorEstadoTarea(tarea) {
   }, [processNodes, processBoxes])
 
   useEffect(() => {
+    const timer =
+      window.setTimeout(
+        () => {
+          actualizarBoardMinimapView()
+          actualizarProcessMinimapView()
+        },
+        40
+      )
+
+    function handleResize() {
+      actualizarBoardMinimapView()
+      actualizarProcessMinimapView()
+    }
+
+    window.addEventListener(
+      'resize',
+      handleResize
+    )
+
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener(
+        'resize',
+        handleResize
+      )
+    }
+  }, [
+    vistaPrincipal,
+    boardSeleccionadoId,
+    processSeleccionadoId,
+    boardZoom,
+    processZoom,
+    cards,
+    boardShapes,
+    boardZones,
+    processNodes,
+    processBoxes,
+  ])
+
+  useEffect(() => {
     if (!processSeleccionado) return
 
     setProcessArrowMode(
@@ -20818,6 +22944,65 @@ function colorEstadoTarea(tarea) {
 
   const boardCanvasBgActual =
     boardSeleccionado?.canvas_bg || '#5d6670'
+
+
+
+  useEffect(() => {
+    versionAutoStateRef.current = {
+      vistaPrincipal,
+      boardId:
+        boardSeleccionadoId,
+      board:
+        boardSeleccionado,
+      cards,
+      cardLinks,
+      boardZones,
+      boardShapes,
+      processId:
+        processSeleccionadoId,
+      process:
+        processSeleccionado,
+      processNodes,
+      processLinks,
+      processBoxes,
+    }
+  }, [
+    vistaPrincipal,
+    boardSeleccionadoId,
+    boardSeleccionado,
+    cards,
+    cardLinks,
+    boardZones,
+    boardShapes,
+    processSeleccionadoId,
+    processSeleccionado,
+    processNodes,
+    processLinks,
+    processBoxes,
+  ])
+
+  useEffect(() => {
+    if (
+      !session?.user?.id
+    ) {
+      return undefined
+    }
+
+    const interval =
+      window.setInterval(
+        () => {
+          guardarVersionAutomaticaDesdeRef()
+        },
+        20 * 60 * 1000
+      )
+
+    return () =>
+      window.clearInterval(
+        interval
+      )
+  }, [
+    session?.user?.id,
+  ])
 
 
   const kanbanProject = kanbanProjects.find(
@@ -24143,6 +26328,18 @@ function colorEstadoTarea(tarea) {
                         ▶ Vista de simulación
                       </button>
 
+                      <button
+                        type="button"
+                        className="btn-secondary projectflow-versions-button"
+                        onClick={() =>
+                          abrirVersiones(
+                            'process'
+                          )
+                        }
+                      >
+                        Versiones
+                      </button>
+
                       <button type="button" className="btn-secondary" onClick={imprimirProcessFlow}>
                         Imprimir flujo
                       </button>
@@ -24165,6 +26362,7 @@ function colorEstadoTarea(tarea) {
                   </div>
 
                   <div
+                    ref={processCanvasRef}
                     className={`process-canvas ${
                       processSelectionRect
                         ? 'selecting'
@@ -24182,6 +26380,7 @@ function colorEstadoTarea(tarea) {
                           ? 'rgba(92, 102, 112, .22)'
                           : 'rgba(225, 232, 238, .18)',
                     }}
+                    onScroll={actualizarProcessMinimapView}
                     onMouseDown={iniciarSeleccionProcess}
                     onMouseMove={(event) => {
                       moverSeleccionProcess(event)
@@ -24541,6 +26740,88 @@ function colorEstadoTarea(tarea) {
                             Align
                           </button>
 
+                          <div className="object-layout-actions process-object-layout-actions">
+                            <span className="object-layout-label">
+                              Alinear
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() => organizarSeleccionProcess('left')}
+                              disabled={selectedProcessNodeIds.length < 2}
+                              title="Alinear izquierda"
+                            >
+                              ⫷
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => organizarSeleccionProcess('centerH')}
+                              disabled={selectedProcessNodeIds.length < 2}
+                              title="Centrar horizontalmente"
+                            >
+                              ↔
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => organizarSeleccionProcess('right')}
+                              disabled={selectedProcessNodeIds.length < 2}
+                              title="Alinear derecha"
+                            >
+                              ⫸
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => organizarSeleccionProcess('top')}
+                              disabled={selectedProcessNodeIds.length < 2}
+                              title="Alinear arriba"
+                            >
+                              ⫯
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => organizarSeleccionProcess('centerV')}
+                              disabled={selectedProcessNodeIds.length < 2}
+                              title="Centrar verticalmente"
+                            >
+                              ↕
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => organizarSeleccionProcess('bottom')}
+                              disabled={selectedProcessNodeIds.length < 2}
+                              title="Alinear abajo"
+                            >
+                              ⫰
+                            </button>
+
+                            <span className="object-layout-divider" />
+
+                            <button
+                              type="button"
+                              className="distribute"
+                              onClick={() => organizarSeleccionProcess('distributeH')}
+                              disabled={selectedProcessNodeIds.length < 3}
+                              title="Distribuir horizontalmente"
+                            >
+                              ⇆
+                            </button>
+
+                            <button
+                              type="button"
+                              className="distribute"
+                              onClick={() => organizarSeleccionProcess('distributeV')}
+                              disabled={selectedProcessNodeIds.length < 3}
+                              title="Distribuir verticalmente"
+                            >
+                              ⇅
+                            </button>
+                          </div>
+
                           <button
                             type="button"
                             className="process-superposition-action"
@@ -24898,6 +27179,104 @@ function colorEstadoTarea(tarea) {
                             )}
                           </div>
                         )}
+                      </div>
+                    )}
+
+
+                    {!processSimulationOpen && (
+                      <div
+                        className="projectflow-minimap projectflow-process-minimap"
+                        onMouseDown={(event) => {
+                          event.preventDefault()
+                          event.stopPropagation()
+                          setProcessMinimapDragging(true)
+                          navegarMinimapaProcess(event)
+                        }}
+                        onMouseMove={(event) => {
+                          if (
+                            processMinimapDragging
+                          ) {
+                            navegarMinimapaProcess(event)
+                          }
+                        }}
+                        onMouseUp={() =>
+                          setProcessMinimapDragging(false)
+                        }
+                        onMouseLeave={() =>
+                          setProcessMinimapDragging(false)
+                        }
+                        title="Mini mapa · Click o arrastrá para navegar"
+                      >
+                        <div className="projectflow-minimap-title">
+                          <span>Mapa</span>
+                          <small>Process</small>
+                        </div>
+
+                        <div className="projectflow-minimap-world">
+                          {processBoxes.map((box) => (
+                            <span
+                              key={`mini-process-box-${box.id}`}
+                              className="projectflow-minimap-object zone"
+                              style={{
+                                left: `${porcentajeMinimap(box.pos_x, processWorldSize.width)}%`,
+                                top: `${porcentajeMinimap(box.pos_y, processWorldSize.height)}%`,
+                                width: `${tamanoMinimap(box.ancho, processWorldSize.width)}%`,
+                                height: `${tamanoMinimap(box.alto, processWorldSize.height)}%`,
+                              }}
+                            />
+                          ))}
+
+                          {processNodes
+                            .filter(processNodeVisible)
+                            .map((node) => (
+                              <span
+                                key={`mini-process-node-${node.id}`}
+                                className={`projectflow-minimap-object process-node ${
+                                  esProcessVisualNode(node.tipo)
+                                    ? 'visual'
+                                    : ''
+                                } ${
+                                  node.tipo === 'image'
+                                    ? 'image'
+                                    : ''
+                                } ${
+                                  selectedProcessNodeIds.includes(node.id)
+                                    ? 'selected'
+                                    : ''
+                                }`}
+                                style={{
+                                  left: `${porcentajeMinimap(node.pos_x, processWorldSize.width)}%`,
+                                  top: `${porcentajeMinimap(node.pos_y, processWorldSize.height)}%`,
+                                  width: `${tamanoMinimap(node.ancho || 120, processWorldSize.width)}%`,
+                                  height: `${tamanoMinimap(node.alto || 90, processWorldSize.height)}%`,
+                                }}
+                              />
+                            ))}
+
+                          <span
+                            className="projectflow-minimap-viewport"
+                            style={{
+                              left: `${porcentajeMinimap(
+                                processMinimapView.scrollLeft / processZoom,
+                                processWorldSize.width
+                              )}%`,
+                              top: `${porcentajeMinimap(
+                                processMinimapView.scrollTop / processZoom,
+                                processWorldSize.height
+                              )}%`,
+                              width: `${tamanoMinimap(
+                                processMinimapView.width / processZoom,
+                                processWorldSize.width,
+                                4
+                              )}%`,
+                              height: `${tamanoMinimap(
+                                processMinimapView.height / processZoom,
+                                processWorldSize.height,
+                                4
+                              )}%`,
+                            }}
+                          />
+                        </div>
                       </div>
                     )}
 
@@ -26463,6 +28842,18 @@ function colorEstadoTarea(tarea) {
 
                         <button
                           type="button"
+                          className="cards-export-button compact projectflow-versions-button"
+                          onClick={() =>
+                            abrirVersiones(
+                              'board'
+                            )
+                          }
+                        >
+                          Versiones
+                        </button>
+
+                        <button
+                          type="button"
                           className="cards-archive-board-top-button compact"
                           onClick={() => {
                             if (
@@ -26497,6 +28888,88 @@ function colorEstadoTarea(tarea) {
                       <span>
                         Arrastrá una seleccionada para moverlas juntas
                       </span>
+
+                      <div className="object-layout-actions cards-object-layout-actions">
+                        <span className="object-layout-label">
+                          Alinear
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => organizarSeleccionCards('left')}
+                          disabled={selectedCardIds.length < 2}
+                          title="Alinear izquierda"
+                        >
+                          ⫷
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => organizarSeleccionCards('centerH')}
+                          disabled={selectedCardIds.length < 2}
+                          title="Centrar horizontalmente"
+                        >
+                          ↔
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => organizarSeleccionCards('right')}
+                          disabled={selectedCardIds.length < 2}
+                          title="Alinear derecha"
+                        >
+                          ⫸
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => organizarSeleccionCards('top')}
+                          disabled={selectedCardIds.length < 2}
+                          title="Alinear arriba"
+                        >
+                          ⫯
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => organizarSeleccionCards('centerV')}
+                          disabled={selectedCardIds.length < 2}
+                          title="Centrar verticalmente"
+                        >
+                          ↕
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => organizarSeleccionCards('bottom')}
+                          disabled={selectedCardIds.length < 2}
+                          title="Alinear abajo"
+                        >
+                          ⫰
+                        </button>
+
+                        <span className="object-layout-divider" />
+
+                        <button
+                          type="button"
+                          className="distribute"
+                          onClick={() => organizarSeleccionCards('distributeH')}
+                          disabled={selectedCardIds.length < 3}
+                          title="Distribuir horizontalmente"
+                        >
+                          ⇆
+                        </button>
+
+                        <button
+                          type="button"
+                          className="distribute"
+                          onClick={() => organizarSeleccionCards('distributeV')}
+                          disabled={selectedCardIds.length < 3}
+                          title="Distribuir verticalmente"
+                        >
+                          ⇅
+                        </button>
+                      </div>
 
                       <button
                         type="button"
@@ -26616,11 +29089,115 @@ function colorEstadoTarea(tarea) {
                   </div>
 
 
+
+                    <div
+                      className="projectflow-minimap projectflow-board-minimap"
+                      onMouseDown={(event) => {
+                        event.preventDefault()
+                        event.stopPropagation()
+                        setBoardMinimapDragging(true)
+                        navegarMinimapaBoard(event)
+                      }}
+                      onMouseMove={(event) => {
+                        if (
+                          boardMinimapDragging
+                        ) {
+                          navegarMinimapaBoard(event)
+                        }
+                      }}
+                      onMouseUp={() =>
+                        setBoardMinimapDragging(false)
+                      }
+                      onMouseLeave={() =>
+                        setBoardMinimapDragging(false)
+                      }
+                      title="Mini mapa · Click o arrastrá para navegar"
+                    >
+                      <div className="projectflow-minimap-title">
+                        <span>Mapa</span>
+                        <small>Boards</small>
+                      </div>
+
+                      <div className="projectflow-minimap-world">
+                        {boardZones.map((zona) => (
+                          <span
+                            key={`mini-zone-${zona.id}`}
+                            className="projectflow-minimap-object zone"
+                            style={{
+                              left: `${porcentajeMinimap(zona.pos_x, 2400)}%`,
+                              top: `${porcentajeMinimap(zona.pos_y, 1600)}%`,
+                              width: `${tamanoMinimap(zona.ancho, 2400)}%`,
+                              height: `${tamanoMinimap(zona.alto, 1600)}%`,
+                            }}
+                          />
+                        ))}
+
+                        {cards.map((card) => (
+                          <span
+                            key={`mini-card-${card.id}`}
+                            className={`projectflow-minimap-object card ${
+                              selectedCardIds.includes(card.id)
+                                ? 'selected'
+                                : ''
+                            }`}
+                            style={{
+                              left: `${porcentajeMinimap(card.pos_x, 2400)}%`,
+                              top: `${porcentajeMinimap(card.pos_y, 1600)}%`,
+                              width: `${tamanoMinimap(card.ancho || 250, 2400)}%`,
+                              height: `${tamanoMinimap(card.alto || 190, 1600)}%`,
+                            }}
+                          />
+                        ))}
+
+                        {boardShapes.map((shape) => (
+                          <span
+                            key={`mini-shape-${shape.id}`}
+                            className={`projectflow-minimap-object shape ${
+                              shape.tipo === 'image'
+                                ? 'image'
+                                : ''
+                            }`}
+                            style={{
+                              left: `${porcentajeMinimap(shape.pos_x, 2400)}%`,
+                              top: `${porcentajeMinimap(shape.pos_y, 1600)}%`,
+                              width: `${tamanoMinimap(shape.ancho || 150, 2400)}%`,
+                              height: `${tamanoMinimap(shape.alto || 110, 1600)}%`,
+                            }}
+                          />
+                        ))}
+
+                        <span
+                          className="projectflow-minimap-viewport"
+                          style={{
+                            left: `${porcentajeMinimap(
+                              boardMinimapView.scrollLeft / boardZoom,
+                              2400
+                            )}%`,
+                            top: `${porcentajeMinimap(
+                              boardMinimapView.scrollTop / boardZoom,
+                              1600
+                            )}%`,
+                            width: `${tamanoMinimap(
+                              boardMinimapView.width / boardZoom,
+                              2400,
+                              4
+                            )}%`,
+                            height: `${tamanoMinimap(
+                              boardMinimapView.height / boardZoom,
+                              1600,
+                              4
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+
 <div
                       ref={boardCanvasRef}
                     className={`cards-canvas ${
                       panInfo ? 'panning' : ''
                     }`}
+                    onScroll={actualizarBoardMinimapView}
                     onMouseDown={iniciarPanCanvas}
                     onMouseMove={(event) => {
                       moverCardEnCanvas(event)
@@ -27455,6 +30032,191 @@ function colorEstadoTarea(tarea) {
 
 
 
+      {versionsOpen && (
+        <aside className="projectflow-versions-drawer">
+          <div className="projectflow-versions-heading">
+            <div>
+              <span>
+                Historial
+              </span>
+
+              <h3>
+                Versiones
+              </h3>
+
+              <small>
+                {versionsResourceType === 'board'
+                  ? boardSeleccionado?.nombre || 'Board'
+                  : processSeleccionado?.nombre || 'Process'}
+              </small>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                setVersionsOpen(false)
+              }
+              title="Cerrar versiones"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="projectflow-versions-summary">
+            <div>
+              <strong>
+                {versionsList.length}/8
+              </strong>
+              <span>
+                versiones guardadas
+              </span>
+            </div>
+
+            <div>
+              <strong>
+                20 min
+              </strong>
+              <span>
+                entre automáticas
+              </span>
+            </div>
+          </div>
+
+          <div className="projectflow-versions-actions">
+            <button
+              type="button"
+              onClick={
+                guardarVersionManual
+              }
+              disabled={
+                versionsSaving ||
+                versionsRestoringId
+              }
+            >
+              {versionsSaving
+                ? 'Guardando…'
+                : '+ Guardar versión ahora'}
+            </button>
+
+            <span>
+              Las imágenes no se duplican: se conserva su referencia.
+            </span>
+          </div>
+
+          <div className="projectflow-versions-list">
+            {versionsLoading && (
+              <div className="projectflow-versions-loading">
+                <span className="global-search-spinner" />
+                Cargando versiones…
+              </div>
+            )}
+
+            {!versionsLoading &&
+              versionsList.length === 0 && (
+                <div className="projectflow-versions-empty">
+                  <span>
+                    ◷
+                  </span>
+
+                  <strong>
+                    Todavía no hay versiones
+                  </strong>
+
+                  <p>
+                    Podés guardar una ahora. Después ProjectFlow conservará
+                    hasta 8 y creará una automática como máximo cada 20 minutos
+                    cuando detecte cambios.
+                  </p>
+                </div>
+              )}
+
+            {!versionsLoading &&
+              versionsList.map(
+                (version, index) => (
+                  <article
+                    key={version.id}
+                    className="projectflow-version-card"
+                  >
+                    <div className="projectflow-version-card-top">
+                      <span className={`projectflow-version-kind ${version.version_kind}`}>
+                        {iconoTipoVersion(
+                          version.version_kind
+                        )}
+                      </span>
+
+                      <div>
+                        <strong>
+                          {index === 0
+                            ? 'Última versión'
+                            : nombreTipoVersion(
+                                version.version_kind
+                              )}
+                        </strong>
+
+                        <span>
+                          {fechaVersion(
+                            version.created_at
+                          )}
+                          {' · '}
+                          {nombreAutorVersion(
+                            version.created_by
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="projectflow-version-card-stats">
+                      <span>
+                        <b>
+                          {version.object_count || 0}
+                        </b>
+                        {' '}objetos
+                      </span>
+
+                      <span>
+                        {pesoVersion(
+                          version.size_bytes
+                        )}
+                      </span>
+
+                      <span>
+                        {nombreTipoVersion(
+                          version.version_kind
+                        )}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="projectflow-version-restore"
+                      disabled={
+                        Boolean(
+                          versionsRestoringId
+                        )
+                      }
+                      onClick={() =>
+                        restaurarVersion(
+                          version
+                        )
+                      }
+                    >
+                      {versionsRestoringId === version.id
+                        ? 'Restaurando…'
+                        : 'Restaurar esta versión'}
+                    </button>
+                  </article>
+                )
+              )}
+          </div>
+
+          <div className="projectflow-versions-footer">
+            <span>
+              Al restaurar, ProjectFlow guarda primero el estado actual.
+            </span>
+          </div>
+        </aside>
+      )}
+
       {chatOpen && (
         <aside className="projectflow-chat-drawer">
           <div className="projectflow-chat-heading">
@@ -27483,9 +30245,18 @@ function colorEstadoTarea(tarea) {
           </div>
 
           <div className="projectflow-chat-tabs-wrap">
-            <div className="projectflow-chat-tabs">
+            <div
+              ref={chatTabsRef}
+              className="projectflow-chat-tabs"
+            >
               <button
                 type="button"
+                style={{
+                  order:
+                    chatActivePartnerId
+                      ? -1
+                      : 0,
+                }}
                 className={`projectflow-chat-tab ${
                   chatActiveChannelKey === 'general'
                     ? 'active'
@@ -27534,6 +30305,12 @@ function colorEstadoTarea(tarea) {
                     <button
                       key={perfil.id}
                       type="button"
+                      style={{
+                        order:
+                          chatActivePartnerId === perfil.id
+                            ? -2
+                            : 0,
+                      }}
                       className={`projectflow-chat-tab ${
                         chatActivePartnerId === perfil.id
                           ? 'active'

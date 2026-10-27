@@ -36889,3 +36889,1023 @@ body .v10-polish
     gap: 3px !important;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.13.0
+   MINI MAP + ALIGN / DISTRIBUTE
+========================================================= */
+
+/* ---------------------------------------------------------
+   MINI MAP — FIXED BOTTOM RIGHT
+--------------------------------------------------------- */
+
+body .v10-polish
+.projectflow-minimap {
+  position: fixed;
+
+  right: 18px;
+  bottom: 76px;
+
+  width: 190px;
+  height: 128px;
+
+  padding: 8px;
+
+  overflow: hidden;
+
+  border: 1px solid #36515f;
+  border-radius: 12px;
+
+  background: rgba(10, 20, 27, .94);
+
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.28);
+
+  z-index: 300;
+
+  user-select: none;
+  cursor: crosshair;
+}
+
+body .v10-polish
+.projectflow-minimap-title {
+  height: 19px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 2px 5px;
+
+  pointer-events: none;
+}
+
+body .v10-polish
+.projectflow-minimap-title
+span {
+  color: #d9e9ed;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+body .v10-polish
+.projectflow-minimap-title
+small {
+  color: #718b97;
+
+  font-size: 8.5px;
+  font-weight: 600;
+}
+
+body .v10-polish
+.projectflow-minimap-world {
+  position: relative;
+
+  width: 100%;
+  height: calc(100% - 19px);
+
+  overflow: hidden;
+
+  border: 1px solid #263d48;
+  border-radius: 7px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.018),
+      rgba(255,255,255,.005)
+    );
+}
+
+body .v10-polish
+.projectflow-minimap-object {
+  position: absolute;
+
+  display: block;
+
+  min-width: 2px;
+  min-height: 2px;
+
+  border-radius: 2px;
+
+  background: #708793;
+
+  opacity: .72;
+
+  pointer-events: none;
+}
+
+body .v10-polish
+.projectflow-minimap-object.zone {
+  border: 1px solid rgba(95, 170, 255, .45);
+
+  background: rgba(95, 170, 255, .08);
+
+  opacity: 1;
+}
+
+body .v10-polish
+.projectflow-minimap-object.card {
+  background: #f6d365;
+}
+
+body .v10-polish
+.projectflow-minimap-object.shape,
+body .v10-polish
+.projectflow-minimap-object.visual {
+  background: #44d7df;
+}
+
+body .v10-polish
+.projectflow-minimap-object.image {
+  background: #bd8cff;
+}
+
+body .v10-polish
+.projectflow-minimap-object.process-node {
+  background: #93b8a0;
+}
+
+body .v10-polish
+.projectflow-minimap-object.selected {
+  background: #ffffff;
+
+  opacity: 1;
+
+  box-shadow:
+    0 0 0 1px #27dbe7;
+}
+
+body .v10-polish
+.projectflow-minimap-viewport {
+  position: absolute;
+
+  display: block;
+
+  min-width: 7px;
+  min-height: 7px;
+
+  box-sizing: border-box;
+
+  border: 1.5px solid #39dce6;
+  border-radius: 3px;
+
+  background: rgba(57, 220, 230, .08);
+
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.18);
+
+  pointer-events: none;
+}
+
+body .v10-polish.theme-light
+.projectflow-minimap {
+  border-color: #c4d5dc;
+
+  background: rgba(255,255,255,.96);
+
+  box-shadow:
+    0 10px 25px rgba(40,62,72,.16);
+}
+
+body .v10-polish.theme-light
+.projectflow-minimap-title
+span {
+  color: #263e49;
+}
+
+body .v10-polish.theme-light
+.projectflow-minimap-title
+small {
+  color: #788f99;
+}
+
+body .v10-polish.theme-light
+.projectflow-minimap-world {
+  border-color: #d5e1e6;
+
+  background: #f5f9fa;
+}
+
+body .v10-polish.theme-light
+.projectflow-minimap-object.process-node {
+  background: #668a73;
+}
+
+body .v10-polish.theme-light
+.projectflow-minimap-object.card {
+  background: #d6a820;
+}
+
+body .v10-polish.theme-light
+.projectflow-minimap-viewport {
+  border-color: #078f9c;
+
+  background: rgba(7,143,156,.08);
+}
+
+
+/* ---------------------------------------------------------
+   ALIGN / DISTRIBUTE — COMMAND PANELS
+--------------------------------------------------------- */
+
+body .v10-polish
+.object-layout-actions {
+  min-height: 32px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 3px 5px;
+
+  border: 1px solid #314b58;
+  border-radius: 8px;
+
+  background: rgba(9, 19, 25, .30);
+}
+
+body .v10-polish
+.object-layout-label {
+  margin: 0 3px 0 2px;
+
+  color: #78919d;
+
+  font-size: 9px;
+  font-weight: 650;
+}
+
+body .v10-polish
+.object-layout-actions
+button {
+  width: 27px;
+  height: 26px;
+  min-width: 27px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid transparent;
+  border-radius: 6px;
+
+  background: transparent;
+  color: #b8ccd4;
+
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+body .v10-polish
+.object-layout-actions
+button:hover:not(:disabled) {
+  border-color: rgba(45, 211, 222, .28);
+
+  background: rgba(45, 211, 222, .09);
+
+  color: #6ce8f0;
+}
+
+body .v10-polish
+.object-layout-actions
+button.distribute {
+  color: #d8bd76;
+}
+
+body .v10-polish
+.object-layout-actions
+button:disabled {
+  opacity: .26;
+  cursor: default;
+}
+
+body .v10-polish
+.object-layout-divider {
+  width: 1px;
+  height: 18px;
+
+  margin: 0 2px;
+
+  background: #314a56;
+}
+
+body .v10-polish
+.process-object-layout-actions {
+  flex: 0 1 auto;
+}
+
+body .v10-polish
+.cards-object-layout-actions {
+  flex: 0 0 auto;
+}
+
+body .v10-polish.theme-light
+.object-layout-actions {
+  border-color: #cbd9df;
+
+  background: #f7fafb;
+}
+
+body .v10-polish.theme-light
+.object-layout-label {
+  color: #718892;
+}
+
+body .v10-polish.theme-light
+.object-layout-actions
+button {
+  color: #445e6a;
+}
+
+body .v10-polish.theme-light
+.object-layout-actions
+button:hover:not(:disabled) {
+  border-color: #a9dce1;
+
+  background: #eaf8f9;
+
+  color: #087f8a;
+}
+
+body .v10-polish.theme-light
+.object-layout-actions
+button.distribute {
+  color: #8a6c18;
+}
+
+body .v10-polish.theme-light
+.object-layout-divider {
+  background: #cfdae0;
+}
+
+
+/* Cards panel can wrap cleanly with the new command group. */
+body .v10-polish
+.cards-selection-toolbar {
+  flex-wrap: wrap;
+  row-gap: 7px;
+}
+
+/* Keep minimap above zoom but below drawers/chat. */
+body .v10-polish
+.projectflow-chat-drawer {
+  z-index: 420 !important;
+}
+
+@media (max-width: 900px) {
+  body .v10-polish
+  .projectflow-minimap {
+    right: 12px;
+    bottom: 72px;
+
+    width: 168px;
+    height: 116px;
+  }
+}
+
+@media (max-width: 620px) {
+  body .v10-polish
+  .projectflow-minimap {
+    width: 145px;
+    height: 104px;
+  }
+
+  body .v10-polish
+  .object-layout-label {
+    display: none;
+  }
+}
+
+
+/* V10.13.0 final polish */
+body .v10-polish
+.object-layout-actions
+button {
+  min-height: 26px !important;
+  padding: 0 !important;
+}
+
+body .v10-polish
+.process-selection-actions-primary {
+  flex-wrap: wrap !important;
+  width: auto !important;
+}
+
+body .v10-polish
+.process-selection-toolbar {
+  max-width: min(920px, calc(100vw - 34px)) !important;
+}
+
+
+/* =========================================================
+   PROJECTFLOW V10.14.0
+   VERSIONS + ACTIVE PRIVATE CHAT PRIORITY
+========================================================= */
+
+/* Active private chat visually moves to the first position. */
+body .v10-polish
+.projectflow-chat-tabs {
+  scroll-behavior: smooth;
+}
+
+
+/* ---------------------------------------------------------
+   VERSIONS BUTTON
+--------------------------------------------------------- */
+
+body .v10-polish
+.projectflow-versions-button {
+  white-space: nowrap !important;
+}
+
+
+/* ---------------------------------------------------------
+   VERSIONS DRAWER
+--------------------------------------------------------- */
+
+body .v10-polish
+.projectflow-versions-drawer {
+  position: fixed;
+
+  top: 72px;
+  right: 16px;
+  bottom: 16px;
+
+  width: min(430px, calc(100vw - 32px));
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  border: 1px solid #314b59;
+  border-radius: 15px;
+
+  background: #0d1a22;
+
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.44);
+
+  z-index: 425;
+}
+
+body .v10-polish
+.projectflow-versions-heading {
+  flex: 0 0 auto;
+
+  min-height: 77px;
+  padding: 14px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-bottom: 1px solid #263b46;
+}
+
+body .v10-polish
+.projectflow-versions-heading
+div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+body .v10-polish
+.projectflow-versions-heading
+span {
+  color: #32d8e4;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+body .v10-polish
+.projectflow-versions-heading
+h3 {
+  margin: 0;
+
+  color: #eff9fb;
+
+  font-size: 21px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+body .v10-polish
+.projectflow-versions-heading
+small {
+  max-width: 300px;
+
+  overflow: hidden;
+
+  color: #7f99a5;
+
+  font-size: 11px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body .v10-polish
+.projectflow-versions-heading
+button {
+  width: 36px;
+  height: 36px;
+
+  flex: 0 0 auto;
+
+  border: 1px solid #324b58;
+  border-radius: 9px;
+
+  background: #10212b;
+  color: #b3c8d1;
+
+  font-size: 22px;
+
+  cursor: pointer;
+}
+
+body .v10-polish
+.projectflow-versions-heading
+button:hover {
+  border-color: #45cfd9;
+  color: #ffffff;
+}
+
+
+/* ---------- Summary ---------- */
+
+body .v10-polish
+.projectflow-versions-summary {
+  flex: 0 0 auto;
+
+  padding: 10px 14px;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+
+  border-bottom: 1px solid #223640;
+}
+
+body .v10-polish
+.projectflow-versions-summary
+div {
+  min-height: 52px;
+
+  padding: 8px 10px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+
+  border: 1px solid #2d4653;
+  border-radius: 9px;
+
+  background: #10212a;
+}
+
+body .v10-polish
+.projectflow-versions-summary
+strong {
+  color: #e5f3f6;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+body .v10-polish
+.projectflow-versions-summary
+span {
+  color: #78939f;
+
+  font-size: 10px;
+}
+
+
+/* ---------- Save ---------- */
+
+body .v10-polish
+.projectflow-versions-actions {
+  flex: 0 0 auto;
+
+  padding: 11px 14px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  border-bottom: 1px solid #223640;
+}
+
+body .v10-polish
+.projectflow-versions-actions
+button {
+  height: 39px;
+
+  border: 1px solid #27cbd6;
+  border-radius: 9px;
+
+  background: rgba(32, 214, 228, .10);
+  color: #c9f7fa;
+
+  font-size: 12px;
+  font-weight: 650;
+
+  cursor: pointer;
+}
+
+body .v10-polish
+.projectflow-versions-actions
+button:hover:not(:disabled) {
+  background: rgba(32, 214, 228, .16);
+}
+
+body .v10-polish
+.projectflow-versions-actions
+button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+body .v10-polish
+.projectflow-versions-actions
+span {
+  color: #708a96;
+
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+
+/* ---------- List ---------- */
+
+body .v10-polish
+.projectflow-versions-list {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  overflow-y: auto;
+
+  padding: 12px 13px 18px;
+
+  scrollbar-width: thin;
+  scrollbar-color: #35515e transparent;
+}
+
+body .v10-polish
+.projectflow-versions-loading {
+  min-height: 150px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  color: #89a4af;
+
+  font-size: 12px;
+}
+
+body .v10-polish
+.projectflow-versions-empty {
+  min-height: 280px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 30px;
+
+  text-align: center;
+}
+
+body .v10-polish
+.projectflow-versions-empty
+> span {
+  margin-bottom: 10px;
+
+  color: #55dbe4;
+
+  font-size: 35px;
+  line-height: 1;
+}
+
+body .v10-polish
+.projectflow-versions-empty
+strong {
+  color: #e8f4f7;
+
+  font-size: 15px;
+  font-weight: 650;
+}
+
+body .v10-polish
+.projectflow-versions-empty
+p {
+  max-width: 310px;
+
+  margin: 7px 0 0;
+
+  color: #78939f;
+
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+
+/* ---------- Version card ---------- */
+
+body .v10-polish
+.projectflow-version-card {
+  margin-bottom: 9px;
+  padding: 11px;
+
+  border: 1px solid #2e4754;
+  border-radius: 11px;
+
+  background: #10212a;
+}
+
+body .v10-polish
+.projectflow-version-card-top {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+}
+
+body .v10-polish
+.projectflow-version-kind {
+  width: 31px;
+  height: 31px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+
+  background: rgba(32, 214, 228, .10);
+  color: #61e3eb;
+
+  font-size: 16px;
+  font-weight: 700;
+}
+
+body .v10-polish
+.projectflow-version-kind.manual {
+  background: rgba(255, 214, 10, .10);
+  color: #f4d65b;
+}
+
+body .v10-polish
+.projectflow-version-kind.pre_restore {
+  background: rgba(182, 127, 255, .12);
+  color: #cba5ff;
+}
+
+body .v10-polish
+.projectflow-version-card-top
+div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+body .v10-polish
+.projectflow-version-card-top
+strong {
+  overflow: hidden;
+
+  color: #dcebed;
+
+  font-size: 12.5px;
+  font-weight: 650;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body .v10-polish
+.projectflow-version-card-top
+span {
+  color: #738d98;
+
+  font-size: 10px;
+}
+
+body .v10-polish
+.projectflow-version-card-stats {
+  margin: 10px 0 9px;
+  padding-top: 8px;
+
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  border-top: 1px solid #253b46;
+}
+
+body .v10-polish
+.projectflow-version-card-stats
+span {
+  padding: 3px 6px;
+
+  border-radius: 5px;
+
+  background: #0c1920;
+  color: #78939f;
+
+  font-size: 9.5px;
+}
+
+body .v10-polish
+.projectflow-version-card-stats
+b {
+  color: #b9d0d7;
+}
+
+body .v10-polish
+.projectflow-version-restore {
+  width: 100%;
+  height: 34px;
+
+  border: 1px solid #3a5865;
+  border-radius: 8px;
+
+  background: transparent;
+  color: #abc2ca;
+
+  font-size: 10.5px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+body .v10-polish
+.projectflow-version-restore:hover:not(:disabled) {
+  border-color: #34cbd5;
+  background: rgba(32,214,228,.07);
+  color: #d5f7fa;
+}
+
+body .v10-polish
+.projectflow-version-restore:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+
+/* ---------- Footer ---------- */
+
+body .v10-polish
+.projectflow-versions-footer {
+  flex: 0 0 auto;
+
+  padding: 9px 14px;
+
+  border-top: 1px solid #223640;
+
+  background: #0b171e;
+}
+
+body .v10-polish
+.projectflow-versions-footer
+span {
+  color: #627d89;
+
+  font-size: 9.5px;
+}
+
+
+/* ---------- Light ---------- */
+
+body .v10-polish.theme-light
+.projectflow-versions-drawer {
+  border-color: #c7d7de;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 22px 60px rgba(38,63,75,.18);
+}
+
+body .v10-polish.theme-light
+.projectflow-versions-heading,
+body .v10-polish.theme-light
+.projectflow-versions-summary,
+body .v10-polish.theme-light
+.projectflow-versions-actions {
+  border-color: #dce6ea;
+}
+
+body .v10-polish.theme-light
+.projectflow-versions-heading
+h3 {
+  color: #172a34;
+}
+
+body .v10-polish.theme-light
+.projectflow-versions-heading
+small {
+  color: #718791;
+}
+
+body .v10-polish.theme-light
+.projectflow-versions-heading
+button {
+  border-color: #cedbe1;
+
+  background: #f7fafb;
+  color: #617985;
+}
+
+body .v10-polish.theme-light
+.projectflow-versions-summary
+div,
+body .v10-polish.theme-light
+.projectflow-version-card {
+  border-color: #d4e1e6;
+  background: #f8fbfc;
+}
+
+body .v10-polish.theme-light
+.projectflow-versions-summary
+strong,
+body .v10-polish.theme-light
+.projectflow-version-card-top
+strong,
+body .v10-polish.theme-light
+.projectflow-versions-empty
+strong {
+  color: #263e49;
+}
+
+body .v10-polish.theme-light
+.projectflow-versions-actions
+button {
+  border-color: #56bec7;
+
+  background: #eaf8f9;
+  color: #166c75;
+}
+
+body .v10-polish.theme-light
+.projectflow-version-card-stats {
+  border-color: #dfe8ec;
+}
+
+body .v10-polish.theme-light
+.projectflow-version-card-stats
+span {
+  background: #edf3f5;
+  color: #667f8a;
+}
+
+body .v10-polish.theme-light
+.projectflow-version-restore {
+  border-color: #c6d8de;
+  color: #506b77;
+}
+
+body .v10-polish.theme-light
+.projectflow-version-restore:hover:not(:disabled) {
+  border-color: #64c5ce;
+  background: #eefafb;
+  color: #176d76;
+}
+
+body .v10-polish.theme-light
+.projectflow-versions-footer {
+  border-color: #dce6ea;
+  background: #f8fbfc;
+}
+
+@media (max-width: 620px) {
+  body .v10-polish
+  .projectflow-versions-drawer {
+    top: 58px;
+    right: 6px;
+    bottom: 6px;
+    left: 6px;
+
+    width: auto;
+  }
+}
