@@ -1634,6 +1634,10 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
     z_index: 12,
   })
   const [selectedProcessBoxId, setSelectedProcessBoxId] = useState(null)
+  const [selectedProcessBoxIds, setSelectedProcessBoxIds] = useState([])
+  const [meetingProcessPalettePos, setMeetingProcessPalettePos] = useState(null)
+  const meetingProcessPaletteDragRef = useRef(null)
+
   const processUndoRef = useRef([])
   const processSelectionRef = useRef(null)
   const processClipboardRef = useRef([])
@@ -1825,6 +1829,7 @@ const [nuevoProyecto, setNuevoProyecto] = useState({
   const chatTextareaRef = useRef(null)
   const chatMessagesEndRef = useRef(null)
   const chatSearchRequestRef = useRef(0)
+  const chatAudioContextRef = useRef(null)
 
 
     useEffect(() => {
@@ -3715,6 +3720,51 @@ useEffect(() => {
   ])
 
 
+
+  useEffect(() => {
+    function habilitarAudioChat() {
+      prepararAudioChat()
+
+      window.removeEventListener(
+        'pointerdown',
+        habilitarAudioChat
+      )
+
+      window.removeEventListener(
+        'keydown',
+        habilitarAudioChat
+      )
+    }
+
+    window.addEventListener(
+      'pointerdown',
+      habilitarAudioChat,
+      {
+        once: true,
+      }
+    )
+
+    window.addEventListener(
+      'keydown',
+      habilitarAudioChat,
+      {
+        once: true,
+      }
+    )
+
+    return () => {
+      window.removeEventListener(
+        'pointerdown',
+        habilitarAudioChat
+      )
+
+      window.removeEventListener(
+        'keydown',
+        habilitarAudioChat
+      )
+    }
+  }, [])
+
   useEffect(() => {
     if (
       !session?.user?.id
@@ -3797,6 +3847,8 @@ useEffect(() => {
             ) {
               return
             }
+
+            void reproducirSonidoChat()
 
             if (
               chatOpen &&
@@ -3915,6 +3967,115 @@ function navegarVistaPrincipal(destino) {
 }
 
 
+
+
+function prepararAudioChat() {
+  try {
+    const AudioContextClass =
+      window.AudioContext ||
+      window.webkitAudioContext
+
+    if (!AudioContextClass) {
+      return null
+    }
+
+    if (
+      !chatAudioContextRef.current
+    ) {
+      chatAudioContextRef.current =
+        new AudioContextClass()
+    }
+
+    const context =
+      chatAudioContextRef.current
+
+    if (
+      context.state ===
+      'suspended'
+    ) {
+      context.resume().catch(
+        () => {}
+      )
+    }
+
+    return context
+  } catch {
+    return null
+  }
+}
+
+async function reproducirSonidoChat() {
+  try {
+    const context =
+      prepararAudioChat()
+
+    if (!context) return
+
+    if (
+      context.state ===
+      'suspended'
+    ) {
+      await context.resume()
+    }
+
+    const start =
+      context.currentTime +
+      0.008
+
+    const oscillator =
+      context.createOscillator()
+
+    const gain =
+      context.createGain()
+
+    oscillator.type =
+      'sine'
+
+    oscillator.frequency.setValueAtTime(
+      720,
+      start
+    )
+
+    oscillator.frequency.exponentialRampToValueAtTime(
+      610,
+      start + 0.11
+    )
+
+    gain.gain.setValueAtTime(
+      0.0001,
+      start
+    )
+
+    gain.gain.exponentialRampToValueAtTime(
+      0.032,
+      start + 0.012
+    )
+
+    gain.gain.exponentialRampToValueAtTime(
+      0.0001,
+      start + 0.13
+    )
+
+    oscillator.connect(
+      gain
+    )
+
+    gain.connect(
+      context.destination
+    )
+
+    oscillator.start(
+      start
+    )
+
+    oscillator.stop(
+      start + 0.14
+    )
+  } catch {
+    // Si el navegador bloquea audio automático,
+    // el chat sigue funcionando normalmente.
+  }
+}
 
 function canalPrivadoChat(userA, userB) {
   if (!userA || !userB) {
@@ -11150,6 +11311,118 @@ async function imprimirProcessFlow() {
 }
 
 
+
+function iniciarDragMeetingProcessPalette(
+  event
+) {
+  if (
+    !meetingMode ||
+    vistaPrincipal !==
+      'process' ||
+    event.button !== 0 ||
+    event.target.closest(
+      'button, input, select, textarea'
+    )
+  ) {
+    return
+  }
+
+  const panel =
+    event.currentTarget.closest(
+      '.process-left-panel'
+    )
+
+  if (!panel) return
+
+  const rect =
+    panel.getBoundingClientRect()
+
+  meetingProcessPaletteDragRef.current = {
+    offsetX:
+      event.clientX -
+      rect.left,
+    offsetY:
+      event.clientY -
+      rect.top,
+    width:
+      rect.width,
+    height:
+      rect.height,
+  }
+
+  function onMove(moveEvent) {
+    const drag =
+      meetingProcessPaletteDragRef.current
+
+    if (!drag) return
+
+    const maxX =
+      Math.max(
+        8,
+        window.innerWidth -
+          drag.width -
+          8
+      )
+
+    const maxY =
+      Math.max(
+        8,
+        window.innerHeight -
+          drag.height -
+          8
+      )
+
+    setMeetingProcessPalettePos({
+      x:
+        Math.max(
+          8,
+          Math.min(
+            maxX,
+            moveEvent.clientX -
+              drag.offsetX
+          )
+        ),
+      y:
+        Math.max(
+          8,
+          Math.min(
+            maxY,
+            moveEvent.clientY -
+              drag.offsetY
+          )
+        ),
+    })
+  }
+
+  function onUp() {
+    meetingProcessPaletteDragRef.current =
+      null
+
+    window.removeEventListener(
+      'mousemove',
+      onMove
+    )
+
+    window.removeEventListener(
+      'mouseup',
+      onUp
+    )
+  }
+
+  event.preventDefault()
+  event.stopPropagation()
+
+  window.addEventListener(
+    'mousemove',
+    onMove
+  )
+
+  window.addEventListener(
+    'mouseup',
+    onUp
+  )
+}
+
 function abrirNuevaProcessBox() {
   if (!processSeleccionadoId) {
     alert('Primero seleccioná un proceso.')
@@ -11263,71 +11536,338 @@ function iniciarDragProcessBox(event, box) {
   pushProcessUndo()
 
   if (
-    event.target.closest('.process-box-resize') ||
-    event.target.closest('.process-box-edit')
+    event.target.closest(
+      '.process-box-resize'
+    ) ||
+    event.target.closest(
+      '.process-box-edit'
+    ) ||
+    event.target.closest(
+      '.process-box-delete'
+    )
   ) {
     return
   }
 
   event.stopPropagation()
 
-  const rect = event.currentTarget.getBoundingClientRect()
+  if (
+    event.ctrlKey ||
+    event.metaKey
+  ) {
+    event.preventDefault()
+
+    const estabaSeleccionada =
+      selectedProcessBoxIds.includes(
+        box.id
+      )
+
+    setSelectedProcessBoxIds(
+      (actual) =>
+        estabaSeleccionada
+          ? actual.filter(
+              (id) =>
+                id !== box.id
+            )
+          : [
+              ...actual,
+              box.id,
+            ]
+    )
+
+    setSelectedProcessBoxId(
+      estabaSeleccionada
+        ? null
+        : box.id
+    )
+
+    return
+  }
+
+  const yaSeleccionada =
+    selectedProcessBoxIds.includes(
+      box.id
+    )
+
+  const boxIds =
+    yaSeleccionada
+      ? selectedProcessBoxIds
+      : [box.id]
+
+  const nodeIds =
+    yaSeleccionada
+      ? selectedProcessNodeIds
+      : []
+
+  if (!yaSeleccionada) {
+    setSelectedProcessBoxIds([
+      box.id,
+    ])
+    setSelectedProcessNodeIds([])
+  }
+
+  setSelectedProcessBoxId(
+    box.id
+  )
+
+  setSelectedProcessLinkId(
+    null
+  )
+
+  const rect =
+    event.currentTarget.getBoundingClientRect()
+
+  const boxPositions =
+    processBoxes
+      .filter(
+        (item) =>
+          boxIds.includes(
+            item.id
+          )
+      )
+      .map(
+        (item) => ({
+          id:
+            item.id,
+          pos_x:
+            Number(
+              item.pos_x
+            ),
+          pos_y:
+            Number(
+              item.pos_y
+            ),
+        })
+      )
+
+  const nodePositions =
+    processNodes
+      .filter(
+        (item) =>
+          nodeIds.includes(
+            item.id
+          )
+      )
+      .map(
+        (item) => ({
+          id:
+            item.id,
+          pos_x:
+            Number(
+              item.pos_x
+            ),
+          pos_y:
+            Number(
+              item.pos_y
+            ),
+        })
+      )
 
   setProcessBoxDragInfo({
-    id: box.id,
-    offsetX: (event.clientX - rect.left) / processZoom,
-    offsetY: (event.clientY - rect.top) / processZoom,
+    id:
+      box.id,
+    anchorX:
+      Number(
+        box.pos_x
+      ),
+    anchorY:
+      Number(
+        box.pos_y
+      ),
+    offsetX:
+      (
+        event.clientX -
+        rect.left
+      ) /
+      processZoom,
+    offsetY:
+      (
+        event.clientY -
+        rect.top
+      ) /
+      processZoom,
+    selectedBoxIds:
+      boxIds,
+    selectedNodeIds:
+      nodeIds,
+    boxPositions,
+    nodePositions,
   })
 }
 
 function moverProcessBox(event) {
   if (!processBoxDragInfo) return
 
-  const canvas = event.currentTarget
-  const rect = canvas.getBoundingClientRect()
+  const canvas =
+    event.currentTarget
+
+  const rect =
+    canvas.getBoundingClientRect()
 
   const x =
-    (event.clientX - rect.left + canvas.scrollLeft) /
+    (
+      event.clientX -
+      rect.left +
+      canvas.scrollLeft
+    ) /
       processZoom -
     processBoxDragInfo.offsetX
 
   const y =
-    (event.clientY - rect.top + canvas.scrollTop) /
+    (
+      event.clientY -
+      rect.top +
+      canvas.scrollTop
+    ) /
       processZoom -
     processBoxDragInfo.offsetY
 
-  setProcessBoxes((actual) =>
-    actual.map((box) =>
-      box.id === processBoxDragInfo.id
-        ? {
-            ...box,
-            pos_x: Math.max(10, x),
-            pos_y: Math.max(10, y),
-          }
-        : box
+  const deltaX =
+    x -
+    processBoxDragInfo.anchorX
+
+  const deltaY =
+    y -
+    processBoxDragInfo.anchorY
+
+  const boxesEnVivo =
+    (
+      processBoxDragInfo.boxPositions ||
+      []
+    ).map(
+      (item) => ({
+        id:
+          item.id,
+        pos_x:
+          Math.max(
+            10,
+            item.pos_x +
+              deltaX
+          ),
+        pos_y:
+          Math.max(
+            10,
+            item.pos_y +
+              deltaY
+          ),
+      })
     )
+
+  const nodesEnVivo =
+    (
+      processBoxDragInfo.nodePositions ||
+      []
+    ).map(
+      (item) => ({
+        id:
+          item.id,
+        pos_x:
+          Math.max(
+            20,
+            item.pos_x +
+              deltaX
+          ),
+        pos_y:
+          Math.max(
+            20,
+            item.pos_y +
+              deltaY
+          ),
+      })
+    )
+
+  setProcessBoxes(
+    (actual) =>
+      actual.map(
+        (box) => {
+          const posicion =
+            boxesEnVivo.find(
+              (item) =>
+                item.id ===
+                box.id
+            )
+
+          return posicion
+            ? {
+                ...box,
+                pos_x:
+                  posicion.pos_x,
+                pos_y:
+                  posicion.pos_y,
+              }
+            : box
+        }
+      )
   )
+
+  if (
+    nodesEnVivo.length > 0
+  ) {
+    setProcessNodes(
+      (actual) =>
+        actual.map(
+          (node) => {
+            const posicion =
+              nodesEnVivo.find(
+                (item) =>
+                  item.id ===
+                  node.id
+              )
+
+            return posicion
+              ? {
+                  ...node,
+                  pos_x:
+                    posicion.pos_x,
+                  pos_y:
+                    posicion.pos_y,
+                }
+              : node
+          }
+        )
+    )
+  }
 }
 
 async function terminarDragProcessBox() {
   if (!processBoxDragInfo) return
 
-  const box = processBoxes.find(
-    (item) => item.id === processBoxDragInfo.id
+  const boxIds =
+    processBoxDragInfo.selectedBoxIds ||
+    [processBoxDragInfo.id]
+
+  const nodeIds =
+    processBoxDragInfo.selectedNodeIds ||
+    []
+
+  const boxesFinales =
+    processBoxes.filter(
+      (box) =>
+        boxIds.includes(
+          box.id
+        )
+    )
+
+  const nodesFinales =
+    processNodes.filter(
+      (node) =>
+        nodeIds.includes(
+          node.id
+        )
+    )
+
+  setProcessBoxDragInfo(
+    null
   )
 
-  setProcessBoxDragInfo(null)
-
-  if (!box) return
-
-  await supabase
-    .from('process_boxes')
-    .update({
-      pos_x: Number(box.pos_x),
-      pos_y: Number(box.pos_y),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', box.id)
+  await Promise.all([
+    guardarPosicionesProcessBoxes(
+      boxesFinales
+    ),
+    guardarPosicionesProcessNodes(
+      nodesFinales
+    ),
+  ])
 }
 
 function iniciarResizeProcessBox(event, box) {
@@ -11586,6 +12126,7 @@ async function deshacerProcess() {
   setProcessBoxes(snapshot.boxes)
   setSelectedProcessNodeIds([])
   setSelectedProcessBoxId(null)
+  setSelectedProcessBoxIds([])
 
   void (async () => {
     try {
@@ -12342,10 +12883,15 @@ function puntoSeleccionProcess(
   }
 }
 
-function idsDentroSeleccionProcess(
+function objetosDentroSeleccionProcess(
   selection
 ) {
-  if (!selection) return []
+  if (!selection) {
+    return {
+      nodeIds: [],
+      boxIds: [],
+    }
+  }
 
   const left =
     Math.min(
@@ -12371,34 +12917,84 @@ function idsDentroSeleccionProcess(
       selection.currentY
     )
 
-  return processNodes
-    .filter(processNodeVisible)
-    .filter((node) => {
-      const nx =
-        Number(node.pos_x)
+  const intersecta =
+    (
+      x,
+      y,
+      width,
+      height
+    ) => (
+      x < right &&
+      x + width > left &&
+      y < bottom &&
+      y + height > top
+    )
 
-      const ny =
-        Number(node.pos_y)
-
-      const nw =
-        Number(node.ancho)
-
-      const nh =
-        Number(node.alto)
-
-      /*
-        Seleccionamos cualquier componente tocado
-        por el rectángulo. No hace falta encerrarlo
-        completamente.
-      */
-      return (
-        nx < right &&
-        nx + nw > left &&
-        ny < bottom &&
-        ny + nh > top
+  const nodeIds =
+    processNodes
+      .filter(
+        processNodeVisible
       )
-    })
-    .map((node) => node.id)
+      .filter(
+        (node) =>
+          intersecta(
+            Number(node.pos_x),
+            Number(node.pos_y),
+            Number(node.ancho) || 120,
+            Number(node.alto) || 90
+          )
+      )
+      .map(
+        (node) => node.id
+      )
+
+  const boxIds =
+    processBoxes
+      .filter(
+        (box) => {
+          const bx =
+            Number(
+              box.pos_x
+            )
+
+          const by =
+            Number(
+              box.pos_y
+            )
+
+          const bw =
+            Number(
+              box.ancho
+            ) || 640
+
+          const bh =
+            Number(
+              box.alto
+            ) || 340
+
+          return (
+            bx >= left &&
+            by >= top &&
+            bx + bw <= right &&
+            by + bh <= bottom
+          )
+        }
+      )
+      .map(
+        (box) => box.id
+      )
+
+  return {
+    nodeIds,
+    boxIds,
+  }
+}
+
+function totalSeleccionProcess() {
+  return (
+    selectedProcessNodeIds.length +
+    selectedProcessBoxIds.length
+  )
 }
 
 function actualizarRectSeleccionProcess(
@@ -12483,6 +13079,7 @@ function iniciarSeleccionProcess(event) {
   event.preventDefault()
 
   setSelectedProcessBoxId(null)
+  setSelectedProcessBoxIds([])
   setSelectedProcessLinkId(null)
   setSelectedProcessNodeIds([])
 
@@ -12521,8 +13118,23 @@ function moverSeleccionProcess(event) {
     pero la selección definitiva se vuelve
     a calcular también al soltar el mouse.
   */
+  const seleccion =
+    objetosDentroSeleccionProcess(
+      next
+    )
+
   setSelectedProcessNodeIds(
-    idsDentroSeleccionProcess(next)
+    seleccion.nodeIds
+  )
+
+  setSelectedProcessBoxIds(
+    seleccion.boxIds
+  )
+
+  setSelectedProcessBoxId(
+    seleccion.boxIds.length === 1
+      ? seleccion.boxIds[0]
+      : null
   )
 }
 
@@ -12579,13 +13191,28 @@ function terminarSeleccionProcess(event) {
     ancho >= 4 ||
     alto >= 4
   ) {
-    setSelectedProcessNodeIds(
-      idsDentroSeleccionProcess(
+    const seleccion =
+      objetosDentroSeleccionProcess(
         finalSelection
       )
+
+    setSelectedProcessNodeIds(
+      seleccion.nodeIds
+    )
+
+    setSelectedProcessBoxIds(
+      seleccion.boxIds
+    )
+
+    setSelectedProcessBoxId(
+      seleccion.boxIds.length === 1
+        ? seleccion.boxIds[0]
+        : null
     )
   } else {
     setSelectedProcessNodeIds([])
+    setSelectedProcessBoxIds([])
+    setSelectedProcessBoxId(null)
   }
 
   processSelectionRef.current =
@@ -12623,6 +13250,57 @@ async function guardarPosicionesProcessNodes(nodes) {
   }
 }
 
+
+
+async function guardarPosicionesProcessBoxes(
+  boxes
+) {
+  if (
+    !boxes ||
+    boxes.length === 0
+  ) {
+    return
+  }
+
+  const resultados =
+    await Promise.all(
+      boxes.map(
+        (box) =>
+          supabase
+            .from(
+              'process_boxes'
+            )
+            .update({
+              pos_x:
+                Number(
+                  box.pos_x
+                ),
+              pos_y:
+                Number(
+                  box.pos_y
+                ),
+              updated_at:
+                new Date().toISOString(),
+            })
+            .eq(
+              'id',
+              box.id
+            )
+      )
+    )
+
+  const error =
+    resultados.find(
+      (item) => item.error
+    )?.error
+
+  if (error) {
+    console.error(
+      'No se pudieron guardar las posiciones de algunas cajas:',
+      error
+    )
+  }
+}
 
 function calcularLayoutObjetos(
   objetos,
@@ -13485,13 +14163,52 @@ async function alinearComponenteSeleccionProcess() {
 async function organizarSeleccionProcess(
   accion
 ) {
-  const seleccionados =
+  const nodosSeleccionados =
     processNodes.filter(
       (node) =>
         selectedProcessNodeIds.includes(
           node.id
         )
     )
+
+  const cajasSeleccionadas =
+    processBoxes.filter(
+      (box) =>
+        selectedProcessBoxIds.includes(
+          box.id
+        )
+    )
+
+  const seleccionados = [
+    ...nodosSeleccionados.map(
+      (node) => ({
+        objectType: 'node',
+        id: node.id,
+        x:
+          Number(node.pos_x) || 0,
+        y:
+          Number(node.pos_y) || 0,
+        width:
+          Number(node.ancho) || 120,
+        height:
+          Number(node.alto) || 90,
+      })
+    ),
+    ...cajasSeleccionadas.map(
+      (box) => ({
+        objectType: 'box',
+        id: box.id,
+        x:
+          Number(box.pos_x) || 0,
+        y:
+          Number(box.pos_y) || 0,
+        width:
+          Number(box.ancho) || 640,
+        height:
+          Number(box.alto) || 340,
+      })
+    ),
+  ]
 
   const minimo =
     accion.startsWith(
@@ -13517,47 +14234,26 @@ async function organizarSeleccionProcess(
 
   const layout =
     calcularLayoutObjetos(
-      seleccionados.map(
-        (node) => ({
-          id:
-            node.id,
-          x:
-            Number(
-              node.pos_x
-            ) || 0,
-          y:
-            Number(
-              node.pos_y
-            ) || 0,
-          width:
-            Number(
-              node.ancho
-            ) || 120,
-          height:
-            Number(
-              node.alto
-            ) || 90,
-        })
-      ),
+      seleccionados,
       accion
     )
 
-  const porId =
+  const porClave =
     new Map(
       layout.map(
         (item) => [
-          item.id,
+          `${item.objectType}:${item.id}`,
           item,
         ]
       )
     )
 
-  const actualizados =
+  const nodesActualizados =
     processNodes.map(
       (node) => {
         const item =
-          porId.get(
-            node.id
+          porClave.get(
+            `node:${node.id}`
           )
 
         if (!item) {
@@ -13584,19 +14280,64 @@ async function organizarSeleccionProcess(
       }
     )
 
-  setProcessNodes(
-    actualizados
-  )
+  const boxesActualizados =
+    processBoxes.map(
+      (box) => {
+        const item =
+          porClave.get(
+            `box:${box.id}`
+          )
 
-  const movidos =
-    actualizados.filter(
-      (node) =>
-        porId.has(node.id)
+        if (!item) {
+          return box
+        }
+
+        return {
+          ...box,
+          pos_x:
+            Math.max(
+              10,
+              Math.round(
+                item.x * 10
+              ) / 10
+            ),
+          pos_y:
+            Math.max(
+              10,
+              Math.round(
+                item.y * 10
+              ) / 10
+            ),
+        }
+      }
     )
 
-  await guardarPosicionesProcessNodes(
-    movidos
+  setProcessNodes(
+    nodesActualizados
   )
+
+  setProcessBoxes(
+    boxesActualizados
+  )
+
+  await Promise.all([
+    guardarPosicionesProcessNodes(
+      nodesActualizados.filter(
+        (node) =>
+          selectedProcessNodeIds.includes(
+            node.id
+          )
+      )
+    ),
+    guardarPosicionesProcessBoxes(
+      boxesActualizados.filter(
+        (box) =>
+          selectedProcessBoxIds.includes(
+            box.id
+          )
+      )
+    ),
+  ])
 
   mostrarToast(
     etiquetaAccionLayout(
@@ -13606,34 +14347,88 @@ async function organizarSeleccionProcess(
 }
 
 async function aplicarSnapSeleccionProcess() {
-  if (selectedProcessNodeIds.length === 0) return
+  if (
+    totalSeleccionProcess() === 0
+  ) {
+    return
+  }
 
   const GRID = 38
 
-  const actualizados =
-    processNodes.map((node) =>
-      selectedProcessNodeIds.includes(node.id)
-        ? {
-            ...node,
-            pos_x:
-              Math.round(
-                Number(node.pos_x) / GRID
-              ) * GRID,
-            pos_y:
-              Math.round(
-                Number(node.pos_y) / GRID
-              ) * GRID,
-          }
-        : node
+  const nodesActualizados =
+    processNodes.map(
+      (node) =>
+        selectedProcessNodeIds.includes(
+          node.id
+        )
+          ? {
+              ...node,
+              pos_x:
+                Math.round(
+                  Number(node.pos_x) /
+                    GRID
+                ) *
+                GRID,
+              pos_y:
+                Math.round(
+                  Number(node.pos_y) /
+                    GRID
+                ) *
+                GRID,
+            }
+          : node
     )
 
-  setProcessNodes(actualizados)
-
-  await guardarPosicionesProcessNodes(
-    actualizados.filter((node) =>
-      selectedProcessNodeIds.includes(node.id)
+  const boxesActualizados =
+    processBoxes.map(
+      (box) =>
+        selectedProcessBoxIds.includes(
+          box.id
+        )
+          ? {
+              ...box,
+              pos_x:
+                Math.round(
+                  Number(box.pos_x) /
+                    GRID
+                ) *
+                GRID,
+              pos_y:
+                Math.round(
+                  Number(box.pos_y) /
+                    GRID
+                ) *
+                GRID,
+            }
+          : box
     )
+
+  setProcessNodes(
+    nodesActualizados
   )
+
+  setProcessBoxes(
+    boxesActualizados
+  )
+
+  await Promise.all([
+    guardarPosicionesProcessNodes(
+      nodesActualizados.filter(
+        (node) =>
+          selectedProcessNodeIds.includes(
+            node.id
+          )
+      )
+    ),
+    guardarPosicionesProcessBoxes(
+      boxesActualizados.filter(
+        (box) =>
+          selectedProcessBoxIds.includes(
+            box.id
+          )
+      )
+    ),
+  ])
 }
 
 
@@ -13835,90 +14630,297 @@ async function cambiarCapaSeleccionProcess(direccion) {
 
 async function eliminarSeleccionProcess() {
   pushProcessUndo()
-  if (selectedProcessNodeIds.length === 0) return
 
-  const ids = [...selectedProcessNodeIds]
-
-  const { error } = await supabase
-    .from('process_nodes')
-    .delete()
-    .in('id', ids)
-
-  if (error) {
-    alert(
-      `No se pudieron eliminar los componentes seleccionados: ${error.message}`
-    )
+  if (
+    totalSeleccionProcess() === 0
+  ) {
     return
   }
 
-  setSelectedProcessNodeIds([])
+  const nodeIds =
+    [...selectedProcessNodeIds]
 
-  await cargarProcessCanvas(processSeleccionadoId)
+  const boxIds =
+    [...selectedProcessBoxIds]
+
+  if (
+    nodeIds.length > 0
+  ) {
+    const {
+      error: linksError,
+    } = await supabase
+      .from(
+        'process_links'
+      )
+      .delete()
+      .or(
+        `source_node_id.in.(${nodeIds.join(',')}),target_node_id.in.(${nodeIds.join(',')})`
+      )
+
+    if (linksError) {
+      alert(
+        `No se pudieron eliminar las conexiones: ${linksError.message}`
+      )
+      return
+    }
+
+    const {
+      error: nodesError,
+    } = await supabase
+      .from(
+        'process_nodes'
+      )
+      .delete()
+      .in(
+        'id',
+        nodeIds
+      )
+
+    if (nodesError) {
+      alert(
+        `No se pudieron eliminar los componentes seleccionados: ${nodesError.message}`
+      )
+      return
+    }
+  }
+
+  if (
+    boxIds.length > 0
+  ) {
+    const {
+      error: boxesError,
+    } = await supabase
+      .from(
+        'process_boxes'
+      )
+      .delete()
+      .in(
+        'id',
+        boxIds
+      )
+
+    if (boxesError) {
+      alert(
+        `No se pudieron eliminar las cajas seleccionadas: ${boxesError.message}`
+      )
+      return
+    }
+  }
+
+  setSelectedProcessNodeIds([])
+  setSelectedProcessBoxIds([])
+  setSelectedProcessBoxId(null)
+
+  await cargarProcessCanvas(
+    processSeleccionadoId
+  )
 }
 
 async function duplicarSeleccionProcess() {
   pushProcessUndo()
-  if (selectedProcessNodeIds.length === 0) return
 
-  const maxZ = Math.max(
-    10,
-    ...processNodes.map(
-      (node) =>
-        Number(node.z_index) || 10
-    )
-  )
-
-  const seleccionados =
-    processNodes.filter((node) =>
-      selectedProcessNodeIds.includes(node.id)
-    )
-
-  const payload =
-    seleccionados.map((node, index) => ({
-      process_id: processSeleccionadoId,
-      tipo: node.tipo,
-      titulo: node.titulo || '',
-      color:
-        node.color ||
-        plantillaProceso(node.tipo)?.color ||
-        '#cfe3cd',
-      rotacion:
-        Number(node.rotacion) || 0,
-      text_align:
-        node.text_align || 'center',
-      pos_x:
-        Number(node.pos_x) + 28,
-      pos_y:
-        Number(node.pos_y) + 28,
-      ancho:
-        Number(node.ancho),
-      alto:
-        Number(node.alto),
-      z_index:
-        maxZ + index + 1,
-      updated_at:
-        new Date().toISOString(),
-    }))
-
-  const { data, error } =
-    await supabase
-      .from('process_nodes')
-      .insert(payload)
-      .select()
-
-  if (error) {
-    alert(
-      `No se pudieron duplicar los componentes: ${error.message}`
-    )
+  if (
+    totalSeleccionProcess() === 0
+  ) {
     return
   }
 
-  setSelectedProcessNodeIds(
-    (data || []).map((node) => node.id)
-  )
+  const maxZ =
+    Math.max(
+      10,
+      ...processNodes.map(
+        (node) =>
+          Number(
+            node.z_index
+          ) || 10
+      )
+    )
+
+  const nodos =
+    processNodes.filter(
+      (node) =>
+        selectedProcessNodeIds.includes(
+          node.id
+        )
+    )
+
+  const cajas =
+    processBoxes.filter(
+      (box) =>
+        selectedProcessBoxIds.includes(
+          box.id
+        )
+    )
+
+  let nuevosNodeIds = []
+  let nuevasBoxIds = []
+
+  if (
+    nodos.length > 0
+  ) {
+    const payload =
+      nodos.map(
+        (node, index) => ({
+          process_id:
+            processSeleccionadoId,
+          tipo:
+            node.tipo,
+          titulo:
+            node.titulo || '',
+          color:
+            node.color ||
+            plantillaProceso(
+              node.tipo
+            )?.color ||
+            '#cfe3cd',
+          rotacion:
+            Number(
+              node.rotacion
+            ) || 0,
+          text_align:
+            node.text_align ||
+            'center',
+          superpuesto:
+            Boolean(
+              node.superpuesto
+            ),
+          pendiente:
+            Boolean(
+              node.pendiente
+            ),
+          pos_x:
+            Number(
+              node.pos_x
+            ) + 28,
+          pos_y:
+            Number(
+              node.pos_y
+            ) + 28,
+          ancho:
+            Number(
+              node.ancho
+            ),
+          alto:
+            Number(
+              node.alto
+            ),
+          z_index:
+            maxZ +
+            index +
+            1,
+          asset_path:
+            node.asset_path ||
+            null,
+          asset_name:
+            node.asset_name ||
+            null,
+          asset_mime:
+            node.asset_mime ||
+            null,
+          asset_bytes:
+            node.asset_bytes ||
+            null,
+          updated_at:
+            new Date().toISOString(),
+        })
+      )
+
+    const {
+      data,
+      error,
+    } = await supabase
+      .from(
+        'process_nodes'
+      )
+      .insert(payload)
+      .select()
+
+    if (error) {
+      alert(
+        `No se pudieron duplicar los componentes: ${error.message}`
+      )
+      return
+    }
+
+    nuevosNodeIds =
+      (data || []).map(
+        (node) => node.id
+      )
+  }
+
+  if (
+    cajas.length > 0
+  ) {
+    const payload =
+      cajas.map(
+        (box) => ({
+          process_id:
+            processSeleccionadoId,
+          titulo:
+            box.titulo || '',
+          color:
+            box.color ||
+            '#4ea1ff',
+          pos_x:
+            Number(
+              box.pos_x
+            ) + 28,
+          pos_y:
+            Number(
+              box.pos_y
+            ) + 28,
+          ancho:
+            Number(
+              box.ancho
+            ) || 640,
+          alto:
+            Number(
+              box.alto
+            ) || 340,
+          updated_at:
+            new Date().toISOString(),
+        })
+      )
+
+    const {
+      data,
+      error,
+    } = await supabase
+      .from(
+        'process_boxes'
+      )
+      .insert(payload)
+      .select()
+
+    if (error) {
+      alert(
+        `No se pudieron duplicar las cajas: ${error.message}`
+      )
+      return
+    }
+
+    nuevasBoxIds =
+      (data || []).map(
+        (box) => box.id
+      )
+  }
 
   await cargarProcessCanvas(
     processSeleccionadoId
+  )
+
+  setSelectedProcessNodeIds(
+    nuevosNodeIds
+  )
+
+  setSelectedProcessBoxIds(
+    nuevasBoxIds
+  )
+
+  setSelectedProcessBoxId(
+    nuevasBoxIds.length === 1
+      ? nuevasBoxIds[0]
+      : null
   )
 }
 
@@ -13980,37 +14982,92 @@ function iniciarDragProcessNode(event, node) {
   const nodeY =
     Number(node.pos_y)
 
-  const ids =
-    selectedProcessNodeIds.includes(node.id)
+  const nodeYaSeleccionado =
+    selectedProcessNodeIds.includes(
+      node.id
+    )
+
+  const nodeIds =
+    nodeYaSeleccionado
       ? selectedProcessNodeIds
       : [node.id]
+
+  const boxIds =
+    nodeYaSeleccionado
+      ? selectedProcessBoxIds
+      : []
 
   setSelectedProcessLinkId(null)
   setSelectedProcessBoxId(null)
 
-  if (!selectedProcessNodeIds.includes(node.id)) {
-    setSelectedProcessNodeIds([node.id])
+  if (!nodeYaSeleccionado) {
+    setSelectedProcessNodeIds([
+      node.id,
+    ])
+    setSelectedProcessBoxIds([])
   }
 
-  const posiciones =
+  const nodePositions =
     processNodes
-      .filter((item) =>
-        ids.includes(item.id)
+      .filter(
+        (item) =>
+          nodeIds.includes(
+            item.id
+          )
       )
-      .map((item) => ({
-        id: item.id,
-        pos_x:
-          Number(item.pos_x),
-        pos_y:
-          Number(item.pos_y),
-      }))
+      .map(
+        (item) => ({
+          id:
+            item.id,
+          pos_x:
+            Number(
+              item.pos_x
+            ),
+          pos_y:
+            Number(
+              item.pos_y
+            ),
+        })
+      )
+
+  const boxPositions =
+    processBoxes
+      .filter(
+        (item) =>
+          boxIds.includes(
+            item.id
+          )
+      )
+      .map(
+        (item) => ({
+          id:
+            item.id,
+          pos_x:
+            Number(
+              item.pos_x
+            ),
+          pos_y:
+            Number(
+              item.pos_y
+            ),
+        })
+      )
 
   setProcessGroupDragInfo({
-    anchorId: node.id,
-    anchorX: nodeX,
-    anchorY: nodeY,
-    selectedIds: ids,
-    posiciones,
+    anchorType: 'node',
+    anchorId:
+      node.id,
+    anchorX:
+      nodeX,
+    anchorY:
+      nodeY,
+    selectedIds:
+      nodeIds,
+    selectedBoxIds:
+      boxIds,
+    posiciones:
+      nodePositions,
+    boxPositions,
   })
 
   /*
@@ -14026,7 +15083,7 @@ function iniciarDragProcessNode(event, node) {
       clickWorldY - nodeY,
   })
 
-  posiciones.forEach(
+  nodePositions.forEach(
     (item) =>
       emitirColaboracionEnVivo({
         modulo: 'process',
@@ -14146,7 +15203,13 @@ function moverProcessNode(event) {
 
   if (
     processGroupDragInfo &&
-    processGroupDragInfo.selectedIds.length > 1
+    (
+      processGroupDragInfo.selectedIds.length +
+      (
+        processGroupDragInfo.selectedBoxIds?.length ||
+        0
+      )
+    ) > 1
   ) {
     const deltaX =
       x -
@@ -14191,6 +15254,57 @@ function moverProcessNode(event) {
           : node
       })
     )
+
+    const boxesEnVivo =
+      (
+        processGroupDragInfo.boxPositions ||
+        []
+      ).map(
+        (item) => ({
+          id:
+            item.id,
+          pos_x:
+            Math.max(
+              20,
+              item.pos_x +
+                deltaX
+            ),
+          pos_y:
+            Math.max(
+              20,
+              item.pos_y +
+                deltaY
+            ),
+        })
+      )
+
+    if (
+      boxesEnVivo.length > 0
+    ) {
+      setProcessBoxes(
+        (actual) =>
+          actual.map(
+            (box) => {
+              const posicion =
+                boxesEnVivo.find(
+                  (item) =>
+                    item.id ===
+                    box.id
+                )
+
+              return posicion
+                ? {
+                    ...box,
+                    pos_x:
+                      posicion.pos_x,
+                    pos_y:
+                      posicion.pos_y,
+                  }
+                : box
+            }
+          )
+      )
+    }
 
     posicionesEnVivo.forEach(
       (item) =>
@@ -14241,19 +15355,33 @@ function moverProcessNode(event) {
 async function terminarDragProcessNode() {
   if (!processDragInfo) return
 
-  const ids =
+  const nodeIds =
     processGroupDragInfo?.selectedIds ||
     [processDragInfo.id]
 
+  const boxIds =
+    processGroupDragInfo?.selectedBoxIds ||
+    []
+
   let nodesFinales =
-    processNodes.filter((node) =>
-      ids.includes(node.id)
+    processNodes.filter(
+      (node) =>
+        nodeIds.includes(
+          node.id
+        )
+    )
+
+  let boxesFinales =
+    processBoxes.filter(
+      (box) =>
+        boxIds.includes(
+          box.id
+        )
     )
 
   /*
     Snap al FINAL del movimiento.
-    En grupos desplazamos a todos por el mismo delta,
-    así no se rompe la distribución relativa.
+    El mismo delta se aplica también a las cajas seleccionadas.
   */
   if (
     processSnapEnabled &&
@@ -14270,10 +15398,14 @@ async function terminarDragProcessNode() {
       nodesFinales[0]
 
     const anchorX =
-      Number(anchor.pos_x)
+      Number(
+        anchor.pos_x
+      )
 
     const anchorY =
-      Number(anchor.pos_y)
+      Number(
+        anchor.pos_y
+      )
 
     const snappedX =
       Math.round(
@@ -14286,47 +15418,105 @@ async function terminarDragProcessNode() {
       ) * GRID
 
     const deltaX =
-      snappedX - anchorX
+      snappedX -
+      anchorX
 
     const deltaY =
-      snappedY - anchorY
+      snappedY -
+      anchorY
 
-    const idsSet =
-      new Set(ids)
+    const nodeIdSet =
+      new Set(
+        nodeIds
+      )
 
-    const actualizados =
-      processNodes.map((node) =>
-        idsSet.has(node.id)
-          ? {
-              ...node,
-              pos_x:
-                Math.max(
-                  20,
-                  Number(node.pos_x) +
-                    deltaX
-                ),
-              pos_y:
-                Math.max(
-                  20,
-                  Number(node.pos_y) +
-                    deltaY
-                ),
-            }
-          : node
+    const boxIdSet =
+      new Set(
+        boxIds
+      )
+
+    const nodesActualizados =
+      processNodes.map(
+        (node) =>
+          nodeIdSet.has(
+            node.id
+          )
+            ? {
+                ...node,
+                pos_x:
+                  Math.max(
+                    20,
+                    Number(
+                      node.pos_x
+                    ) +
+                      deltaX
+                  ),
+                pos_y:
+                  Math.max(
+                    20,
+                    Number(
+                      node.pos_y
+                    ) +
+                      deltaY
+                  ),
+              }
+            : node
+      )
+
+    const boxesActualizados =
+      processBoxes.map(
+        (box) =>
+          boxIdSet.has(
+            box.id
+          )
+            ? {
+                ...box,
+                pos_x:
+                  Math.max(
+                    20,
+                    Number(
+                      box.pos_x
+                    ) +
+                      deltaX
+                  ),
+                pos_y:
+                  Math.max(
+                    20,
+                    Number(
+                      box.pos_y
+                    ) +
+                      deltaY
+                  ),
+              }
+            : box
       )
 
     setProcessNodes(
-      actualizados
+      nodesActualizados
+    )
+
+    setProcessBoxes(
+      boxesActualizados
     )
 
     nodesFinales =
-      actualizados.filter(
+      nodesActualizados.filter(
         (node) =>
-          idsSet.has(node.id)
+          nodeIdSet.has(
+            node.id
+          )
+      )
+
+    boxesFinales =
+      boxesActualizados.filter(
+        (box) =>
+          boxIdSet.has(
+            box.id
+          )
       )
   }
 
-  ids.forEach(
+  nodeIds.forEach(
     (id) =>
       liberarColaboracionEnVivo(
         'process',
@@ -14343,9 +15533,14 @@ async function terminarDragProcessNode() {
     y: null,
   })
 
-  await guardarPosicionesProcessNodes(
-    nodesFinales
-  )
+  await Promise.all([
+    guardarPosicionesProcessNodes(
+      nodesFinales
+    ),
+    guardarPosicionesProcessBoxes(
+      boxesFinales
+    ),
+  ])
 }
 
 function iniciarResizeProcessNode(event, node) {
@@ -15392,6 +16587,7 @@ function iniciarSimulacionProcess() {
   }
 
   setSelectedProcessNodeIds([])
+  setSelectedProcessBoxIds([])
   setSelectedProcessLinkId(null)
   setSelectedProcessBoxId(null)
   setProcessValidationMessages([])
@@ -15498,6 +16694,7 @@ function saltarSimulacionAComponente(node) {
   }
 
   setSelectedProcessNodeIds([])
+  setSelectedProcessBoxIds([])
   setSelectedProcessLinkId(null)
   setSelectedProcessBoxId(null)
 
@@ -22978,6 +24175,15 @@ function colorEstadoTarea(tarea) {
 
 
   useEffect(() => {
+    setSelectedProcessNodeIds([])
+    setSelectedProcessBoxIds([])
+    setSelectedProcessBoxId(null)
+    setSelectedProcessLinkId(null)
+  }, [
+    processSeleccionadoId,
+  ])
+
+  useEffect(() => {
     versionAutoStateRef.current = {
       vistaPrincipal,
       boardId:
@@ -26106,7 +27312,20 @@ function colorEstadoTarea(tarea) {
           </div>
 
           <div className="process-layout">
-            <aside className="process-left-panel">
+            <aside
+              className="process-left-panel"
+              style={
+                meetingMode &&
+                meetingProcessPalettePos
+                  ? {
+                      '--meeting-process-palette-left':
+                        `${meetingProcessPalettePos.x}px`,
+                      '--meeting-process-palette-top':
+                        `${meetingProcessPalettePos.y}px`,
+                    }
+                  : undefined
+              }
+            >
               <div className="process-left-top">
                 <div className="process-list-header">
                   <div>
@@ -26261,7 +27480,21 @@ function colorEstadoTarea(tarea) {
               <div className="process-left-divider" />
 
               <div className="process-components-panel">
-                <div className="process-components-header">
+                <div
+                  className={`process-components-header ${
+                    meetingMode
+                      ? 'meeting-process-palette-drag-handle'
+                      : ''
+                  }`}
+                  onMouseDown={
+                    iniciarDragMeetingProcessPalette
+                  }
+                  title={
+                    meetingMode
+                      ? 'Arrastrá para mover la caja de componentes'
+                      : undefined
+                  }
+                >
                   <div>
                     <span>Componentes</span>
                   </div>
@@ -26688,7 +27921,7 @@ function colorEstadoTarea(tarea) {
                     </div>
 
                     {!processSimulationOpen &&
-                      selectedProcessNodeIds.length > 0 && (
+                      totalSeleccionProcess() > 0 && (
                       <div
                         className="process-selection-toolbar"
                         style={{
@@ -26709,7 +27942,7 @@ function colorEstadoTarea(tarea) {
                           title="Arrastrá para mover el cuadro"
                         >
                           <strong>
-                            {selectedProcessNodeIds.length}
+                            {totalSeleccionProcess()}
                             {' '}seleccionados
                           </strong>
 
@@ -26728,6 +27961,9 @@ function colorEstadoTarea(tarea) {
 
                           <button
                             type="button"
+                            disabled={
+                              selectedProcessNodeIds.length === 0
+                            }
                             onClick={() =>
                               cambiarCapaSeleccionProcess(
                                 'frente'
@@ -26739,6 +27975,9 @@ function colorEstadoTarea(tarea) {
 
                           <button
                             type="button"
+                            disabled={
+                              selectedProcessNodeIds.length === 0
+                            }
                             onClick={() =>
                               cambiarCapaSeleccionProcess(
                                 'fondo'
@@ -26758,6 +27997,9 @@ function colorEstadoTarea(tarea) {
                           <button
                             type="button"
                             className="process-align-action"
+                            disabled={
+                              selectedProcessNodeIds.length === 0
+                            }
                             onClick={
                               alinearComponenteSeleccionProcess
                             }
@@ -26778,7 +28020,7 @@ function colorEstadoTarea(tarea) {
                             <button
                               type="button"
                               onClick={() => organizarSeleccionProcess('left')}
-                              disabled={selectedProcessNodeIds.length < 2}
+                              disabled={totalSeleccionProcess() < 2}
                               title="Alinear izquierda"
                             >
                               ⫷
@@ -26787,7 +28029,7 @@ function colorEstadoTarea(tarea) {
                             <button
                               type="button"
                               onClick={() => organizarSeleccionProcess('centerH')}
-                              disabled={selectedProcessNodeIds.length < 2}
+                              disabled={totalSeleccionProcess() < 2}
                               title="Centrar horizontalmente"
                             >
                               ↔
@@ -26796,7 +28038,7 @@ function colorEstadoTarea(tarea) {
                             <button
                               type="button"
                               onClick={() => organizarSeleccionProcess('right')}
-                              disabled={selectedProcessNodeIds.length < 2}
+                              disabled={totalSeleccionProcess() < 2}
                               title="Alinear derecha"
                             >
                               ⫸
@@ -26805,7 +28047,7 @@ function colorEstadoTarea(tarea) {
                             <button
                               type="button"
                               onClick={() => organizarSeleccionProcess('top')}
-                              disabled={selectedProcessNodeIds.length < 2}
+                              disabled={totalSeleccionProcess() < 2}
                               title="Alinear arriba"
                             >
                               ⫯
@@ -26814,7 +28056,7 @@ function colorEstadoTarea(tarea) {
                             <button
                               type="button"
                               onClick={() => organizarSeleccionProcess('centerV')}
-                              disabled={selectedProcessNodeIds.length < 2}
+                              disabled={totalSeleccionProcess() < 2}
                               title="Centrar verticalmente"
                             >
                               ↕
@@ -26823,7 +28065,7 @@ function colorEstadoTarea(tarea) {
                             <button
                               type="button"
                               onClick={() => organizarSeleccionProcess('bottom')}
-                              disabled={selectedProcessNodeIds.length < 2}
+                              disabled={totalSeleccionProcess() < 2}
                               title="Alinear abajo"
                             >
                               ⫰
@@ -26835,7 +28077,7 @@ function colorEstadoTarea(tarea) {
                               type="button"
                               className="distribute"
                               onClick={() => organizarSeleccionProcess('distributeH')}
-                              disabled={selectedProcessNodeIds.length < 3}
+                              disabled={totalSeleccionProcess() < 3}
                               title="Distribuir horizontalmente"
                             >
                               ⇆
@@ -26845,7 +28087,7 @@ function colorEstadoTarea(tarea) {
                               type="button"
                               className="distribute"
                               onClick={() => organizarSeleccionProcess('distributeV')}
-                              disabled={selectedProcessNodeIds.length < 3}
+                              disabled={totalSeleccionProcess() < 3}
                               title="Distribuir verticalmente"
                             >
                               ⇅
@@ -26855,6 +28097,9 @@ function colorEstadoTarea(tarea) {
                           <button
                             type="button"
                             className="process-superposition-action"
+                            disabled={
+                              selectedProcessNodeIds.length === 0
+                            }
                             onClick={
                               marcarSuperposicionSeleccionProcess
                             }
@@ -26863,9 +28108,15 @@ function colorEstadoTarea(tarea) {
                             Superposición
                           </button>
 
+                        </div>
+
+                        <div className="process-selection-secondary-row">
                           <button
                             type="button"
-                            className="process-pending-action"
+                            className="process-pending-action process-pending-secondary"
+                            disabled={
+                              selectedProcessNodeIds.length === 0
+                            }
                             onClick={
                               togglePendienteSeleccionProcess
                             }
@@ -26873,9 +28124,7 @@ function colorEstadoTarea(tarea) {
                           >
                             Pendiente
                           </button>
-                        </div>
 
-                        <div className="process-selection-secondary-row">
                           <div className="process-selection-colors">
                             <div>
                               {[
@@ -26957,9 +28206,11 @@ function colorEstadoTarea(tarea) {
                           <button
                             type="button"
                             className="process-selection-cancel"
-                            onClick={() =>
+                            onClick={() => {
                               setSelectedProcessNodeIds([])
-                            }
+                              setSelectedProcessBoxIds([])
+                              setSelectedProcessBoxId(null)
+                            }}
                           >
                             Cancelar
                           </button>
@@ -27246,7 +28497,11 @@ function colorEstadoTarea(tarea) {
                           {processBoxes.map((box) => (
                             <span
                               key={`mini-process-box-${box.id}`}
-                              className="projectflow-minimap-object zone"
+                              className={`projectflow-minimap-object zone ${
+                                selectedProcessBoxIds.includes(box.id)
+                                  ? 'selected'
+                                  : ''
+                              }`}
                               style={{
                                 left: `${porcentajeMinimap(box.pos_x, processWorldSize.width)}%`,
                                 top: `${porcentajeMinimap(box.pos_y, processWorldSize.height)}%`,
@@ -27376,8 +28631,9 @@ function colorEstadoTarea(tarea) {
                               ? 'dragging'
                               : ''
                           } ${
+                            selectedProcessBoxIds.includes(box.id) ||
                             selectedProcessBoxId === box.id
-                              ? 'selected'
+                              ? 'selected multi-selected'
                               : ''
                           }`}
                           style={{
@@ -27393,8 +28649,10 @@ function colorEstadoTarea(tarea) {
                               ),
                           }}
                           onMouseDown={(event) => {
-                            setSelectedProcessBoxId(box.id)
-                            iniciarDragProcessBox(event, box)
+                            iniciarDragProcessBox(
+                              event,
+                              box
+                            )
                           }}
                           onDoubleClick={(event) => {
                             event.stopPropagation()
@@ -27516,6 +28774,7 @@ function colorEstadoTarea(tarea) {
                                 onClick={(event) => {
                                   event.stopPropagation()
                                   setSelectedProcessNodeIds([])
+                                  setSelectedProcessBoxIds([])
                                   setSelectedProcessBoxId(null)
                                   setSelectedProcessLinkId(link.id)
                                 }}
@@ -27564,6 +28823,7 @@ function colorEstadoTarea(tarea) {
                                   onClick={(event) => {
                                     event.stopPropagation()
                                     setSelectedProcessNodeIds([])
+                                    setSelectedProcessBoxIds([])
                                     setSelectedProcessBoxId(null)
                                     setSelectedProcessLinkId(link.id)
                                   }}

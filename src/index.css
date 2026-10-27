@@ -37968,3 +37968,284 @@ body .v10-polish
 .meeting-cards .board-zoom-overlay {
   z-index: 10050 !important;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.14.2
+   PROCESS MIXED MULTISELECT / MEETING PALETTE / CHAT BEEP
+========================================================= */
+
+/* ---------- Process boxes in multi-selection ---------- */
+
+body .v10-polish
+.process-box.multi-selected {
+  box-shadow:
+    0 0 0 3px rgba(44, 190, 255, .72),
+    0 12px 26px rgba(0, 0, 0, .20)
+    !important;
+}
+
+body .v10-polish.theme-light
+.process-box.multi-selected {
+  box-shadow:
+    0 0 0 3px rgba(0, 135, 175, .52),
+    0 10px 22px rgba(31, 57, 70, .14)
+    !important;
+}
+
+/* Node-only commands visibly disabled when the selection is only boxes. */
+body .v10-polish
+.process-selection-toolbar
+button:disabled {
+  opacity: .30 !important;
+  cursor: default !important;
+}
+
+
+/* ---------- Movable Process component palette in Meeting Mode ---------- */
+
+body .v10-polish
+.meeting-process
+.process-left-panel {
+  left:
+    var(
+      --meeting-process-palette-left,
+      14px
+    )
+    !important;
+
+  top:
+    var(
+      --meeting-process-palette-top,
+      calc(100vh - 274px)
+    )
+    !important;
+
+  bottom: auto !important;
+}
+
+body .v10-polish
+.meeting-process
+.process-components-header.meeting-process-palette-drag-handle {
+  cursor: move !important;
+
+  user-select: none !important;
+
+  border-bottom:
+    1px solid rgba(
+      95,
+      128,
+      145,
+      .30
+    );
+}
+
+body .v10-polish
+.meeting-process
+.process-components-header.meeting-process-palette-drag-handle::after {
+  content: '⋮⋮';
+
+  margin-left: auto;
+
+  color: #7896a5;
+
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -2px;
+}
+
+body .v10-polish.theme-light
+.meeting-process
+.process-components-header.meeting-process-palette-drag-handle::after {
+  color: #718792;
+}
+
+/*
+  La caja flotante de componentes queda debajo de Chat/Versiones,
+  pero por encima del canvas.
+*/
+body .v10-polish
+.meeting-process
+.process-left-panel {
+  z-index: 12000 !important;
+}
+
+
+/* ---------- Chat sound ---------- */
+
+/*
+  El sonido se genera con Web Audio API.
+  No requiere archivos de audio ni agrega peso al bundle.
+*/
+
+/* =========================================================
+   PROJECTFLOW V10.14.3
+   PROCESS SELECTION TOOLBAR — EXACTLY 2 ROWS
+========================================================= */
+
+/*
+  Fila 1:
+  Duplicar · Frente · Atrás · Snap · Align · Alinear · Superposición
+
+  Fila 2:
+  Pendiente · Colores · Alineación de texto · Delete · Cancelar
+*/
+
+body .v10-polish
+.process-selection-toolbar {
+  grid-template-columns: 116px minmax(0, auto) !important;
+  grid-template-rows: 36px 34px !important;
+
+  column-gap: 10px !important;
+  row-gap: 7px !important;
+
+  align-items: center !important;
+
+  padding: 9px 10px !important;
+}
+
+body .v10-polish
+.process-selection-summary {
+  grid-column: 1 !important;
+  grid-row: 1 / span 2 !important;
+
+  align-self: start !important;
+}
+
+body .v10-polish
+.process-selection-actions-primary {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+
+  width: max-content !important;
+  max-width: none !important;
+
+  gap: 6px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body .v10-polish
+.process-selection-secondary-row {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+
+  width: max-content !important;
+  max-width: none !important;
+
+  gap: 6px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Pendiente now begins the second row. */
+body .v10-polish
+.process-selection-secondary-row
+.process-pending-secondary {
+  height: 29px !important;
+  min-height: 29px !important;
+
+  padding: 0 11px !important;
+
+  flex: 0 0 auto !important;
+
+  border-radius: 6px !important;
+
+  font-size: 9.5px !important;
+  font-weight: 850 !important;
+  white-space: nowrap !important;
+}
+
+/* Colors sit immediately beside Pendiente. */
+body .v10-polish
+.process-selection-secondary-row
+.process-selection-colors {
+  flex: 0 0 auto !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body .v10-polish
+.process-selection-secondary-row
+.process-selection-colors > div {
+  height: 29px !important;
+
+  display: flex !important;
+  align-items: center !important;
+
+  gap: 6px !important;
+}
+
+/* Keep every secondary action within the same visual line. */
+body .v10-polish
+.process-selection-secondary-row
+.process-text-align-actions {
+  flex: 0 0 auto !important;
+
+  height: 29px !important;
+
+  margin: 0 2px !important;
+}
+
+body .v10-polish
+.process-selection-secondary-row
+> .selection-delete-all,
+body .v10-polish
+.process-selection-secondary-row
+> .process-selection-cancel {
+  flex: 0 0 auto !important;
+
+  height: 29px !important;
+  min-height: 29px !important;
+}
+
+/*
+  The toolbar is intentionally wide instead of wrapping into
+  a third row. It can still be dragged to a convenient position.
+*/
+body .v10-polish
+.process-selection-toolbar {
+  max-width: none !important;
+  overflow: visible !important;
+}
+
+body .v10-polish
+.process-selection-actions-primary,
+body .v10-polish
+.process-selection-secondary-row {
+  white-space: nowrap !important;
+}
+
+
+/* Light mode: Pending retains the normal command-button treatment. */
+body .v10-polish.theme-light
+.process-selection-secondary-row
+.process-pending-secondary {
+  background: #fff4fa !important;
+  border: 1px solid #d9a9c5 !important;
+
+  color: #7e345d !important;
+  -webkit-text-fill-color: #7e345d !important;
+}
+
+body .v10-polish.theme-dark
+.process-selection-secondary-row
+.process-pending-secondary {
+  background: rgba(196, 76, 137, .13) !important;
+  border-color: #9f4f7a !important;
+
+  color: #f2bdd8 !important;
+  -webkit-text-fill-color: #f2bdd8 !important;
+}
+
