@@ -3844,6 +3844,36 @@ useEffect(() => {
     chatActiveChannelKey,
   ])
 
+
+  useEffect(() => {
+    if (
+      !chatOpen ||
+      !chatTabsRef.current
+    ) {
+      return
+    }
+
+    const timer =
+      window.setTimeout(
+        () => {
+          chatTabsRef.current?.scrollTo({
+            left: 0,
+            behavior: 'smooth',
+          })
+        },
+        20
+      )
+
+    return () =>
+      window.clearTimeout(
+        timer
+      )
+  }, [
+    chatOpen,
+    chatActivePartnerId,
+    chatUnreadByChannel,
+  ])
+
   useEffect(() => {
     if (!chatOpen) return
 
@@ -30253,8 +30283,17 @@ function colorEstadoTarea(tarea) {
                 type="button"
                 style={{
                   order:
-                    chatActivePartnerId
-                      ? -1
+                    (
+                      chatActivePartnerId ||
+                      Object.entries(
+                        chatUnreadByChannel
+                      ).some(
+                        ([channelKey, count]) =>
+                          String(channelKey).startsWith('dm:') &&
+                          Number(count) > 0
+                      )
+                    )
+                      ? -10
                       : 0,
                 }}
                 className={`projectflow-chat-tab ${
@@ -30308,8 +30347,10 @@ function colorEstadoTarea(tarea) {
                       style={{
                         order:
                           chatActivePartnerId === perfil.id
-                            ? -2
-                            : 0,
+                            ? -30
+                            : unread > 0
+                              ? -20
+                              : 0,
                       }}
                       className={`projectflow-chat-tab ${
                         chatActivePartnerId === perfil.id

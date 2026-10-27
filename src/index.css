@@ -37909,3 +37909,62 @@ body .v10-polish.theme-light
     width: auto;
   }
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.14.1
+   CHAT HOTFIX — TOP LAYER + PRIVATE PRIORITY
+========================================================= */
+
+/*
+  El zoom de Boards/Process usa capas muy altas (hasta 10050).
+  El Chat debe estar siempre por encima de cualquier control del canvas.
+*/
+body .v10-polish
+.projectflow-chat-drawer {
+  z-index: 50000 !important;
+  isolation: isolate;
+}
+
+/* Todo contenido emergente interno del Chat queda dentro de su capa superior. */
+body .v10-polish
+.projectflow-chat-drawer
+.projectflow-chat-suggestions {
+  z-index: 50010 !important;
+}
+
+/* La tira siempre arranca visualmente desde la izquierda después de reordenar. */
+body .v10-polish
+.projectflow-chat-tabs {
+  scroll-behavior: smooth !important;
+  scroll-snap-type: x proximity;
+}
+
+body .v10-polish
+.projectflow-chat-tab {
+  scroll-snap-align: start;
+}
+
+/*
+  Versiones queda debajo del Chat.
+  Normalmente no conviven porque abrir uno cierra el otro,
+  pero mantenemos jerarquía consistente.
+*/
+body .v10-polish
+.projectflow-versions-drawer {
+  z-index: 49000 !important;
+}
+
+/* Canvas overlays stay below collaboration drawers. */
+body .v10-polish
+.projectflow-minimap,
+body .v10-polish
+.board-zoom-overlay,
+body .v10-polish
+.process-zoom-overlay,
+body .v10-polish
+.meeting-process .process-zoom-overlay,
+body .v10-polish
+.meeting-cards .board-zoom-overlay {
+  z-index: 10050 !important;
+}
