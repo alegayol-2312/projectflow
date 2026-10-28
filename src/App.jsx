@@ -11294,6 +11294,53 @@ async function imprimirProcessFlow() {
         processNodeVisible
       )
 
+    /*
+      V10.14.6
+      Las etiquetas de flechas viven dentro de un foreignObject SVG.
+      html2canvas puede omitirlas al exportar, así que calculamos su
+      geometría ahora para incluirlas en el recorte y luego recrearlas
+      como HTML normal dentro del clon de impresión.
+    */
+    const processLinkLabelsExport =
+      processLinks
+        .filter(processLinkVisible)
+        .map((link) => {
+          const texto =
+            String(link.etiqueta || '').trim()
+
+          if (!texto) return null
+
+          const line = processLine(link)
+          if (!line) return null
+
+          const metrics =
+            processLinkLabelMetrics(texto)
+
+          const centerX =
+            Number(
+              line.labelX ?? line.midX
+            )
+
+          const centerY =
+            Number(
+              line.labelY ?? line.midY
+            )
+
+          return {
+            id: link.id,
+            texto,
+            x:
+              centerX -
+              metrics.width / 2,
+            y:
+              centerY -
+              metrics.height / 2,
+            width: metrics.width,
+            height: metrics.height,
+          }
+        })
+        .filter(Boolean)
+
     const elementosX = [
       ...processNodesExport.map((node) => ({
         x: Number(node.pos_x),
@@ -11302,6 +11349,10 @@ async function imprimirProcessFlow() {
       ...processBoxes.map((box) => ({
         x: Number(box.pos_x),
         width: Number(box.ancho),
+      })),
+      ...processLinkLabelsExport.map((label) => ({
+        x: label.x,
+        width: label.width,
       })),
     ]
 
@@ -11313,6 +11364,10 @@ async function imprimirProcessFlow() {
       ...processBoxes.map((box) => ({
         y: Number(box.pos_y),
         height: Number(box.alto),
+      })),
+      ...processLinkLabelsExport.map((label) => ({
+        y: label.y,
+        height: label.height,
       })),
     ]
 
@@ -11405,6 +11460,71 @@ async function imprimirProcessFlow() {
           de exportación reemplazamos esa capa por un PNG ya
           rasterizado y coloreado.
         */
+        /*
+          html2canvas no siempre incluye foreignObject dentro de SVG.
+          Ocultamos la versión SVG de las etiquetas y recreamos cada
+          comentario como un DIV absoluto dentro de process-world.
+          De esa forma el texto se imprime igual que el resto del flujo.
+        */
+        clonedDocument
+          .querySelectorAll('.process-link-label')
+          .forEach((labelElement) => {
+            labelElement.style.display =
+              'none'
+          })
+
+        if (clonedWorld) {
+          processLinkLabelsExport.forEach(
+            (label) => {
+              const printLabel =
+                clonedDocument.createElement(
+                  'div'
+                )
+
+              printLabel.className =
+                'process-print-link-label'
+
+              printLabel.textContent =
+                label.texto
+
+              Object.assign(
+                printLabel.style,
+                {
+                  position: 'absolute',
+                  left: `${label.x}px`,
+                  top: `${label.y}px`,
+                  width: `${label.width}px`,
+                  height: `${label.height}px`,
+                  zIndex: '2',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxSizing: 'border-box',
+                  padding: '7px 10px',
+                  border: '1px solid #526775',
+                  borderRadius: '8px',
+                  background: '#111a22',
+                  color: '#ffffff',
+                  fontFamily: 'Inter, Segoe UI, system-ui, sans-serif',
+                  fontSize: '10px',
+                  fontWeight: '500',
+                  lineHeight: '15px',
+                  textAlign: 'center',
+                  whiteSpace: 'pre-wrap',
+                  overflowWrap: 'anywhere',
+                  wordBreak: 'break-word',
+                  overflow: 'hidden',
+                  pointerEvents: 'none',
+                }
+              )
+
+              clonedWorld.appendChild(
+                printLabel
+              )
+            }
+          )
+        }
+
         clonedDocument
           .querySelectorAll('.process-node')
           .forEach((nodeElement) => {

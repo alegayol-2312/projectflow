@@ -38340,3 +38340,46 @@ body .v10-polish
   align-items: center;
   justify-content: center;
 }
+
+
+/* =========================================================
+   PROJECTFLOW V10.14.6
+   PROCESS PRINT — LINK LABELS
+========================================================= */
+
+/*
+  En pantalla las etiquetas siguen usando foreignObject dentro del SVG.
+  Durante la exportación se recrean temporalmente como HTML porque
+  html2canvas puede omitir foreignObject. Esta clase sólo existe en el clon.
+*/
+body .v10-polish .process-print-link-label {
+  position: absolute !important;
+  z-index: 2 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  box-sizing: border-box !important;
+  padding: 7px 10px !important;
+
+  border: 1px solid #526775 !important;
+  border-radius: 8px !important;
+
+  background: #111a22 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+
+  font-family: Inter, "Segoe UI", system-ui, sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  line-height: 15px !important;
+  text-align: center !important;
+
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
