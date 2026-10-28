@@ -38249,3 +38249,94 @@ body .v10-polish.theme-dark
   -webkit-text-fill-color: #f2bdd8 !important;
 }
 
+/* =========================================================
+   PROJECTFLOW V10.14.4
+   CHAT — AVATAR ELEGIDO EN VEZ DE INICIALES
+========================================================= */
+
+body .v10-polish
+.projectflow-chat-tab-avatar,
+body .v10-polish
+.projectflow-chat-suggestion-avatar {
+  overflow: hidden !important;
+}
+
+body .v10-polish
+.projectflow-chat-tab-avatar > img,
+body .v10-polish
+.projectflow-chat-suggestion-avatar > img {
+  width: 100% !important;
+  height: 100% !important;
+
+  display: block !important;
+  object-fit: cover !important;
+
+  border-radius: inherit !important;
+}
+
+body .v10-polish
+.projectflow-chat-tab-avatar
+.avatar-fallback,
+body .v10-polish
+.projectflow-chat-suggestion-avatar
+.avatar-fallback,
+body .v10-polish
+.projectflow-chat-avatar
+.avatar-fallback {
+  width: 100%;
+  height: 100%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* El punto de conectado queda siempre sobre la foto. */
+body .v10-polish
+.projectflow-chat-tab-avatar > i {
+  z-index: 2 !important;
+}
+
+
+
+/* =========================================================
+   PROJECTFLOW V10.14.5
+   CHAT AVATARS — USE SELECTED USER IMAGE
+========================================================= */
+
+/* Private-chat tabs must render the selected avatar image, not initials. */
+body .v10-polish
+.projectflow-chat-tab-avatar:not(.general),
+body .v10-polish
+.projectflow-chat-suggestion-avatar,
+body .v10-polish
+.projectflow-chat-avatar {
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+body .v10-polish
+.projectflow-chat-tab-avatar:not(.general) > img,
+body .v10-polish
+.projectflow-chat-suggestion-avatar > img,
+body .v10-polish
+.projectflow-chat-avatar > img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  border-radius: inherit !important;
+}
+
+/* Fallback initials remain only for users without a stored avatar. */
+body .v10-polish
+.avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1968,6 +1968,35 @@ useEffect(() => {
   ])
 
 
+  useEffect(() => {
+    if (
+      !session?.user?.id ||
+      !avatarExists(avatarId)
+    ) {
+      return
+    }
+
+    const perfilActual =
+      perfiles.find(
+        (perfil) =>
+          perfil.id === session.user.id
+      )
+
+    if (
+      perfilActual?.avatar_id ===
+      avatarId
+    ) {
+      return
+    }
+
+    guardarAvatarEnPerfil(
+      avatarId
+    )
+  }, [
+    session?.user?.id,
+    avatarId,
+    perfiles,
+  ])
 
 
 
@@ -2987,9 +3016,87 @@ useEffect(() => {
     }
   }, [appTheme])
 
+  useEffect(() => {
+    if (!session?.user?.id) return
+
+    try {
+      const cacheAnterior = JSON.parse(
+        localStorage.getItem(
+          'projectflow-chat-avatar-cache'
+        ) || '{}'
+      )
+
+      const cacheSiguiente = {
+        ...cacheAnterior,
+        [session.user.id]: avatarId,
+      }
+
+      usuariosConectados.forEach(
+        (usuario) => {
+          if (
+            usuario?.user_id &&
+            avatarExists(usuario.avatar_id)
+          ) {
+            cacheSiguiente[
+              usuario.user_id
+            ] = usuario.avatar_id
+          }
+        }
+      )
+
+      localStorage.setItem(
+        'projectflow-chat-avatar-cache',
+        JSON.stringify(cacheSiguiente)
+      )
+    } catch {
+      // El chat sigue funcionando aunque storage esté bloqueado.
+    }
+  }, [
+    session?.user?.id,
+    avatarId,
+    usuariosConectados,
+  ])
+
   function cambiarAppTheme(theme) {
     setAppTheme(theme)
     setSettingsMenuOpen(false)
+  }
+
+  async function guardarAvatarEnPerfil(nuevoAvatarId) {
+    if (
+      !session?.user?.id ||
+      !avatarExists(nuevoAvatarId)
+    ) {
+      return
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        avatar_id: nuevoAvatarId,
+      })
+      .eq('id', session.user.id)
+
+    if (error) {
+      console.error(
+        'Error guardando avatar en profiles:',
+        error
+      )
+      return
+    }
+
+    setPerfiles(
+      (actual) =>
+        actual.map(
+          (perfil) =>
+            perfil.id === session.user.id
+              ? {
+                  ...perfil,
+                  avatar_id: nuevoAvatarId,
+                }
+              : perfil
+        )
+    )
   }
 
   async function cambiarAvatar(nuevoAvatarId) {
@@ -3020,6 +3127,10 @@ useEffect(() => {
         error
       )
     }
+
+    await guardarAvatarEnPerfil(
+      nuevoAvatarId
+    )
   }
 
   function liveObjectKey(
@@ -4248,14 +4359,46 @@ function avatarChatUsuario(userId) {
     return avatarId
   }
 
-  return (
+  const perfil =
+    perfilChatPorId(userId)
+
+  const avatarPerfil =
+    perfil?.avatar_id ||
+    perfil?.projectflow_avatar_id ||
+    null
+
+  if (avatarExists(avatarPerfil)) {
+    return avatarPerfil
+  }
+
+  const avatarPresencia =
     usuariosConectados.find(
       (usuario) =>
         usuario.user_id ===
         userId
     )?.avatar_id ||
     null
-  )
+
+  if (avatarExists(avatarPresencia)) {
+    return avatarPresencia
+  }
+
+  try {
+    const cache = JSON.parse(
+      localStorage.getItem(
+        'projectflow-chat-avatar-cache'
+      ) || '{}'
+    )
+
+    const avatarCache =
+      cache?.[userId]
+
+    return avatarExists(avatarCache)
+      ? avatarCache
+      : null
+  } catch {
+    return null
+  }
 }
 
 function horaChat(fecha) {
@@ -31625,9 +31768,26 @@ function colorEstadoTarea(tarea) {
                       title={`Chat privado con ${perfil.nombre || 'usuario'}`}
                     >
                       <span className="projectflow-chat-tab-avatar">
-                        {initialsFromName(
-                          perfil.nombre ||
-                          'U'
+                        {avatarExists(
+                          avatarChatUsuario(
+                            perfil.id
+                          )
+                        ) ? (
+                          <img
+                            src={avatarSrcById(
+                              avatarChatUsuario(
+                                perfil.id
+                              )
+                            )}
+                            alt=""
+                          />
+                        ) : (
+                          <span className="avatar-fallback">
+                            {initialsFromName(
+                              perfil.nombre ||
+                              'U'
+                            )}
+                          </span>
                         )}
 
                         {conectado && (
@@ -31916,8 +32076,25 @@ function colorEstadoTarea(tarea) {
                         >
                           {chatSuggestionMode === 'mention' ? (
                             <span className="projectflow-chat-suggestion-avatar">
-                              {initialsFromName(
-                                item.title
+                              {avatarExists(
+                                avatarChatUsuario(
+                                  item.id
+                                )
+                              ) ? (
+                                <img
+                                  src={avatarSrcById(
+                                    avatarChatUsuario(
+                                      item.id
+                                    )
+                                  )}
+                                  alt=""
+                                />
+                              ) : (
+                                <span className="avatar-fallback">
+                                  {initialsFromName(
+                                    item.title
+                                  )}
+                                </span>
                               )}
                             </span>
                           ) : (
